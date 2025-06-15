@@ -1,0 +1,95 @@
+3.26 设计基础shader 测试BRG
+4.10：
+ 根据ITriggerEventsJob的特性，设计TriggerSystem，及其各具体的TriggerJob逻辑, 制作默认检测TirggerJob, 调整检测碰撞
+
+4.11 增加EntityShaderG 的shader graph ，用于entity 怪物简易特效控制
+优化ActionSystem,TirggerSystem在同一帧多次调用的问题, 设置物体旋转造成大量物理开销的问题
+
+4.14:
+  初始化EntityShaderG受到攻击、溶解、冰霜、火焰、毒素、暗影、闪电 7种简易特效基本功能，集成在AnimationBaker中，供ECS世界调取，目前集成两种，较复杂的特效采用额外的mesh shader 制作，后期待优化
+解决PhysicsSystemGroup在低帧率中在同一帧里反复调用, 简化模型,有限状态机, InputSystem, Hero的基础idle，Run。
+
+4.15:
+ Hero的Obj和Entity同步， HeroSystem。设计武器功能，设计子弹，设计Box击中
+
+4.16:
+Attribute 单位的各个属性，在DOTS或传统中都可用，英雄生成英雄Entity时复制给Entity。
+BuffHandlerBuffer 在DOTS中处理buff效果及各种特殊效果，英雄生成英雄Entity时通技能或者装备添加buff，还需要继续构思。buffSystem 管理BuffHandler的一些逻辑
+
+4.17:
+BuffHandlerAspect/BuffHandlerUtility:多线程中的基础属性和动态缓存区buff中的基本属性集合，BuffHandlerAspect可以直接注入job进行多线程，BuffHandlerUtility从外部将Lookup传入job。Gun枪械脚本
+
+4.20  完成entity shader及 飞行道具 伤害检测的调试，目前可实现基本元素伤害特效，待集成和优化
+
+4.20  调整架构， 增加协程管理模块CoroutineControlller 添加ECS 寻路导航插件 Agents Navigation 添加集群插件Swarms 添加GPUInstancer 插件 添加LOD插件POlyFew 
+
+4.25  添加MEGloabs 接口类，专用于Mono混合ECS 的开发接口功能
+
+4.27  添加 SpawnCollection 类， 专用于，ECS 的烘焙prefabs 的初始化
+
+4.28  拓展 GameManager功能，将英雄的初始化放到 场景文件的流加载完成之后，避免Mono 和ECS 混合开发的坑！！
+
+4.29 实现ECS中shader 特效的基本功能， 怪物的五种Debuff 效果
+
+4.30 优化Hero类关于配置文件的读取， 放到GloabConfigsRead 中， Hero类直接引用
+
+5.5 将飞行道具的生成方法Hero Mono 中， 采用 burst 优化， 感觉差别不大
+
+5.6 添加事件总线逻辑EventBus 外部通过 EventBusManager 单例获取 ,添加主角基础攻击换弹逻辑，拟增加投射角属性
+
+5.7 设计玩家道具类 ItemAttrobutes 包括json 加载，道具累计 属性计算等
+
+5.8 道具的硬盘读取 简易加密 管理基类 FlieEncryPtion 
+
+5.9 同理，拓展英雄属性、武器的储存与加载，采用道具简易加密方式 ，英雄后续拓展称号、成就、威能、技能，加载完成后，统一读取，并计算属性
+
+5.9 添加基础统计类，对接趣味称号系统、平台成就系统
+
+5.11 改造ActionSystem 执行 动画切换 目标跟踪 等逻辑，保留部分之前逻辑
+
+5.14 调试动画 动画事件 执行基本死亡逻辑 默认shader 消融
+
+5.14 增加怪物伤害计算简化逻辑，英雄entity 扣血？同一帧多次计算，锁帧？ 
+
+5.16 增加伤害锁定逻辑，解决5.14 问题 由飞行道具的hitBuffer确定，添加timer标签，1秒计算伤害一次
+
+5.17 更新传统Mono物理参数更新，解决主角物理碰撞问题
+
+5.18 疑似解决多碰撞体， 碰撞对分离问题 添加  EnemyBaseDamageSystem 来构建英雄碰撞伤害 和近战攻击伤害
+
+5.20 新增 BehaviorControlSystem ,增加敌人的控制逻辑，新增引力和爆炸 两项属性，用于后期的技能或者武器特效
+
+5.21 重新分配动画 1Run 2Attack1 3Attack2  4Idel 5Die  调整GPU 动画 为single 但感觉差别不大，更改伤害参数 添加 ControlDamageAttribute 与 DotDamageAttribute 两种伤害计算，
+处于伤害计算的第二阶段， 在FlightPropDamageSystem里 利用英雄引用判断及怪物是否触发进行伤害判断
+
+5.22 初步设计英雄技能系统， 使用脉冲做测试，后续完善 , 添加基本技能产生的引力和爆炸斥力系统，测试可行，后期优化碰撞性能
+
+5.23 设计英雄技能的伤害计算 与力量 武器等级 敏捷 智力 基本伤害属性相关联，用于计算英雄的技能伤害 英雄技能 新增加 预留三个属性加成的插槽和数值 使用终极技能的插槽会增加
+
+5.24 优化 预制体entity烘焙，全局唯一单例，直接获取使用就可以
+
+5.25 完善技能的 阶段释放 、 道具存续时间  等多种功能，采用专用技能标签储存Mono 状态
+
+6.2  增加VFX技能系统， 但目前看来貌似消耗很大， 先办法节能精简，实现 暗能 附魔类技能，将技能释放整合
+
+6.3  重新分配怪物的属性，将原本的整合属性拆分，设置LiveMonster为激活标识， 性能有一定提升， 后考虑增加ECS缓存池结构，尽量避免大范围 结构改变
+
+6.4  设计 冰火技能， 后期调整特效 尤其是性能消耗
+
+6.5  设计伤害飘字系统，设计相关的shahder  Mono中已经实现，待转移到ECS中
+
+6.6  初步完成ECS伤害飘子系统设计，充分利用shader 在GPU进行计算，目前性能良好，飘字动态效果待改善
+
+6.7  增加同时基础道具命中的累加伤害 池 控制 效果，避免并行计算带来的覆盖情况
+
+6.8  增加技能命中效果累加赏花 池 控制 效果，避免并行计算带来的覆盖情况
+
+6.9 改变基本的Entity怪物特效的处理，采用5个菲涅尔进行 简单的标识，效果比之前稍微好点
+
+6.10 部分代码修正为SIMD 友好型，感觉性能有一定提升，添加DOT伤害逻辑及飘字逻辑
+
+6.11 完善几种DOT 伤害基础效果及特效
+
+6.12 修改碰撞对收集， 分离detction 和hero ,整合碰撞收集系统减少依赖
+
+6.13 集中碰撞对搜集方式， 集中到detction类里面进行收集，部分完成技能法阵，法阵虹吸特效后期制作

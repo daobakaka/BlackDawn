@@ -1,0 +1,2642 @@
+﻿//透视通道
+ Pass
+        {
+            Name "CustomShadowCaster"
+            Tags { "LightMode"="CustomPassTransparentShadow" }
+
+            HLSLPROGRAM
+#pragma multi_compile_instancing
+#pragma vertex ShadowVert
+#pragma fragment ShadowFrag
+#pragma target 3.0
+
+# include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+# ifndef LerpWhiteTo
+            real3 LerpWhiteTo(real3 b, real t)
+            {
+                return lerp(real3(1.0,1.0,1.0), b, t);
+            }
+#endif
+
+// #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+
+
+struct VertexInput
+{
+    float4 positionOS : POSITION;
+            };
+
+struct VertexOutput
+{
+    float4 positionCS : SV_POSITION;
+            };
+
+VertexOutput ShadowVert(VertexInput input)
+{
+    VertexOutput output;
+    float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+    output.positionCS = TransformWorldToHClip(positionWS);
+    return output;
+}
+
+float4 ShadowFrag(VertexOutput input) : SV_Target
+            {
+                //return 0;
+                  return float4(1, 1, 1, 1); // 输出纯白色
+            }
+            ENDHLSL
+        }
+
+///-----------------------------
+
+
+     //=============================
+        // 2) Outline Pass（描边效果）
+        //=============================
+        Pass
+        {
+            Name "CustomPassTest"
+            // 这里也可以不声明 Queue，因为我们在 SubShader 里已经指定了 Opaque
+            // 但如果想让描边在另一个队列，也可以改
+            Tags { "LightMode" = "CustomPassOutline" }
+
+            Cull Front
+            ZWrite On
+            ZTest Less
+
+            HLSLPROGRAM
+            #pragma multi_compile_instancing
+            #pragma vertex OutlineVert
+            #pragma fragment OutlineFrag
+            #pragma target 3.0
+
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Assets/Scripts/CustomShader/LitInput.hlsl"
+
+            struct Attributes
+            {
+                float4 positionOS : POSITION;
+                float3 normalOS   : NORMAL;
+            };
+
+            struct Varyings
+            {
+                float4 positionCS : SV_POSITION;
+            };
+
+            Varyings OutlineVert(Attributes input)
+            {
+                Varyings output;
+                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
+                positionWS += normalWS * _OutlineWidth;
+                output.positionCS = TransformWorldToHClip(positionWS);
+                return output;
+            }
+
+            float4 OutlineFrag(Varyings input) : SV_Target
+            {
+                return _OutlineColor; // 不用透明
+            }
+            ENDHLSL
+        }
+
+
+
+//------------------保留原本的实例化参数
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Rendering;
+
+namespace BlackDawn
+{
+    public class TestScript : MonoBehaviour
+    {
+        public GameObject gameObject0;
+        public float spacing = 2.0f; // 对象之间的间距
+        public float rotationSpeed = 10.0f; // 旋转速度
+        public int counter = 100; // 生成数量
+        private List<GameObject> clones = new List<GameObject>();
+        public int rotate = 1;
+
+        void Start()
+        {
+            // 动态计算 xSize, ySize, zSize，尽量接近立方体布局
+            int xSize = Mathf.CeilToInt(Mathf.Pow(counter, 1f / 3f)); // 立方根，向上取整
+            int ySize = Mathf.CeilToInt(Mathf.Sqrt(counter / (float)xSize)); // 剩余部分按面积分配
+            int zSize = Mathf.CeilToInt((float)counter / (xSize * ySize)); // 确保总数 >= counter
+
+            int count = 0;
+
+            for (int x = 0; x < xSize && count < counter; x++)
+            {
+                for (int y = 0; y < ySize && count < counter; y++)
+                {
+                    for (int z = 0; z < zSize && count < counter; z++)
+                    {
+                        Vector3 position = new Vector3(
+                            x * spacing - (xSize - 1) * spacing * 0.5f,
+                            y * spacing - (ySize - 1) * spacing * 0.5f + 10, // 整体上抬
+                            z * spacing - (zSize - 1) * spacing * 0.5f
+                        );
+
+                        // 实例化对象
+                        GameObject clone = Instantiate(gameObject0, position, Quaternion.identity);
+                        clones.Add(clone);
+                        count++;
+
+                        // 设置实例化颜色属性 _BaseColorInstance
+                       // Renderer renderer = clone.GetComponent<Renderer>();
+                        var renderer = clone.GetComponent<MeshRenderer>();
+                        if (renderer != null)
+                        {
+                            // 创建新的 MaterialPropertyBlock
+                            MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+                            // 生成随机颜色，或根据需求自定义
+                            Color instColor = new Color(Random.value, Random.value, Random.value, 1.0f);
+                            // 这里的属性名必须与 Shader 中定义的实例化属性名称一致，例如 "_BaseColorInstance"
+                            mpb.SetColor("_BaseColorInstance", instColor);
+                            renderer.SetPropertyBlock(mpb);
+                        }
+                    }
+                }
+            }
+        }
+
+        void Update()
+        {
+            // 围绕 Y 轴旋转所有克隆对象
+            foreach (GameObject clone in clones)
+            {
+                clone.transform.RotateAround(Vector3.zero, Vector3.up, rotationSpeed * Time.deltaTime * rotate);
+            }
+        }
+    }
+}
+//------------
+
+
+//----批量绘制
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace BlackDawn
+{
+    public class TestScriptInstanced : MonoBehaviour
+    {
+        // 预制体，必须包含 MeshFilter 和 MeshRenderer
+        public GameObject prefab;
+        public float spacing = 2.0f;      // 对象之间的间距
+        public float rotationSpeed = 10.0f; // 旋转速度（度/秒）
+        public int counter = 100;         // 生成实例数量
+        public int rotate = 1;            // 旋转方向（1 或 -1）
+
+        // 用于批量绘制的矩阵数组
+        private Matrix4x4[] matrices;
+        // 存储每个实例的颜色（用于 GPU Instancing）
+        private List<Vector4> instanceColors = new List<Vector4>();
+
+        // 缓存 Mesh 和 Material
+        private Mesh instanceMesh;
+        private Material instanceMaterial;
+
+        void Start()
+        {
+            // 获取预制体的 Mesh 和 Material
+            MeshFilter mf = prefab.GetComponent<MeshFilter>();
+            MeshRenderer mr = prefab.GetComponent<MeshRenderer>();
+            if (mf == null || mr == null)
+            {
+                Debug.LogError("Prefab must have MeshFilter and MeshRenderer components.");
+                return;
+            }
+            instanceMesh = mf.sharedMesh;
+            instanceMaterial = mr.sharedMaterial;
+
+            // 动态计算 xSize, ySize, zSize 以尽量形成立方体布局
+            int xSize = Mathf.CeilToInt(Mathf.Pow(counter, 1f / 3f));
+            int ySize = Mathf.CeilToInt(Mathf.Sqrt(counter / (float)xSize));
+            int zSize = Mathf.CeilToInt((float)counter / (xSize * ySize));
+
+            List<Matrix4x4> matrixList = new List<Matrix4x4>();
+            int count = 0;
+            for (int x = 0; x < xSize && count < counter; x++)
+            {
+                for (int y = 0; y < ySize && count < counter; y++)
+                {
+                    for (int z = 0; z < zSize && count < counter; z++)
+                    {
+                        // 计算每个实例的位置，使整体居中
+                        Vector3 pos = new Vector3(
+                            x * spacing - (xSize - 1) * spacing * 0.5f,
+                            y * spacing - (ySize - 1) * spacing * 0.5f + 10, // 上抬10单位
+                            z * spacing - (zSize - 1) * spacing * 0.5f
+                        );
+                        // 生成实例的变换矩阵（此处只使用平移，旋转将在 Update 中处理）
+                        Matrix4x4 mat = Matrix4x4.TRS(pos, Quaternion.identity, Vector3.one);
+                        matrixList.Add(mat);
+
+                        // 生成每个实例的随机颜色，作为 _BaseColorInstance 的值
+                        instanceColors.Add(new Vector4(Random.value, Random.value, Random.value, 1.0f));
+                        count++;
+                    }
+                }
+            }
+
+            matrices = matrixList.ToArray();
+        }
+
+        void Update()
+        {
+            // 每帧更新实例的旋转（例如围绕 Y 轴旋转）
+            for (int i = 0; i < matrices.Length; i++)
+            {
+                // 取出当前矩阵
+                Matrix4x4 mat = matrices[i];
+                // 分离平移部分
+                Vector3 pos = mat.GetColumn(3);
+                // 计算旋转：绕 Y 轴旋转 rotationSpeed * Time.deltaTime * rotate 度
+                Quaternion rot = Quaternion.Euler(0, rotationSpeed * Time.deltaTime * rotate, 0);
+                // 旋转平移坐标
+                pos = rot * pos;
+                // 更新矩阵（这里只更新平移，保持缩放和旋转为默认）
+                matrices[i] = Matrix4x4.TRS(pos, Quaternion.identity, Vector3.one);
+            }
+
+            // 创建 MaterialPropertyBlock 并设置实例化属性数组
+            MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+            mpb.SetVectorArray("_BaseColorInstance", instanceColors);
+
+            // DrawMeshInstanced 每批最多支持1023个实例，分批绘制
+            int instanceCount = matrices.Length;
+            int batchSize = 1023;
+            for (int i = 0; i < instanceCount; i += batchSize)
+            {
+                int count = Mathf.Min(batchSize, instanceCount - i);
+                Matrix4x4[] batch = new Matrix4x4[count];
+                System.Array.Copy(matrices, i, batch, 0, count);
+                Graphics.DrawMeshInstanced(instanceMesh, 0, instanceMaterial, batch, count, mpb);
+            }
+        }
+    }
+}
+//-----   
+
+//----原本的dots侦察系统
+using BlackDawn.DOTS;
+using BlackDawn;
+using System.Collections;
+using System.Collections.Generic;
+using Unity.Burst;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Physics;
+using Unity.Physics.Systems;
+using Unity.Transforms;
+using UnityEngine;
+
+
+namespace BlackDawn.DOTS
+{
+    // public struct CollisionPairData
+    // {
+    //     public Entity EntityA;
+    //     public Entity EntityB;
+    // }
+
+
+    // /// <summary>
+    // /// 检测System
+    // /// </summary>
+    // [BurstCompile]
+    // // [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
+    // // [UpdateBefore(typeof(PhysicsSystemGroup))]
+
+    // [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
+    // [UpdateAfter(typeof(ActionSystemGroup))]
+    // public partial class DetectionSystem : SystemBase
+    // {
+    //     protected override void OnCreate()
+    //     {
+
+    //     }
+    //     protected override void OnUpdate()
+    //     {
+    //         // 获取物理世界单例 
+    //         // PhysicsWorldSingleton physicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
+    //         // CollisionWorld collisionWorld = physicsWorld.CollisionWorld;
+
+    //         // 获取碰撞事件流 
+    //         SimulationSingleton simSingleton = SystemAPI.GetSingleton<SimulationSingleton>();
+    //         //CollisionEvents collisionEvents = simulation.GetCollisionEvents();
+
+    //         // // 创建用于存储碰撞信息的 NativeQueue
+    //         // var collisionQueue = new NativeQueue<CollisionPairData>(Allocator.TempJob);
+
+    //         // // 创建并调度 Job 
+    //         // var ecb = new EntityCommandBuffer(Allocator.TempJob);
+    //         // var processJob = new CollisionEventJob
+    //         // {
+
+    //         // }.Schedule(simSingleton, Dependency);
+    //         // Dependency = processJob;
+    //         // Dependency.Complete();
+    //         // ecb.Playback(EntityManager);
+
+    //         var tirggerjob = new TirggerEventJob
+    //         {
+
+    //         }.Schedule(simSingleton, Dependency);
+    //         Dependency = tirggerjob;
+    //         Dependency.Complete();
+
+    //         // // 在主线程中读取并输出碰撞数据
+    //         // while (collisionQueue.TryDequeue(out CollisionPairData data))
+    //         // {
+    //         //     Debug.Log($"碰撞发生在: {data.EntityA} 与 {data.EntityB}");
+    //         // }
+    //         // collisionQueue.Dispose();
+
+    //         //ecb.Dispose();
+
+
+
+    //     }
+        
+    // }
+
+
+    // [UpdateAfter(typeof(PhysicsSimulationGroup))]
+    // public partial class CollisionEventSystemBase : SystemBase
+    // {
+
+    //     protected override void OnCreate()
+    //     {
+
+    //     }
+
+    //     protected override void OnUpdate()
+    //     {
+
+    //     }
+    // }
+
+
+}
+
+
+
+//-----
+/// <summary>
+/// Watcher_A行为System
+/// </summary>
+//[BurstCompile]
+//[UpdateInGroup(typeof(ActionSystemGroup))]
+//public partial struct ActionSystem : ISystem
+//{
+//    ComponentLookup<LocalTransform> m_transform;
+//    ComponentLookup<LocalToWorld> m_localtoWorld;
+//    ComponentLookup<PhysicsVelocity> m_PhysicsVelocity;
+//    bool IsOpenAction;
+//    int updateActionCount;
+
+//    public void OnCreate(ref SystemState state)
+//    {
+//        IsOpenAction = true;
+//        m_transform = SystemAPI.GetComponentLookup<LocalTransform>(true);
+//        m_localtoWorld = SystemAPI.GetComponentLookup<LocalToWorld>(true);
+//        m_PhysicsVelocity = SystemAPI.GetComponentLookup<PhysicsVelocity>(true);
+//    }
+//    void UpDataAllComponentLookup(ref SystemState state)
+//    {
+//        m_transform.Update(ref state);
+//        m_localtoWorld.Update(ref state);
+//        m_PhysicsVelocity.Update(ref state);
+//    }
+
+//    public void OnUpdate(ref SystemState state)
+//    {
+//        if (Input.GetKeyDown(KeyCode.A) && Input.GetKey(KeyCode.LeftControl))
+//        {
+//            IsOpenAction = !IsOpenAction;
+//            Debug.Log($"ActionSystem:{IsOpenAction}");
+//        }
+//        // if(!IsOpenAction) return;
+//        // if(updateActionCount<30)
+//        // {
+//        //     updateActionCount += 1;
+//        //     return;
+//        // }
+//        // updateActionCount = 0;
+
+//        UpDataAllComponentLookup(ref state);
+
+//        if (!TestManager.instance) return;
+
+//        var ecb = new EntityCommandBuffer(Allocator.TempJob);
+//        var ECBParallel = ecb.AsParallelWriter();
+
+//        state.Dependency = new Watcher_AIdleJob
+//        {
+//            ECB = ECBParallel,
+//            actionGroup = new OtherActionsGroup<Idle>(),
+//            target = TestManager.instance.HeroEntity,
+//        }.ScheduleParallel(state.Dependency);
+
+//        state.Dependency = new Watcher_ARunJob
+//        {
+//            ECB = ECBParallel,
+//            actionGroup = new OtherActionsGroup<Run>(),
+//            time = SystemAPI.Time.DeltaTime,
+//            transform = m_transform,
+//            target = TestManager.instance.HeroEntity,
+//        }.ScheduleParallel(state.Dependency);
+
+//        state.Dependency = new LockMonster_YAxis { }.ScheduleParallel(state.Dependency);
+
+//        state.Dependency.Complete();
+//        ecb.Playback(state.EntityManager);
+//        ecb.Dispose();
+//    }
+
+
+
+//    // protected override void OnCreate()
+//    // {
+//    //     m_transform = SystemAPI.GetComponentLookup<LocalTransform>(true);
+//    //     m_localtoWorld = SystemAPI.GetComponentLookup<LocalToWorld>(true);
+//    //     m_PhysicsVelocity = SystemAPI.GetComponentLookup<PhysicsVelocity>(true);
+//    // }
+//    // void UpDataAllComponentLookup(SystemBase state)
+//    // {
+//    //     m_transform.Update(state);
+//    //     m_localtoWorld.Update(state);
+//    //     m_PhysicsVelocity.Update(state);
+//    // }
+//    // protected override void OnUpdate()
+//    // {
+//    //     UpDataAllComponentLookup(this);
+
+//    //     if (!TestManager.instance) return;
+
+//    //     var ecb = new EntityCommandBuffer(Allocator.TempJob);
+//    //     var ECBParallel = ecb.AsParallelWriter();
+
+//    //     Dependency = new Watcher_AIdleJob
+//    //     {
+//    //         ECB = ECBParallel,
+//    //         actionGroup = new OtherActionsGroup<Idle>(),
+//    //         target = TestManager.instance.Player,
+//    //     }.ScheduleParallel(Dependency);
+
+//    //     Dependency = new Watcher_ARunJob
+//    //     {
+//    //         ECB = ECBParallel,
+//    //         actionGroup = new OtherActionsGroup<Run>(),
+//    //         time = SystemAPI.Time.DeltaTime,
+//    //         transform = m_transform,
+//    //         target = TestManager.instance.Player,
+//    //     }.ScheduleParallel(Dependency);
+
+//    //     Dependency.Complete();
+//    //     ecb.Playback(EntityManager);
+//    //     ecb.Dispose();
+//    // }
+//}
+
+
+//[BurstCompile]
+//public partial struct Watcher_AIdleJob : IJobEntity
+//{
+//    public EntityCommandBuffer.ParallelWriter ECB;
+//    public OtherActionsGroup<Idle> actionGroup;
+//    public Entity target;
+//    public void Execute(Entity entity, Idle idle, /*GpuEcsAnimatorAspect gupAnimatorAsp, */ref PhysicsVelocity phyVelocity, PhysicsCollider collider, ref Detection_DefaultCmpt detection, [ChunkIndexInQuery] int Chunkindex)
+//    {
+//        //播放idle动画
+//        //gupAnimatorAsp.RunAnimation((int)AnimationIdsWatcher_A.Idle);
+
+//        //停止移动
+//        phyVelocity.Linear = float3.zero;
+
+//        //有目标时转换为Run行为
+//        if (target != Entity.Null)
+//            actionGroup.SwitchAction(ECB, Chunkindex, entity, EActionType.Run);
+//        // else if(detection.attackTarget == target && target != Entity.Null)
+//        //     actionGroup.SwitchAction(ECB, Chunkindex, entity, EActionType.Attack);
+
+//        //UnityEngine.Debug.Log("idle");
+
+
+//    }
+//}
+
+//[BurstCompile]
+//public partial struct Watcher_ARunJob : IJobEntity
+//{
+//    public EntityCommandBuffer.ParallelWriter ECB;
+//    public OtherActionsGroup<Run> actionGroup;
+//    public float time;
+//    [ReadOnly] public ComponentLookup<LocalTransform> transform;
+//    public Entity target;
+
+//    public void Execute(Entity entity, Run run,
+//                        /*GpuEcsAnimatorAspect gupAnimatorAsp, */ref PhysicsVelocity phyVelocity,
+//                        ref Detection_DefaultCmpt detection, [ChunkIndexInQuery] int Chunkindex)
+//    {
+//        //播放Run动画
+//        //gupAnimatorAsp.RunAnimation((int)AnimationIdsWatcher_A.Run);
+
+//        //朝目标移动
+//        if (transform.HasComponent(target))
+//        {
+//            var targettsf = transform[target];
+//            var tsf = transform[entity];
+//            var dir = math.normalize(targettsf.Position - tsf.Position);
+//            dir.y = 0;
+//            phyVelocity.Linear = 100 * time * dir;
+//            phyVelocity.Linear.y = 0;
+
+//            // 创建旋转矩阵，使得角色的z轴朝向目标
+//            quaternion rotation = quaternion.LookRotationSafe(dir, new float3(0, 1, 0));//math.normalize(math.lookRotation(dir, math.up()));
+//            tsf.Rotation = math.slerp(tsf.Rotation, rotation, 5f * time);// 插值旋转
+//            ECB.SetComponent(Chunkindex, entity, tsf);
+//        }
+
+//        //如果失去目标转为idle,且玩家死亡
+//        if (detection.attackTarget == Entity.Null && target == Entity.Null)
+//            actionGroup.SwitchAction(ECB, Chunkindex, entity, EActionType.Idle);
+//        // else if(detection.attackTarget == target && target != Entity.Null)
+//        //     actionGroup.SwitchAction(ECB, Chunkindex, entity, EActionType.Attack);
+
+//    }
+//}
+///// <summary>
+///// 锁定所有怪物的Y轴
+///// </summary>
+//[BurstCompile]
+//public partial struct LockMonster_YAxis : IJobEntity
+//{
+//    public void Execute(MonsterComponent monster, ref PhysicsVelocity phyVelocity, ref LocalTransform transform)
+//    {
+//        phyVelocity.Linear.y = 0;
+//        transform.Position.y = 0;
+//    }
+//}
+
+////-- 之前的shader 效果调试
+using BlackDawn.DOTS;
+using Unity.Burst;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
+[BurstCompile]
+public partial struct RenderEffectSystem : ISystem
+{
+
+    ComponentLookup<MonsterAttributeCmpt> attLookup;
+    public void OnCreate(ref SystemState state) 
+    {
+
+        state.RequireForUpdate<EnableRenderEffectSystemTag>();
+        //标准非只读，可写
+        attLookup =SystemAPI.GetComponentLookup<MonsterAttributeCmpt>(false);   
+    
+    
+    }
+
+    public void OnUpdate(ref SystemState state)
+    {
+       
+        attLookup.Update(ref state);
+        
+        
+        float dt = SystemAPI.Time.DeltaTime;
+
+        // 直接查询 Aspect，就能同时拿到两个组件,普通组件要放在 ASPCET前面
+        foreach ( var ( parent,mat) in SystemAPI.Query<RefRO<Parent>, MaterialParameterAspect>())
+        {
+            ref var ua = ref mat.UnderAttack.ValueRW;
+
+            ref var iceDamade = ref mat.Freeze.ValueRW.Value;
+
+            ref var fre = ref mat.Fresnel.ValueRW.Value;
+
+            var parentEntity = parent.ValueRO.Value;
+
+           var parentAtt =  attLookup[parentEntity];
+
+            if (parentAtt.lossPoolAttribute.attackTimer > 0.01f)
+            {
+                parentAtt.lossPoolAttribute.attackTimer -= dt;
+                attLookup[parentEntity] = parentAtt;        // 写回
+                //冰霜属性测试
+          
+               iceDamade = parentAtt.lossPoolAttribute.frostPool * 0.08F;
+             if (iceDamade > 1) 
+                    iceDamade = 1;
+                fre = new float4(0, 1, 1, 1);
+
+            }
+            else
+            {
+                ua.Value = float4.zero;
+
+            }
+            // 冰霜属性测试
+            if (parentAtt.lossPoolAttribute.frostPool <= 10)
+            {
+                fre = new float4(0, 0, 0, 0);
+            }
+            if(iceDamade>0)
+                iceDamade -= 0.2F*dt;
+        }
+    }
+}
+//----
+
+
+///--生成子弹逻辑
+//发射远程道具测试
+            foreach (var (upperCmp, animData, local,anchorBuffer) in
+              SystemAPI.Query<
+                  RefRW<MoAlbonoUpperCmp>,                         // 可写组件
+                  RefRO<AnimationControllerData>,  
+                  RefRW<LocalTransform>,// 只读组件
+                  DynamicBuffer<GpuEcsCurrentAttachmentAnchorBufferElement> // 动态缓冲
+              >())
+            {
+                // 可按需读取／修改 upperCmp 和 animData
+                ref var upper = ref upperCmp.ValueRW;
+                var animation = animData.ValueRO;
+
+                if (anchorBuffer.Length == 0)
+                    continue;
+
+
+                if (Mathf.Repeat(timer, 1f) < SystemAPI.Time.DeltaTime&&animData.ValueRO.isAttack==true)
+                {  // 取第一个挂件锚点
+                    var anchor = anchorBuffer[0];
+
+                    // 1. 实例化新的远程道具实体
+                    Entity enemyProp = state.EntityManager.Instantiate(m_Prefabs.EnemyFlightProp);
+                
+                    float4x4 m = math.mul(local.ValueRO.ToMatrix(),anchor.currentTransform);
+
+                    // 1. 位置 在矩阵的第四列 xyz
+                    float3 pos = m.c3.xyz;
+                   // DevDebug.Log("位置："+pos);
+
+                    // 2. 读取并修改它的 LocalTransform，然后写回
+                    var lt = state.EntityManager.GetComponentData<LocalTransform>(enemyProp);
+                    lt.Position = pos;
+                 
+                    state.EntityManager.SetComponentData(enemyProp, lt);
+                }
+            }
+            //----
+
+            ///---  子碰撞体 问题
+            using Unity.Burst;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using Unity.Mathematics;
+using Unity.Physics;
+using Unity.Transforms;
+//用于计算 怪物碰撞及基础攻击的buffer，英雄身上也添加了<hitRecord>默认周期为1秒
+namespace BlackDawn.DOTS
+{
+    [BurstCompile]
+    [RequireMatchingQueriesForUpdate]
+    [UpdateAfter(typeof(ActionSystem))]
+    public partial struct BaseDamageSystem : ISystem
+    {
+
+        private ComponentLookup<MonsterAttributeCmpt> _monsterLookup;
+        private ComponentLookup<HeroAttributeCmpt> _heroLookup;
+        private BufferLookup<HeroHitRecord> _recordBufferLookup;
+
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<EnableEnemyBaseDamageSystemTag>();
+            _monsterLookup = SystemAPI.GetComponentLookup<MonsterAttributeCmpt>(true);
+            _heroLookup = SystemAPI.GetComponentLookup<HeroAttributeCmpt>(true);
+            _recordBufferLookup = SystemAPI.GetBufferLookup<HeroHitRecord>(true);
+        }
+
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            _monsterLookup.Update(ref state);
+            _heroLookup.Update(ref state);
+            _recordBufferLookup.Update(ref state);
+
+            // 1) 调度“收集”Job
+            var rawQueue = new NativeQueue<TriggerPairData>(Allocator.TempJob);
+            var sim = SystemAPI.GetSingleton<SimulationSingleton>();
+            state.Dependency = new CollectEnemyBaseHitsJob
+            {
+                MonsterLookup = _monsterLookup,
+                HeroLookup = _heroLookup,
+                HitQueue = rawQueue.AsParallelWriter()
+            }.Schedule(sim, state.Dependency);
+            state.Dependency.Complete();
+
+            var rawHits = rawQueue.ToArray(Allocator.TempJob);
+            rawQueue.Dispose();
+
+            // 2) 主线程过滤：只保留 child1（胶囊）那条
+            const int DesiredLeafIndex = 1;
+            var goodHits = new NativeList<TriggerPairData>(Allocator.TempJob);
+            var em = state.EntityManager;
+
+            foreach (var hit in rawHits)
+            {
+                // 拿英雄实体上的 PhysicsColliderKeyEntityPair Buffer
+                var buf = em.GetBuffer<PhysicsColliderKeyEntityPair>(hit.EntityB);
+                if (buf.Length > DesiredLeafIndex && buf[DesiredLeafIndex].Key.Equals(hit.Key))
+                {
+                    goodHits.Add(hit);
+                }
+            }
+            rawHits.Dispose();
+
+            // 3) 调度“应用伤害”Job
+            var hitsArray = goodHits.AsDeferredJobArray();
+            goodHits.Dispose();
+
+
+            var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            var ecbWriter = ecb.AsParallelWriter();
+            state.Dependency = new ApplyEnemyBaseDamageJob
+            {
+                ECB = ecbWriter,
+                AttrLookup = _heroLookup,
+                HitArray = hitsArray,
+                MonsterAttrLookup = _monsterLookup,
+                RecordBufferLookup = _recordBufferLookup
+            }.Schedule(hitsArray.Length, 64, state.Dependency);
+
+            state.Dependency.Complete();
+            // 回放并清理
+            ecb.Playback(state.EntityManager);
+            ecb.Dispose();
+        }
+
+
+
+        void OnDestory(ref SystemState state) { }
+
+    }
+
+
+    /// <summary>
+    /// 收集所有“英雄⇄怪物”触发事件，只 enqueue 英雄与怪物组合
+    /// </summary>
+    [BurstCompile]
+    public struct CollectEnemyBaseHitsJob : ITriggerEventsJob
+    {
+        [ReadOnly] public ComponentLookup<MonsterAttributeCmpt> MonsterLookup;
+        [ReadOnly] public ComponentLookup<HeroAttributeCmpt> HeroLookup;
+
+        public NativeQueue<TriggerPairData>.ParallelWriter HitQueue;
+
+        public void Execute(TriggerEvent e)
+        {
+            var a = e.EntityA;
+            var b = e.EntityB;
+
+            bool aIsMonster = MonsterLookup.HasComponent(a);
+            bool bIsMonster = MonsterLookup.HasComponent(b);
+            bool aIsHero = HeroLookup.HasComponent(a);
+            bool bIsHero = HeroLookup.HasComponent(b);
+
+            if (aIsMonster && bIsHero)
+            {
+                HitQueue.Enqueue(new TriggerPairData
+                {
+                    EntityA = a,
+                    EntityB = b,
+                    Key = e.ColliderKeyB
+                });
+            }
+            else if (bIsMonster && aIsHero)
+            {
+                HitQueue.Enqueue(new TriggerPairData
+                {
+                    EntityA = b,
+                    EntityB = a,
+                    Key = e.ColliderKeyA
+                });
+            }
+        }
+    }
+
+
+
+
+
+
+
+    /// <summary>
+    /// 敌人近战伤害与英雄的碰撞计算，这里简化逻辑，近战、远程怪，碰到就会掉血
+    /// </summary>
+    [BurstCompile]
+    struct ApplyEnemyBaseDamageJob : IJobParallelFor
+    {
+        public EntityCommandBuffer.ParallelWriter ECB;
+        //这里就是计算英雄自身扣血逻辑
+        [ReadOnly] public ComponentLookup<HeroAttributeCmpt> AttrLookup;
+        // [ReadOnly] public BufferLookup<LinkedEntityGroup> LinkedLookup;
+        [ReadOnly] public NativeArray<TriggerPairData> HitArray;
+        [ReadOnly] public ComponentLookup<MonsterAttributeCmpt> MonsterAttrLookup;
+        [ReadOnly] public BufferLookup<HeroHitRecord> RecordBufferLookup;
+
+        public void Execute(int i)
+        {
+            // 1) 拿到碰撞实体对
+            var pair = HitArray[i];
+            Entity monster = pair.EntityA;
+            Entity hero = pair.EntityB;
+
+
+            if (!MonsterAttrLookup.HasComponent(monster))
+            {
+                monster = pair.EntityB;
+                hero = pair.EntityA;
+            }
+
+            // 拿到伤害的记录缓冲
+            var buffer = RecordBufferLookup[hero];
+
+            // 先检查是否已经记录过这个 target
+            for (int j = 0; j < buffer.Length; j++)
+            {
+                if (buffer[j].other == monster)
+                {
+                    return;
+                }
+            }
+            // 只有没记录过，才加进来,这里要注意并行写入限制，使用并行写入方法         
+            ECB.AppendToBuffer(i, hero, new HeroHitRecord { other = monster });
+
+
+
+            // 2) 读取组件 & 随机数
+            var h = MonsterAttrLookup[monster];
+            var a = AttrLookup[hero];
+            var d = h.attackAttribute;
+            var rnd = new Unity.Mathematics.Random(a.defenseAttribute.rngState);
+
+            // 3) 闪避判定
+            if (rnd.NextFloat() < a.defenseAttribute.dodge)
+            {
+                // DevDebug.Log("随机数"+rnd.NextFloat()+"闪避率"+a.defenseAttribute.dodge);
+                a.defenseAttribute.rngState = rnd.state;
+                ECB.SetComponent(i, hero, a);
+                return;
+            }
+            // DevDebug.Log("执行多线程2");
+
+            // 4) 计算缩减后的“瞬时伤害”和“DOT伤害”
+            float instTotal = 0f, dotTotal = 0f;
+
+            // 物理子计算
+            float CalcPhysicalSub(float armor, float breakVal, float pen)
+            {
+                float eff = armor - (breakVal + math.max(0f, 1f - pen) * armor);
+                return eff / (eff + 100f);
+            }
+
+            // 元素子计算
+            float CalcElementSub(float res, float breakVal, float pen)
+            {
+                float eff = res - (breakVal + math.max(0f, 1f - pen) * res);
+                return eff / (eff + 50f);
+            }
+
+            // 物理
+            float physSub = CalcPhysicalSub(
+                a.defenseAttribute.armor,
+                h.attackAttribute.armorBreak,
+                h.attackAttribute.armorPenetration);
+            instTotal += d.attackPower * (1f - physSub);
+
+            var dotPhy = rnd.NextFloat() < d.dotProcChance.bleedChance
+                ? d.attackPower * (1f - physSub) * 0.3f
+                : 0f;
+            dotTotal += dotPhy;
+
+            // 火
+            float fireSub = CalcElementSub(
+                a.defenseAttribute.resistances.fire,
+                h.attackAttribute.elementalBreak,
+                h.attackAttribute.elementalPenetration);
+            instTotal += d.elementalDamage.fireDamage * (1f - fireSub);
+
+            var dotFire = rnd.NextFloat() < d.dotProcChance.fireChance
+                ? d.elementalDamage.fireDamage * (1f - fireSub) * 0.3f
+                : 0f;
+            dotTotal += dotFire;
+
+            // 冰
+            float frostSub = CalcElementSub(
+                a.defenseAttribute.resistances.frost,
+                h.attackAttribute.elementalBreak,
+                h.attackAttribute.elementalPenetration);
+            instTotal += d.elementalDamage.frostDamage * (1f - frostSub);
+
+            var dotFrost = rnd.NextFloat() < d.dotProcChance.frostChance
+                ? d.elementalDamage.frostDamage * (1f - frostSub) * 0.3f
+                : 0f;
+            dotTotal += dotFrost;
+
+            // 闪电
+            float lightSub = CalcElementSub(
+                a.defenseAttribute.resistances.lightning,
+                h.attackAttribute.elementalBreak,
+                h.attackAttribute.elementalPenetration);
+            instTotal += d.elementalDamage.lightningDamage * (1f - lightSub);
+
+            var dotLightning = rnd.NextFloat() < d.dotProcChance.lightningChance
+                ? d.elementalDamage.lightningDamage * (1f - lightSub) * 0.3f
+                : 0f;
+            dotTotal += dotLightning;
+
+            // 毒素
+            float poisonSub = CalcElementSub(
+                a.defenseAttribute.resistances.poison,
+                h.attackAttribute.elementalBreak,
+                h.attackAttribute.elementalPenetration);
+            instTotal += d.elementalDamage.poisonDamage * (1f - poisonSub);
+
+            var dotPoison = rnd.NextFloat() < d.dotProcChance.poisonChance
+                ? d.elementalDamage.poisonDamage * (1f - poisonSub) * 0.3f
+                : 0f;
+            dotTotal += dotPoison;
+
+            // 暗影
+            float shadowSub = CalcElementSub(
+                a.defenseAttribute.resistances.shadow,
+                h.attackAttribute.elementalBreak,
+                h.attackAttribute.elementalPenetration);
+            instTotal += d.elementalDamage.shadowDamage * (1f - shadowSub);
+
+            var dotShadow = rnd.NextFloat() < d.dotProcChance.shadowChance
+                ? d.elementalDamage.shadowDamage * (1f - shadowSub) * 0.3f
+                : 0f;
+            dotTotal += dotShadow;
+
+
+            // 5) 池化反应（基于 raw dmg，不受任何减免，已闪避过滤）
+            //dot dot伤害也能堆叠反应池
+
+            float origHp = a.defenseAttribute.originalHp;
+            const float mult = 5f, cap = 200f;
+            float Gain(float raw, float dot) => math.min(((raw + dot) / origHp) * 100f * mult, cap);
+
+            a.lossPoolAttribute.firePool = math.min(a.lossPoolAttribute.firePool + Gain(d.elementalDamage.fireDamage, dotFire), cap);
+            a.lossPoolAttribute.frostPool = math.min(a.lossPoolAttribute.frostPool + Gain(d.elementalDamage.frostDamage, dotFrost), cap);
+            a.lossPoolAttribute.lightningPool = math.min(a.lossPoolAttribute.lightningPool + Gain(d.elementalDamage.lightningDamage, dotFrost), cap);
+            a.lossPoolAttribute.poisonPool = math.min(a.lossPoolAttribute.poisonPool + Gain(d.elementalDamage.poisonDamage, dotPoison), cap);
+            a.lossPoolAttribute.shadowPool = math.min(a.lossPoolAttribute.shadowPool + Gain(d.elementalDamage.shadowDamage, dotShadow), cap);
+            //流血池只使用25%物理伤害计算
+            a.lossPoolAttribute.bleedPool = math.min(a.lossPoolAttribute.bleedPool + Gain(d.attackPower, dotPhy), cap) * 0.25f;
+
+
+            // 6) 格挡判定（仅对瞬时）,随机减免20%-80%伤害
+            if (rnd.NextFloat() < a.defenseAttribute.block)
+            {
+                float br = math.lerp(0.2f, 0.8f, rnd.NextFloat());
+                instTotal *= (1f - br);
+            }
+
+            // 7) 固定减伤（对瞬时+DOT）
+            var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//固定随机减伤,0-50的固定随机减伤，模拟伤害波动
+            float finalDamage = (instTotal + dotTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd);
+
+            // 8) 应用扣血 & 写回
+            a.defenseAttribute.hp = math.max(0f, a.defenseAttribute.hp - finalDamage);
+
+            //攻击颜色变化状态
+            // 9) 受击高亮
+            if (true)
+            {
+                //var under = LinkedLookup[target][1].Value;
+                a.lossPoolAttribute.attackTimer = 0.1f;
+                //  ECB.SetComponent(i, under, new UnderAttackColor { Value = new float4(1f, 1f, 1f, 1f) });
+                // 2) 重置所有特效激活标志
+                a.lossPoolAttribute.frostActive = false;
+                a.lossPoolAttribute.fireActive = false;
+                a.lossPoolAttribute.poisonActive = false;
+                a.lossPoolAttribute.lightningActive = false;
+                a.lossPoolAttribute.shadowActive = false;
+                a.lossPoolAttribute.bleedActive = false;
+
+                // 3) 找出所有池中值最大的那一个
+                float maxVal = a.lossPoolAttribute.frostPool;
+                int maxIdx = 0; // 0=frost,1=fire,2=poison,3=lightning,4=shadow,5=bleed
+
+                if (a.lossPoolAttribute.firePool > maxVal) { maxVal = a.lossPoolAttribute.firePool; maxIdx = 1; }
+                if (a.lossPoolAttribute.poisonPool > maxVal) { maxVal = a.lossPoolAttribute.poisonPool; maxIdx = 2; }
+                if (a.lossPoolAttribute.lightningPool > maxVal) { maxVal = a.lossPoolAttribute.lightningPool; maxIdx = 3; }
+                if (a.lossPoolAttribute.shadowPool > maxVal) { maxVal = a.lossPoolAttribute.shadowPool; maxIdx = 4; }
+                if (a.lossPoolAttribute.bleedPool > maxVal) { maxVal = a.lossPoolAttribute.bleedPool; maxIdx = 5; }
+
+                // 4) 激活对应的特效，并将该池的计时器重置为 3 秒
+                const float effectDuration = 3f;
+                switch (maxIdx)
+                {
+                    case 0:
+                        a.lossPoolAttribute.frostActive = true;
+                        a.lossPoolAttribute.frostTimer = effectDuration;
+                        break;
+                    case 1:
+                        a.lossPoolAttribute.fireActive = true;
+                        a.lossPoolAttribute.fireTimer = effectDuration;
+                        break;
+                    case 2:
+                        a.lossPoolAttribute.poisonActive = true;
+                        a.lossPoolAttribute.poisonTimer = effectDuration;
+                        break;
+                    case 3:
+                        a.lossPoolAttribute.lightningActive = true;
+                        a.lossPoolAttribute.lightningTimer = effectDuration;
+                        break;
+                    case 4:
+                        a.lossPoolAttribute.shadowActive = true;
+                        a.lossPoolAttribute.shadowTimer = effectDuration;
+                        break;
+                    case 5:
+                        a.lossPoolAttribute.bleedActive = true;
+                        a.lossPoolAttribute.bleedTimer = effectDuration;
+                        break;
+
+                }
+
+            }
+
+            // 9) 保存新的 RNG 状态
+            a.defenseAttribute.rngState = rnd.state;
+            ECB.SetComponent(i, hero, a);
+
+
+
+
+        }
+
+
+    }
+}
+
+----- 新的子碰撞体获取
+  [BurstCompile]
+    public unsafe struct CollectEnemyBaseHitsJob : ITriggerEventsJob
+    {
+        [ReadOnly] public ComponentLookup<MonsterAttributeCmpt> MonsterLookup;
+        [ReadOnly] public ComponentLookup<HeroAttributeCmpt> HeroLookup;
+        [ReadOnly] public ComponentLookup<PhysicsCollider> ColliderLookup;
+        [ReadOnly] public BufferLookup<PhysicsColliderKeyEntityPair> PhysicsColliderKey;
+
+        public NativeQueue<TriggerPairData>.ParallelWriter HitQueue;
+
+        public void Execute(TriggerEvent e)
+        {
+            var a = e.EntityA;
+            var b = e.EntityB;
+            bool aIsMonster = MonsterLookup.HasComponent(a);
+            bool bIsMonster = MonsterLookup.HasComponent(b);
+            bool aIsHero = HeroLookup.HasComponent(a);
+            bool bIsHero = HeroLookup.HasComponent(b);
+
+            foreach (var item in PhysicsColliderKey[a])
+            { 
+            
+            item.Key
+            
+            }
+
+            // 情况1：怪物 A 撞到 英雄 B
+            if (aIsMonster && bIsHero)
+            {
+                // 拿到 Hero 的 PhysicsCollider Blob
+                var blobRefB = ColliderLookup[b].Value;
+                var colB = blobRefB.Value;
+
+                if (colB.Type == ColliderType.Compound)
+                {
+                    // 对复合体，用 GetChild 拆子碰撞体
+                    var keyB = e.ColliderKeyB;
+                    if (colB.GetChild(ref keyB, out ChildCollider childB)
+                        && childB.Collider->Type == ColliderType.Capsule)
+                    {
+                        HitQueue.Enqueue(new TriggerPairData { EntityA = a, EntityB = b });
+                    }
+                }
+                else if (colB.Type == ColliderType.Capsule)
+                {
+                    // 单一胶囊直接算命中
+                    HitQueue.Enqueue(new TriggerPairData { EntityA = a, EntityB = b });
+                }
+            }
+            // 情况2：怪物 B 撞到 英雄 A
+            else if (bIsMonster && aIsHero)
+            {
+                var blobRefA = ColliderLookup[a].Value;
+                var colA = blobRefA.Value;
+
+                if (colA.Type == ColliderType.Compound)
+                {
+                    var keyA = e.ColliderKeyA;
+                    if (colA.GetChild(ref keyA, out ChildCollider childA)
+                        && childA.Collider->Type == ColliderType.Capsule)
+                    {
+                        HitQueue.Enqueue(new TriggerPairData { EntityA = b, EntityB = a });
+                    }
+                }
+                else if (colA.Type == ColliderType.Capsule)
+                {
+                    HitQueue.Enqueue(new TriggerPairData { EntityA = b, EntityB = a });
+                }
+            }
+        }
+    }
+
+-------------------------大改前源码
+using Unity.Burst;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using Unity.Mathematics;
+using Unity.Physics;
+using Unity.Transforms;
+//用于计算 怪物碰撞及基础攻击的buffer，英雄身上也添加了<hitRecord>默认周期为1秒
+namespace BlackDawn.DOTS
+{
+    [BurstCompile]
+    [RequireMatchingQueriesForUpdate]
+    [UpdateAfter(typeof(ActionSystem))]
+    public partial struct BaseDamageSystem : ISystem
+    {
+
+        private ComponentLookup<MonsterAttributeCmpt> _monsterAttrLookup;
+        //部分参数用于寻找到英雄结构体进行计算
+        private ComponentLookup<HeroAttributeCmpt> _heroAttrLookup;
+        //打击记录
+        private BufferLookup<HeroHitRecord> _recordBufferLookup;
+
+        private ComponentLookup<PhysicsCollider> _physicsCollider;
+
+
+        private BufferLookup<PhysicsColliderKeyEntityPair> _physicsColliderKey;
+
+        void OnCreate(ref SystemState state)
+        {
+            //更新控制标签
+            state.RequireForUpdate<EnableEnemyBaseDamageSystemTag>();
+            _monsterAttrLookup = SystemAPI.GetComponentLookup<MonsterAttributeCmpt>(true);
+            _heroAttrLookup = SystemAPI.GetComponentLookup<HeroAttributeCmpt>(true);
+            _recordBufferLookup = SystemAPI.GetBufferLookup<HeroHitRecord>(true);
+            _physicsCollider = SystemAPI.GetComponentLookup<PhysicsCollider>(true);
+            _physicsColliderKey = SystemAPI.GetBufferLookup<PhysicsColliderKeyEntityPair>(true);
+            
+           
+     
+
+        }
+
+
+        [BurstCompile]
+        void OnUpdate(ref SystemState state)
+
+        {
+            _monsterAttrLookup.Update(ref state);
+            _heroAttrLookup.Update(ref state);
+            _recordBufferLookup.Update(ref state);
+            _physicsCollider.Update(ref state);
+            _physicsColliderKey.Update(ref state);  
+            
+
+            // 1) 拿到 PhysicsWorldSingleton
+            var physicsWorldSingleton = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
+
+            // 1. 收集“怪物 英雄”触发对
+            var queue = new NativeQueue<TriggerPairData>(Allocator.TempJob);
+            var sim = SystemAPI.GetSingleton<SimulationSingleton>();
+
+            //调度碰撞job
+            state.Dependency = new CollectEnemyBaseHitsJob
+            {
+                HitQueue = queue.AsParallelWriter(),
+                HeroLookup = _heroAttrLookup,
+                MonsterLookup = _monsterAttrLookup,
+                ColliderLookup =_physicsCollider,
+                PhysicsColliderKey = _physicsColliderKey,
+              //  PhysicsWorld = physicsWorldSingleton,              
+
+            }.Schedule(sim, state.Dependency);
+            state.Dependency.Complete();
+
+
+            //第二步 检测碰撞
+            var hits = queue.ToArray(Allocator.TempJob);
+            state.Dependency = queue.Dispose(state.Dependency);
+
+            var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            var ecbWriter = ecb.AsParallelWriter();
+            state.Dependency = new ApplyEnemyBaseDamageJob
+            {
+                ECB = ecbWriter,
+                AttrLookup = _heroAttrLookup,
+                HitArray = hits,
+                MonsterAttrLookup = _monsterAttrLookup,
+                RecordBufferLookup = _recordBufferLookup,
+                
+            }
+            .Schedule(hits.Length, 64, state.Dependency);
+
+
+            state.Dependency.Complete();
+            hits.Dispose();
+
+            // 3. 回放并清理
+            ecb.Playback(state.EntityManager);
+            ecb.Dispose();
+
+
+
+
+
+
+
+
+        }
+
+
+
+
+        void OnDestory(ref SystemState state) { }
+
+    }
+
+
+    /// <summary>
+    /// 收集所有“英雄⇄怪物”触发事件，只 enqueue 英雄与怪物组合
+    /// </summary>
+
+
+    [BurstCompile]
+    public unsafe struct CollectEnemyBaseHitsJob : ITriggerEventsJob
+    {
+        [ReadOnly] public ComponentLookup<MonsterAttributeCmpt> MonsterLookup;
+        [ReadOnly] public ComponentLookup<HeroAttributeCmpt> HeroLookup;
+        [ReadOnly] public ComponentLookup<PhysicsCollider> ColliderLookup;
+        [ReadOnly] public BufferLookup<PhysicsColliderKeyEntityPair> PhysicsColliderKey;
+
+        public NativeQueue<TriggerPairData>.ParallelWriter HitQueue;
+
+        public void Execute(TriggerEvent e)
+        {
+            var a = e.EntityA;
+            var b = e.EntityB;
+            bool aIsMonster = MonsterLookup.HasComponent(a);
+            bool bIsMonster = MonsterLookup.HasComponent(b);
+            bool aIsHero = HeroLookup.HasComponent(a);
+            bool bIsHero = HeroLookup.HasComponent(b);
+
+            foreach (var item in PhysicsColliderKey[a])
+            { 
+            
+            item.Key
+            
+            }
+
+            // 情况1：怪物 A 撞到 英雄 B
+            if (aIsMonster && bIsHero)
+            {
+                // 拿到 Hero 的 PhysicsCollider Blob
+                var blobRefB = ColliderLookup[b].Value;
+                var colB = blobRefB.Value;
+
+                if (colB.Type == ColliderType.Compound)
+                {
+                    // 对复合体，用 GetChild 拆子碰撞体
+                    var keyB = e.ColliderKeyB;
+                    if (colB.GetChild(ref keyB, out ChildCollider childB)
+                        && childB.Collider->Type == ColliderType.Capsule)
+                    {
+                        HitQueue.Enqueue(new TriggerPairData { EntityA = a, EntityB = b });
+                    }
+                }
+                else if (colB.Type == ColliderType.Capsule)
+                {
+                    // 单一胶囊直接算命中
+                    HitQueue.Enqueue(new TriggerPairData { EntityA = a, EntityB = b });
+                }
+            }
+            // 情况2：怪物 B 撞到 英雄 A
+            else if (bIsMonster && aIsHero)
+            {
+                var blobRefA = ColliderLookup[a].Value;
+                var colA = blobRefA.Value;
+
+                if (colA.Type == ColliderType.Compound)
+                {
+                    var keyA = e.ColliderKeyA;
+                    if (colA.GetChild(ref keyA, out ChildCollider childA)
+                        && childA.Collider->Type == ColliderType.Capsule)
+                    {
+                        HitQueue.Enqueue(new TriggerPairData { EntityA = b, EntityB = a });
+                    }
+                }
+                else if (colA.Type == ColliderType.Capsule)
+                {
+                    HitQueue.Enqueue(new TriggerPairData { EntityA = b, EntityB = a });
+                }
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+    /// <summary>
+    /// 敌人近战伤害与英雄的碰撞计算，这里简化逻辑，近战、远程怪，碰到就会掉血
+    /// </summary>
+    [BurstCompile]
+    struct ApplyEnemyBaseDamageJob : IJobParallelFor
+    {
+        public EntityCommandBuffer.ParallelWriter ECB;
+        //这里就是计算英雄自身扣血逻辑
+        [ReadOnly] public ComponentLookup<HeroAttributeCmpt> AttrLookup;
+        // [ReadOnly] public BufferLookup<LinkedEntityGroup> LinkedLookup;
+        [ReadOnly] public NativeArray<TriggerPairData> HitArray;
+        [ReadOnly] public ComponentLookup<MonsterAttributeCmpt> MonsterAttrLookup;
+        [ReadOnly] public BufferLookup<HeroHitRecord> RecordBufferLookup;
+
+        public void Execute(int i)
+        {
+            // 1) 拿到碰撞实体对
+            var pair = HitArray[i];
+            Entity monster = pair.EntityA;
+            Entity hero = pair.EntityB;
+
+
+            if (!MonsterAttrLookup.HasComponent(monster))
+            {
+                monster = pair.EntityB;
+                hero = pair.EntityA;
+            }
+
+            // 拿到伤害的记录缓冲
+            var buffer = RecordBufferLookup[hero];
+
+            // 先检查是否已经记录过这个 target
+            for (int j = 0; j < buffer.Length; j++)
+            {
+                if (buffer[j].other == monster)
+                {
+                    return;
+                }
+            }
+            // 只有没记录过，才加进来,这里要注意并行写入限制，使用并行写入方法         
+            ECB.AppendToBuffer(i, hero, new HeroHitRecord { other = monster });
+
+
+
+            // 2) 读取组件 & 随机数
+            var h = MonsterAttrLookup[monster];
+            var a = AttrLookup[hero];
+            var d = h.attackAttribute;
+            var rnd = new Unity.Mathematics.Random(a.defenseAttribute.rngState);
+
+            // 3) 闪避判定
+            if (rnd.NextFloat() < a.defenseAttribute.dodge)
+            {
+                // DevDebug.Log("随机数"+rnd.NextFloat()+"闪避率"+a.defenseAttribute.dodge);
+                a.defenseAttribute.rngState = rnd.state;
+                ECB.SetComponent(i, hero, a);
+                return;
+            }
+            // DevDebug.Log("执行多线程2");
+
+            // 4) 计算缩减后的“瞬时伤害”和“DOT伤害”
+            float instTotal = 0f, dotTotal = 0f;
+
+            // 物理子计算
+            float CalcPhysicalSub(float armor, float breakVal, float pen)
+            {
+                float eff = armor - (breakVal + math.max(0f, 1f - pen) * armor);
+                return eff / (eff + 100f);
+            }
+
+            // 元素子计算
+            float CalcElementSub(float res, float breakVal, float pen)
+            {
+                float eff = res - (breakVal + math.max(0f, 1f - pen) * res);
+                return eff / (eff + 50f);
+            }
+
+            // 物理
+            float physSub = CalcPhysicalSub(
+                a.defenseAttribute.armor,
+                h.attackAttribute.armorBreak,
+                h.attackAttribute.armorPenetration);
+            instTotal += d.attackPower * (1f - physSub);
+
+            var dotPhy = rnd.NextFloat() < d.dotProcChance.bleedChance
+                ? d.attackPower * (1f - physSub) * 0.3f
+                : 0f;
+            dotTotal += dotPhy;
+
+            // 火
+            float fireSub = CalcElementSub(
+                a.defenseAttribute.resistances.fire,
+                h.attackAttribute.elementalBreak,
+                h.attackAttribute.elementalPenetration);
+            instTotal += d.elementalDamage.fireDamage * (1f - fireSub);
+
+            var dotFire = rnd.NextFloat() < d.dotProcChance.fireChance
+                ? d.elementalDamage.fireDamage * (1f - fireSub) * 0.3f
+                : 0f;
+            dotTotal += dotFire;
+
+            // 冰
+            float frostSub = CalcElementSub(
+                a.defenseAttribute.resistances.frost,
+                h.attackAttribute.elementalBreak,
+                h.attackAttribute.elementalPenetration);
+            instTotal += d.elementalDamage.frostDamage * (1f - frostSub);
+
+            var dotFrost = rnd.NextFloat() < d.dotProcChance.frostChance
+                ? d.elementalDamage.frostDamage * (1f - frostSub) * 0.3f
+                : 0f;
+            dotTotal += dotFrost;
+
+            // 闪电
+            float lightSub = CalcElementSub(
+                a.defenseAttribute.resistances.lightning,
+                h.attackAttribute.elementalBreak,
+                h.attackAttribute.elementalPenetration);
+            instTotal += d.elementalDamage.lightningDamage * (1f - lightSub);
+
+            var dotLightning = rnd.NextFloat() < d.dotProcChance.lightningChance
+                ? d.elementalDamage.lightningDamage * (1f - lightSub) * 0.3f
+                : 0f;
+            dotTotal += dotLightning;
+
+            // 毒素
+            float poisonSub = CalcElementSub(
+                a.defenseAttribute.resistances.poison,
+                h.attackAttribute.elementalBreak,
+                h.attackAttribute.elementalPenetration);
+            instTotal += d.elementalDamage.poisonDamage * (1f - poisonSub);
+
+            var dotPoison = rnd.NextFloat() < d.dotProcChance.poisonChance
+                ? d.elementalDamage.poisonDamage * (1f - poisonSub) * 0.3f
+                : 0f;
+            dotTotal += dotPoison;
+
+            // 暗影
+            float shadowSub = CalcElementSub(
+                a.defenseAttribute.resistances.shadow,
+                h.attackAttribute.elementalBreak,
+                h.attackAttribute.elementalPenetration);
+            instTotal += d.elementalDamage.shadowDamage * (1f - shadowSub);
+
+            var dotShadow = rnd.NextFloat() < d.dotProcChance.shadowChance
+                ? d.elementalDamage.shadowDamage * (1f - shadowSub) * 0.3f
+                : 0f;
+            dotTotal += dotShadow;
+
+
+            // 5) 池化反应（基于 raw dmg，不受任何减免，已闪避过滤）
+            //dot dot伤害也能堆叠反应池
+
+            float origHp = a.defenseAttribute.originalHp;
+            const float mult = 5f, cap = 200f;
+            float Gain(float raw, float dot) => math.min(((raw + dot) / origHp) * 100f * mult, cap);
+
+            a.lossPoolAttribute.firePool = math.min(a.lossPoolAttribute.firePool + Gain(d.elementalDamage.fireDamage, dotFire), cap);
+            a.lossPoolAttribute.frostPool = math.min(a.lossPoolAttribute.frostPool + Gain(d.elementalDamage.frostDamage, dotFrost), cap);
+            a.lossPoolAttribute.lightningPool = math.min(a.lossPoolAttribute.lightningPool + Gain(d.elementalDamage.lightningDamage, dotFrost), cap);
+            a.lossPoolAttribute.poisonPool = math.min(a.lossPoolAttribute.poisonPool + Gain(d.elementalDamage.poisonDamage, dotPoison), cap);
+            a.lossPoolAttribute.shadowPool = math.min(a.lossPoolAttribute.shadowPool + Gain(d.elementalDamage.shadowDamage, dotShadow), cap);
+            //流血池只使用25%物理伤害计算
+            a.lossPoolAttribute.bleedPool = math.min(a.lossPoolAttribute.bleedPool + Gain(d.attackPower, dotPhy), cap) * 0.25f;
+
+
+            // 6) 格挡判定（仅对瞬时）,随机减免20%-80%伤害
+            if (rnd.NextFloat() < a.defenseAttribute.block)
+            {
+                float br = math.lerp(0.2f, 0.8f, rnd.NextFloat());
+                instTotal *= (1f - br);
+            }
+
+            // 7) 固定减伤（对瞬时+DOT）
+            var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//固定随机减伤,0-50的固定随机减伤，模拟伤害波动
+            float finalDamage = (instTotal + dotTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd);
+
+            // 8) 应用扣血 & 写回
+            a.defenseAttribute.hp = math.max(0f, a.defenseAttribute.hp - finalDamage);
+
+            //攻击颜色变化状态
+            // 9) 受击高亮
+            if (true)
+            {
+                //var under = LinkedLookup[target][1].Value;
+                a.lossPoolAttribute.attackTimer = 0.1f;
+                //  ECB.SetComponent(i, under, new UnderAttackColor { Value = new float4(1f, 1f, 1f, 1f) });
+                // 2) 重置所有特效激活标志
+                a.lossPoolAttribute.frostActive = false;
+                a.lossPoolAttribute.fireActive = false;
+                a.lossPoolAttribute.poisonActive = false;
+                a.lossPoolAttribute.lightningActive = false;
+                a.lossPoolAttribute.shadowActive = false;
+                a.lossPoolAttribute.bleedActive = false;
+
+                // 3) 找出所有池中值最大的那一个
+                float maxVal = a.lossPoolAttribute.frostPool;
+                int maxIdx = 0; // 0=frost,1=fire,2=poison,3=lightning,4=shadow,5=bleed
+
+                if (a.lossPoolAttribute.firePool > maxVal) { maxVal = a.lossPoolAttribute.firePool; maxIdx = 1; }
+                if (a.lossPoolAttribute.poisonPool > maxVal) { maxVal = a.lossPoolAttribute.poisonPool; maxIdx = 2; }
+                if (a.lossPoolAttribute.lightningPool > maxVal) { maxVal = a.lossPoolAttribute.lightningPool; maxIdx = 3; }
+                if (a.lossPoolAttribute.shadowPool > maxVal) { maxVal = a.lossPoolAttribute.shadowPool; maxIdx = 4; }
+                if (a.lossPoolAttribute.bleedPool > maxVal) { maxVal = a.lossPoolAttribute.bleedPool; maxIdx = 5; }
+
+                // 4) 激活对应的特效，并将该池的计时器重置为 3 秒
+                const float effectDuration = 3f;
+                switch (maxIdx)
+                {
+                    case 0:
+                        a.lossPoolAttribute.frostActive = true;
+                        a.lossPoolAttribute.frostTimer = effectDuration;
+                        break;
+                    case 1:
+                        a.lossPoolAttribute.fireActive = true;
+                        a.lossPoolAttribute.fireTimer = effectDuration;
+                        break;
+                    case 2:
+                        a.lossPoolAttribute.poisonActive = true;
+                        a.lossPoolAttribute.poisonTimer = effectDuration;
+                        break;
+                    case 3:
+                        a.lossPoolAttribute.lightningActive = true;
+                        a.lossPoolAttribute.lightningTimer = effectDuration;
+                        break;
+                    case 4:
+                        a.lossPoolAttribute.shadowActive = true;
+                        a.lossPoolAttribute.shadowTimer = effectDuration;
+                        break;
+                    case 5:
+                        a.lossPoolAttribute.bleedActive = true;
+                        a.lossPoolAttribute.bleedTimer = effectDuration;
+                        break;
+
+                }
+
+            }
+
+            // 9) 保存新的 RNG 状态
+            a.defenseAttribute.rngState = rnd.state;
+            ECB.SetComponent(i, hero, a);
+
+
+
+
+        }
+
+
+    }
+}
+////文字渲染部分 -- 整体渲染非分布渲染
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+/// <summary>
+/// 本脚本一次性并排渲染固定 6 位字符（字符串长度必须为 6），
+/// 并在 duration 秒后渐隐 + 飘动消失。
+/// 支持16x16正方形图集自动映射，无需手填字典！
+/// </summary>
+public class DamageTextMono : MonoBehaviour
+{
+    [Header("Prefab & 材质设置")]
+    public GameObject quadPrefab;
+    public Material atlasMaterial;
+
+    [Header("Atlas 切片行列")]
+    [Tooltip("Atlas 水平方向分为几列，正方形图集为16")]
+    public int atlasCols = 16;
+    [Tooltip("Atlas 垂直方向分为几行，正方形图集为16")]
+    public int atlasRows = 16;
+
+    [Header("字符渲染参数")]
+    public int charCount = 6;
+    public float charUnitSize = 1f;
+    public string text6 = "000000";
+    public float duration = 1f;
+    public int testNum = 100;
+
+    // 自动填充的字符字典
+    private Dictionary<char, Vector2Int> charToGrid;
+    private GameObject[] instances;
+    private MaterialPropertyBlock[] mpbs;
+    private Vector2 uvScale;
+
+    // 字符顺序严格与你图集一致，每行16字符
+    private readonly string[] atlasRowsChars = new string[]
+    {
+        " !\"#$%&'()*+,-./",  // 第1行（首格空）
+        "0123456789:;<=>?",   // 第2行（16个，填满）
+        "@ABCDEFGHIJKLMNO",   // 第3行（16个，填满）
+        "PQRSTUVWXYZ[\\]^-",  // 第4行（16个，填满，\\表示1个\）
+        "`abcdefghijklmno",   // 第5行（无前导空格，16个，填满）
+        "pqrstuvwxyz{|}~ ",   // 第6行（末格空，16个，填满）
+        "                ",   // 第7~16行全空
+        "                ",
+        "                ",
+        "                ",
+        "                ",
+        "                ",
+        "                ",
+        "                ",
+        "                ",
+        "                "
+    };
+
+    void Awake()
+    {
+        // 自动填充 charToGrid，首格和第6行末格特殊空，其它空格只作占位
+        charToGrid = new Dictionary<char, Vector2Int>();
+        int rows = atlasRowsChars.Length;
+        int cols = 16;
+
+        for (int row = 0; row < rows; ++row)
+        {
+            string line = atlasRowsChars[row].PadRight(cols, ' ');
+            for (int col = 0; col < cols; ++col)
+            {
+                char c = line[col];
+                // 跳过第1行首格 [0,0] 和第6行末格 [15,5]
+                if ((row == 0 && col == 0) || (row == 5 && col == 15))
+                    continue;
+                if (c == ' ') continue; // 其它空格只作占位不映射
+                charToGrid[c] = new Vector2Int(col, row);
+            }
+        }
+
+        // 预计算 uvScale
+        uvScale = new Vector2(1f / atlasCols, 1f / atlasRows);
+
+        // 实例化 charCount 个 Quad
+        instances = new GameObject[charCount];
+        mpbs = new MaterialPropertyBlock[charCount];
+        for (int i = 0; i < charCount; i++)
+        {
+            instances[i] = Instantiate(quadPrefab, transform);
+            instances[i].name = $"Char_{i}";
+            instances[i].SetActive(false);
+
+            MeshRenderer mr = instances[i].GetComponent<MeshRenderer>();
+            mr.sharedMaterial = atlasMaterial;
+            mpbs[i] = new MaterialPropertyBlock();
+            mr.GetPropertyBlock(mpbs[i]);
+        }
+    }
+
+    public void RenderSixChars(string _text6, Vector3 worldPos, float _duration = 1f)
+    {
+        if (string.IsNullOrEmpty(_text6) || _text6.Length != charCount)
+        {
+            Debug.LogError($"RenderSixChars：传入字符串长度必须等于 {charCount}，当前长度 = {_text6?.Length}");
+            return;
+        }
+
+        text6 = _text6;
+        duration = _duration;
+
+        float totalWidth = charCount * charUnitSize;
+        float startX = worldPos.x - totalWidth * 0.5f + (charUnitSize * 0.5f);
+        float yPos = worldPos.y;
+        float zPos = worldPos.z;
+
+        for (int i = 0; i < charCount; i++)
+        {
+            char c = text6[i];
+            if (!charToGrid.TryGetValue(c, out Vector2Int grid))
+            {
+                Debug.LogWarning($"[DamageTextMono] 字符 '{c}' 未在 charToGrid 中配置，渲染时跳过。index:{i}");
+                instances[i].SetActive(false);
+                continue;
+            }
+          //  Debug.Log($"[DamageTextMono] 字符 '{c}' => atlas列:{grid.x} 行:{grid.y} (index:{i})");
+
+            int col = grid.x;
+            int row = grid.y;
+            Vector2 uvOffset = new Vector2(
+                col * uvScale.x,
+                1f - (row + 1) * uvScale.y
+            );
+
+            MeshRenderer mr = instances[i].GetComponent<MeshRenderer>();
+            var mpb = mpbs[i];
+            mpb.Clear();
+            mpb.SetTexture("_MainTex", atlasMaterial.GetTexture("_MainTex"));
+            mpb.SetVector("_UVScale", uvScale);
+            mpb.SetVector("_UVOffset", uvOffset);
+            mpb.SetColor("_Color", Color.white);
+            mr.SetPropertyBlock(mpb);
+
+            Vector3 charPos = new Vector3(startX + i * charUnitSize, yPos, zPos);
+            instances[i].transform.position = charPos;
+            instances[i].transform.localScale = Vector3.one * charUnitSize;
+            instances[i].SetActive(true);
+        }
+
+
+        StopAllCoroutines();
+        StartCoroutine(AnimateAndHide());
+    }
+
+    private IEnumerator AnimateAndHide()
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            float alpha = Mathf.Clamp01(1f - t);
+
+            for (int i = 0; i < charCount; i++)
+            {
+                if (!instances[i].activeSelf) continue;
+
+                MeshRenderer mr = instances[i].GetComponent<MeshRenderer>();
+                var mpb = mpbs[i];
+                Color baseColor = mpb.GetColor("_Color");
+                baseColor.a = alpha;
+                mpb.SetColor("_Color", baseColor);
+                mr.SetPropertyBlock(mpb);
+
+                instances[i].transform.position += Vector3.up * (Time.deltaTime * 1f);
+            }
+
+            yield return null;
+        }
+
+        for (int i = 0; i < charCount; i++)
+        {
+            instances[i].SetActive(false);
+        }
+    }
+
+    // 调试用：运行时按P触发一次渲染
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            int rnd = Random.Range(0, 999999);
+            string str6 = rnd.ToString("D6");
+            string str = "123.4K";
+            RenderSixChars(str, transform.position, duration);
+        }
+    }
+}
+
+
+//----伤害飘字的普通foreach 渲染
+
+     //伤害漂字的ECS 渲染
+            foreach (var (parent, textM,mat,entiy) in SystemAPI.Query<RefRO<Parent>,RefRW<MonsterTempDamageText>, DamageTextMaterialAspect>().WithEntityAccess())
+            {
+               
+                //这里利用开关的方式可以增加查询效率，不用每帧去判断
+                    var text = textM.ValueRW;
+                   
+              
+                   // DevDebug.LogError("写入伤害渲染参数");
+                    var damageValue = text.hurtVlue;
+                    var fs = FormatDamageValue(damageValue);
+
+                    // 2. 右对齐到 6 个字符，左补下划线 '_'
+                    int fsLen = fs.Length;
+                    int startIndex = math.max(0, 6 - fsLen);
+
+                    // 3. 依次写入 mat.Char1~Char6
+                    for (int i = 0; i < 6; i++)
+                    {
+                        char c;
+                        if (i < startIndex)
+                        {
+                            c = '_';
+                        }
+                        else
+                        {
+                            // fs 索引返回一个 byte，需要强制转换为 char
+                            c = (char)fs[i - startIndex];
+                        }
+
+
+                        // Burst 友好地查 index
+                        int idx = GetCharIndex(c);
+
+                        // 拿到 UVRect
+                        float4 uv = _UVTable[idx];
+
+
+                        // 写入对应的材质属性（通过 Aspect）
+                        switch (i)
+                        {
+                            case 0: mat.Char1.ValueRW.Value = uv; break;
+                            case 1: mat.Char2.ValueRW.Value = uv; break;
+                            case 2: mat.Char3.ValueRW.Value = uv; break;
+                            case 3: mat.Char4.ValueRW.Value = uv; break;
+                            case 4: mat.Char5.ValueRW.Value = uv; break;
+                            case 5: mat.Char6.ValueRW.Value = uv; break;
+                        }
+                    }
+                    switch (text.damageTriggerType)
+                    {
+                        case DamageTriggerType.NormalAttack:
+                            // 文本颜色、偏移、开始时间、活动时长、总时长
+                            mat.TextColor.ValueRW.Value = new float4(1f, 1f, 1f, 1f);
+                            mat.Offset.ValueRW.Value = new float2(0f, 1f);
+                            mat.StartTime.ValueRW.Value = (float)currentTime;
+                
+                            // 如果 NormalAttack 有特殊 Scale，再单独写；否则默认 Scale=1
+                            mat.Scale.ValueRW.Value = 1f;
+                            break;
+
+                        case DamageTriggerType.Vulnerable:
+                            mat.TextColor.ValueRW.Value = new float4(0f, 1f, 1f, 1f);
+                            mat.Offset.ValueRW.Value = new float2(0f, 1f);
+                            mat.StartTime.ValueRW.Value = (float)currentTime;
+     
+                            mat.Scale.ValueRW.Value = 1f;
+                            break;
+
+                        case DamageTriggerType.CriticalStrike:
+                            mat.TextColor.ValueRW.Value = new float4(1f, 1f, 1f, 1f);
+                            mat.Offset.ValueRW.Value = new float2(0f, 0.5f);
+                            mat.StartTime.ValueRW.Value = (float)currentTime;
+
+                            mat.Scale.ValueRW.Value = 1.5f;
+                            break;
+
+                        case DamageTriggerType.VulnerableCritical:
+                            mat.TextColor.ValueRW.Value = new float4(0f, 1f, 1f, 1f);
+                            mat.Offset.ValueRW.Value = new float2(0f, 0.5f);
+                            mat.StartTime.ValueRW.Value = (float)currentTime;
+     
+                            mat.Scale.ValueRW.Value = 1.5f;
+                            break;
+
+                        case DamageTriggerType.Suppression:
+                            mat.TextColor.ValueRW.Value = new float4(1f, 0.85f, 0f, 1f);
+                            mat.Offset.ValueRW.Value = new float2(0f, 1.2f);
+                            mat.StartTime.ValueRW.Value = (float)currentTime;
+      
+                            mat.Scale.ValueRW.Value = 1.2f;
+                            break;
+
+                        case DamageTriggerType.SuppressionVulnerable:
+                            mat.TextColor.ValueRW.Value = new float4(0f, 1f, 1f, 1f);
+                            mat.Offset.ValueRW.Value = new float2(0f, 1.2f);
+                            mat.StartTime.ValueRW.Value = (float)currentTime;
+            
+                            mat.Scale.ValueRW.Value = 1.2f;
+                            break;
+
+                        case DamageTriggerType.SuppressionCritical:
+                            mat.TextColor.ValueRW.Value = new float4(1f, 0.85f, 0f, 1f);
+                            mat.Offset.ValueRW.Value = new float2(0f, 0.7f);
+                            mat.StartTime.ValueRW.Value = (float)currentTime;
+      
+                            mat.Scale.ValueRW.Value = 1.5f;
+                            break;
+
+                        case DamageTriggerType.SuppressionVulnCrit:
+                            mat.TextColor.ValueRW.Value = new float4(1f, 0.5f, 0f, 1f);
+                            mat.Offset.ValueRW.Value = new float2(0f, 0.4f);
+                            mat.StartTime.ValueRW.Value = (float)currentTime;
+                            mat.Scale.ValueRW.Value = 1.8f;
+                            break;
+                    }
+
+               ecb.SetComponentEnabled<MonsterTempDamageText>(entiy, false);
+
+       
+            }
+
+
+
+            ///-- 普通情况下的渲染
+              foreach (var (parent, mat) in SystemAPI.Query<RefRO<Parent>, RenderParameterAspect>())
+            {
+                var monster = parent.ValueRO.Value;
+                var attr = _monsterLossPoolattrLookup[monster];
+                var de = _monsterDefenseAttrLookup[monster];
+                ref var pools = ref attr;
+                ref var defense = ref de;
+
+                // 1) 受击高亮
+                pools.attackTimer = math.max(0f, pools.attackTimer - dt);
+                if (pools.attackTimer < 0.01f)
+                    mat.UnderAttack.ValueRW.Value = new float4(0f, 0f, 0f, 0f);
+                else mat.UnderAttack.ValueRW.Value = new float4(1f, 1f, 1f, 1f);
+                // 2) 冰霜特效
+                if (pools.frostActive)
+                {
+                    pools.frostTimer = math.max(0f, pools.frostTimer - dt);
+                    float t = math.saturate(pools.frostPool / 100f);
+                    mat.Freeze.ValueRW.Value = t;
+                    mat.Fresnel.ValueRW.Value = new float4(0f, 1f, 1f, 1);
+                    if (pools.frostTimer == 0f&&pools.frostPool>=0) pools.frostPool -= 100 * dt;
+                }
+
+                // 3) 火焰特效
+                if (pools.fireActive)
+                {
+                    pools.fireTimer = math.max(0f, pools.fireTimer - dt);
+                    float t = math.saturate(pools.firePool / 100f);
+                    if (t >= 1)
+                    {
+
+                        ToggleChildActive(monster, 2, _entityManager, ecb, true);
+                    }
+                    else
+                        ToggleChildActive(monster, 2, _entityManager, ecb, false);
+
+                    mat.Fire.ValueRW.Value = t;
+                    if (pools.fireTimer == 0f && pools.firePool >= 0) pools.firePool -= 100 * dt;
+                }
+
+                // 4) 毒素特效
+                if (pools.poisonActive)
+                {
+                    pools.poisonTimer = math.max(0f, pools.poisonTimer - dt);
+                    float t = math.saturate(pools.poisonPool / 100f);
+                    mat.Poisoning.ValueRW.Value = t;
+                    mat.Fresnel.ValueRW.Value = new float4(0f, 1f, 0f, 1);
+                    if (pools.poisonTimer == 0f) pools.poisonActive = false;
+                }
+
+                // 5) 闪电特效
+                if (pools.lightningActive)
+                {
+                    pools.lightningTimer = math.max(0f, pools.lightningTimer - dt);
+                    mat.Lighting.ValueRW.Value = math.saturate(pools.lightningPool / 100f);
+                    mat.Fresnel.ValueRW.Value = new float4(1f, 1f, 1f, 1);
+                    if (pools.lightningTimer == 0f) pools.lightningActive = false;
+                }
+
+                // 6) 暗影特效
+                if (pools.shadowActive)
+                {
+                    pools.shadowTimer = math.max(0f, pools.shadowTimer - dt);
+                    float t = math.saturate(pools.shadowPool / 100f);
+                    mat.DarkShadow.ValueRW.Value = t;
+                    mat.Fresnel.ValueRW.Value = new float4(1f, 0f, 1f, 1);
+                    if (pools.shadowTimer == 0f) pools.shadowActive = false;
+                }
+
+                // 7) 流血特效（驱动透明度）
+                if (pools.bleedActive)
+                {
+                    pools.bleedTimer = math.max(0f, pools.bleedTimer - dt);
+                    // mat.Alpha.ValueRW.Value = math.saturate(pools.bleedPool / 100f);
+                    if (pools.bleedTimer == 0f) pools.bleedActive = false;
+                }
+
+                //默认死亡溶解,存活时间2秒的时候溶解
+
+                if (defense.survivalTime <= 2)
+                {
+                    mat.Dissolve.ValueRW.Value = 1 - defense.survivalTime / 2;
+
+                }
+
+                // 8) 写回属性组件
+                attr = pools;
+                _monsterLossPoolattrLookup[monster] = attr;
+                de = defense;
+                _monsterDefenseAttrLookup[monster] = de;
+            }   同理 这段逻辑 也写在 job 里面 并且 毒素 暗影 闪电 流血 的逻辑都参照冰霜的逻辑
+
+
+
+            //--- 由于修改了shader的表达，原先的池判断失效
+              if (LinkedLookup.HasBuffer(target))
+            {
+                var under = LinkedLookup[target][1].Value;
+                //这里攻击高亮持续时间-0.07秒
+                l.attackTimer = 0.07f;
+                //  ECB.SetComponent(i, under, new UnderAttackColor { Value = new float4(1f, 1f, 1f, 1f) });
+                // 2) 重置所有特效激活标志
+                l.frostActive = false;
+                l.fireActive = false;
+                l.poisonActive = false;
+                l.lightningActive = false;
+                l.shadowActive = false;
+                l.bleedActive = false;
+
+                // 3) 找出所有池中值最大的那一个
+                float maxVal = l.frostPool;
+                int maxIdx = 0; // 0=frost,1=fire,2=poison,3=lightning,4=shadow,5=bleed
+
+                if (l.firePool > maxVal) { maxVal = l.firePool; maxIdx = 1; }
+                if (l.poisonPool > maxVal) { maxVal = l.poisonPool; maxIdx = 2; }
+                if (l.lightningPool > maxVal) { maxVal = l.lightningPool; maxIdx = 3; }
+                if (l.shadowPool > maxVal) { maxVal = l.shadowPool; maxIdx = 4; }
+                if (l.bleedPool > maxVal) { maxVal = l.bleedPool; maxIdx = 5; }
+
+                // 4) 激活对应的特效，并将该池的计时器重置为 3 秒
+                const float effectDuration = 3f;
+                switch (maxIdx)
+                {
+                    case 0:
+                        l.frostActive = true;
+                        l.frostTimer = effectDuration;
+                        break;
+                    case 1:
+                        l.fireActive = true;
+                        l.fireTimer = effectDuration;
+                        break;
+                    case 2:
+                        l.poisonActive = true;
+                        l.poisonTimer = effectDuration;
+                        break;
+                    case 3:
+                        l.lightningActive = true;
+                        l.lightningTimer = effectDuration;
+                        break;
+                    case 4:
+                        l.shadowActive = true;
+                        l.shadowTimer = effectDuration;
+                        break;
+                    case 5:
+                        l.bleedActive = true;
+                        l.bleedTimer = effectDuration;
+                        break;
+
+                }
+
+            }
+
+
+            //原始的池化逻辑，改用SIMD 指令集优化
+
+             //攻击颜色变化状态
+            // 9) 受击高亮
+            if (true)
+            {
+                //var under = LinkedLookup[target][1].Value;
+                a.lossPoolAttribute.attackTimer = 0.1f;
+                //  ECB.SetComponent(i, under, new UnderAttackColor { Value = new float4(1f, 1f, 1f, 1f) });
+                // 2) 重置所有特效激活标志
+                a.lossPoolAttribute.frostActive = false;
+                a.lossPoolAttribute.fireActive = false;
+                a.lossPoolAttribute.poisonActive = false;
+                a.lossPoolAttribute.lightningActive = false;
+                a.lossPoolAttribute.shadowActive = false;
+                a.lossPoolAttribute.bleedActive = false;
+
+                // 3) 找出所有池中值最大的那一个
+                float maxVal = a.lossPoolAttribute.frostPool;
+                int maxIdx = 0; // 0=frost,1=fire,2=poison,3=lightning,4=shadow,5=bleed
+
+                if (a.lossPoolAttribute.firePool > maxVal) { maxVal = a.lossPoolAttribute.firePool; maxIdx = 1; }
+                if (a.lossPoolAttribute.poisonPool > maxVal) { maxVal = a.lossPoolAttribute.poisonPool; maxIdx = 2; }
+                if (a.lossPoolAttribute.lightningPool > maxVal) { maxVal = a.lossPoolAttribute.lightningPool; maxIdx = 3; }
+                if (a.lossPoolAttribute.shadowPool > maxVal) { maxVal = a.lossPoolAttribute.shadowPool; maxIdx = 4; }
+                if (a.lossPoolAttribute.bleedPool > maxVal) { maxVal = a.lossPoolAttribute.bleedPool; maxIdx = 5; }
+
+                // 4) 激活对应的特效，并将该池的计时器重置为 3 秒
+                const float effectDuration = 3f;
+                switch (maxIdx)
+                {
+                    case 0:
+                        a.lossPoolAttribute.frostActive = true;
+                        a.lossPoolAttribute.frostTimer = effectDuration;
+                        break;
+                    case 1:
+                        a.lossPoolAttribute.fireActive = true;
+                        a.lossPoolAttribute.fireTimer = effectDuration;
+                        break;
+                    case 2:
+                        a.lossPoolAttribute.poisonActive = true;
+                        a.lossPoolAttribute.poisonTimer = effectDuration;
+                        break;
+                    case 3:
+                        a.lossPoolAttribute.lightningActive = true;
+                        a.lossPoolAttribute.lightningTimer = effectDuration;
+                        break;
+                    case 4:
+                        a.lossPoolAttribute.shadowActive = true;
+                        a.lossPoolAttribute.shadowTimer = effectDuration;
+                        break;
+                    case 5:
+                        a.lossPoolAttribute.bleedActive = true;
+                        a.lossPoolAttribute.bleedTimer = effectDuration;
+                        break;
+
+                }
+                //  --攻击表现的普通版本
+                    foreach (var evt in eventBuffer)
+    {
+        switch (evt.eventId)
+        {
+            case 0:
+                animation.isAttack =true;
+               // DevDebug.Log("动画播放开始---");
+                break;
+            case 1:
+                animation.isAttack = false;
+                break;
+            //s DevDebug.Log("动画播放结束---");
+            case 2:
+                animation.isAttack = true;
+                // DevDebug.Log("动画播放开始---");
+                break;
+            case 3:
+                animation.isAttack = false;
+                break;
+            // …其它事件                   
+        }
+    }
+    //每帧清空buffer
+    eventBuffer.Clear();
+    // 2. 如果到达攻击范围，切换到 Attack 状态
+    if (distSqr <= rangeSqr)
+    {            
+        //开启攻击模式
+        animatorAspect.RunAnimation(1, 0, 1f);
+      
+    }
+    else
+    {   if (animation.isAttack == false)
+            animatorAspect.RunAnimation(0, 0, 1);
+      
+    }
+
+    if (animation.isAttack==true)
+    {
+        agentBody.Stop();
+        //停止移动之后，进行手动转向
+        float3 dir = math.normalize(delta);
+        // 生成仅围绕 Y 轴的旋转
+        float yaw = math.atan2(dir.x, dir.z);
+        quaternion rot = quaternion.AxisAngle(math.up(), yaw);
+        transform.Rotation = rot;
+
+    }   这里 你进行SIMD 友好改造
+
+
+
+
+            //}
+            ///-- 怪物Action 系统 未攻击前的表现
+            
+    /// <summary>
+    /// 有锚点远程怪逻辑
+    /// </summary>
+    [BurstCompile]
+    public partial struct ActionRanged_Job : IJobEntity
+    {
+        public EntityCommandBuffer.ParallelWriter ECB;
+        public float Time;
+        public ScenePrefabsSingleton Prefabs;
+        public float3 HeroPosition;
+
+        public void Execute(Entity entity, EnabledRefRO<LiveMonster> live,  MonsterGainAttribute gainAttribute, ref AgentBody agentBody, AtRanged atRanged,
+            ref AnimationControllerData animation, ref DynamicBuffer<GpuEcsAnimatorEventBufferElement> eventBuffer,
+            ref LocalTransform transform, GpuEcsAnimatorAspect animatorAspect,ref  DynamicBuffer<GpuEcsCurrentAttachmentAnchorBufferElement> anchorBuffer, 
+            [ChunkIndexInQuery] int index)
+        {
+
+            float3 currentPos = transform.Position;
+            float3 destPos = agentBody.Destination;  // AgentBody 中的目标位置
+            float3 delta = destPos - currentPos;
+            delta.y = 0;
+            float distSqr = math.lengthsq(delta);
+            //这里可以根据怪物的攻击范围属性定义
+            float attackRange = gainAttribute.atkRange;
+            float rangeSqr = attackRange * attackRange;
+
+
+            foreach (var evt in eventBuffer)
+            {
+                switch (evt.eventId)
+                {
+                    //这里就是远程怪的fire
+
+                    case 0:
+                        animation.isAttack = true;
+                        // DevDebug.Log("动画播放开始---");
+                        break;
+                    case 1:
+                        animation.isAttack = false;
+                        break;
+
+                    case 2:
+                        animation.isAttack = true;                
+                        break;
+                    case 3:
+                        //开火
+                        Fire(index, transform, anchorBuffer, gainAttribute,entity);
+                        break;                
+                    case 4:
+                        animation.isAttack = false;
+                        break;
+                    case 5:
+                        break;
+                            
+                }
+            }
+            //每帧清空buffer
+            eventBuffer.Clear();
+            // 2. 如果到达攻击范围，切换到 Attack 状态
+            if (distSqr <= rangeSqr)
+            {
+                //开启攻击模式
+                animatorAspect.RunAnimation(2, 0, 1f);
+
+            }
+            else
+            {
+                if (animation.isAttack == false)
+                    animatorAspect.RunAnimation(0, 0, 1);
+
+            }
+
+            if (animation.isAttack   == true)
+            {
+                agentBody.Stop();
+                //停止移动之后，进行手动转向
+                float3 dir = math.normalize(delta);
+                // 生成仅围绕 Y 轴的旋转
+                float yaw = math.atan2(dir.x, dir.z);
+                quaternion rot = quaternion.AxisAngle(math.up(), yaw);
+                transform.Rotation = rot;
+
+            }
+
+        }
+
+        void Fire(int index,LocalTransform transform, DynamicBuffer<GpuEcsCurrentAttachmentAnchorBufferElement> anchorBuffer,MonsterGainAttribute gainAttribute,Entity entity)
+        {
+           var prob=  ECB.Instantiate(index, Prefabs.MonsterFlightProp_FrostLightningBall);
+
+            // 取第一个挂件锚点
+            var anchor = anchorBuffer[0];
+
+            float4x4 worldM = math.mul(transform.ToMatrix(), anchor.currentTransform);
+
+            ECB.SetComponent(index, prob, new LocalTransform());
+
+            // 拆位置
+            float3 pos = worldM.c3.xyz;
+            // 拆旋转（forward=col2, up=col1）
+            quaternion rot = quaternion.LookRotationSafe(worldM.c2.xyz, worldM.c1.xyz);
+            var scale = 1;
+
+
+            // 写回到新实体的 LocalTransform
+            ECB.SetComponent(index,
+                prob,
+                new LocalTransform
+                {
+                    Position = pos,
+                    Rotation = rot,
+                    Scale = scale
+                });
+
+
+            float3 diro = HeroPosition -transform.Position;      // 方向向量
+            diro = math.normalize(diro);              // 单位化
+
+            ECB.AddComponent(index, prob, new EnemyFlightProp { speed = 20 ,survivalTime=5,dir=diro, monsterRef= entity});
+            //添加记录buffer
+          var hits=  ECB.AddBuffer<HitRecord>(index, prob);
+          hits.Capacity = 5; //更新容量为5
+            //暂时不管其他伤害计算，后期怪物攻击属性也许会缩减，目前就用基础伤害代替
+            //
+
+        }
+
+
+
+
+        //-- 原始的线程过滤 不同级别的结构体
+                    // 2) 主线程过滤：只保留子碰撞体 1 (胶囊) 触发的,这里的索引？匹配不是 physicasCollider ，phy组件有大量的解算操作 不方便
+            const int DesiredLeafIndex = 1;
+            var filteredHits = new NativeList<TriggerPairData>(Allocator.TempJob);
+            var em = state.EntityManager;
+            foreach (var hit in rawHits)
+            {
+           
+                // 拿英雄实体的 KeyEntityPair Buffer
+                var buf = em.GetBuffer<PhysicsColliderKeyEntityPair>(hit.EntityB);
+                if (buf[DesiredLeafIndex].Key.Equals(hit.Key))
+                {
+                   // DevDebug.Log("Key ...：" + hit.Key + "buffer Key:" + buf[DesiredLeafIndex].Key);
+                    filteredHits.Add(hit);
+                }
+            }
+
+            ///-- 原怪物《——》英雄碰撞收集系统
+            
+            // 1) 收集所有 rawHits
+            var rawQueue = new NativeQueue<TriggerPairData>(Allocator.TempJob);
+            var sim = SystemAPI.GetSingleton<SimulationSingleton>();
+            state.Dependency = new CollectEnemyBaseHitsJob
+            {
+                MonsterLookup = _liveMonsterLookup,
+                HeroLookup = _heroAttrLookup,
+                ColliderLookup = _physicsCollider,
+                HitQueue = rawQueue.AsParallelWriter()
+            }.Schedule(sim, state.Dependency);
+            state.Dependency.Complete();
+
+            var rawHits = rawQueue.ToArray(Allocator.TempJob);
+
+
+            // 2) 主线程过滤：只保留子碰撞体 1 (胶囊) 触发的,这里的索引？匹配不是 physicasCollider ，phy组件有大量的解算操作 不方便
+            const int DesiredLeafIndex = 1;
+            var filteredHits = new NativeList<TriggerPairData>(Allocator.TempJob);
+            var em = state.EntityManager;
+            foreach (var hit in rawHits)
+            {
+           
+                // 拿英雄实体的 KeyEntityPair Buffer
+                var buf = em.GetBuffer<PhysicsColliderKeyEntityPair>(hit.EntityB);
+                if (buf[DesiredLeafIndex].Key.Equals(hit.Key))
+                {
+                   // DevDebug.Log("Key ...：" + hit.Key + "buffer Key:" + buf[DesiredLeafIndex].Key);
+                    filteredHits.Add(hit);
+                }
+            }
+
+
+            // 3) 调度 ApplyEnemyBaseDamageJob
+            // var hitsArray = filteredHits.ToArray(Allocator.TempJob);
+
+            var hitsArray = detectionSystem.heroHitMonsterArray;
+           // DevDebug.Log("筛选碰撞对长度：" + hitsArray.Length);
+            filteredHits.Dispose();
+
+
+               /// <summary>
+    /// 收集所有“道具⇄怪物”触发事件，只 enqueue 道具与怪物组合
+    /// </summary>
+    [BurstCompile]
+    struct CollectEnemyPropHitsJob : ITriggerEventsJob
+    {
+        [ReadOnly] public ComponentLookup<EnemyFlightProp> DamageParLookup;
+        [ReadOnly] public ComponentLookup<HeroAttributeCmpt> HeroAttrLookup;
+        //这里进行不存活判断，怪物即使死亡，其飞行道具也有效
+        [ReadOnly] public ComponentLookup<LiveMonster> LiveMonsterLookup;
+        public NativeQueue<TriggerPairData>.ParallelWriter HitQueue;
+
+        public void Execute(TriggerEvent triggerEvent)
+        {
+            bool aIsProp = DamageParLookup.HasComponent(triggerEvent.EntityA);
+            bool bIsProp = DamageParLookup.HasComponent(triggerEvent.EntityB);
+            bool aIsHero = HeroAttrLookup.HasComponent(triggerEvent.EntityA);
+            bool bIsHero = HeroAttrLookup.HasComponent(triggerEvent.EntityB);
+
+            if (aIsProp && bIsHero)
+            {
+                HitQueue.Enqueue(new TriggerPairData
+                {
+                    EntityA = triggerEvent.EntityA,  // 子弹
+                    EntityB = triggerEvent.EntityB   // 英雄
+                });
+            }
+            else if (bIsProp && aIsHero)
+            {
+                HitQueue.Enqueue(new TriggerPairData
+                {
+                    EntityA = triggerEvent.EntityB,
+                    EntityB = triggerEvent.EntityA
+                });
+            }
+        }
+    }
+
+
+      /// <summary>
+    /// 收集所有“英雄⇄怪物”触发事件，只 enqueue 英雄与怪物组合
+    /// </summary>
+
+
+    [BurstCompile]
+    public unsafe struct CollectEnemyBaseHitsJob : ITriggerEventsJob
+    {
+        [ReadOnly] public ComponentLookup<LiveMonster> MonsterLookup;
+        [ReadOnly] public ComponentLookup<HeroAttributeCmpt> HeroLookup;
+        [ReadOnly] public ComponentLookup<PhysicsCollider> ColliderLookup;
+
+        public NativeQueue<TriggerPairData>.ParallelWriter HitQueue;
+
+        public void Execute(TriggerEvent e)
+        {
+            var a = e.EntityA;
+            var b = e.EntityB;
+            bool aIsMonster = MonsterLookup.HasComponent(a);
+            bool bIsMonster = MonsterLookup.HasComponent(b);
+            bool aIsHero = HeroLookup.HasComponent(a);
+            bool bIsHero = HeroLookup.HasComponent(b);
+
+            // 情况1：怪物 A → 英雄 B
+            if (aIsMonster && bIsHero)
+            {
+                HitQueue.Enqueue(new TriggerPairData
+                {
+                    EntityA = a,
+                    EntityB = b,
+                    Key = e.ColliderKeyB
+                });
+            }
+            // 情况2：怪物 B → 英雄 A
+            else if (bIsMonster && aIsHero)
+            {
+                HitQueue.Enqueue(new TriggerPairData
+                {
+                    EntityA = b,
+                    EntityB = a,
+                    Key = e.ColliderKeyA
+                });
+            }
+        }
+    }
+
+
+       /// <summary>
+    /// 收集所有“道具⇄怪物”触发事件，只 enqueue 道具与怪物组合
+    /// </summary>
+    [BurstCompile]
+    struct CollectEnemyPropHitsJob : ITriggerEventsJob
+    {
+        [ReadOnly] public ComponentLookup<EnemyFlightProp> DamageParLookup;
+        [ReadOnly] public ComponentLookup<HeroAttributeCmpt> HeroAttrLookup;
+        //这里进行不存活判断，怪物即使死亡，其飞行道具也有效
+        [ReadOnly] public ComponentLookup<LiveMonster> LiveMonsterLookup;
+        public NativeQueue<TriggerPairData>.ParallelWriter HitQueue;
+
+        public void Execute(TriggerEvent triggerEvent)
+        {
+            bool aIsProp = DamageParLookup.HasComponent(triggerEvent.EntityA);
+            bool bIsProp = DamageParLookup.HasComponent(triggerEvent.EntityB);
+            bool aIsHero = HeroAttrLookup.HasComponent(triggerEvent.EntityA);
+            bool bIsHero = HeroAttrLookup.HasComponent(triggerEvent.EntityB);
+
+            if (aIsProp && bIsHero)
+            {
+                HitQueue.Enqueue(new TriggerPairData
+                {
+                    EntityA = triggerEvent.EntityA,  // 子弹
+                    EntityB = triggerEvent.EntityB   // 英雄
+                });
+            }
+            else if (bIsProp && aIsHero)
+            {
+                HitQueue.Enqueue(new TriggerPairData
+                {
+                    EntityA = triggerEvent.EntityB,
+                    EntityB = triggerEvent.EntityA
+                });
+            }
+        }
+    }
+
+
+     /// <summary>
+    /// 收集所有“道具⇄怪物”触发事件，只 enqueue 道具与怪物组合
+    /// </summary>
+    [BurstCompile]
+    struct CollectPropHitsJob : ITriggerEventsJob
+    {
+        [ReadOnly] public ComponentLookup<FlightPropDamageCalPar> DamageParLookup;
+        [ReadOnly] public ComponentLookup<LiveMonster> LiveMonsterLookup;
+
+        // 用来并行写入碰撞对
+        public NativeQueue<TriggerPairData>.ParallelWriter HitQueue;
+
+        public void Execute(TriggerEvent triggerEvent)
+        {
+            // 判断哪一方是道具（Prop）：
+            bool aIsProp = DamageParLookup.HasComponent(triggerEvent.EntityA);
+            bool bIsProp = DamageParLookup.HasComponent(triggerEvent.EntityB);
+
+            // 判断哪一方是怪物（Monster），并且它的 LiveMonster 组件当前是启用状态：
+            bool aIsEnabledMonster = LiveMonsterLookup.HasComponent(triggerEvent.EntityA)
+                                      && LiveMonsterLookup.IsComponentEnabled(triggerEvent.EntityA);
+            bool bIsEnabledMonster = LiveMonsterLookup.HasComponent(triggerEvent.EntityB)
+                                      && LiveMonsterLookup.IsComponentEnabled(triggerEvent.EntityB);
+
+            // 如果 A 是道具，B 是已启用的怪物，就把 (A→B) 入队
+            if (aIsProp && bIsEnabledMonster)
+            {
+                HitQueue.Enqueue(new TriggerPairData
+                {
+                    EntityA = triggerEvent.EntityA,
+                    EntityB = triggerEvent.EntityB
+                });
+            }
+            // 如果 B 是道具，A 是已启用的怪物，就把 (B→A) 入队
+            else if (bIsProp && aIsEnabledMonster)
+            {
+                HitQueue.Enqueue(new TriggerPairData
+                {
+                    EntityA = triggerEvent.EntityB,
+                    EntityB = triggerEvent.EntityA
+                });
+            }
+        }
+    }
+
+
+     /// <summary>
+    /// 技能碰撞对搜集
+    /// </summary>
+   [ BurstCompile]
+     struct CollectSkillHitsJob : ITriggerEventsJob
+    {
+        // 用来并行读取 LiveMonster（怪物）组件
+        [ReadOnly] public ComponentLookup<LiveMonster> MonsterAttribute;
+        // 用来并行读取 SkillsDamageCalPar（技能伤害参数）组件
+        [ReadOnly] public ComponentLookup<SkillsDamageCalPar> SkillDamage;
+        // 用于并行写入碰撞对
+        public NativeQueue<TriggerPairData>.ParallelWriter HitQueue;
+
+        public void Execute(TriggerEvent triggerEvent)
+        {
+            // 判断 A 是否是技能（Prop）——不仅要 HasComponent 还要 IsComponentEnabled
+            bool aIsSkill = SkillDamage.HasComponent(triggerEvent.EntityA);
+
+            // 判断 B 是否是技能（Prop）
+            bool bIsSkill = SkillDamage.HasComponent(triggerEvent.EntityB);
+                      
+            // 判断 A 是否是怪物（Monster）且其 LiveMonster 组件处于 Enabled
+            bool aIsMonster = MonsterAttribute.HasComponent(triggerEvent.EntityA)
+                              && MonsterAttribute.IsComponentEnabled(triggerEvent.EntityA);
+
+            // 判断 B 是否是怪物（Monster）且其 LiveMonster 组件处于 Enabled
+            bool bIsMonster = MonsterAttribute.HasComponent(triggerEvent.EntityB)
+                              && MonsterAttribute.IsComponentEnabled(triggerEvent.EntityB);
+
+            // 如果 A 是已启用的技能，B 是已启用的怪物，就 enqueue (A→B)
+            if (aIsSkill && bIsMonster)
+            {
+                HitQueue.Enqueue(new TriggerPairData
+                {
+                    EntityA = triggerEvent.EntityA,
+                    EntityB = triggerEvent.EntityB
+                });
+            }
+            // 如果 B 是已启用的技能，A 是已启用的怪物，就 enqueue (B→A)
+            else if (bIsSkill && aIsMonster)
+            {
+                HitQueue.Enqueue(new TriggerPairData
+                {
+                    EntityA = triggerEvent.EntityB,
+                    EntityB = triggerEvent.EntityA
+                });
+            }
+        }
+    }
+
+    //初期设计的英雄状态标识
+
+
+                //添加几种状态标识
+            //entityManager.AddComponent<HeroStateWillUnchained>(heroEntity);
+            //entityManager.SetComponentEnabled<HeroStateWillUnchained>(heroEntity, false);
+
+            //entityManager.AddComponent<HeroStateDivineDescent>(heroEntity);
+            //entityManager.SetComponentEnabled<HeroStateDivineDescent>(heroEntity, false);
+
+            //entityManager.AddComponent<HeroStateSilentDomain>(heroEntity);
+            //entityManager.SetComponentEnabled<HeroStateSilentDomain>(heroEntity, false);
+
+            //entityManager.AddComponent<HeroStatePsionicSurge>(heroEntity);
+            //entityManager.SetComponentEnabled<HeroStatePsionicSurge>(heroEntity, false);
+
+            //entityManager.AddComponent<HeroStateTitaniumShell>(heroEntity);
+            //entityManager.SetComponentEnabled<HeroStateTitaniumShell>(heroEntity, false);
+
+            //entityManager.AddComponent<HeroStateForbiddenResonance>(heroEntity);
+            //entityManager.SetComponentEnabled<HeroStateForbiddenResonance>(heroEntity, false);
