@@ -21,6 +21,7 @@ namespace BlackDawn.DOTS
     /// Watcher_A行为System
     /// </summary>
     [BurstCompile]
+    [UpdateAfter(typeof(DetectionSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     public partial struct ActionSystem : ISystem,ISystemStartStop
     {
@@ -60,7 +61,7 @@ namespace BlackDawn.DOTS
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-           // state.Dependency.Complete();
+            
             timer += SystemAPI.Time.DeltaTime;
 
             UpdateAllComponentLookup(ref state);
@@ -78,51 +79,31 @@ namespace BlackDawn.DOTS
             }
            
              //近战job
-            var ecb = new EntityCommandBuffer(Allocator.TempJob);
-            var EcbParaller = ecb.AsParallelWriter();
+           // var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
-            state.Dependency = new ActionMelee_Job
+            var parallelECB = ecb.AsParallelWriter();
+
+            // Step 1: 调度 Melee Job
+            var meleeHandle = new ActionMelee_Job
             {
-                ECB = EcbParaller,
+                ECB = parallelECB,
                 Time = SystemAPI.Time.DeltaTime,
-
+                TransformLookup = m_transform,
             }.ScheduleParallel(state.Dependency);
 
-
-
-            //远程job
-
-            state.Dependency = new ActionRanged_Job
+            // Step 2: 调度 Ranged Job，依赖 Melee 完成
+            var rangedHandle = new ActionRanged_Job
             {
-                ECB = EcbParaller,
+                ECB = parallelECB,
                 Time = SystemAPI.Time.DeltaTime,
                 Prefabs = m_Prefabs,
-                HeroPosition = heroPositon
+                HeroPosition = heroPositon,
+                TransformLookup = m_transform,
+            }.ScheduleParallel(meleeHandle); // 注意依赖 meleeHandle！
 
-
-            }.ScheduleParallel(state.Dependency);
-
-            state.Dependency.Complete();
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
-
-
-
-
-            //并行计算 采用ange 原生的距离来处理？
-            //var ecb1 = new EntityCommandBuffer(Allocator.TempJob);
-            //var EcbParaller1 = ecb1.AsParallelWriter();
-
-            //state.Dependency = new ActionChange_Job
-            //{
-            //    ECB = EcbParaller1,
-            //    time = SystemAPI.Time.DeltaTime,
-
-            //}.ScheduleParallel(state.Dependency);
-
-            //state.Dependency.Complete();
-            //ecb1.Playback(state.EntityManager);
-            //ecb1.Dispose();
+            // 更新最终依赖
+            state.Dependency = rangedHandle;
 
 
 
@@ -166,6 +147,7 @@ namespace BlackDawn.DOTS
     public partial struct ActionMelee_Job : IJobEntity
     {
         public EntityCommandBuffer.ParallelWriter ECB;
+        [ReadOnly] public ComponentLookup<LocalTransform> TransformLookup;
         public float Time;
 
         /// <summary>
@@ -180,7 +162,7 @@ namespace BlackDawn.DOTS
         /// <param name="index"></param>
         public void Execute(Entity entity, EnabledRefRO<LiveMonster> live, MonsterGainAttribute gainAttribute,ref AgentBody agentBody, ref AgentLocomotion agentLocomotion,AtMelee atMelee,
             ref AnimationControllerData animation, ref DynamicBuffer<GpuEcsAnimatorEventBufferElement> eventBuffer,
-            ref LocalTransform transform, GpuEcsAnimatorAspect animatorAspect, [ChunkIndexInQuery] int index)
+            in LocalTransform transform,  GpuEcsAnimatorAspect animatorAspect, [ChunkIndexInQuery] int index)
         {
 
             // 0. 计算 delta 和距离
@@ -259,17 +241,18 @@ namespace BlackDawn.DOTS
     public partial struct ActionRanged_Job : IJobEntity
     {
         public EntityCommandBuffer.ParallelWriter ECB;
+        [ReadOnly] public ComponentLookup<LocalTransform> TransformLookup;
         public float Time;
         public ScenePrefabsSingleton Prefabs;
         public float3 HeroPosition;
 
         public void Execute(Entity entity, EnabledRefRO<LiveMonster> live,  MonsterGainAttribute gainAttribute, ref AgentBody agentBody, ref AgentLocomotion agentLocomotion, AtRanged atRanged,
             ref AnimationControllerData animation, ref DynamicBuffer<GpuEcsAnimatorEventBufferElement> eventBuffer,
-            ref LocalTransform transform, GpuEcsAnimatorAspect animatorAspect,ref  DynamicBuffer<GpuEcsCurrentAttachmentAnchorBufferElement> anchorBuffer, 
+            in LocalTransform transform, GpuEcsAnimatorAspect animatorAspect,ref  DynamicBuffer<GpuEcsCurrentAttachmentAnchorBufferElement> anchorBuffer, 
             [ChunkIndexInQuery] int index)
         {
 
-            float3 currentPos = transform.Position;
+              float3 currentPos = transform.Position;
             float3 destPos = agentBody.Destination;  // AgentBody 中的目标位置
             float3 delta = destPos - currentPos;
             delta.y = 0;
@@ -338,7 +321,7 @@ namespace BlackDawn.DOTS
 
         }
 
-        void Fire(int index,LocalTransform transform, DynamicBuffer<GpuEcsCurrentAttachmentAnchorBufferElement> anchorBuffer,MonsterGainAttribute gainAttribute,Entity entity)
+        void Fire(int index,in LocalTransform transform, DynamicBuffer<GpuEcsCurrentAttachmentAnchorBufferElement> anchorBuffer,MonsterGainAttribute gainAttribute,Entity entity)
         {
            var prob=  ECB.Instantiate(index, Prefabs.MonsterFlightProp_FrostLightningBall);
 

@@ -7,7 +7,7 @@ namespace BlackDawn.DOTS
     [BurstCompile]
     [RequireMatchingQueriesForUpdate]
     //这里落到控制表现系统之后进行处理
-    [UpdateAfter(typeof(RenderEffectSystem))]
+    [UpdateAfter(typeof(BehaviorControlSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     partial struct AttackRecordBufferSystem : ISystem
     {
@@ -23,7 +23,7 @@ namespace BlackDawn.DOTS
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             var ecbP= ecb.AsParallelWriter();
             var timer = SystemAPI.Time.DeltaTime;
 
@@ -55,10 +55,6 @@ namespace BlackDawn.DOTS
 
 
 
-
-            //不传入ECB 实际上就不需要写回
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
 
         }
 

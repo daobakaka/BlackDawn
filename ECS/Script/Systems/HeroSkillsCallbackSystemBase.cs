@@ -9,10 +9,10 @@ using UnityEngine.VFX;
 //用于处理技能释放的回调，非burstCompile
 namespace BlackDawn.DOTS
 {/// <summary>
-/// 由英雄mono开启,在mono之后开启，保证组件添加之后回调的完成
+/// 由英雄mono开启,在渲染系统之后进行
 /// </summary>
     [RequireMatchingQueriesForUpdate]
-    [UpdateAfter(typeof(HeroSkillsMonoSystem))]
+    [UpdateAfter(typeof(RenderEffectSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     public partial class HeroSkillsCallbackSystemBase : SystemBase,IOneStepFun
     {

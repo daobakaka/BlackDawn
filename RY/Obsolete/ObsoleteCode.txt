@@ -2640,3 +2640,37 @@ public class DamageTextMono : MonoBehaviour
 
             //entityManager.AddComponent<HeroStateForbiddenResonance>(heroEntity);
             //entityManager.SetComponentEnabled<HeroStateForbiddenResonance>(heroEntity, false);
+
+
+
+            //---
+                         //近战job
+           // var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+
+            // var EcbParaller = ecb.AsParallelWriter();
+
+            state.Dependency = new ActionMelee_Job
+            {
+                ECB = ecb.AsParallelWriter(),
+                Time = SystemAPI.Time.DeltaTime,
+                TransformLookup=m_transform,
+            }.ScheduleParallel(state.Dependency);
+
+
+            ////！eccute 中引用的组件 必须要在lookup 中使用 才能保持依赖
+            state.Dependency= new ActionRanged_Job
+            {
+                ECB = ecb.AsParallelWriter(),
+                Time = SystemAPI.Time.DeltaTime,
+                Prefabs = m_Prefabs,
+                HeroPosition = heroPositon,
+                TransformLookup = m_transform,
+            }.ScheduleParallel(state.Dependency); // 不是 meleeHandle，而是 state.Dependency！
+
+            //// 合并两者并行依赖，因为两者都对同一组件进行了修改， 标记不一样
+            //state.Dependency = JobHandle.CombineDependencies(meleeHandle, rangedHandle);
+
+            //state.Dependency.Complete();
+            //ecb.Playback(state.EntityManager);
+            //ecb.Dispose();

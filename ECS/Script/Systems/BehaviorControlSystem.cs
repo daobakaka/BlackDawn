@@ -15,7 +15,7 @@ namespace BlackDawn
 {
 
     [RequireMatchingQueriesForUpdate]
-    [UpdateBefore(typeof(RenderEffectSystem))]
+    [UpdateAfter(typeof(DotDamageSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     [BurstCompile]
     public partial struct BehaviorControlSystem : ISystem
@@ -33,6 +33,8 @@ namespace BlackDawn
         void OnUpdate(ref SystemState state) 
         {
             var time = SystemAPI.Time.DeltaTime;
+
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
             state.Dependency = new BehaviorControlledJob()
             {

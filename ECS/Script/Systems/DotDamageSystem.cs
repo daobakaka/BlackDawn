@@ -11,7 +11,7 @@ namespace BlackDawn.DOTS
 {
     [RequireMatchingQueriesForUpdate]
     //在渲染系统之前进行DOT伤害计算
-    [UpdateBefore(typeof(RenderEffectSystem))]
+    [UpdateBefore(typeof(HeroSkillsMonoSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     [BurstCompile]
     public partial struct DotDamageSystem : ISystem

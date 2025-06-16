@@ -88,11 +88,12 @@ namespace BlackDawn.DOTS
 
 
             // 2. 并行应用伤害 & 销毁道具,重要job 结构
-            var ecb = new EntityCommandBuffer(Allocator.TempJob);
-            var ecbWriter = ecb.AsParallelWriter();
+
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+
             state.Dependency = new ApplyPropDamageJob
             {
-                ECB = ecbWriter,
+                ECB = ecb.AsParallelWriter(),
                 DamageParLookup = _damageParLookup,
                 DefenseAttrLookup = _monsterDefenseAttrLookup,
                 LossPoolLookup =_monsterLossPoolAttrLookup,
@@ -109,18 +110,10 @@ namespace BlackDawn.DOTS
             }
             .Schedule(hitsArray.Length, 64, state.Dependency);
 
-            state.Dependency.Complete();
-     
-            // 3. 回放并清理
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
-
 
             //4.回放清理之后再更改？因该是再之后，因为需要马上更改并行数据，确保多帧命中
             //这里不用传入参，直接写入，这种方式重新更新，但是不需要.complete() 依赖性更好
             //结构性改动之前刷新
-            _monsterTempDamageTextLookup.Update(ref state);
-            _monsterTempDotDamageTextLookup.Update(ref state);
             state.Dependency = new ApplyFlightPropBufferAggregatesJob
             {           
             DamageTextLookop=_monsterTempDamageTextLookup,

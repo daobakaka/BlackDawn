@@ -176,7 +176,7 @@ namespace BlackDawn.DOTS
     /// 二阶灵能法阵标签，这里应该是一个buffer，这个buffer可以添加不同的link，用于把相关的参数链接
     /// 保留目标和时间 按照dot分配？6秒
     /// </summary>
-    [InternalBufferCapacity(1000)]
+    [InternalBufferCapacity(10000)]
     public struct SkillArcaneCircleSecondBufferTag : IBufferElementData 
     
     {

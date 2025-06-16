@@ -11,12 +11,12 @@ using ProjectDawn.Navigation;
 using UnityEditor.Search;
 using ProjectDawn.ContinuumCrowds;
 using Unity.Physics;
-
+//英雄系统为渲染前的最后一个系统
 namespace BlackDawn.DOTS
 {
     [BurstCompile]
     //renderEFects 处理所有渲染效果包括文字
-    [UpdateAfter(typeof(RenderEffectSystem))]
+    [UpdateAfter(typeof(MonsterMonoSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     public partial struct HeroSystem : ISystem, ISystemStartStop
     {

@@ -93,3 +93,5 @@ BuffHandlerAspect/BuffHandlerUtility:¶àÏß³ÌÖÐµÄ»ù´¡ÊôÐÔºÍ¶¯Ì¬»º´æÇøbuffÖÐµÄ»ù±¾Ê
 6.12 ÐÞ¸ÄÅö×²¶ÔÊÕ¼¯£¬ ·ÖÀëdetction ºÍhero ,ÕûºÏÅö×²ÊÕ¼¯ÏµÍ³¼õÉÙÒÀÀµ
 
 6.13 ¼¯ÖÐÅö×²¶ÔËÑ¼¯·½Ê½£¬ ¼¯ÖÐµ½detctionÀàÀïÃæ½øÐÐÊÕ¼¯£¬²¿·ÖÍê³É¼¼ÄÜ·¨Õó£¬·¨ÕóºçÎüÌØÐ§ºóÆÚÖÆ×÷
+
+6.14 ¸Ä±äÔ­ÓÐµÄ job  ÒÀÀµÂß¼­£¬¼õÉÙ state.completete µ«Ä¿Ç°¿´À´ËÆºõ¶ÁÐ´Çé¿ö²»Ì«ÎÈ¶¨

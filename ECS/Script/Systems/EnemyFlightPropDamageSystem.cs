@@ -65,7 +65,8 @@ namespace BlackDawn.DOTS
           
 
             // 2. 并行应用伤害 & 销毁敌人道具,传入记录buffer，用一个额外的类专门计算buffer的持续时间，初始默认1秒
-            var ecb = new EntityCommandBuffer(Allocator.TempJob);
+           // var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             var ecbWriter = ecb.AsParallelWriter();
             state.Dependency = new ApplyEnemyPropDamageJob
             {
@@ -80,11 +81,11 @@ namespace BlackDawn.DOTS
             .Schedule(hitsArray.Length, 64, state.Dependency);
 
 
-            state.Dependency.Complete();
+            //state.Dependency.Complete();
 
-            // 3. 回放并清理
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
+            //// 3. 回放并清理
+            //ecb.Playback(state.EntityManager);
+            //ecb.Dispose();
 
 
 

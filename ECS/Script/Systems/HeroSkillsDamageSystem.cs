@@ -12,7 +12,7 @@ namespace BlackDawn.DOTS
 {
 
     [RequireMatchingQueriesForUpdate]
-    [UpdateAfter(typeof(FlightPropMonoSystem))]
+    [UpdateAfter(typeof(EnemyFlightPropMonoSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     [BurstCompile]
     public partial struct HeroSkillsDamageSystem : ISystem
@@ -85,7 +85,8 @@ namespace BlackDawn.DOTS
 
 
             // 2. 并行应用伤害 技能& 标记技能结束？,重要job 结构
-            var ecb = new EntityCommandBuffer(Allocator.TempJob);
+          // var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             var ecbWriter = ecb.AsParallelWriter();
             state.Dependency = new ApplySkillDamageJob
             {
@@ -106,16 +107,14 @@ namespace BlackDawn.DOTS
             }
             .Schedule(hitsArray.Length, 64, state.Dependency);
 
-            state.Dependency.Complete();
+          //  state.Dependency.Complete();
 
             // 3. 回放并清理
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
+            //ecb.Playback(state.EntityManager);
+            //ecb.Dispose();
 
             //4. 即时性技能改动
             //临时更新一次
-            _monsterTempDamageTextLookup.Update(ref state);
-            _monsterTempDotDamageTextLookup.Update(ref state);
             state.Dependency = new ApplyHeroSkillPropBufferAggregatesJob
             {
 

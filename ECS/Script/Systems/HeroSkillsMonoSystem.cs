@@ -66,6 +66,12 @@ namespace BlackDawn.DOTS
 
 
             var ecb = new EntityCommandBuffer(Allocator.Temp);
+            //var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            
+        
+                
+           
+
 
             var timer = SystemAPI.Time.DeltaTime;
             //后续需要更改,查询英雄的位置

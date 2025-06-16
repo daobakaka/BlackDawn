@@ -15,7 +15,7 @@ namespace BlackDawn.DOTS
 {
     //‘⁄‰÷»æ÷Æ∫Û
     [BurstCompile]
-    [UpdateAfter(typeof(RenderEffectSystem))]
+    [UpdateAfter(typeof(AttackRecordBufferSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     public partial struct  MonsterMonoSystem : ISystem
 {

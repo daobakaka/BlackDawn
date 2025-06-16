@@ -205,6 +205,9 @@ namespace BlackDawn
         /// <param name="sectorAngle"></param>
         public void HeroAttackBurst()
         {
+
+            //DevDebug.Log("开始射击");
+            
             // 缓存属性
             var weaponAttr = attributeCmpt.weaponAttribute;
             var atkAttr = attributeCmpt.attackAttribute;

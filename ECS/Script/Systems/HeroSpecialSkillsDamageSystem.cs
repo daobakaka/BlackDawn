@@ -56,7 +56,8 @@ namespace BlackDawn.DOTS
         }
         void UpDataAllComponentLookup(ref SystemState state)
         {
-           
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            // 或者用 GetSingletonBuffer 方式（需 DOTS 1.4 以上）
 
 
 
@@ -73,14 +74,15 @@ namespace BlackDawn.DOTS
             _skillArcaneCircleSecondBufferLookup.Update(ref state);
 
 
-            var ecb = new EntityCommandBuffer(Allocator.TempJob);
+           // var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             //获取收集世界单例
             var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
             var arcanelCorcleHitsArray = detectionSystem.arcaneCircleHitMonsterArray;
 
 
-           // DevDebug.LogError("传入的专用处理job 长度" + arcanelCorcleHitsArray.Length);
-            state.Dependency = new ApplySpecialSkillDamageJob
+            // 为虹吸特效提供buffer，遍历BUFFer  生成特效
+            var damageJobHandle = new ApplySpecialSkillDamageJob
             {
                 ECB = ecb.AsParallelWriter(),
                 DamageParLookup = _skillArcaneCircleTagLookup,
@@ -90,11 +92,29 @@ namespace BlackDawn.DOTS
                 HitArray = arcanelCorcleHitsArray,
 
             }.Schedule(arcanelCorcleHitsArray.Length, 64, state.Dependency);
+  
+    
+            var collectedPositions = new NativeList<float3>(1000,Allocator.TempJob);
 
-            state.Dependency.Complete();
+            // 3. 创建 Job
+            var collectJobHandle = new CollectArcaneCircleLinkJob
+            {
+                TargetTransformLookup = m_transform,
+                OutputPositions = collectedPositions.AsParallelWriter()
+            }.ScheduleParallel(damageJobHandle);
 
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
+            state.Dependency = collectJobHandle;
+
+
+            //state.Dependency = bufferJob;
+           // state.Dependency.Complete();
+
+
+           //DevDebug.Log("生命buffer长度="+collectedPositions.Length);
+            //处理buffer的效果
+
+            //ecb.Playback(state.EntityManager);
+            //ecb.Dispose();
 
         }
         public void OnDestroy(ref SystemState state)
@@ -174,5 +194,28 @@ namespace BlackDawn.DOTS
 
         }
     }
+
+    /// <summary>
+    /// 收集法阵链接
+    /// </summary>
+
+    [BurstCompile]
+    public partial struct CollectArcaneCircleLinkJob : IJobEntity
+    {
+        [ReadOnly] public ComponentLookup<LocalTransform> TargetTransformLookup;
+        public NativeList<float3>.ParallelWriter OutputPositions;
+
+        void Execute(in DynamicBuffer<SkillArcaneCircleSecondBufferTag> bufferElement)
+        {
+
+            for (int i = 0; i < bufferElement.Length; i++)
+            {
+
+                float3 pos = TargetTransformLookup[bufferElement[i].target].Position;
+                OutputPositions.AddNoResize(pos); // 或者根据情况 Add()
+            }
+        }
+    }
+
 
 }

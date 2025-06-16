@@ -11,7 +11,7 @@ namespace BlackDawn.DOTS
 {
     [BurstCompile]
     [RequireMatchingQueriesForUpdate]
-    [UpdateAfter(typeof(DetectionSystem))]
+    [UpdateAfter(typeof(FlightPropMonoSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     public partial struct EnemyBaseDamageSystem : ISystem
     {
@@ -52,11 +52,12 @@ namespace BlackDawn.DOTS
            
             var hitsArray = detectionSystem.heroHitMonsterArray;
 
-            var ecb = new EntityCommandBuffer(Allocator.TempJob);
-            var ecbWriter = ecb.AsParallelWriter();
+            //var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            //var ecbWriter = ecb.AsParallelWriter();
             state.Dependency = new ApplyEnemyBaseDamageJob
             {
-                ECB = ecbWriter,
+                ECB = ecb.AsParallelWriter(),
                 AttrLookup = _heroAttrLookup,
                 HitArray = hitsArray,
                 MonsterAttrLookup = _monsterAttack,
@@ -65,9 +66,9 @@ namespace BlackDawn.DOTS
                
             }.Schedule(hitsArray.Length, 64, state.Dependency);
 
-            state.Dependency.Complete();
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
+            //state.Dependency.Complete();
+            //ecb.Playback(state.EntityManager);
+            //ecb.Dispose();
         }
 
         void OnDestroy(ref SystemState state) { }

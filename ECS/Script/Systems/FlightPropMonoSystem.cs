@@ -27,19 +27,18 @@ namespace BlackDawn.DOTS
         public void OnUpdate(ref SystemState state)
         {
 
-            var ecb = new EntityCommandBuffer(Allocator.TempJob);
-            var ECBParallel = ecb.AsParallelWriter();
+
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+
 
             state.Dependency = new DirectFlightPropJob
             {
                 time = SystemAPI.Time.DeltaTime,
-                ECB = ECBParallel,
+                ECB = ecb.AsParallelWriter(),
 
             }.ScheduleParallel(state.Dependency);
 
-            state.Dependency.Complete();
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
+
         }
 
         [BurstCompile]

@@ -15,7 +15,7 @@ namespace BlackDawn.DOTS
 /// 
 /// </summary>
     [BurstCompile]
-    [UpdateAfter(typeof(HeroSkillsCallbackSystemBase))]
+    [UpdateAfter(typeof(HeroSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     public partial struct RenderEffectSystem : ISystem,ISystemStartStop

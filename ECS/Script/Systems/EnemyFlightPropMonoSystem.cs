@@ -27,19 +27,18 @@ namespace BlackDawn.DOTS
         public void OnUpdate(ref SystemState state)
         {
 
-            var ecb = new EntityCommandBuffer(Allocator.TempJob);
-            var ECBParallel = ecb.AsParallelWriter();
+
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+
 
             state.Dependency = new EnemyFlightPropJob
             {
                 Time = SystemAPI.Time.DeltaTime,
-                ECB = ECBParallel,
+                ECB = ecb.AsParallelWriter(),
 
             }.ScheduleParallel(state.Dependency);
 
-            state.Dependency.Complete();
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
+
         }
 
         [BurstCompile]
@@ -49,7 +48,9 @@ namespace BlackDawn.DOTS
 
         }
     }
-
+    /// <summary>
+    /// 依赖管理良好版本，所有变更通过ECB记录 统一改回
+    /// </summary>
     [BurstCompile]
     partial struct EnemyFlightPropJob : IJobEntity
     {
@@ -57,24 +58,32 @@ namespace BlackDawn.DOTS
         public float Time;
 
         void Execute(Entity entity,
-                     ref LocalTransform transform,
+                     in LocalTransform transform, // 只读访问
                      ref EnemyFlightProp enemyFlightProp,
-             
-                    [EntityIndexInQuery] int sortKey)
+                     [EntityIndexInQuery] int sortKey)
         {
-            // 普通存活倒计时，或者有删除标记
+            // 存活时间处理
             enemyFlightProp.survivalTime -= Time;
-            if (enemyFlightProp.survivalTime <= 0f|| enemyFlightProp.destory == true)
+            if (enemyFlightProp.survivalTime <= 0f || enemyFlightProp.destory == true)
             {
                 ECB.DestroyEntity(sortKey, entity);
                 return;
             }
 
-          
-            // 飞行逻辑……
-            transform.Position += enemyFlightProp.speed * Time * enemyFlightProp.dir;
-            transform.Position.y = 1;
-            transform.Rotation = quaternion.LookRotationSafe(enemyFlightProp.dir, math.up());
+            // 计算新位置和旋转
+            float3 newPos = transform.Position + enemyFlightProp.speed * Time * enemyFlightProp.dir;
+            newPos.y = 1; // 强制 Y 高度为 1
+
+            quaternion newRot = quaternion.LookRotationSafe(enemyFlightProp.dir, math.up());
+
+            // 写回 LocalTransform
+            ECB.SetComponent(sortKey, entity, new LocalTransform
+            {
+                Position = newPos,
+                Rotation = newRot,
+                Scale = transform.Scale // 保持原始缩放
+            });
         }
     }
+
 }
