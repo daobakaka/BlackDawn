@@ -94,7 +94,7 @@ namespace BlackDawn.DOTS
             }.Schedule(arcanelCorcleHitsArray.Length, 64, state.Dependency);
   
     
-            var collectedPositions = new NativeList<float3>(1000,Allocator.TempJob);
+            var collectedPositions = new NativeList<float3>(5000,Allocator.TempJob);
 
             // 3. 创建 Job
             var collectJobHandle = new CollectArcaneCircleLinkJob
@@ -106,15 +106,6 @@ namespace BlackDawn.DOTS
             state.Dependency = collectJobHandle;
 
 
-            //state.Dependency = bufferJob;
-           // state.Dependency.Complete();
-
-
-           //DevDebug.Log("生命buffer长度="+collectedPositions.Length);
-            //处理buffer的效果
-
-            //ecb.Playback(state.EntityManager);
-            //ecb.Dispose();
 
         }
         public void OnDestroy(ref SystemState state)
@@ -212,6 +203,8 @@ namespace BlackDawn.DOTS
             {
 
                 float3 pos = TargetTransformLookup[bufferElement[i].target].Position;
+              //强制钳制到5000
+                if(bufferElement.Length<5000)
                 OutputPositions.AddNoResize(pos); // 或者根据情况 Add()
             }
         }

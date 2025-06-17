@@ -101,11 +101,11 @@ namespace BlackDawn.DOTS
     /// 基础飞行子弹的多重命中，累加计算值，这里可以直接采用标签确定初始化容量
     /// </summary>
     [Serializable]
-    [InternalBufferCapacity(10)]
+    [InternalBufferCapacity(3)]
     public struct FlightPropAccumulateData : IBufferElementData
     {
         public float damage, dotDamage;
-        public float slow, fear, root, stun, freeze;
+      //  public float slow, fear, root, stun, freeze;
         public float firePool, frostPool, lightningPool, poisonPool, shadowPool, bleedPool;
     }
 
@@ -115,11 +115,11 @@ namespace BlackDawn.DOTS
     /// 英雄技能的buffer，累加计算值，这里可以直接采用标签确定初始化容量
     /// </summary>
     [Serializable]
-    [InternalBufferCapacity(5)]
+    [InternalBufferCapacity(1)]
     public struct HeroSkillPropAccumulateData : IBufferElementData
     {
         public float damage, dotDamage;
-        public float slow, fear, root, stun, freeze;
+      //  public float slow, fear, root, stun, freeze;
         public float firePool, frostPool, lightningPool, poisonPool, shadowPool, bleedPool;
     }
 

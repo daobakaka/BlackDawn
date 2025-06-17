@@ -387,11 +387,6 @@ namespace BlackDawn.DOTS
             //8-2 这里保留原本的写入， 这样在后续的代码中仅需要遍历长度>=2的buffer，同时保留原结构不变
             var dd = new HeroSkillPropAccumulateData();
             dd.damage = finalDamage;//合并使用伤害数字，到这个job之后更新
-            dd.slow = h.controlAbilityAttribute.slow;
-            dd.fear = h.controlAbilityAttribute.fear;
-            dd.root = h.controlAbilityAttribute.root;
-            dd.stun = h.controlAbilityAttribute.stun;
-            dd.freeze = h.controlAbilityAttribute.freeze;
 
             // 各池化增量
             dd.firePool = addFirePool;
@@ -514,11 +509,6 @@ namespace BlackDawn.DOTS
                 var d = accBuf[i];
                 sum.damage += d.damage;
                 sum.dotDamage += sum.dotDamage;
-                sum.slow += d.slow;
-                sum.fear += d.fear;
-                sum.root += d.root;
-                sum.stun += d.stun;
-                sum.freeze += d.freeze;
                 sum.firePool += d.firePool;
                 sum.frostPool += d.frostPool;
                 sum.lightningPool += d.lightningPool;
@@ -531,13 +521,6 @@ namespace BlackDawn.DOTS
             def.hp = math.max(0f, def.hp - sum.damage);
 
 
-
-            // 3) 写回控制
-            ctl.slow += sum.slow;
-            ctl.fear += sum.fear;
-            ctl.root += sum.root;
-            ctl.stun += sum.stun;
-            ctl.freeze += sum.freeze;
 
 
             // 4) 写回池化值

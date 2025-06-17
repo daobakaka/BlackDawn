@@ -65,8 +65,8 @@ namespace BlackDawn.DOTS
      
 
 
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
-            //var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+         
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             
         
                 
@@ -277,10 +277,6 @@ namespace BlackDawn.DOTS
 
 
 
-
-
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
 
 
         }

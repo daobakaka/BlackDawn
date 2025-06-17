@@ -2674,3 +2674,96 @@ public class DamageTextMono : MonoBehaviour
             //state.Dependency.Complete();
             //ecb.Playback(state.EntityManager);
             //ecb.Dispose();
+            
+            
+            
+            //----原本的写回控制状态的效果， 为节省chunk 或者游戏逻辑 ，控制状态不予叠加写回
+
+               /// <summary>
+    /// 修正同时多个飞行道具碰撞产生的伤害以及累加池化计算问题
+    /// </summary>
+    [BurstCompile]
+   partial struct ApplyFlightPropBufferAggregatesJob : IJobEntity
+    {
+        [NativeDisableParallelForRestriction]
+        public ComponentLookup<MonsterTempDamageText> DamageTextLookop;
+        [NativeDisableParallelForRestriction]
+        public ComponentLookup<MonsterTempDotDamageText> DamageDotTextLookop;
+        void Execute(
+            Entity e,
+            EnabledRefRO<LiveMonster> live ,
+            ref MonsterDefenseAttribute def,
+            ref MonsterControlledEffectAttribute ctl,
+            ref MonsterLossPoolAttribute pool, 
+            ref MonsterDebuffAttribute dot,
+            ref DynamicBuffer<FlightPropAccumulateData> accBuf,
+            DynamicBuffer<LinkedEntityGroup>  linkedEntity)
+        {
+            //长度小于2的时候已经写入不需要聚合
+            if (accBuf.Length < 2)
+            {
+                //返回之前清空buffer
+                accBuf.Clear();
+                return;
+            }
+
+            // 1) 聚合
+            var sum = new FlightPropAccumulateData();
+            for (int i = 0; i < accBuf.Length - 1; i++)
+            {
+                var d = accBuf[i];
+                sum.damage += d.damage;
+                sum.dotDamage += sum.dotDamage;
+                sum.slow += d.slow;
+                sum.fear += d.fear;
+                sum.root += d.root;
+                sum.stun += d.stun;
+                sum.freeze += d.freeze;
+                sum.firePool += d.firePool;
+                sum.frostPool += d.frostPool;
+                sum.lightningPool += d.lightningPool;
+                sum.poisonPool += d.poisonPool;
+                sum.shadowPool += d.shadowPool;
+                sum.bleedPool += d.bleedPool;
+            }
+
+            // 2) 写回血量
+            def.hp = math.max(0f, def.hp - sum.damage);
+           
+
+
+            // 3) 写回控制
+            ctl.slow += sum.slow;
+            ctl.fear += sum.fear;
+            ctl.root += sum.root;
+            ctl.stun += sum.stun;
+            ctl.freeze += sum.freeze;
+
+
+            // 4) 写回池化值
+            if (true)
+            {
+                pool.firePool = math.min(pool.firePool + sum.firePool, 200);
+                pool.frostPool = math.min(pool.frostPool + sum.frostPool, 200);
+                pool.lightningPool = math.min(pool.lightningPool + sum.lightningPool, 200);
+                pool.poisonPool = math.min(pool.poisonPool + sum.poisonPool, 200);
+                pool.shadowPool = math.min(pool.shadowPool + sum.shadowPool, 200);
+                pool.bleedPool = math.min(pool.bleedPool + sum.bleedPool, 200);
+            }
+            //5)写回dot总伤害
+            dot.totalDotDamage =sum.dotDamage;
+
+
+            //这两条是去查找字体并且更改
+            var damageText = DamageTextLookop[linkedEntity[2].Value];
+            //写回伤害
+            damageText.hurtVlue +=sum.damage;
+
+            DamageTextLookop[linkedEntity[2].Value] = damageText;
+
+            // 5) 清空 buffer，为下一帧重用
+            accBuf.Clear();
+
+           // DevDebug.Log("已累加并清空自己的buffer");
+
+        }

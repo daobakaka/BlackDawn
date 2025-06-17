@@ -379,11 +379,6 @@ namespace BlackDawn.DOTS
             var dd = new FlightPropAccumulateData();
             dd.damage = finalDamage;//合并使用伤害数字，到这个job之后更新
             dd.dotDamage = finalDotDamage;//写入dot伤害的总量
-            dd.slow = h.controlAbilityAttribute.slow;
-            dd.fear = h.controlAbilityAttribute.fear;
-            dd.root = h.controlAbilityAttribute.root;
-            dd.stun = h.controlAbilityAttribute.stun;
-            dd.freeze = h.controlAbilityAttribute.freeze;
 
             // 各池化增量
             dd.firePool = addFirePool;
@@ -505,11 +500,6 @@ namespace BlackDawn.DOTS
                 var d = accBuf[i];
                 sum.damage += d.damage;
                 sum.dotDamage += sum.dotDamage;
-                sum.slow += d.slow;
-                sum.fear += d.fear;
-                sum.root += d.root;
-                sum.stun += d.stun;
-                sum.freeze += d.freeze;
                 sum.firePool += d.firePool;
                 sum.frostPool += d.frostPool;
                 sum.lightningPool += d.lightningPool;
@@ -523,12 +513,6 @@ namespace BlackDawn.DOTS
            
 
 
-            // 3) 写回控制
-            ctl.slow += sum.slow;
-            ctl.fear += sum.fear;
-            ctl.root += sum.root;
-            ctl.stun += sum.stun;
-            ctl.freeze += sum.freeze;
 
 
             // 4) 写回池化值
