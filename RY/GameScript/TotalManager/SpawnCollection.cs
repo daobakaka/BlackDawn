@@ -81,6 +81,7 @@ namespace BlackDawn
 
             var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
 
 
             //从场景里那个“管理实体”上读出来 PrefabsComponentData
@@ -135,8 +136,19 @@ namespace BlackDawn
                 physicalDamageNoImmunity = 1f,
                 elementDamageNoImmunity = 1f
             });
+            //为子组件添加相关标识
+            // 1) 读取 LinkedEntityGroup,连续递归，读取完毕
+            var linked = entityManager.GetBuffer<LinkedEntityGroup>(heroEntity);
+  
+            //链接渲染体， 专门处理英雄的链接渲染特效
+            var childLinkedEffects = linked[1].Value;
+            
+            //添加结构， 失活
+            ecb.AddComponent(childLinkedEffects, new HeroEffectsLinked());
+            ecb.SetComponentEnabled<HeroEffectsLinked>(childLinkedEffects, false); // 设置为禁用
 
-
+            ecb.Playback(entityManager);
+            ecb.Dispose();
 
             DevDebug.LogError("初始化英雄entity,初始化侦擦器" + heroEntity.Index);
 

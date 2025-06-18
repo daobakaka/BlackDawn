@@ -202,12 +202,11 @@ namespace BlackDawn.DOTS
 
         /// <summary>
         /// 无用， 不提供无参构造函数
-
-
-
     }
-    
-    
+    /// <summary>
+    /// link 效果或者其他效果开启标识
+    /// </summary>
+    public struct HeroEffectsLinked : IComponentData, IEnableableComponent { }
     
     
     

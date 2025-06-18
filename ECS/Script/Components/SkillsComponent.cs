@@ -188,6 +188,11 @@ namespace BlackDawn.DOTS
     /// 仅仅用于收集碰撞对
     /// </summary>
     public struct SkillArcaneCircleSecondTag : IComponentData { }
+
+    /// <summary>
+    /// 法阵二阶技能渲染标签
+    /// </summary>
+    public struct SkillArcaneCircleSecondRenderTag : IComponentData, IEnableableComponent { }
     /// <summary>
     /// 三阶法阵标签
     /// </summary>

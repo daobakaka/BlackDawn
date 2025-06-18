@@ -37,6 +37,9 @@ namespace BlackDawn.DOTS
         public BufferLookup<SkillArcaneCircleSecondBufferTag> _skillArcaneCircleSecondBufferLookup;
         //侦测系统缓存
         private SystemHandle _detectionSystemHandle;
+
+        //公开区域
+        public NativeArray<float3> arcaneCircleLinkenBuffer;
         public void OnCreate(ref SystemState state)
         {
             //外部控制
@@ -73,7 +76,8 @@ namespace BlackDawn.DOTS
             _skillArcaneCircleTagLookup.Update(ref state);
             _skillArcaneCircleSecondBufferLookup.Update(ref state);
 
-
+            if (arcaneCircleLinkenBuffer.IsCreated)
+                arcaneCircleLinkenBuffer.Dispose();
            // var ecb = new EntityCommandBuffer(Allocator.TempJob);
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             //获取收集世界单例
@@ -104,6 +108,12 @@ namespace BlackDawn.DOTS
             }.ScheduleParallel(damageJobHandle);
 
             state.Dependency = collectJobHandle;
+            //这里转换回主线程，获取数组
+            state.Dependency.Complete();
+            arcaneCircleLinkenBuffer = collectedPositions.ToArray(Allocator.Persistent);
+            collectedPositions.Dispose(); 
+
+
 
 
 

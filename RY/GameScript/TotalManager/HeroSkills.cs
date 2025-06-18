@@ -73,7 +73,7 @@ namespace BlackDawn
 
         public void RelasesHeroSkill(HeroSkillID iD, HeroSkillPsionicType psionicType = HeroSkillPsionicType.Basic)
         {
-
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
             switch (iD)
                 
             {
@@ -282,6 +282,8 @@ namespace BlackDawn
                                     _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleTag() { tagSurvivalTime = 3 ,enableSecondA=true});
                                     _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleSecondTag());//添加标识，用于收集碰撞对
                                     _entityManager.AddBuffer<SkillArcaneCircleSecondBufferTag>(entityArcaneCircle);//添加技能专属buffer标签，用于构建虹吸效果的基础数据
+                                    //添加链接效果渲染标签
+                                  //  ecb.AddComponent(_entityManager.GetBuffer<LinkedEntityGroup>(_heroEntity)[1].Value, new HeroEffectsLinked());
                                 }
                             }
                             else
@@ -289,6 +291,8 @@ namespace BlackDawn
                                 //再次点击手动关闭
                                 var arcaneCircleEntity = _arcaneCircleQuery.GetSingletonRW<SkillArcaneCircleTag>();
                                 arcaneCircleEntity.ValueRW.closed = true;
+                                //关闭法阵时，需要设置链接为0
+                               // ecb.SetComponentEnabled<HeroEffectsLinked>(_entityManager.GetBuffer<LinkedEntityGroup>(_heroEntity)[1].Value, false);
                             }
 
                             break;
@@ -340,6 +344,7 @@ namespace BlackDawn
                                     _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleTag() { tagSurvivalTime = 3, enableSecondA = true,enableSecondB=true });
                                     _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleSecondTag());//添加标识，用于收集碰撞对
                                     _entityManager.AddBuffer<SkillArcaneCircleSecondBufferTag>(entityArcaneCircle);//添加技能专属buffer标签，用于构建虹吸效果的基础数据
+                         
                                 }
                             }
                             else
@@ -347,6 +352,8 @@ namespace BlackDawn
                                 //再次点击手动关闭
                                 var arcaneCircleEntity = _arcaneCircleQuery.GetSingletonRW<SkillArcaneCircleTag>();
                                 arcaneCircleEntity.ValueRW.closed = true;
+                                //关闭法阵时，需要设置链接为0
+                             //   ecb.SetComponentEnabled<HeroEffectsLinked>(_entityManager.GetBuffer<LinkedEntityGroup>(_heroEntity)[1].Value, false);
                             }
 
 
@@ -358,7 +365,8 @@ namespace BlackDawn
                     break;
             }
             ;
-
+            ecb.Playback(_entityManager);
+            ecb.Dispose();
                
         }
         /// <summary>

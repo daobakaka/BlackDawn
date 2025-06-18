@@ -11,6 +11,7 @@ using ProjectDawn.Navigation;
 using UnityEditor.Search;
 using ProjectDawn.ContinuumCrowds;
 using Unity.Physics;
+using Unity.Collections;
 //英雄系统为渲染前的最后一个系统
 namespace BlackDawn.DOTS
 {
@@ -79,6 +80,8 @@ namespace BlackDawn.DOTS
             //获取收集世界单例
             var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
             var arcanelCorcleHitsArray = detectionSystem.arcaneCircleHitHeroArray;
+            //ECB
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
             //  DevDebug.LogError("英雄碰撞对" + arcanelCorcleHitsArray.Length);
             //处理侦测器
@@ -99,7 +102,7 @@ namespace BlackDawn.DOTS
 
             }
             //技能法阵的英雄自身伤害、DOT减免、控制抵消的判定
-            HeroSkillArcanelCorcleDeal(ref state, arcanelCorcleHitsArray.Length, timer);
+            HeroSkillArcanelCorcleDeal(ref state,ecb, arcanelCorcleHitsArray.Length, timer);
 
 
 
@@ -111,16 +114,16 @@ namespace BlackDawn.DOTS
         /// 分开写，法阵技能的状态处理，增加分层逻辑
         /// </summary>
         /// <param name="state"></param>
-        void HeroSkillArcanelCorcleDeal(ref SystemState state, int length, float timer)
+        void HeroSkillArcanelCorcleDeal(ref SystemState state,EntityCommandBuffer ecb ,int length, float timer)
         {
 
 
-            foreach (var (transform, heroAttr, stateNoImmunity) in SystemAPI.Query<RefRW<HeroEntityMasterTag>, RefRW<HeroAttributeCmpt>, RefRW<HeroIntgratedNoImmunityState>>())
+            foreach (var (transform, heroAttr, stateNoImmunity,linkedGroup) in SystemAPI.Query<RefRW<HeroEntityMasterTag>, RefRW<HeroAttributeCmpt>, RefRW<HeroIntgratedNoImmunityState>,DynamicBuffer<LinkedEntityGroup>>())
             {
 
                 //拿取碰撞对，英雄处于碰撞对中，则按照帧掉血？应该也可以
 
-                //二阶法阵中生命值的扣除逻辑
+                //二阶法阵中生命值的扣除逻辑，有基础法阵标签才执行的逻辑
                 if (SystemAPI.TryGetSingleton<SkillArcaneCircleTag>(out var tag))
                 {
                     if (length > 0)
@@ -134,29 +137,44 @@ namespace BlackDawn.DOTS
                         //1+等级乘以系数，默认等级为1？二阶技能开启标识,英雄掉血逻辑这里自动判断
                         if (tag.enableSecondA == true)
                         {
-                           //s DevDebug.LogError("自己扣血"+ stateNoImmunity.ValueRW.inlineDamageNoImmunity);
+                            //s DevDebug.LogError("自己扣血"+ stateNoImmunity.ValueRW.inlineDamageNoImmunity);
                             heroAttr.ValueRW.defenseAttribute.hp -= (((heroAttr.ValueRW.defenseAttribute.originalHp / 100) * (5 + (tag.level - 1) * 0.5f)) * timer * stateNoImmunity.ValueRW.inlineDamageNoImmunity);
+
+                            //开启链接特效
+                            ecb.SetComponentEnabled<HeroEffectsLinked>(linkedGroup[1].Value, true);
+
                         }
                         //英雄法阵内伤害免疫逻辑
                         if (tag.enableSecondB == true)
                         {
                             //DevDebug.LogError("自己扣血三阶");
-                           // stateNoImmunity.ValueRW.inlineDamageNoImmunity = 0;
+                            // stateNoImmunity.ValueRW.inlineDamageNoImmunity = 0;
                             //免疫dot伤害
                             stateNoImmunity.ValueRW.dotNoImmunity = 0;
                             //免疫控制
                             stateNoImmunity.ValueRW.controlNoImmunity = 0;
 
                         }
-                
+
                     }
 
                     else
                     {
+
+                        //1+等级乘以系数，默认等级为1？二阶技能开启标识,英雄掉血逻辑这里自动判断
+                        if (tag.enableSecondA == true)
+                        {
+                            //关闭链接特效
+                            ecb.SetComponentEnabled<HeroEffectsLinked>(linkedGroup[1].Value, false);
+
+                            // DevDebug.Log("初始执行关闭链接");
+                        }
+
+
                         if (tag.enableSecondB == true)
 
                         {
-                           // stateNoImmunity.ValueRW.inlineDamageNoImmunity = 1;
+                            // stateNoImmunity.ValueRW.inlineDamageNoImmunity = 1;
                             //免疫dot伤害
                             stateNoImmunity.ValueRW.dotNoImmunity = 1;
                             //免疫控制
@@ -164,6 +182,13 @@ namespace BlackDawn.DOTS
                         }
 
                     }
+                }
+                else
+                {
+
+                    //关闭链接特效
+                    ecb.SetComponentEnabled<HeroEffectsLinked>(linkedGroup[1].Value, false);
+
                 }
 
 

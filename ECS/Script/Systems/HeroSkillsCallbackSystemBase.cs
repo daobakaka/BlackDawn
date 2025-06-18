@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Entities.UniversalDelegates;
+using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.VFX;
@@ -9,7 +11,7 @@ using UnityEngine.VFX;
 //用于处理技能释放的回调，非burstCompile
 namespace BlackDawn.DOTS
 {/// <summary>
-/// 由英雄mono开启,在渲染系统之后进行
+/// 由英雄mono开启,在渲染系统之后进行,回调系统， 涉及到传统class交互， 设计在最后进行
 /// </summary>
     [RequireMatchingQueriesForUpdate]
     [UpdateAfter(typeof(RenderEffectSystem))]
@@ -19,12 +21,23 @@ namespace BlackDawn.DOTS
         public bool Done { get ; set ; }
         HeroSkills _heroSkills;
         ScenePrefabsSingleton _prefabs;
-   
+
+        //侦测系统缓存
+        private SystemHandle _specialSkillsDamageSystemHandle;
+
+
+        //法阵技能的GPUbuffer
+        GraphicsBuffer _arcaneCirclegraphicsBuffer;
+        private bool resetVFXPartical;
         protected override void OnCreate()
         {
             base.OnCreate();
             //由英雄初始化时开启
             base.Enabled = false;
+
+            _specialSkillsDamageSystemHandle = World.Unmanaged.GetExistingUnmanagedSystem<HeroSpecialSkillsDamageSystem>();
+            _arcaneCirclegraphicsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, 5000, sizeof(float) * 3);
+
         }
 
         protected override void OnStartRunning()
@@ -41,9 +54,16 @@ namespace BlackDawn.DOTS
             var ecb = new EntityCommandBuffer(Allocator.Temp);
             var timer = SystemAPI.Time.DeltaTime;
 
+
+            var specialDanafeSystem = World.Unmanaged.GetUnsafeSystemRef<HeroSpecialSkillsDamageSystem>(_specialSkillsDamageSystemHandle);
+            //渲染链接
+            var arcaneCircleLinkedArray = specialDanafeSystem.arcaneCircleLinkenBuffer; 
+
+
+
             // **遍历所有打了请求标记的实体**,这里需要为方法传入ECB，这样可以在foreach里面同一帧使用
             //这是针对粒子特效的方法
-            if(false)
+            if (false)
             Entities
                 .WithName("SkillPulseSceondExplosionCallback") //程序底层打签名，用于标记
                 .WithAll<SkillPulseSecondExplosionRequestTag>() //匹配ABC 所有组件,默认匹配没有被disnable的组件
@@ -146,14 +166,63 @@ namespace BlackDawn.DOTS
                         damageCalPar.enablePull = false;
                         skillTag.enableSpecialEffect = true;                    
                     }
-                
-                
+                             
                 
                 })
                 .WithoutBurst() .Run();
 
 
+            //法阵buffer的效果 ，需要在外面清除,目前暂时使用这种方式，感觉其他方式有BUG,特比是关于buffer的清除比麻烦
+            if (_arcaneCirclegraphicsBuffer != null)
+            {
+                _arcaneCirclegraphicsBuffer.Dispose();
+            }
+        
 
+        //法阵的链接特效,传入buffer数组
+        Entities
+                .WithName("Enable_ArcaneCircleSecond")
+                .WithAll<HeroEffectsLinked>()
+                .ForEach((Entity entity, VisualEffect vfx
+                  ) =>
+                {
+
+                    if (arcaneCircleLinkedArray.Length > 0)
+                    {
+                        var targetPositions = arcaneCircleLinkedArray;
+
+                        _arcaneCirclegraphicsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, targetPositions.Length, sizeof(float) * 3);
+                        vfx.SetInt("_LinkedTargetsCount", targetPositions.Length);
+            
+                        _arcaneCirclegraphicsBuffer.SetData(targetPositions);
+                        // 传入 VFX
+                        vfx.SetGraphicsBuffer("_LinkedTargets", _arcaneCirclegraphicsBuffer);  // 与 VFX 中匹配
+
+                        //缓冲数据准备完毕之后，进行buffer清除
+                        vfx.SendEvent("Custom5");
+                        // buffer.Dispose();
+                        resetVFXPartical = false;
+                    }
+                })
+                .WithoutBurst().Run();
+
+            //法阵的链接特效,传入buffer数组
+            Entities
+                .WithName("DisEnable_ArcaneCircleSecond")
+                .WithDisabled<HeroEffectsLinked>()
+                .ForEach((Entity entity, VisualEffect vfx
+                  ) =>
+                {
+                    if (!resetVFXPartical)
+                    {
+                     
+                        
+                        vfx.Reinit();
+                        resetVFXPartical = true;
+                    }
+                   
+                })
+                .WithoutBurst().Run();
 
 
 
@@ -163,6 +232,20 @@ namespace BlackDawn.DOTS
             ecb.Dispose();
 
 
+        }
+
+
+
+
+        protected override void OnDestroy()
+        {
+
+
+            //法阵buffer的效果 ，需要在外面清除
+            if (_arcaneCirclegraphicsBuffer != null)
+            {
+                _arcaneCirclegraphicsBuffer.Dispose(); 
+            }
         }
     }
 }
