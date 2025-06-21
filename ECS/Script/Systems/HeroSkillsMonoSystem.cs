@@ -252,6 +252,7 @@ namespace BlackDawn.DOTS
             }
 
             //法阵技能，可以手动关闭
+            //二阶段遍历buffer,构建虹吸链接，链接根据动态效果改变长短？持续6秒自动消失，重新生成，还是按照buffer状态定义消失或者生成,这段逻辑在特殊技能类里面处理
             foreach (var (skillTag, skillCal, transform, collider, entity)
        in SystemAPI.Query<RefRW<SkillArcaneCircleTag>, RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
             {         
@@ -273,9 +274,9 @@ namespace BlackDawn.DOTS
                     ecb.DestroyEntity(entity);
 
             }
-            //二阶段遍历buffer,构建虹吸链接，链接根据动态效果改变长短？持续6秒自动消失，重新生成，还是按照buffer状态定义消失或者生成
-
-
+         
+            //寒冰的Mono效果
+            SkillMonoFrost(ref state,ecb);
 
 
 
@@ -288,5 +289,128 @@ namespace BlackDawn.DOTS
         {
           
         }
+
+        /// <summary>
+        /// 寒冰
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="ecb"></param>
+        void SkillMonoFrost(ref SystemState state, EntityCommandBuffer ecb)
+        {
+
+
+            //一阶性状控制
+            foreach (var (skillTag, skillCal, transform, collider, entity)
+              in SystemAPI.Query<RefRW<SkillFrostTag>, RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
+             {
+                // 1. 缓存发射时的原点和开始时间（只在第一次执行时写入）
+                if (skillTag.ValueRO.tagSurvivalTime==10)
+                {
+                    skillTag.ValueRW.originalPosition = transform.ValueRO.Position;
+                }
+                // 2. 增加存活时间
+                skillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
+                // 3. 读取 origin、t
+                float3 origin = skillTag.ValueRO.originalPosition;
+                float t = 10-skillTag.ValueRO.tagSurvivalTime;
+
+                // 5. 用 speed 直接作为线速度，半径 r = speed * t
+                float r = skillTag.ValueRO.speed * t;
+                // 6. 角速度保持不变（按需修改）
+                float angularSpeed = math.radians(90f); // 90°/s
+                float theta = angularSpeed * t;
+
+                // 7. 在 XZ 平面计算螺旋偏移（Y 不变）
+                float3 offset = new float3(
+                    r * math.cos(theta),
+                    0f,
+                    r * math.sin(theta)
+                );
+                // 7. 更新位置
+                transform.ValueRW.Position = origin + offset;
+
+                // 8. 超时销毁
+                if (t >= 10f)
+                {
+                    ecb.DestroyEntity(entity);
+                }
+
+                //开启第二阶段，寒冰碎片能力
+                if (skillTag.ValueRO.enableSecond)
+                {                 
+                //生成 不同数量寒冰碎片
+                if(skillCal.ValueRW.hit ==true&& skillTag.ValueRW.hitCount>0)
+                    {                        
+                        skillCal.ValueRW.hit = false;
+                        var prefab = SystemAPI.GetSingleton<ScenePrefabsSingleton>();
+
+                        //激发一次寒冰碎片的计算
+
+                        skillTag.ValueRW.hitCount--;
+
+                        for (int i = 0; i < skillTag.ValueRO.shrapnelCount; i++)
+                        {
+
+                           var fragIce= ecb.Instantiate(prefab.HeroSkillAssistive_Frost);
+
+                            var trs = transform.ValueRW;
+                            trs.Scale = 1;
+                            float angleDeg = 360f / skillTag.ValueRO.shrapnelCount * i;
+                            float angleRad = math.radians(angleDeg);
+
+                            // 3. 生成绕 Y 轴的四元数，并赋给 trs.Rotation
+                            trs.Rotation = quaternion.EulerXYZ(0f, angleRad, 0f);
+                            ecb.AddComponent(fragIce, trs);                           
+                            //添加寒冰碎片的标签,赋予伤害标签的伤害值
+                            ecb.AddComponent(fragIce , new SkillFrostShrapneTag() { speed =20,tagSurvivalTime =1});
+                            var newCal = skillCal.ValueRW;
+                            // 2. 修改字段，寒冰碎片继承20%冻结值
+                            newCal.damageChangePar = skillTag.ValueRO.skillDamageChangeParTag;
+                            if(skillTag.ValueRO.enableSpecialEffect)
+                            newCal.tempFreeze = 20;
+
+                            // 3. 把改好的组件整包给实体  
+                            ecb.AddComponent(fragIce, newCal);
+
+                            var hits = ecb.AddBuffer<HitRecord>(fragIce);
+                            hits.Capacity = 10;
+                            ecb.AddBuffer<HitElementResonanceRecord>(fragIce);
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+
+            //二阶性状控制
+            foreach (var (skillTag, skillCal, transform, collider, entity)
+           in SystemAPI.Query<RefRW<SkillFrostShrapneTag>, RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
+            {
+
+                // 2) 计算“前向”世界向量
+                float3 forward = math.mul(transform.ValueRO.Rotation, new float3(0f, 0f, 1f));
+                // 3) 沿着前向移动
+                transform.ValueRW.Position += forward * skillTag.ValueRW.speed * SystemAPI.Time.DeltaTime;
+
+                skillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
+
+                if (skillTag.ValueRO.tagSurvivalTime <= 0)
+                {
+
+                    ecb.DestroyEntity(entity);
+                }
+
+
+
+            }
+
+
+        }
+
+
+
     }
 }

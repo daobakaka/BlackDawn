@@ -68,17 +68,6 @@ namespace BlackDawn
             {
                 _hasFiredMid = true;
                 DevDebug.Log("SKILL 动画到中点，执行特殊逻辑"+stateInfo.normalizedTime);
-                //脉冲基础形态
-                //   _heroSkills.RelasesDamageSkillFlightProp(HeroSkillID.Pulse);
-                //脉冲A形态添加标识
-                //  _heroSkills.RelasesDamageSkillFlightProp(HeroSkillID.Pulse, HeroSkillPsionicType.PsionicA);
-                //脉冲B 形态
-                // _heroSkills.RelasesDamageSkillFlightProp(HeroSkillID.Pulse,HeroSkillPsionicType.PsionicB);
-                //脉冲AB形态,这里应该可以从英雄加载的类里面读取
-                // _heroSkills.RelasesDamageSkillFlightProp(HeroSkillID.Pulse, HeroSkillPsionicType.PsionicAB);
-               // _heroSkills.RelasesDamageSkillFlightProp(HeroSkillID.DarkEnergy);
-               // _heroSkills.RelasesDamageSkillFlightProp(HeroSkillID.DarkEnergy, HeroSkillPsionicType.PsionicA);
-              //这里可以统一 ，一个技能状态机根据枚举不同释放所有技能，读取的时候再增加
                 _heroSkills.RelasesHeroSkill((HeroSkillID)_skillID, (HeroSkillPsionicType)_skillIDType);
 
 

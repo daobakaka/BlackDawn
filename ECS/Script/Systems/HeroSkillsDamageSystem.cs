@@ -5,7 +5,6 @@ using Unity.Jobs;
 using Unity.Physics;
 using Unity.Mathematics;
 using Unity.Transforms;
-using TMPro;
 
 //用于英雄技能的检测以及伤害计算,这个系统在基础伤害系统之后进行更新
 namespace BlackDawn.DOTS
@@ -219,7 +218,10 @@ namespace BlackDawn.DOTS
                 ECB.SetComponent(i, textRenderEntity, tempText);
                 return;
             }
-
+            //3+0）
+            //刷新击中时间,更新击中判定
+            d.hitSurvivalTime = 1;
+            d.hit = true;
 
             //3+1) 控制系统参数，传入相关的控制参数， 达到阈值之后产生控制效果
             //控制系统是以叠加周期的方式进行，而不是概率方式进行
@@ -235,13 +237,13 @@ namespace BlackDawn.DOTS
 
             //状态控制，后者可覆盖前者状态，但控制状态标识依旧在，用于计算伤害
             //恐惧
-           c.fear += h.controlAbilityAttribute.fear;
+           c.fear += h.controlAbilityAttribute.fear+d.tempFear;
             //定身
-            c.root += h.controlAbilityAttribute.root;
+            c.root += h.controlAbilityAttribute.root+d.tempRoot;
             //昏迷
-            c.stun += h.controlAbilityAttribute.stun;
+            c.stun += h.controlAbilityAttribute.stun+d.tempStun;
             //冻结
-            c.freeze += h.controlAbilityAttribute.freeze;
+            c.freeze += h.controlAbilityAttribute.freeze+d.tempFreeze;
 
             //由技能标签的加载决定牵引状态,通常可以获得道具或者技能可以获得临时或者永久牵引或者爆炸值
             //牵引或者爆炸有1秒间隔，因为有buffer的间隔，所以这里判断并不能和执行
@@ -356,10 +358,11 @@ namespace BlackDawn.DOTS
             }
 
             // 7) 固定减伤（对瞬时+DOT，0-50%的固定随机减伤，用于控制数字跳动),这里的DOT伤害是计算过暴击和抗性之后,补充上伤害加深的debuffer
+            //这里乘以伤害变化参数
             var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//固定随机减伤
-            float finalDamage = (instTotal + dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification);
+            float finalDamage = (instTotal + dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification)*d.damageChangePar;
             //这里分离dot伤害
-            float finalDotDamage = (dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification);
+            float finalDotDamage = (dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification)*d.damageChangePar;
 
 
             //（7-1）写回dot伤害的扣血总量,采用同样的buffer累加方式

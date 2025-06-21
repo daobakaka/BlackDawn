@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using BlackDawn.DOTS;
 using GameFrame.EventBus;
@@ -26,6 +27,8 @@ namespace BlackDawn
     {
         [HideInInspector] public Animator animator;
         [HideInInspector] public Vector3 targetPosition; //点击的鼠标位置
+        [HideInInspector] public Vector3 skillTargetPositon;//点击鼠标右键的位置
+        [HideInInspector] public Vector3 skillElur;//技能欧拉角旋转
         [HideInInspector] public Vector3 cameraDistance;
         [HideInInspector] public Entity heroEntity;//英雄自己的Entity
         [HideInInspector] public HeroAttributeCmpt attributeCmpt; //英雄属性继承Icomponent接口
@@ -70,15 +73,35 @@ namespace BlackDawn
         }
 
         /// <summary>
-        /// 临时技能参数结构体
+        /// 临时技能参数结构体，通常为附魔类技能使用
         /// </summary>
         public struct TempSkillAttackPar
         {
+            //通用时间标识
             public float timer;
-            public int capacity;
+            //寒冰附魔时间
+            public float frostEnchantmentTimer;
+            //暗能附魔时间
+            public float darkEnergyEnhantmentTimer;
+            //暗能容量
+            public int darkEnergyCapacity;
+            //寒冰容量
+            public int frostCapacity;
             public bool isReloading;    // 是否正在冷却
             public float reloadTimer;    // 冷却时间
+            //-----
             public bool enableSpecialEffect; //是否触发特殊效果
+
+            public bool enableFrostSecond;
+
+            //寒冰分裂次数
+            public int frostSplittingCount;
+            //寒冰碎片数量
+            public int frostShardCount;
+            //寒冰状态切换伤害参数变化
+            public float frostSkillChangePar;
+            //寒冰的临时冻结值
+            public float tempFreeze;
         }
 
 
@@ -170,7 +193,8 @@ namespace BlackDawn
             CalculateBaseSkillDamage();
             //技能攻速变化？可以一直受攻击状态或者buffer的加成影响
             CalculateSkillAttackSpeed();
-
+            //附魔类技能的附魔时间计算
+            CalcuateSkillEnhancementTimer();
 
 
 
@@ -285,10 +309,17 @@ namespace BlackDawn
 
             //基础攻击变化1
             //这里增加附魔攻击判断
-            if (skillAttackPar.capacity > 0)
+            if (skillAttackPar.darkEnergyCapacity > 0)
             {
-                DevDebug.Log("释放暗影能量体附魔技能");
+                DevDebug.LogError("释放暗影能量体附魔技能");
                 HeroSkillDarkEnergyAttackBurst();
+            }
+            //寒冰释放判断
+            if (skillAttackPar.frostCapacity == 1 && _attackPar.capacity == 1)
+            {
+
+                DevDebug.LogError("释放寒冰球附魔技能");
+                HeroSkillForestAttack();
             }
         }
 
@@ -298,7 +329,7 @@ namespace BlackDawn
         /// </summary>
         public void HeroSkillDarkEnergyAttackBurst()
         {
-            skillAttackPar.capacity--;
+            skillAttackPar.darkEnergyCapacity--;
             var det = entityManager.GetComponentData<HeroAttackTarget>(heroEntity);
             // 只取 XZ 平面计算一次中心方向
             float3 heroPos = transform.position;
@@ -330,6 +361,70 @@ namespace BlackDawn
             JobHandle handle = job.Schedule(attributeCmpt.weaponAttribute.pelletCount, attributeCmpt.weaponAttribute.pelletCount /*batch count*/);
 
             ecbSystem.AddJobHandleForProducer(handle);
+        }
+
+        /// <summary>
+        /// 附魔类技能寒冰初始化逻辑
+        /// </summary>
+        public void HeroSkillForestAttack()
+       
+        {
+            skillAttackPar.frostCapacity--;
+            var det = entityManager.GetComponentData<HeroAttackTarget>(heroEntity);
+            // 只取 XZ 平面计算一次中心方向
+            float3 heroPos = transform.position;
+            float3 targetPos = entityManager.GetComponentData<LocalTransform>(det.attackTarget).Position;
+            float3 rawDir = targetPos - heroPos;
+            rawDir.y = 0f;
+            float3 centerDir = math.normalize(rawDir);
+
+            //新建查询
+            var prefabs = entityManager.CreateEntityQuery(typeof(ScenePrefabsSingleton)).GetSingleton<ScenePrefabsSingleton>();
+            var ecb = ecbSystem.CreateCommandBuffer();
+
+            //entityManager.Instantiate(prefabs.HeroSkill_Frost);
+
+            Entity prop = ecb.Instantiate(prefabs.HeroSkill_Frost);
+
+            ecb.SetComponent( prop, new LocalTransform
+            {
+                Position = transform.position,
+                Rotation = quaternion.LookRotation(centerDir, math.up()),
+                Scale = 1f
+
+            });
+
+            // 添加寒冰技能标识,这里技能道具的释放速度可以直接写死，后期可以根据道具设计，增加一个飞行速度值
+            //传入起始位置
+            ecb.AddComponent( prop, new SkillFrostTag
+            {
+                tagSurvivalTime = 10,
+                speed = 5,
+                originalPosition = transform.position,
+                enableSecond =  skillAttackPar.enableFrostSecond,
+                hitCount = skillAttackPar.frostSplittingCount,
+                shrapnelCount =skillAttackPar.frostShardCount,
+                //传入分裂伤害参数
+                skillDamageChangeParTag = skillAttackPar.frostSkillChangePar,
+                //传入碎片的冻结参数
+                enableSpecialEffect =skillAttackPar.enableSpecialEffect,
+               
+
+            });
+
+
+            var damagePar = skillsDamageCalPar;
+            damagePar.tempFreeze = skillAttackPar.tempFreeze;
+            // 添加伤害计算组件
+            ecb.AddComponent( prop, damagePar);
+
+            //默认命中容量50个，为道具添加命中参数
+            var hits = ecb.AddBuffer<HitRecord>(prop);
+            hits.Capacity = 50;
+            ecb.AddBuffer<HitElementResonanceRecord>( prop);
+
+
+
         }
 
 
@@ -597,7 +692,21 @@ namespace BlackDawn
         {
 
             animator.SetFloat("Skill1AttackSpeed", attributeCmpt.attackAttribute.attackSpeed + 1);
-        
+              
+        }
+        /// <summary>
+        /// 附魔类技能的附魔时间计算
+        /// </summary>
+        void CalcuateSkillEnhancementTimer()
+        {
+            //暗能附魔时间小于0，则容量取消
+            skillAttackPar.darkEnergyEnhantmentTimer -= Time.deltaTime;
+            if (skillAttackPar.darkEnergyEnhantmentTimer <= 0)
+                skillAttackPar.darkEnergyCapacity = 0;
+            //寒冰附魔时间小于0，则容量取消
+            skillAttackPar.frostEnchantmentTimer -= Time.deltaTime;
+            if (skillAttackPar.frostEnchantmentTimer <= 0)
+                skillAttackPar.frostCapacity = 0;
         
         }
 
@@ -732,6 +841,7 @@ namespace BlackDawn
             //默认命中容量20个
             var hits=  Ecb.AddBuffer<HitRecord>(index, prop);
             hits.Capacity =10;
+            Ecb.AddBuffer<HitElementResonanceRecord>(index, prop);
         }
     }
 
@@ -784,9 +894,11 @@ namespace BlackDawn
             // 添加伤害计算组件
             Ecb.AddComponent(index, prop, DamageCalData);
 
-            //默认命中容量20个，为道具添加命中参数
+            //默认命中容量50个，为道具添加命中参数
             var hits = Ecb.AddBuffer<HitRecord>(index, prop);
             hits.Capacity = 50;
+
+            Ecb.AddBuffer<HitElementResonanceRecord>(index, prop);
         }
     }
 

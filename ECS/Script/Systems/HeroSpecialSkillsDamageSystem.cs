@@ -7,8 +7,9 @@ using Unity.Physics;
 using Unity.Transforms;
 using Unity.Mathematics;
 using Unity.Jobs;
+using UnityEditor.Experimental.GraphView;
 
-
+//执行特殊技能的伤害处理
 namespace BlackDawn.DOTS
 {
     /// <summary>
@@ -26,6 +27,10 @@ namespace BlackDawn.DOTS
         private ComponentLookup<MonsterLossPoolAttribute> _monsterLossPoolAttrLookip;
         private ComponentLookup<MonsterControlledEffectAttribute> _monsterControlledEffectAttrLookup;
         private ComponentLookup<HeroAttributeCmpt> _heroAttrLookup;
+        private BufferLookup<HitElementResonanceRecord> _hitElementResonanceRecordBufferLookup;
+        private BufferLookup<LinkedEntityGroup> _linkedEntityGroupLookup;
+        private ComponentLookup<FlightPropDamageCalPar> _flightPropDamageCalParLookup;
+        private ComponentLookup<SkillsDamageCalPar> _skillsDamageCalParLookup;
         /// <summary>
         /// 法阵特殊技能造成的伤害表现为DOT伤害
         /// </summary>
@@ -55,6 +60,10 @@ namespace BlackDawn.DOTS
             _heroAttrLookup = SystemAPI.GetComponentLookup<HeroAttributeCmpt>(true);
             _skillArcaneCircleSecondBufferLookup = SystemAPI.GetBufferLookup<SkillArcaneCircleSecondBufferTag>(true);
             _skillArcaneCircleTagLookup = SystemAPI.GetComponentLookup<SkillArcaneCircleTag>(true);
+            _hitElementResonanceRecordBufferLookup = SystemAPI.GetBufferLookup<HitElementResonanceRecord>(true);
+            _linkedEntityGroupLookup = SystemAPI.GetBufferLookup<LinkedEntityGroup>(true);
+            _flightPropDamageCalParLookup = SystemAPI.GetComponentLookup<FlightPropDamageCalPar>(true);
+            _skillsDamageCalParLookup = SystemAPI.GetComponentLookup<SkillsDamageCalPar>(true);
 
         }
         void UpDataAllComponentLookup(ref SystemState state)
@@ -76,6 +85,12 @@ namespace BlackDawn.DOTS
             _skillArcaneCircleTagLookup.Update(ref state);
             _skillArcaneCircleSecondBufferLookup.Update(ref state);
 
+            _hitElementResonanceRecordBufferLookup.Update(ref state);
+            _linkedEntityGroupLookup.Update(ref state);
+
+            _flightPropDamageCalParLookup.Update(ref state);
+            _skillsDamageCalParLookup.Update(ref state);
+
             if (arcaneCircleLinkenBuffer.IsCreated)
                 arcaneCircleLinkenBuffer.Dispose();
            // var ecb = new EntityCommandBuffer(Allocator.TempJob);
@@ -83,10 +98,11 @@ namespace BlackDawn.DOTS
             //获取收集世界单例
             var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
             var arcanelCorcleHitsArray = detectionSystem.arcaneCircleHitMonsterArray;
+            var elementResonanceHitArray =detectionSystem.combinedElementResonanceArray;
 
 
             // 为虹吸特效提供buffer，遍历BUFFer  生成特效
-            var damageJobHandle = new ApplySpecialSkillDamageJob
+            var damageJobHandle = new ApplySpecialSkillArcaneCircleDamageJob
             {
                 ECB = ecb.AsParallelWriter(),
                 DamageParLookup = _skillArcaneCircleTagLookup,
@@ -100,7 +116,7 @@ namespace BlackDawn.DOTS
     
             var collectedPositions = new NativeList<float3>(5000,Allocator.TempJob);
 
-            // 3. 创建 Job
+            // 3. 创建这里是为了  法阵的链解特效做的代码块
             var collectJobHandle = new CollectArcaneCircleLinkJob
             {
                 TargetTransformLookup = m_transform,
@@ -111,9 +127,38 @@ namespace BlackDawn.DOTS
             //这里转换回主线程，获取数组
             state.Dependency.Complete();
             arcaneCircleLinkenBuffer = collectedPositions.ToArray(Allocator.Persistent);
-            collectedPositions.Dispose(); 
+            collectedPositions.Dispose();
 
+            //元素共鸣的相关计算
+            var elementResonanceEnableSecond = false;
+            var elementResonanceEnableThird = false;
+            float elementResonanceSecondPar = 0;
+            float elementRespnanceThridPar = 0;
 
+            foreach (var (skillTagE, entity) in SystemAPI.Query<RefRW<SkillElementResonanceTag>>().WithEntityAccess())
+            {
+                elementResonanceEnableSecond = skillTagE.ValueRO.enableSecond;
+                elementResonanceEnableThird = skillTagE.ValueRO.enableThrid;
+                elementResonanceSecondPar = skillTagE.ValueRO.secondDamagePar;
+                elementRespnanceThridPar = skillTagE.ValueRO.thridDamagePar;
+                break;
+             }
+
+            state.Dependency = new ApplySpecialSkillElementResonanceDamageJob
+            { DefenseAttrLookup =_monsterDefenseAttrLookup,
+             ECB = ecb.AsParallelWriter(),
+             FlightPropDamageCalParLookip =_flightPropDamageCalParLookup,
+             SkillDamageCalParLookup =_skillsDamageCalParLookup,
+             LossPoolAttrLookup =_monsterLossPoolAttrLookip,
+             HitArray=elementResonanceHitArray,
+             LinkedLookup= _linkedEntityGroupLookup,
+             RecordElementResonanceBufferLookup=_hitElementResonanceRecordBufferLookup,
+             EnableSecond=elementResonanceEnableSecond,
+             EnableThrid =elementResonanceEnableThird,
+             SecondDamagePar =elementResonanceSecondPar,
+             ThridDamagePar =elementRespnanceThridPar,
+           
+            }.Schedule(elementResonanceHitArray.Length, 64, state.Dependency);
 
 
 
@@ -130,7 +175,7 @@ namespace BlackDawn.DOTS
     /// 对每个特殊碰撞对
     /// </summary>
     [BurstCompile]
-    struct ApplySpecialSkillDamageJob : IJobParallelFor
+    struct ApplySpecialSkillArcaneCircleDamageJob : IJobParallelFor
     {
         public EntityCommandBuffer.ParallelWriter ECB;
         [ReadOnly] public ComponentLookup<SkillArcaneCircleTag> DamageParLookup;
@@ -219,6 +264,107 @@ namespace BlackDawn.DOTS
             }
         }
     }
+
+    /// <summary>
+    /// 元素共鸣的伤害计算
+    /// </summary>
+
+    [BurstCompile]
+    struct ApplySpecialSkillElementResonanceDamageJob : IJobParallelFor
+    {
+        public EntityCommandBuffer.ParallelWriter ECB;
+        [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
+        [ReadOnly] public ComponentLookup<SkillsDamageCalPar> SkillDamageCalParLookup;
+        [ReadOnly] public ComponentLookup<FlightPropDamageCalPar> FlightPropDamageCalParLookip;
+        [ReadOnly] public ComponentLookup<MonsterLossPoolAttribute> LossPoolAttrLookup;
+        [ReadOnly] public BufferLookup<HitElementResonanceRecord> RecordElementResonanceBufferLookup;
+        [ReadOnly] public BufferLookup<LinkedEntityGroup> LinkedLookup;
+        [ReadOnly] public NativeArray<TriggerPairData> HitArray;//收集产生元素共鸣的碰撞对，合并元素共鸣/暗影吞噬类特效,可以使用广告牌做激发特效
+
+        public bool EnableSecond;
+        public bool EnableThrid;
+        public float SecondDamagePar;
+        public float ThridDamagePar;
+                  
+        public void Execute(int i)
+        {
+            var pair = HitArray[i];
+            Entity damage = pair.EntityA;
+            Entity target = pair.EntityB; // target = 怪物
+
+            // 取出怪物属性
+            var d = DefenseAttrLookup[target];
+            var l = LossPoolAttrLookup[target];
+            var textRenderEntity = LinkedLookup[target][2].Value;
+            var buffer = RecordElementResonanceBufferLookup[damage];
+
+            // 防止重复处理
+            bool alreadyProcessed = false;
+            for (int j = 0; j < buffer.Length; j++)
+            {
+                alreadyProcessed |= buffer[j].other == target;
+            }
+            if (alreadyProcessed) return;
+            // 添加元素共鸣buffer
+            ECB.AppendToBuffer(i, damage, new HitElementResonanceRecord { other = target });
+
+            // 计算dotNum: 分支变掩码
+            float dotCount = l.fireActive + l.frostActive + l.lightningActive + l.poisonActive + l.shadowActive;
+            float mask2 = math.select(0f, 1f, dotCount >= 3 && dotCount < 5); // 3/4种
+            float mask3 = math.select(0f, 1f, dotCount >= 5);                 // 5种及以上
+            float dotNum = 1f + mask2 * SecondDamagePar + mask3 * ThridDamagePar;
+
+            // 取 skill/flight 属性、统一混合处理（SIMD友好关键）
+            bool isSkill = SkillDamageCalParLookup.HasComponent(damage);
+            bool isFlight = FlightPropDamageCalParLookip.HasComponent(damage);
+
+            float frost = 0, fire = 0, lightning = 0, poison = 0, shadow = 0;
+
+            if (isSkill)
+            {
+                var skill = SkillDamageCalParLookup[damage];
+                frost = skill.frostDamage;
+                fire = skill.fireDamage;
+                lightning = skill.lightningDamage;
+                poison = skill.poisonDamage;
+                shadow = skill.shadowDamage;
+            }
+            else if (isFlight)
+            {
+                var flight = FlightPropDamageCalParLookip[damage];
+                frost = flight.frostDamage;
+                fire = flight.fireDamage;
+                lightning = flight.lightningDamage;
+                poison = flight.poisonDamage;
+                shadow = flight.shadowDamage;
+            }
+
+            float totalDamage = (frost + fire + lightning + poison + shadow) * d.damageReduction * dotNum;
+
+            // 用掩码方式、全部都写，最后只激活一种
+            int skillMask = isSkill ? 1 : 0;
+            int flightMask = isFlight ? 1 : 0;
+
+            // 写入技能/道具专属数据（这样Burst能合并分支）
+            FlightPropAccumulateData skillData = default;
+            skillData.damage = totalDamage * skillMask;
+
+            HeroSkillPropAccumulateData flightData = default;
+            flightData.damage = totalDamage * flightMask;
+
+            // SIMD友好写法，写回只激活一种
+            if (isSkill)
+                ECB.AppendToBuffer(i, target, skillData);
+            if (isFlight)
+                ECB.AppendToBuffer(i, target, flightData);
+
+            // 激活一次伤害飘字
+            ECB.SetComponentEnabled<MonsterTempDamageText>(i, textRenderEntity, true);
+
+        }
+    }
+
+
 
 
 }

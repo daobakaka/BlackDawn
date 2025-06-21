@@ -925,7 +925,7 @@ namespace BlackDawn
     }
 
     /// <summary>
-    /// 怪物伤害池属性
+    /// 怪物伤害池属性,这里激活标志用于代表true
     /// </summary>
     [Serializable]
     public struct MonsterLossPoolAttribute : IComponentData
@@ -1072,6 +1072,21 @@ namespace BlackDawn
 
         /// <summary>爆炸</summary>
         public float explosion;
+
+        ///// <summary>昏迷</summary>
+        //public float tempStun;
+
+        ///// <summary>定身（定身/束缚）</summary>
+        //public float tempRoot;
+
+        ///// <summary>恐惧</summary>
+        //public float tempFear;
+
+        ///// <summary>冻结</summary>
+        //public float tempFreeze;
+
+
+
     }
     /// <summary>
     /// 怪物被控制效果属性

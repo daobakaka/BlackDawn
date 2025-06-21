@@ -148,6 +148,62 @@ namespace BlackDawn.DOTS
 
 
     #endregion
+    #region 动态buffer区域
+    /// <summary>
+    /// Buffer 元素：记录一次触发碰撞的“另一方实体 + 距离平方”
+    /// </summary>
+    [Serializable]
+    [InternalBufferCapacity(100)]
+    public struct NearbyHit : IBufferElementData
+    {
+        public Entity other;
+        public float sqrDist;
+    }
 
+
+    /// <summary>
+    /// 打击记录
+    /// </summary>
+    [Serializable]
+    [InternalBufferCapacity(50)] //默认容量50
+    public struct HitRecord : IBufferElementData
+    {
+        public Entity other;
+        //事件标签,攻击间隔
+        public float timer;
+        //通用判定,判定 暗影吞噬 等各种触发效果
+        public bool universalJudgment;
+    }
+
+
+    /// <summary>
+    /// 用于记录元素共鸣的记录条，后买可根据选择的中途休息选择的技能进行配置
+    /// </summary>
+    [Serializable]
+    [InternalBufferCapacity(10)] //默认容量50
+    public struct HitElementResonanceRecord : IBufferElementData
+    {
+        public Entity other;
+        //事件标签,攻击间隔
+        public float timer;
+    }
+
+
+
+    /// <summary>
+    /// 英雄受伤打击记录
+    /// </summary>
+    [Serializable]
+    [InternalBufferCapacity(50)]
+    public struct HeroHitRecord : IBufferElementData
+    {
+        public Entity other;
+        //事件标签,攻击间隔
+        public float timer;
+    }
+
+
+
+    #endregion
 
 }

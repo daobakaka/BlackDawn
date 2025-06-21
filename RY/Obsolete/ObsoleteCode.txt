@@ -2767,3 +2767,94 @@ public class DamageTextMono : MonoBehaviour
            // DevDebug.Log("已累加并清空自己的buffer");
 
         }
+        //--元素共鸣   SIMD 优化前
+         /// <summary>
+    /// 元素共鸣的伤害计算
+    /// </summary>
+
+    [BurstCompile]
+    struct ApplySpecialSkillElementResonanceDamageJob : IJobParallelFor
+    {
+        public EntityCommandBuffer.ParallelWriter ECB;
+        [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
+        [ReadOnly] public ComponentLookup<SkillsDamageCalPar> SkillDamageCalParLookup;
+        [ReadOnly] public ComponentLookup<FlightPropDamageCalPar> FlightPropDamageCalParLookip;
+        [ReadOnly] public ComponentLookup<MonsterLossPoolAttribute> LossPoolAttrLookup;
+        [ReadOnly] public BufferLookup<HitElementResonanceRecord> RecordElementResonanceBufferLookup;
+        [ReadOnly] public BufferLookup<LinkedEntityGroup> LinkedLookup;
+        [ReadOnly] public NativeArray<TriggerPairData> HitArray;//收集产生元素共鸣的碰撞对，合并元素共鸣/暗影吞噬类特效,可以使用广告牌做激发特效
+
+        public bool EnableSecond;
+        public bool EnableThrid;
+        public float SecondDamagePar;
+        public float ThridDamagePar;
+                  
+        public void Execute(int i)
+        {
+            // 1) 拿到碰撞实体对,这里之前已经处理过相关的结构 ，因此不用混合
+            var pair = HitArray[i];
+            Entity damage = pair.EntityA;
+            Entity target = pair.EntityB;//target 是怪物
+            //取出怪物生命值
+            var d = DefenseAttrLookup[target];
+            var textRenderEntity = LinkedLookup[target][2].Value;
+            var l = LossPoolAttrLookup[target];
+
+            var buffer = RecordElementResonanceBufferLookup[damage];
+                    
+            // 先检查是否已经记录过这个 target
+            for (int j = 0; j < buffer.Length; j++)
+            {
+                //DevDebug.Log("buffer：--"+j +"   "+ buffer[j].timer);
+                if (buffer[j].other == target)
+                {
+                    // DevDebug.Log("有重复拒绝计算");
+                    return;
+                }
+            }
+            //添加元素共鸣的buffer
+            ECB.AppendToBuffer(i, damage, new HitElementResonanceRecord { other = target });
+            float totalDamage = 0;
+
+            float dotNum = l.fireActive + l.frostActive + l.lightningActive + l.poisonActive + l.shadowActive;
+            if (dotNum >= 3)
+            {
+                dotNum = SecondDamagePar+1;
+            }
+            else if (dotNum >= 5)
+            {
+                dotNum =SecondDamagePar+ThridDamagePar+1;
+
+            }
+            else
+                dotNum = 1;
+
+
+            // 只需二选一（不会出现都不是的情况）,这里可以在搜集碰撞对的时候进行筛选逻辑，防止回退
+            if (SkillDamageCalParLookup.HasComponent(damage))
+            {
+                var skill = SkillDamageCalParLookup[damage];
+                 totalDamage = skill.frostDamage + skill.fireDamage + skill.lightningDamage + skill.poisonDamage + skill.shadowDamage;
+                var db = new FlightPropAccumulateData();
+                db.damage = totalDamage *d.damageReduction*dotNum;
+                ECB.AppendToBuffer(i, target, db);
+
+
+                // ...元素共鸣+技能逻辑
+            }
+            else // 必然是飞行道具
+            {
+                var flight = FlightPropDamageCalParLookip[damage];
+                // ...元素共鸣+飞行道具逻辑
+
+                 totalDamage = flight.frostDamage + flight.fireDamage + flight.lightningDamage + flight.poisonDamage + flight.shadowDamage;
+                var ds = new HeroSkillPropAccumulateData();
+                ds.damage = totalDamage *d.damageReduction*dotNum;
+                ECB.AppendToBuffer(i, target, ds);
+            }
+
+            //血量不需要写回在伤害阶段写回，激活瞬时伤害表，触发一次伤害飘字
+            ECB.SetComponentEnabled<MonsterTempDamageText>(i, textRenderEntity, true);
+
+        }
+    }

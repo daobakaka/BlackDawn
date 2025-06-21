@@ -165,7 +165,7 @@ namespace GameFrame.Runtime
         }
         
         /// <summary>
-        /// 鼠标左键抬起事件
+        /// 鼠标右键抬起事件
         /// </summary>
         Action<Vector2> onMouse1Cancel
         {

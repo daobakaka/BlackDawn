@@ -223,8 +223,9 @@ namespace BlackDawn
 
             //冻结  - 停止当前动画  - 速度为0 ，以冰霜池控制？特殊属性+冰霜控制 ，测试可行，所以因设计冰霜伤害有额外的控制效果，因此冰霜伤害应该设计更低
             //这里如果昏迷和冻结同时触发，冻结可以覆盖昏迷，注意脚本先后顺序
-            if (lossPoolAttribute.frostPool + ce.freeze > 150 )
+            if ( ce.freeze > 100 )
             {
+                
                 if (ce.freezeTimer <= 2)
                 {
                     ce.freezeActive = true;
@@ -233,6 +234,7 @@ namespace BlackDawn
                     agentLocomotion.Speed = 0;
                     //停止动画
                     animatorAspect.StopAnimation();
+                   // DevDebug.LogError(index + "  被冻结");
                 }
                 else
                 {

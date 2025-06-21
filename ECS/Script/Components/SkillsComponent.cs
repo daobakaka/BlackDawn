@@ -41,8 +41,14 @@ namespace BlackDawn.DOTS
         /// <summary>流血持续性伤害，由物理伤害触发</summary>
         public float bleedDotDamage;
 
+        // —— 临时性（控制属性） ——
+        /// <summary>临时性控制属性</summary>
+        public float tempFreeze;
+        public float tempStun;
+        public float tempFear;
+        public float tempRoot;
 
-        /// <summary>用于技能变化的整体伤害参数</summary>
+        /// <summary>用于技能变化的整体伤害参，这里看到是在池化中进行计算的，也应该在技能表现中增加，默认值为1</summary>
         public float damageChangePar;
 
         /// <summary>
@@ -56,8 +62,9 @@ namespace BlackDawn.DOTS
 
         //伤害类型枚举
         public DamageTriggerType damageTriggerType;
-        //击中后存活时间，用于构建爆炸或者其他属性
+        //击中后存活时间，用于构建爆炸或者其他属性(如分裂)
         public float hitSurvivalTime;
+        public bool hit;
         //原始存活时间
         public float originalSurvivalTime;
         //销毁标识
@@ -91,7 +98,7 @@ namespace BlackDawn.DOTS
 
 
     /// <summary>
-    /// 暗能球
+    /// 暗能球附魔类
     /// </summary>
     public struct SkillDarkEnergyTag : IComponentData, IEnableableComponent
     {
@@ -106,6 +113,41 @@ namespace BlackDawn.DOTS
         public float skillDamageChangeParTag;
 
     }
+
+    /// <summary>
+    /// 寒冰 附魔类
+    /// </summary>
+    public struct SkillFrostTag : IComponentData, IEnableableComponent
+    {
+        public float3 originalPosition;
+        public float tagSurvivalTime;
+        public float speed;
+        //形变参数
+        public float scaleChangePar;
+        //允许第二阶段
+        public bool enableSecond;
+        //允许特殊执行逻辑
+        public bool enableSpecialEffect;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+        //击中间隔时间
+        public float hitIntervalTime;
+        //击中次数
+        public int hitCount;
+        //碎片数量
+        public int shrapnelCount;
+
+
+    }
+    /// <summary>
+    /// 寒冰碎片标签
+    /// </summary>
+    public struct SkillFrostShrapneTag : IComponentData
+    {
+        public float tagSurvivalTime;
+        public float speed;
+    }
+
 
     /// <summary>
     /// 冰火球 ，持续旋转 模板
@@ -197,5 +239,25 @@ namespace BlackDawn.DOTS
     /// 三阶法阵标签
     /// </summary>
     public struct SkillArcaneCircleThirdTag : IComponentData, IEnableableComponent { }
+
+
+    /// <summary>
+    /// 元素共鸣
+    /// </summary>
+    public struct SkillElementResonanceTag : IComponentData 
+    {
+        public float tagSurvivalTime;
+
+        public bool enableSecond;
+        //二重变化因子，技能初始化时传入
+        public float secondDamagePar;
+
+        public bool enableThrid;
+        //三重变化因子，技能初始化时传入
+        public float thridDamagePar;
+
+    }
 }
+
+
 

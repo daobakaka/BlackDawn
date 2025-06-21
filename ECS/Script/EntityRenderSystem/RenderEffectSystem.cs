@@ -26,6 +26,7 @@ namespace BlackDawn.DOTS
         private ComponentLookup<LocalTransform> _transform;
         private BufferLookup<LinkedEntityGroup> _linkedEntityGroupLookup;
         private ComponentLookup<FireRandomOffset> _fireRandomOffsetLookup;
+        private ComponentLookup<MonsterControlledEffectAttribute> _monsterControlledEffectAttributeLookup;
         private EntityManager _entityManager;
         private NativeArray<char> _UVchar;
         private NativeArray<float4> _UVTable;
@@ -44,6 +45,8 @@ namespace BlackDawn.DOTS
             _transform = SystemAPI.GetComponentLookup<LocalTransform>(true);
             _linkedEntityGroupLookup = SystemAPI.GetBufferLookup<LinkedEntityGroup>(true);
             _fireRandomOffsetLookup = SystemAPI.GetComponentLookup<FireRandomOffset>(true);
+            _monsterControlledEffectAttributeLookup = SystemAPI.GetComponentLookup<MonsterControlledEffectAttribute>(true);
+            
             _entityManager = state.EntityManager;
 
             //_ecbSystem = state.World.GetOrCreateSystemManaged<EndSimulationEntityCommandBufferSystem>();
@@ -83,6 +86,7 @@ namespace BlackDawn.DOTS
             _transform.Update(ref state);
             _linkedEntityGroupLookup.Update(ref state);
             _fireRandomOffsetLookup.Update(ref state);
+            _monsterControlledEffectAttributeLookup.Update(ref state);
             float dt = SystemAPI.Time.DeltaTime;
             var ecb = new EntityCommandBuffer(Allocator.TempJob);
             var currentTime = SystemAPI.Time.ElapsedTime;
@@ -101,6 +105,7 @@ namespace BlackDawn.DOTS
                 Ecb = ecb.AsParallelWriter(),
                 DeltaTime = SystemAPI.Time.DeltaTime,
                 LinderGroupLookup =_linkedEntityGroupLookup,
+                MonsterControlledEffectAttrLookup =_monsterControlledEffectAttributeLookup,
             }.ScheduleParallel(state.Dependency);
 
            renderEffectsJob.Complete();
@@ -286,6 +291,7 @@ namespace BlackDawn.DOTS
       [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseLookup;
       [ReadOnly] public ComponentLookup<LocalTransform> LtLookup;
       [ReadOnly] public BufferLookup<LinkedEntityGroup> LinderGroupLookup;
+      [ReadOnly] public ComponentLookup<MonsterControlledEffectAttribute> MonsterControlledEffectAttrLookup;
 
         // Parallel ECB for structural changes
         public EntityCommandBuffer.ParallelWriter Ecb;
@@ -307,7 +313,8 @@ namespace BlackDawn.DOTS
                 // DevDebug.Log("进入渲染JOB"); 
                 var monster = parentRO.ValueRO.Value;
                 var linkedGroup = LinderGroupLookup[monster];
-
+                //获取控制组件
+                var control = MonsterControlledEffectAttrLookup[monster];
                 // 先拷贝出来，再修改，最后 write-back
                 var pools = LossPoolLookup[monster];
                 var defense = DefenseLookup[monster];
@@ -324,7 +331,7 @@ namespace BlackDawn.DOTS
                         ? float4.zero
                         : new float4(1f, 1f, 1f, 1f);
 
-                //同一时间dot激活时间减少
+                //同一时间dot激活时间减少，池化标签的功能目前是激活DOT
                 pools.fireActive = math.max(0f, pools.fireActive - DeltaTime);
                 pools.frostActive = math.max(0f, pools.frostActive - DeltaTime);
                 pools.poisonActive = math.max(0f, pools.poisonActive - DeltaTime);
@@ -341,16 +348,25 @@ namespace BlackDawn.DOTS
                 float maskFrost = math.select(0f, 1f, pools.frostActive > 0f && pools.frostPool > 0f);
                 float invMaskFrost = 1f - maskFrost;
 
-                // 2) 正常 frostPool 控制值（范围 0~1）
-                float frostPoolVal = math.saturate(pools.frostPool / 100f);
+                // 2) 正常 frostPool 控制值（范围 0~1）,池化效果在大于100时显示
+                float frostPoolVal = math.saturate((pools.frostPool-100) / 100f);
 
                 // 3) 冻伤目标值
                 float currentFrost = mat.Frost.ValueRW.Value;
                 float frostFrozenVal = math.lerp(currentFrost, 1.1f, DeltaTime * 2f); // 冻伤特效
 
-                // 4) 合并结果（冻伤优先）
-                float frostFinal = frostFrozenVal * maskFrost + frostPoolVal * invMaskFrost;
+
+                // 4) 合并结果（冻伤优先），增加冻结冻伤 1.1  冻结参数1.3
+                float freezeMask = math.select(0f, 1f, control.freezeActive);
+
+                //    首先按 frost 逻辑合并
+                float frostFinalBase = frostFrozenVal * maskFrost + frostPoolVal * invMaskFrost;
+
+                //    再用 select 在一条指令里覆盖冻结效果（值为 1.3f）
+                float frostFinal = math.select(frostFinalBase, 1.3f, control.freezeActive);
                 mat.Frost.ValueRW.Value = frostFinal;
+
+
 
                 // 5) 计时器更新
                 pools.frostTimer = math.max(0f, pools.frostTimer - DeltaTime);
@@ -366,7 +382,7 @@ namespace BlackDawn.DOTS
 
                 // 2) 火焰
                 pools.fireTimer = math.max(0f, pools.fireTimer - DeltaTime);
-                var firet = math.saturate(pools.firePool / 100f);
+                var firet = math.saturate((pools.firePool-100) / 100f);
                 mat.Fire.ValueRW.Value = firet;
                 pools.firePool = math.max(
                     0f,
@@ -385,7 +401,7 @@ namespace BlackDawn.DOTS
 
                 // 3) 暗影
                 pools.shadowTimer = math.max(0f, pools.shadowTimer - DeltaTime);
-               var  shadowt = math.saturate(pools.shadowPool / 100f);
+               var  shadowt = math.saturate((pools.shadowPool-100) / 100f);
                 mat.DarkShadow.ValueRW.Value = shadowt;
                 pools.shadowPool = math.max(
                     0f,
@@ -403,7 +419,7 @@ namespace BlackDawn.DOTS
 
                 // 4) 闪电
                 pools.lightningTimer = math.max(0f, pools.lightningTimer - DeltaTime);
-               var lightningt = math.saturate(pools.lightningPool / 100f);
+               var lightningt = math.saturate((pools.lightningPool-100) / 100f);
                 mat.Lighting.ValueRW.Value = lightningt;
                 pools.lightningPool = math.max(
                     0f,
@@ -419,7 +435,7 @@ namespace BlackDawn.DOTS
                 
                 // 5) 毒素
                 pools.poisonTimer = math.max(0f, pools.poisonTimer - DeltaTime);
-                var poisont = math.saturate(pools.poisonPool / 100f);
+                var poisont = math.saturate((pools.poisonPool-100) / 100f);
                 mat.Poisoning.ValueRW.Value = poisont;
                 pools.poisonPool = math.max(
                     0f,

@@ -35,8 +35,18 @@ namespace BlackDawn
 
 
             };
+
+
+            //鼠标右键点击事件，捕获鼠标位置，为技能释放位置
             _inputOperate.onMouse1Cancel = (input) =>
             {
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit))
+                {
+                    fsm.Owner.skillTargetPositon =new Vector3( hit.point.x,0,hit.point.z);
+
+                }
 
                 fsm.ChangeState<Hero_Skill>();
             };

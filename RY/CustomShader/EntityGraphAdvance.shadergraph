@@ -10529,7 +10529,7 @@
     "m_Title": "Fresnel AdvancePositon",
     "m_Position": {
         "x": -2194.0,
-        "y": 1095.000244140625
+        "y": 1095.0
     }
 }
 
@@ -14419,7 +14419,7 @@
     "m_Title": "Fresnel AdvanceShadow",
     "m_Position": {
         "x": -2306.0,
-        "y": 2508.000732421875
+        "y": 2508.0
     }
 }
 

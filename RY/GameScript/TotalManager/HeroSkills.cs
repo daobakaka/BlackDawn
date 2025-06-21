@@ -9,6 +9,7 @@ using Unity.Mathematics;
 using Random = Unity.Mathematics.Random;
 using Unity.Collections;
 using ProjectDawn.Entities;
+using System;
 
 
 namespace BlackDawn
@@ -124,20 +125,20 @@ namespace BlackDawn
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
-                            WeaponEnchantmentSkill(5);
+                            WeaponEnchantmentSkillDarkEnergy(5);
                             break;
                           //增加两次充能，随着技能等级成长，增加充能次数
                         case HeroSkillPsionicType.PsionicA:
-                            WeaponEnchantmentSkill(7);
+                            WeaponEnchantmentSkillDarkEnergy(7);
                             break;
                             //暗影吞噬的技能，这里应该增加一个新标签
                         case HeroSkillPsionicType.PsionicB:
-                            WeaponEnchantmentSkill(5);
+                            WeaponEnchantmentSkillDarkEnergy(5);
                             break;
                         //暗影吞噬的技能，这里应该增加一个新标签
                         case HeroSkillPsionicType.PsionicAB:
                             Hero.instance.skillAttackPar.enableSpecialEffect = true;
-                            WeaponEnchantmentSkill(7);
+                            WeaponEnchantmentSkillDarkEnergy(7);
                             break;
                     }
 
@@ -190,7 +191,7 @@ namespace BlackDawn
                             break;
                     }
                     break;
-                    //落雷
+               //落雷
                 case HeroSkillID.ThunderStrike:
 
                     switch (psionicType)
@@ -229,9 +230,7 @@ namespace BlackDawn
 
 
                     break;
-
-
-                //法阵,使用prop作为标签，英雄本身使用距离判断？
+                //法阵
                 case HeroSkillID.ArcaneCircle:
 
                     switch (psionicType)
@@ -363,6 +362,59 @@ namespace BlackDawn
 
 
                     break;
+                //寒冰    
+                case HeroSkillID.Frost:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+                            WeaponEnchantmentSkillFrost();
+                            break;
+                        //增加分裂功能
+                        case HeroSkillPsionicType.PsionicA:
+                            WeaponEnchantmentSkillFrost( true,5,5);
+                            break;
+                        //增加碎片次数,不能分裂，但是可以冻结
+                        case HeroSkillPsionicType.PsionicB:
+                            WeaponEnchantmentSkillFrost(false,5,2);
+                            Hero.instance.skillAttackPar.tempFreeze = 101;
+                            Hero.instance.skillAttackPar.enableSpecialEffect = true;
+                            break;
+                        //分裂和碎片都增加
+                        case HeroSkillPsionicType.PsionicAB:
+                            WeaponEnchantmentSkillFrost(true, 15, 17,0.1f);
+                            Hero.instance.skillAttackPar.tempFreeze = 101;
+                            Hero.instance.skillAttackPar.enableSpecialEffect = true;
+                            break;
+                    }
+
+                    break;
+
+                //元素共鸣,非技能标签，不会造成伤害
+                case HeroSkillID.ElementResonance:
+                    switch (psionicType)
+                    { case HeroSkillPsionicType.Basic:
+
+                            var entityElementResonance = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_ElementResonance, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityElementResonance, new SkillElementResonanceTag() { tagSurvivalTime = 8 });
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            var entityElementResonanceA = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_ElementResonance, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityElementResonanceA, new SkillElementResonanceTag() { tagSurvivalTime = 8,enableSecond=true,secondDamagePar=1 });
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                            var entityElementResonanceB = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_ElementResonance, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityElementResonanceB, new SkillElementResonanceTag() { tagSurvivalTime = 8, enableThrid = true, thridDamagePar = 2 });
+                            break;
+
+                        case HeroSkillPsionicType.PsionicAB:
+                            var entityElementResonanceAB = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_ElementResonance, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityElementResonanceAB, new SkillElementResonanceTag() { tagSurvivalTime = 8, enableThrid = true, secondDamagePar = 2,enableSecond=true,thridDamagePar=2 });
+                            break;
+
+
+                    }
+                    break;
+
             }
             ;
             ecb.Playback(_entityManager);
@@ -434,6 +486,66 @@ namespace BlackDawn
 
             // 8) 添加碰撞记录缓冲区
             var hits = _entityManager.AddBuffer<HitRecord>(entity);
+            _entityManager.AddBuffer<HitElementResonanceRecord>(entity);
+
+            return entity;
+        }
+
+
+        /// <summary>
+        /// 无伤害类型增益 技能道具，如元素共鸣体
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <param name="posion"></param>
+        /// <param name="quaternion"></param>
+        /// <param name="damageChangePar"></param>
+        /// <param name="positionOffset"></param>
+        /// <param name="rotationOffsetEuler"></param>
+        /// <param name="scaleFactor"></param>
+        /// <param name="enablePull"></param>
+        /// <param name="enableExplosion"></param>
+        /// <returns></returns>
+        public Entity DamageSkillsFlightPropNoneDamage(
+       Entity prefab,
+       float3 posion,
+       quaternion quaternion,
+       float damageChangePar = 1,//默认伤害参数为1
+       float3 positionOffset = default,
+       float3 rotationOffsetEuler = default,  // 传入度数
+       float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
+        {
+            DevDebug.Log("释放伤害型飞行技能");
+
+            // 1) 实例化
+            var entity = _entityManager.Instantiate(prefab);
+
+            // 2) 取出可变的 LocalTransform
+            var transform = _entityManager.GetComponentData<LocalTransform>(entity);
+
+
+            // 3) 从英雄获取基础位置/旋转/缩放
+            float3 heroPos = posion;
+            quaternion heroRot = quaternion;
+            float baseScale = transform.Scale; // 保留预制体的原始 scale
+
+            // 4) 计算欧拉偏移的四元数
+            //    math.radians 将度数转为弧度
+            quaternion eulerOffsetQuat = quaternion.EulerXYZ(
+                math.radians(rotationOffsetEuler)
+            );
+
+            // 5) 叠加偏移
+            transform.Position = heroPos
+                                + math.mul(heroRot, positionOffset);
+            //计算整合旋转
+            var combineRotation = math.mul(heroRot, eulerOffsetQuat);
+            //叠加本体旋转
+            transform.Rotation = math.mul(transform.Rotation, combineRotation);
+            transform.Scale = baseScale * scaleFactor * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange);
+
+            // 6) 写回组件
+            _entityManager.SetComponentData(entity, transform);
+
 
             return entity;
         }
@@ -491,6 +603,7 @@ namespace BlackDawn
             _entityManager.AddComponentData(entity, damagePar);
             // 6) 添加缓冲区
             var hits = _entityManager.AddBuffer<HitRecord>(entity);
+            _entityManager.AddBuffer<HitElementResonanceRecord>(entity);
 
 
             return entity;
@@ -541,6 +654,7 @@ namespace BlackDawn
 
             // 6) 添加碰撞记录缓冲区
             var hits = ecb.AddBuffer<HitRecord>(entity);
+           ecb.AddBuffer<HitElementResonanceRecord>(entity);
 
             //写回
             return entity;
@@ -548,16 +662,35 @@ namespace BlackDawn
 
 
         /// <summary>
-        /// 武器附魔类技能
+        /// 武器附魔类技能,附魔，暗能，并补充附魔时间，附魔类技能的特效？
         /// </summary>
-        public void WeaponEnchantmentSkill(int count)
+        public void WeaponEnchantmentSkillDarkEnergy(int darkEnergyCount)
         { 
                 
-           Hero.instance.skillAttackPar.capacity = count;
-               
+            Hero.instance.skillAttackPar.darkEnergyCapacity = darkEnergyCount;
+
+                Hero.instance.skillAttackPar.darkEnergyEnhantmentTimer = 15;
+
+                                  
         }
 
+        /// <summary>
+        /// 武器附魔类技能， 寒冰
+        /// </summary>
+        public void WeaponEnchantmentSkillFrost( bool enableFrostScenod = false,int frostSplittingCount =5, int frostShardCount =5,float skillDamageChangePar=0.1f)
+        {
 
+            Hero.instance.skillAttackPar.frostCapacity = 1;
+                Hero.instance.skillAttackPar.frostEnchantmentTimer = 15;
+            if (enableFrostScenod)
+            {
+                Hero.instance.skillAttackPar.enableFrostSecond = true;
+                Hero.instance.skillAttackPar.frostSplittingCount =frostSplittingCount;
+                Hero.instance.skillAttackPar.frostShardCount =frostShardCount;
+                Hero.instance.skillAttackPar.frostSkillChangePar = skillDamageChangePar;
+            }
+       
+        }
 
         #region 带连续释放的触发携程类的技能
 
@@ -692,6 +825,7 @@ namespace BlackDawn
 
                 // 8) 添加碰撞记录缓冲区
                 var hits = _entityManager.AddBuffer<HitRecord>(entity);
+                _entityManager.AddBuffer<HitElementResonanceRecord>(entity);
 
                 //携程内直接添加技能标签
                 _entityManager.AddComponentData<T>(entity, componentData);

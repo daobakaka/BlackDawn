@@ -44,8 +44,15 @@ namespace BlackDawn.DOTS
             }.ScheduleParallel(state.Dependency);
 
             //state.Dependency.Complete();
+            //计算元素共鸣的 buffer
+            state.Dependency = new HitElementResonanceRecordBufferDealJob
+            {
+
+                DeltaTime = timer,
+            }.ScheduleParallel(state.Dependency);
 
 
+            //用于记录法阵技能的相关buffer
             state.Dependency = new SpecialSkillArcaneCircleSecondBufferDealJob
             {
 
@@ -107,6 +114,39 @@ namespace BlackDawn.DOTS
     {
         public float DeltaTime;
         void Execute(Entity entity, ref DynamicBuffer<HeroHitRecord> heroHitRecord, [EntityIndexInQuery] int sortKey)
+        {
+
+            for (int i = 0; i < heroHitRecord.Length; i++)
+            {
+                var record = heroHitRecord[i];
+                record.timer += DeltaTime;
+
+                if (record.timer > 0.5f)
+                {
+                    heroHitRecord.RemoveAtSwapBack(i);
+                    // 由于 SwapBack，把最后一个元素放到了当前索引，为了不漏掉要再检查新元素
+                    i--;
+                }
+                else
+                {
+                    heroHitRecord[i] = record;
+                }
+            }
+
+        }
+    }
+
+
+
+    /// <summary>
+    /// 用于计算元素共鸣的伤害效果，伤害频次0.5f
+    /// </summary>
+
+    [BurstCompile]
+    partial struct HitElementResonanceRecordBufferDealJob : IJobEntity
+    {
+        public float DeltaTime;
+        void Execute(Entity entity, ref DynamicBuffer<HitElementResonanceRecord> heroHitRecord, [EntityIndexInQuery] int sortKey)
         {
 
             for (int i = 0; i < heroHitRecord.Length; i++)

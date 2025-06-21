@@ -31,9 +31,18 @@ namespace BlackDawn
                 }
                 
             };
+            //鼠标右键事件
             _inputOperate.onMouse1Cancel = (input) =>
             {
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit))
+                {
+                    fsm.Owner.skillTargetPositon = new Vector3(hit.point.x, 0, hit.point.z);
+                   // fsm.Owner.skillElur = hit.transform.position.normalized;
+                   
 
+                }
                 fsm.ChangeState<Hero_Skill>();
             };
 
