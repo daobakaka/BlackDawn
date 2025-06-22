@@ -137,8 +137,8 @@ namespace BlackDawn.DOTS
 
             foreach (var (skillTagE, entity) in SystemAPI.Query<RefRW<SkillElementResonanceTag>>().WithEntityAccess())
             {
-                elementResonanceEnableSecond = skillTagE.ValueRO.enableSecond;
-                elementResonanceEnableThird = skillTagE.ValueRO.enableThrid;
+                elementResonanceEnableSecond = skillTagE.ValueRO.enableSecondA;
+                elementResonanceEnableThird = skillTagE.ValueRO.enableSecondB;
                 elementResonanceSecondPar = skillTagE.ValueRO.secondDamagePar;
                 elementRespnanceThridPar = skillTagE.ValueRO.thridDamagePar;
                 break;
@@ -305,13 +305,15 @@ namespace BlackDawn.DOTS
                 alreadyProcessed |= buffer[j].other == target;
             }
             if (alreadyProcessed) return;
-            // 添加元素共鸣buffer
-            ECB.AppendToBuffer(i, damage, new HitElementResonanceRecord { other = target });
-
+            // 添加元素共鸣buffer,添加一个判断， 后期整改
+            if (!RecordElementResonanceBufferLookup.HasBuffer(damage))
+                return;
+                ECB.AppendToBuffer(i, damage, new HitElementResonanceRecord { other = target });
+    
             // 计算dotNum: 分支变掩码
             float dotCount = l.fireActive + l.frostActive + l.lightningActive + l.poisonActive + l.shadowActive;
-            float mask2 = math.select(0f, 1f, dotCount >= 3 && dotCount < 5); // 3/4种
-            float mask3 = math.select(0f, 1f, dotCount >= 5);                 // 5种及以上
+            float mask2 = math.select(0f, 1f, EnableSecond && dotCount >= 12 && dotCount < 20);
+            float mask3 = math.select(0f, 1f, EnableThrid && dotCount >= 20);
             float dotNum = 1f + mask2 * SecondDamagePar + mask3 * ThridDamagePar;
 
             // 取 skill/flight 属性、统一混合处理（SIMD友好关键）
@@ -339,8 +341,9 @@ namespace BlackDawn.DOTS
                 shadow = flight.shadowDamage;
             }
 
-            float totalDamage = (frost + fire + lightning + poison + shadow) * d.damageReduction * dotNum;
+            float totalDamage = (frost + fire + lightning + poison + shadow) * (1-d.damageReduction) * dotNum;
 
+           // DevDebug.LogError("开始共鸣伤害计算"+totalDamage);
             // 用掩码方式、全部都写，最后只激活一种
             int skillMask = isSkill ? 1 : 0;
             int flightMask = isFlight ? 1 : 0;
@@ -361,6 +364,9 @@ namespace BlackDawn.DOTS
             // 激活一次伤害飘字
             ECB.SetComponentEnabled<MonsterTempDamageText>(i, textRenderEntity, true);
 
+            //测试共鸣效果,而
+            //l.fireActive = 6;
+            //ECB.SetComponent(i, target, l);
         }
     }
 

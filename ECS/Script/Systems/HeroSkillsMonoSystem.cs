@@ -16,7 +16,7 @@ namespace BlackDawn.DOTS
     //先伤害计算，再更新状态
     [BurstCompile]
     [RequireMatchingQueriesForUpdate]
-    [UpdateAfter(typeof(HeroSpecialSkillsDamageSystem))]
+    [UpdateAfter(typeof(FlightPropMonoSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     public partial struct HeroSkillsMonoSystem : ISystem,ISystemStartStop
     {
@@ -27,6 +27,8 @@ namespace BlackDawn.DOTS
         BufferLookup<HitRecord> _hitBuffer;
         float3 _heroPosition;
         Entity _heroEntity;
+        EntityManager _entityManager;
+        HeroAttributeCmpt _heroAttributeCmptOriginal;
 
       public  void OnCreate(ref SystemState state) 
         {
@@ -38,7 +40,8 @@ namespace BlackDawn.DOTS
 
           _transform= state.GetComponentLookup<LocalTransform>(true);
           _monsterLossPoolAttrLookup = state.GetComponentLookup<MonsterLossPoolAttribute>(false);
-            _heroAttribute = state.GetComponentLookup<HeroAttributeCmpt>(true);   
+            _heroAttribute = state.GetComponentLookup<HeroAttributeCmpt>(true);
+            _entityManager = state.EntityManager;
          // _hitBuffer = state.GetBufferLookup<HitRecord>(true);   
         
         }
@@ -46,7 +49,7 @@ namespace BlackDawn.DOTS
         public void OnStartRunning(ref SystemState state)
         {
             _heroEntity = SystemAPI.GetSingletonEntity<HeroEntityMasterTag>();
-        
+            _heroAttributeCmptOriginal = Hero.instance.attributeCmpt;
 
             DevDebug.Log("重启SkillMono系统");
         }
@@ -82,6 +85,8 @@ namespace BlackDawn.DOTS
             var heroPar = _heroAttribute[_heroEntity];
             //获取英雄装载的技能等级
             var level = _heroAttribute[_heroEntity].skillDamageAttribute.skillLevel;
+            var prefab =SystemAPI.GetSingleton<ScenePrefabsSingleton>();
+
 
             //脉冲技能处理
             foreach (var (skillTag ,skillCal,transform,collider,entity)
@@ -277,6 +282,12 @@ namespace BlackDawn.DOTS
          
             //寒冰的Mono效果
             SkillMonoFrost(ref state,ecb);
+            //元素共鸣Mono效果
+            SkillMonoElementResonance(ref state,ecb);
+            //技能静电牢笼
+            SkillMonoElectroCage(ref state,ecb,prefab);
+            
+
 
 
 
@@ -412,5 +423,206 @@ namespace BlackDawn.DOTS
 
 
 
+        /// <summary>
+        /// 元素共鸣
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="ecb"></param>
+        void SkillMonoElementResonance(ref SystemState state, EntityCommandBuffer ecb)
+        {
+
+            foreach (var (skillTag,transform, collider, entity)
+            in SystemAPI.Query<RefRW<SkillElementResonanceTag>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
+            {
+
+                skillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
+
+                if (skillTag.ValueRW.tagSurvivalTime <= 0)
+                    ecb.DestroyEntity(entity);
+            
+            }
+
+
+        }
+
+        /// <summary>
+        /// 静电牢笼，持续4秒？
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="ecb"></param>
+        void SkillMonoElectroCage(ref SystemState state, EntityCommandBuffer ecb,ScenePrefabsSingleton prefabs)
+        {
+            var rng = new Unity.Mathematics.Random((uint)UnityEngine.Random.Range(1, int.MaxValue));
+
+            foreach (var (skillTag,damagePar ,transform, collider, entity)
+            in SystemAPI.Query<RefRW<SkillElectroCageTag>,RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
+            {
+
+                skillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
+
+
+                if (skillTag.ValueRW.tagSurvivalTime <= 0)
+                {
+                    ecb.DestroyEntity(entity);
+                    continue;
+                }
+                //第二阶段雷暴牢笼
+                if (skillTag.ValueRO.enableSecondA)
+                {
+                    skillTag.ValueRW.timerA += SystemAPI.Time.DeltaTime;
+
+                    if (skillTag.ValueRW.timerA >= skillTag.ValueRW.intervalTimer)
+                    {
+                        skillTag.ValueRW.timerA = 0;
+
+                      //  1.实例化新牢笼电弧
+                        var arcEntity = ecb.Instantiate(prefabs.HeroSkillAssistive_ElectroCage_Lightning);
+
+                        // 2. LocalTransform 随机偏移 XZ ±10
+                        var newTransform = transform.ValueRO;
+                        float xOffset = rng.NextFloat(-7f, 7f);
+                        float zOffset = rng.NextFloat(-7f, 7f);
+                        newTransform.Position.x += xOffset;
+                        newTransform.Position.z += zOffset;
+                        ecb.SetComponent(arcEntity, newTransform);
+
+                        // 3. 构造伤害参数（复制+定制）
+                        var newSkillPar = damagePar.ValueRO;
+                        //第二阶段进行雷暴增伤
+                        newSkillPar.damageChangePar = skillTag.ValueRW.skillDamageChangeParTag;
+
+                        ecb.AddComponent(arcEntity, newSkillPar);
+                        //添加雷暴存活印记
+                        ecb.AddComponent(arcEntity, new SkillElectroCageScoendTag() { tagSurvivalTime = 1 });
+
+                        // 4. 添加碰撞记录缓冲区
+                        ecb.AddBuffer<HitRecord>(arcEntity);
+                        ecb.AddBuffer<HitElementResonanceRecord>(arcEntity);
+
+
+                    }
+
+
+                }
+                //第三阶段导电牢笼,两秒一次的概率判断
+                if (skillTag.ValueRO.enableSecondB)
+                {
+                    skillTag.ValueRW.timerB += SystemAPI.Time.DeltaTime;
+
+
+                    if (skillTag.ValueRW.timerB >= 1.99)
+                    {
+                        skillTag.ValueRW.timerB = 0;
+
+                        var random = rng.NextFloat(0, 1);
+                        //概率每次降低20%
+                        if (random <=( 0.5-skillTag.ValueRO.StackCount*0.05f))
+                        {
+                            float3 Offset = rng.NextFloat3(-15f, 15f);
+                            //增加一次传导次数
+                            skillTag.ValueRW.StackCount += 1;
+                            float3 newPosition = transform.ValueRO.Position + new float3(Offset.x, 0, Offset.z);
+
+                          var entityElectroCage =  DamageSkillsECSRelaseProp(ecb, prefabs.HeroSkill_ElectroCage, damagePar.ValueRO, newPosition, quaternion.identity);
+                            int nextStackCount = skillTag.ValueRO.StackCount + 1;
+                            if (skillTag.ValueRO.enableSecondA)
+                            {
+                                ecb.AddComponent(entityElectroCage, new SkillElectroCageTag() { tagSurvivalTime = 4, enableSecondA = true, enableSecondB = true, skillDamageChangeParTag = 2, intervalTimer = 0.2f ,StackCount=nextStackCount});
+                            }
+                            else
+                            {
+                                ecb.AddComponent(entityElectroCage, new SkillElectroCageTag() { tagSurvivalTime = 4, enableSecondB = true,StackCount=nextStackCount});
+
+                            }
+                        
+                        }
+
+
+                    }
+
+                }
+
+
+
+            }
+
+
+
+
+            //雷暴消除逻辑
+            foreach (var (skillTag, entity)
+          in SystemAPI.Query<RefRW<SkillElectroCageScoendTag>>().WithEntityAccess())
+            {
+
+                skillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
+                if (skillTag.ValueRO.tagSurvivalTime <= 0)
+                {
+
+                    ecb.DestroyEntity(entity);
+                    continue;
+                
+                }
+
+            }
+
+        }
+
+        /// <summary>
+        /// 英雄技能ECS 释放系统(静电牢笼B变种)
+        /// </summary>
+        /// <param name="ecb"></param>
+        /// <param name="prefab"></param>
+        /// <param name="position"></param>
+        /// <param name="rotation"></param>
+        /// <param name="damageChangePar"></param>
+        /// <param name="positionOffset"></param>
+        /// <param name="rotationOffsetEuler"></param>
+        /// <param name="scaleFactor"></param>
+        /// <param name="enablePull"></param>
+        /// <param name="enableExplosion"></param>
+        /// <returns></returns>
+        public Entity DamageSkillsECSRelaseProp(
+         EntityCommandBuffer ecb,
+         Entity prefab,
+         SkillsDamageCalPar skillsDamageCal,
+         float3 position,
+         quaternion rotation,
+         float damageChangePar = 1,//默认伤害参数为1
+         float3 positionOffset = default,
+         float3 rotationOffsetEuler = default,
+         float scaleFactor = 1f,
+         bool enablePull = false,
+         bool enableExplosion = false)
+        {
+            // 1) 延迟实例化
+            var entity = ecb.Instantiate(prefab);
+
+            // 2) 读取预制体上已有的 LocalTransform，仅读取操作可以直接用 EntityManager
+            var prefabTransform = _entityManager.GetComponentData<LocalTransform>(prefab);
+            float baseScale = prefabTransform.Scale;
+
+            // 3) 计算新的变换
+            quaternion offsetQuat = quaternion.EulerXYZ(math.radians(rotationOffsetEuler));
+            LocalTransform newTransform = new LocalTransform
+            {
+                Position = position + math.mul(rotation, positionOffset),
+                Rotation = math.mul(rotation, offsetQuat),
+                //这里由技能范围决定技能的影响因子
+                Scale = baseScale * scaleFactor * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange)
+            };
+
+            // 4) 写入新实体
+            ecb.SetComponent(entity, newTransform);
+
+            // 5) 添加并初始化伤害参数组件，沿用快照机制
+            ecb.AddComponent(entity, skillsDamageCal);
+
+            // 6) 添加碰撞记录缓冲区
+            var hits = ecb.AddBuffer<HitRecord>(entity);
+            ecb.AddBuffer<HitElementResonanceRecord>(entity);
+
+            //写回
+            return entity;
+        }
     }
 }

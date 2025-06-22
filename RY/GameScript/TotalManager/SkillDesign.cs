@@ -47,10 +47,10 @@ namespace BlackDawn
         //元素共鸣
         ElementResonance,  // 元素共鸣：生成一个持续8秒的元素领域，范围内所有攻击附加随机元素效果  
                            // 释放方式：Release/Buff；伤害类型：全元素
-
+        //暗影步        
         ShadowStep,        // 暗影步：瞬移至目标位置，留下一个持续3秒的暗影残影（吸引敌人攻击）  
                            // 释放方式：Teleport；伤害类型：暗影
-
+        //静电牢笼
         ElectroCage,       // 静电牢笼：禁锢目标敌人4秒，期间闪电伤害对其+100%  
                            // 释放方式：Release/Buff；伤害类型：闪电
 
@@ -211,7 +211,9 @@ namespace BlackDawn
     { 
     // 冰火-》火
      IceFireFire,
-     Frost,
+     Frost_Fragment,
+     ElectroCage_Lightning,
+
     }
     /// <summary>
     /// 英雄技能灵能分类

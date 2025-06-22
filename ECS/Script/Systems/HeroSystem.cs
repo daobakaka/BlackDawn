@@ -16,8 +16,8 @@ using Unity.Collections;
 namespace BlackDawn.DOTS
 {
     [BurstCompile]
-    //renderEFects 处理所有渲染效果包括文字
-    [UpdateAfter(typeof(MonsterMonoSystem))]
+    //renderEFects 处理所有渲染效果包括文字,在渲染系统之前执行
+    [UpdateBefore(typeof(RenderEffectSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     public partial struct HeroSystem : ISystem, ISystemStartStop
     {

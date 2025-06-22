@@ -12,7 +12,7 @@ namespace BlackDawn.DOTS
     /// </summary>
     [BurstCompile]
     [RequireMatchingQueriesForUpdate]
-    [UpdateAfter(typeof(FlightPropDamageSystem))]
+    [UpdateAfter(typeof(DotDamageSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     partial struct FlightPropMonoSystem : ISystem
     {
@@ -38,7 +38,7 @@ namespace BlackDawn.DOTS
 
             }.ScheduleParallel(state.Dependency);
 
-
+            state.Dependency.Complete();
         }
 
         [BurstCompile]

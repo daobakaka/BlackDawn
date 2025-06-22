@@ -389,7 +389,7 @@ namespace BlackDawn
 
                     break;
 
-                //元素共鸣,非技能标签，不会造成伤害
+                //元素共鸣,非技能标签，不会造成伤害,可以读取等级展示伤害
                 case HeroSkillID.ElementResonance:
                     switch (psionicType)
                     { case HeroSkillPsionicType.Basic:
@@ -399,20 +399,74 @@ namespace BlackDawn
                             break;
                         case HeroSkillPsionicType.PsionicA:
                             var entityElementResonanceA = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_ElementResonance, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                            _entityManager.AddComponentData(entityElementResonanceA, new SkillElementResonanceTag() { tagSurvivalTime = 8,enableSecond=true,secondDamagePar=1 });
+                            _entityManager.AddComponentData(entityElementResonanceA, new SkillElementResonanceTag() { tagSurvivalTime = 8,enableSecondA=true,secondDamagePar=1 });
                             break;
                         case HeroSkillPsionicType.PsionicB:
                             var entityElementResonanceB = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_ElementResonance, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                            _entityManager.AddComponentData(entityElementResonanceB, new SkillElementResonanceTag() { tagSurvivalTime = 8, enableThrid = true, thridDamagePar = 2 });
+                            _entityManager.AddComponentData(entityElementResonanceB, new SkillElementResonanceTag() { tagSurvivalTime = 8, enableSecondB = true, thridDamagePar = 2 });
                             break;
 
                         case HeroSkillPsionicType.PsionicAB:
                             var entityElementResonanceAB = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_ElementResonance, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                            _entityManager.AddComponentData(entityElementResonanceAB, new SkillElementResonanceTag() { tagSurvivalTime = 8, enableThrid = true, secondDamagePar = 2,enableSecond=true,thridDamagePar=2 });
+                            _entityManager.AddComponentData(entityElementResonanceAB, new SkillElementResonanceTag() { tagSurvivalTime = 8, enableSecondA = true, secondDamagePar = 2,enableSecondB=true,thridDamagePar=2 });
+                            break;
+
+                    }
+                    break;
+                    //静电牢笼13
+                case HeroSkillID.ElectroCage:
+
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+
+                            var entityElectroCage = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ElectroCage, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            //构造定身效果
+                            var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entityElectroCage);
+                            skillPar.tempRoot = 101;
+                            skillPar.tempStun = 101;
+                            _entityManager.SetComponentData(entityElectroCage, skillPar);
+                            _entityManager.AddComponentData(entityElectroCage, new SkillElectroCageTag() { tagSurvivalTime = 4 });
+                            break;
+
+                            //开启二阶段，增伤100%
+                        case HeroSkillPsionicType.PsionicA:
+
+                            var entityElectroCageA = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ElectroCage, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            //构造定身效果
+                            var skillParA = _entityManager.GetComponentData<SkillsDamageCalPar>(entityElectroCageA);
+                            skillPar.tempRoot = 101;
+                            skillPar.tempStun = 101;
+                            _entityManager.SetComponentData(entityElectroCageA, skillParA);
+                            _entityManager.AddComponentData(entityElectroCageA, new SkillElectroCageTag() { tagSurvivalTime = 4,enableSecondA =true,skillDamageChangeParTag=2,intervalTimer=0.2f });
+                            break;
+                            //开启第三阶段，静电传导
+                        case HeroSkillPsionicType.PsionicB:
+
+                            var entityElectroCageB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ElectroCage, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            //构造定身效果
+                            var skillParB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityElectroCageB);
+                            skillPar.tempRoot = 101;
+                            skillPar.tempStun = 101;
+                            _entityManager.SetComponentData(entityElectroCageB, skillParB);
+                            _entityManager.AddComponentData(entityElectroCageB, new SkillElectroCageTag() { tagSurvivalTime = 4,enableSecondB=true });
+                            break;
+
+                        //开启二阶段，增伤100%,开启静电传导标识
+                        case HeroSkillPsionicType.PsionicAB:
+
+                            var entityElectroCageAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ElectroCage, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            //构造定身效果
+                            var skillParAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityElectroCageAB);
+                            skillPar.tempRoot = 101;
+                            skillPar.tempStun = 101;
+                            _entityManager.SetComponentData(entityElectroCageAB, skillParAB);
+                            _entityManager.AddComponentData(entityElectroCageAB, new SkillElectroCageTag() { tagSurvivalTime = 4, enableSecondA = true,enableSecondB=true, skillDamageChangeParTag = 2, intervalTimer = 0.2f });
                             break;
 
 
                     }
+
                     break;
 
             }

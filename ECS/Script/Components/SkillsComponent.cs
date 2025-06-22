@@ -248,13 +248,47 @@ namespace BlackDawn.DOTS
     {
         public float tagSurvivalTime;
 
-        public bool enableSecond;
+        public bool enableSecondA;
         //二重变化因子，技能初始化时传入
         public float secondDamagePar;
 
-        public bool enableThrid;
+        public bool enableSecondB;
         //三重变化因子，技能初始化时传入
         public float thridDamagePar;
+
+    }
+    /// <summary>
+    /// 静电牢笼
+    /// </summary>
+    public struct SkillElectroCageTag : IComponentData
+    {
+
+
+        public float tagSurvivalTime;
+        //形变参数
+        public float scaleChangePar;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        //间隔时间
+        public float intervalTimer;
+        //内部标记时间
+        public float timerA;
+        public float timerB;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+        //这里添加等级标签，二阶技能扣除生命值跟等级有关
+        public int level;
+        //传导次数
+        public int StackCount;
+
+    }
+    /// <summary>
+    /// 静电牢笼2阶雷暴，1秒
+    /// </summary>
+    public struct SkillElectroCageScoendTag : IComponentData
+    {
+
+        public float tagSurvivalTime;
 
     }
 }

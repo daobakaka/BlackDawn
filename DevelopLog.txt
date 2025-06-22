@@ -104,3 +104,8 @@ BuffHandlerAspect/BuffHandlerUtility:¶àÏß³ÌÖÐµÄ»ù´¡ÊôÐÔºÍ¶¯Ì¬»º´æÇøbuffÖÐµÄ»ù±¾Ê
 6.21 Ôö¼Ó¼¼ÄÜÔªËØ¹²Ãù£¬³õ²½Íê³ÉÎ´²âÊÔ
 
 
+6.22 Íê³ÉÔªËØ¹²ÃùµÄ»ù±¾Ð§¹û£¬ ºóÃæÔö¼ÓÌØÐ§£¿
+
+6.22 Íê³É¼¼ÄÜ ¾²µçÀÎÁý£¬¿´Çé¿öÓÐ±ØÒªÉè¼ÆECS »º´æ³ØÀ´´¦Àí ¸ß·¢ÐÔµÄ½á¹¹¸Ä±ä£¿
+
+

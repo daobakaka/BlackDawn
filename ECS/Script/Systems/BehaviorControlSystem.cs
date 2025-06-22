@@ -15,7 +15,7 @@ namespace BlackDawn
 {
 
     [RequireMatchingQueriesForUpdate]
-    [UpdateAfter(typeof(DotDamageSystem))]
+    [UpdateAfter(typeof(EnemyFlightPropMonoSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     [BurstCompile]
     public partial struct BehaviorControlSystem : ISystem

@@ -165,7 +165,7 @@ namespace BlackDawn.DOTS
     /// 打击记录
     /// </summary>
     [Serializable]
-    [InternalBufferCapacity(50)] //默认容量50
+    [InternalBufferCapacity(10)] //默认容量10
     public struct HitRecord : IBufferElementData
     {
         public Entity other;

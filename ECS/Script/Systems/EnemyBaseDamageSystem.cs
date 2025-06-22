@@ -11,7 +11,7 @@ namespace BlackDawn.DOTS
 {
     [BurstCompile]
     [RequireMatchingQueriesForUpdate]
-    [UpdateAfter(typeof(FlightPropMonoSystem))]
+    [UpdateAfter(typeof(HeroSpecialSkillsDamageSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     public partial struct EnemyBaseDamageSystem : ISystem
     {

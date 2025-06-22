@@ -15,7 +15,7 @@ namespace BlackDawn.DOTS
 {
     //在渲染之后
     [BurstCompile]
-    [UpdateAfter(typeof(AttackRecordBufferSystem))]
+    [UpdateAfter(typeof(HeroSkillsCallbackSystemBase))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     public partial struct  MonsterMonoSystem : ISystem
 {
@@ -31,11 +31,15 @@ namespace BlackDawn.DOTS
 
         }
         [BurstCompile]
-        void OnUpdate(ref SystemState state) 
-        
+        void OnUpdate(ref SystemState state)
+
         {
+          //等待其他地方job完成，最后执行清理
+           // state.Dependency.Complete();
+
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             //ecb 都是临时定义
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
+          //  var ecb = new EntityCommandBuffer(Allocator.Temp);
             _timer = SystemAPI.Time.DeltaTime;
 
             //entiy 销毁回到主线程,查找活怪标签，减少job判断，模拟状态机,貌似1.4 只能执行一次？1
@@ -43,13 +47,18 @@ namespace BlackDawn.DOTS
                 RefRW<AgentBody>, RefRW<AgentShape>,
                 RefRW<LiveMonster>,GpuEcsAnimatorAspect> ().WithEntityAccess())
             {
-                if (attrRW.ValueRW.hp <= 0f)
+                if (attrRW.ValueRW.hp <= 0.00f)
                 //固定死亡动画
                 {
                     if (!attrRW.ValueRW.death)
                     {
+                        // DevDebug.Log("播放死亡动画");
+                        //这里存在多线程机制？同一帧单次写有可能不被命中！！（非常重要谨记）
+                        attrRW.ValueRW.death = true;
                         //失活liveMonster组件，避免job计算
                         ecb.SetComponentEnabled<LiveMonster>(entity, false);
+                        //只播一次，默认动画4死亡，后续有精英怪加入也默认4
+                        animatorAspect.RunAnimation(4, 0, 1);
 
                         // 2) 移除碰撞组件，物理引擎就不会再检测它
                         ecb.RemoveComponent<PhysicsCollider>(entity);
@@ -58,31 +67,23 @@ namespace BlackDawn.DOTS
                         ecb.RemoveComponent<AgentBody>(entity);
                         //移除导航路障
                         ecb.RemoveComponent<AgentShape>(entity);
-
-                        //只播一次，默认动画4死亡，后续有精英怪加入也默认4
-                        animatorAspect.RunAnimation(4, 0, 1);
-                       // DevDebug.Log("播放死亡动画");
-                        attrRW.ValueRW.death = true;   
                     }
                    
                 }
   
             }
 
-            //死亡销毁逻辑，只能分开？
-            foreach (var (attrRW, entity) in SystemAPI.Query<RefRW<MonsterDefenseAttribute>>().WithEntityAccess())
+            //死亡销毁逻辑，只能分开？,而且上面的 death 标签经常无法有效设置？ 有线程竞争，有一定概率拿到老值，所以这里需要  state.EntityManager.CompleteAllTrackedJobs();？
+            foreach (var (attrRW, entity) in SystemAPI.Query<RefRW<MonsterDefenseAttribute>>().WithDisabled<LiveMonster>().WithEntityAccess())
             {
-
-                if (attrRW.ValueRW.death)
-                {
+               
                 
                     attrRW.ValueRW.survivalTime -= _timer;
                     //存活时间完毕之后销毁
                     if (attrRW.ValueRO.survivalTime <= 0)
                         ecb.DestroyEntity(entity);
 
-                }        
-            
+                                   
             
             }
 
@@ -93,8 +94,8 @@ namespace BlackDawn.DOTS
 
 
 
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
+            //ecb.Playback(state.EntityManager);
+            //ecb.Dispose();
 
         }
         void OnDestroy(ref SystemState state) { }

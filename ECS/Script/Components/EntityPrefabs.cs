@@ -135,7 +135,9 @@ namespace BlackDawn.DOTS
 
                     //英雄辅助技能
                     HeroSkillAssistive_IceFireFire =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.IceFireFire),
-                    HeroSkillAssistive_Frost = GetSafe(auth.skillAssistivePrefabs, HeroSkillAssistiveID.Frost),
+                    HeroSkillAssistive_Frost = GetSafe(auth.skillAssistivePrefabs, HeroSkillAssistiveID.Frost_Fragment),
+                    HeroSkillAssistive_ElectroCage_Lightning =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.ElectroCage_Lightning),
+
 
 
                     // 怪物技能
@@ -360,8 +362,9 @@ namespace BlackDawn.DOTS
             public Entity HeroSkill_ElementFusion;
             public Entity HeroSkill_TwilightMoment;
           //英雄辅助skill
-          public Entity HeroSkillAssistive_IceFireFire;
-         public Entity HeroSkillAssistive_Frost;  
+            public Entity HeroSkillAssistive_IceFireFire;
+            public Entity HeroSkillAssistive_Frost;
+        public Entity HeroSkillAssistive_ElectroCage_Lightning;
             // Monster Skills
             public Entity MonsterSkill_DeathPulse;
             // Monster Entities
