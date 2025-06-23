@@ -291,6 +291,41 @@ namespace BlackDawn.DOTS
         public float tagSurvivalTime;
 
     }
+    /// <summary>
+    /// 毒爆地雷,可以关闭，就可以取消碰撞对收集，并打开二阶段的爆炸效果，重新赋值伤害
+    /// </summary>
+    public struct SkillMineBlastTag : IComponentData,IEnableableComponent
+    {
+
+
+        public float tagSurvivalTime;
+        //形变参数
+        public float scaleChangePar;
+
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+        //这里添加等级标签，二阶技能扣除生命值跟等级有关
+        public int level;
+  
+    }
+
+    /// <summary>
+    /// 毒爆，爆炸后的标签， 用于移除 原始标签的单独碰撞检测效果
+    /// </summary>
+    public struct SkillMineBlastExplosionTag : IComponentData, IEnableableComponent
+    {
+
+        public float tagSurvivalTime;
+        //形变参数
+        public float scaleChangePar;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+    }
+
+
+
 }
 
 

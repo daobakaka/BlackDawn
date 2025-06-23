@@ -145,7 +145,8 @@ namespace BlackDawn
             if (ce.fear > 100)
             {
 
-                if (ce.fearTimer <= 2)
+                float fearDuration = 2f + (ce.fear - 100) / 100f;
+                if (ce.fearTimer <= fearDuration)
                 {
                     ce.fearActive = true;
                     ce.fearTimer += Time;//增长恐惧时间标签
@@ -174,7 +175,8 @@ namespace BlackDawn
             //这里可以加入定身控制标签
             if (ce.root > 100 )
             {
-                if (ce.rootTimer <= 2)
+                float rootDuration = 2f + (ce.root - 100) / 100f;
+                if (ce.rootTimer <= rootDuration)
                 {
                     ce.rootActive = true;//确认定身状态
                     ce.rootTimer += Time;
@@ -198,7 +200,8 @@ namespace BlackDawn
             if (ce.stun > 100)
             {
 
-                if (ce.stunTimer <= 2)
+                float stunDuration = 2f + (ce.stun - 100) / 100f;
+                if (ce.stunTimer <= stunDuration)
                 {
                     ce.stunActive = true;//昏迷状态确认，便于伤害计算
                     ce.stunTimer += Time;//昏迷值大于100 产生昏迷控制，大于2秒时退出循环，更新昏迷值
@@ -225,8 +228,10 @@ namespace BlackDawn
             //这里如果昏迷和冻结同时触发，冻结可以覆盖昏迷，注意脚本先后顺序
             if ( ce.freeze > 100 )
             {
-                
-                if (ce.freezeTimer <= 2)
+                //这里可以增加冻结值 来制造技能的冻结效果
+                float freezeDuration = 2f + (ce.freeze - 100) / 100f;
+
+                if (ce.freezeTimer <= freezeDuration)
                 {
                     ce.freezeActive = true;
                     ce.freezeTimer += Time;//达到触发条件更新timer值

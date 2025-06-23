@@ -177,7 +177,7 @@ namespace BlackDawn.DOTS
 
 
     /// <summary>
-    /// 用于记录元素共鸣的记录条，后买可根据选择的中途休息选择的技能进行配置
+    /// 用于记录元素共鸣的记录条，后面可根据选择的中途休息选择的技能进行配置
     /// </summary>
     [Serializable]
     [InternalBufferCapacity(10)] //默认容量50

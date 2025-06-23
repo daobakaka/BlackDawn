@@ -53,7 +53,7 @@ namespace BlackDawn
         //静电牢笼
         ElectroCage,       // 静电牢笼：禁锢目标敌人4秒，期间闪电伤害对其+100%  
                            // 释放方式：Release/Buff；伤害类型：闪电
-
+        //毒爆地雷
         MineBlast,         // 毒爆地雷：布置3颗隐形毒雷，触发时造成范围中毒并降低敌人30%移动速度  
                            // 释放方式：Release/Summon；伤害类型：毒素
 

@@ -413,7 +413,7 @@ namespace BlackDawn
 
                     }
                     break;
-                    //静电牢笼13
+                //静电牢笼13
                 case HeroSkillID.ElectroCage:
 
                     switch (psionicType)
@@ -467,6 +467,33 @@ namespace BlackDawn
 
                     }
 
+                    break;
+
+                //毒爆地雷
+                case HeroSkillID.MineBlast:
+                    switch (psionicType)
+                    {
+                        //布置3颗毒爆雷  是否有必要，布置方式，是否可提供旋转操作？暂不提供效果， 原生技能自带2阶爆炸效果,添加爆炸效果标签，用于爆炸持续时间,300%爆炸伤害传递
+                        case HeroSkillPsionicType.Basic:
+
+                            for (int i = 0; i < 3; i++)
+                            {
+                                var entityMineBlast = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10*i,0,0), float3.zero, 1, false, false);
+                                _entityManager.AddComponentData(entityMineBlast, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2 ,skillDamageChangeParTag=3});
+                                _entityManager.AddComponentData(entityMineBlast, new SkillMineBlastExplosionTag() { tagSurvivalTime = 5 });
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                          
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                            break;
+
+                        case HeroSkillPsionicType.PsionicAB:
+                           
+                            break;
+
+                    }
                     break;
 
             }

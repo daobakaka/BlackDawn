@@ -568,6 +568,22 @@ namespace BlackDawn.DOTS
         }
 
         /// <summary>
+        ///毒爆地雷的Mono 控制？或许直接写在回调类里面？爆炸之后重新更新时间？
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="ecb"></param>
+
+        void SkillMineBlastMono(ref SystemState state, EntityCommandBuffer ecb)
+        { 
+        
+        
+        
+        }
+
+
+
+
+        /// <summary>
         /// 英雄技能ECS 释放系统(静电牢笼B变种)
         /// </summary>
         /// <param name="ecb"></param>

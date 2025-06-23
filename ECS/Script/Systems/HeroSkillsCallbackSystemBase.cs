@@ -22,8 +22,10 @@ namespace BlackDawn.DOTS
         HeroSkills _heroSkills;
         ScenePrefabsSingleton _prefabs;
 
-        //侦测系统缓存
+        //特殊技能系统（法阵的虹吸特效）缓存
         private SystemHandle _specialSkillsDamageSystemHandle;
+
+        private SystemHandle _detectionSystemHandle;
 
 
         //法阵技能的GPUbuffer
@@ -37,6 +39,7 @@ namespace BlackDawn.DOTS
 
             _specialSkillsDamageSystemHandle = World.Unmanaged.GetExistingUnmanagedSystem<HeroSpecialSkillsDamageSystem>();
             _arcaneCirclegraphicsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, 5000, sizeof(float) * 3);
+            _detectionSystemHandle = World.Unmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
 
         }
 
@@ -51,13 +54,20 @@ namespace BlackDawn.DOTS
 
         protected override void OnUpdate()
         {
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
+           // var ecb = new EntityCommandBuffer(Allocator.Temp);
+           // var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            var ecb = World.GetOrCreateSystemManaged<EndSimulationEntityCommandBufferSystem>().CreateCommandBuffer();
+
             var timer = SystemAPI.Time.DeltaTime;
 
 
             var specialDanafeSystem = World.Unmanaged.GetUnsafeSystemRef<HeroSpecialSkillsDamageSystem>(_specialSkillsDamageSystemHandle);
+
+            var detctionSystem = World.Unmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
             //渲染链接
             var arcaneCircleLinkedArray = specialDanafeSystem.arcaneCircleLinkenBuffer; 
+            //获取侦测系统的  碰撞对
+            var mineBlastArray =detctionSystem.mineBlastHitMonsterArray;
 
 
 
@@ -206,7 +216,7 @@ namespace BlackDawn.DOTS
                 })
                 .WithoutBurst().Run();
 
-            //法阵的链接特效,传入buffer数组
+            //法阵的链接特效,这里是恢复
             Entities
                 .WithName("DisEnable_ArcaneCircleSecond")
                 .WithDisabled<HeroEffectsLinked>()
@@ -226,10 +236,69 @@ namespace BlackDawn.DOTS
 
 
 
+            //毒爆地雷一级阶段处理
+            Entities
+                .WithName("SkillMineBlast")               
+                .ForEach((Entity entity, VisualEffect vfx,
+                    ref SkillMineBlastTag skillTag,
+                    ref SkillsDamageCalPar damageCalPar,
+                    ref LocalTransform transform) =>
+                {
+
+                    skillTag.tagSurvivalTime-= timer;
+                    if (skillTag.tagSurvivalTime <= 0)
+                    {
+                        ecb.DestroyEntity(entity);
+                        return;
+                    }
+                    for (int i = 0; i < mineBlastArray.Length; i++)
+                    {
+
+                        if (mineBlastArray[i].EntityA == entity || mineBlastArray[i].EntityB == entity)
+
+                        {
+                            vfx.SendEvent("hit");
+                            ecb.SetComponentEnabled<SkillMineBlastTag>(entity,false);
+                            //开启爆炸
+                            ecb.SetComponentEnabled<SkillMineBlastExplosionTag>(entity, true);
+                            //赋予新的伤害
+                            damageCalPar.damageChangePar = skillTag.skillDamageChangeParTag;
+                            transform.Scale =skillTag.scaleChangePar;
+                            break;
+                        }
+                    
+                    }
+
+                })
+                .WithoutBurst().Run();
+
+            //毒爆地雷一阶爆炸效果处理
+            Entities
+                .WithName("DisableSkillMineBlast")
+                .WithDisabled<SkillMineBlastTag>()
+                .ForEach((Entity entity, VisualEffect vfx,
+                    ref SkillMineBlastExplosionTag skillTag,
+                    ref SkillsDamageCalPar damageCalPar,
+                    ref LocalTransform transform) =>
+                {
+                    skillTag.tagSurvivalTime -= timer;
+                    if (skillTag.tagSurvivalTime <= 0)
+                    {
+                        ecb.DestroyEntity(entity);
+                        return;
+                    }
+             
+
+                })
+                .WithoutBurst().Run();
+
+
+
+
 
             // 播放并清理
-            ecb.Playback(base.EntityManager);
-            ecb.Dispose();
+            //ecb.Playback(base.EntityManager);
+            //ecb.Dispose();
 
 
         }

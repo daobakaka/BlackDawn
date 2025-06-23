@@ -35,6 +35,7 @@ namespace BlackDawn.DOTS
         private ComponentLookup<SkillArcaneCircleSecondTag> _skillArcaneCircleSecondTagLookup;
         private ComponentLookup<SkillArcaneCircleTag> _skillArcaneCircleTagLookup;
         private ComponentLookup<SkillElementResonanceTag> _skillElementResonanceTagLookup;
+        private ComponentLookup<SkillMineBlastTag> _skillMineBlastTagLookup;
 
 
         // 所有用于分类的碰撞对容器
@@ -47,6 +48,7 @@ namespace BlackDawn.DOTS
         private NativeQueue<TriggerPairData> _skillElementResonance;
         private NativeQueue<TriggerPairData> _basePropElementResonance;
         private NativeQueue<TriggerPairData> _combinedElementResonance;
+        private NativeQueue<TriggerPairData> _mineBlastHitMonster;
 
         //用于在job中并行的array
         public NativeArray<TriggerPairData> heroHitMonsterArray;
@@ -59,6 +61,7 @@ namespace BlackDawn.DOTS
         public NativeArray<TriggerPairData> basePropElementResonanceArray;
         public NativeArray<TriggerPairData> combinedElementResonanceArray; // 如需后续使用
         private NativeParallelHashMap<Entity, byte> _resonanceMap;
+        public NativeArray<TriggerPairData> mineBlastHitMonsterArray;
 
 
         public void OnCreate(ref SystemState state)
@@ -78,6 +81,7 @@ namespace BlackDawn.DOTS
             _skillArcaneCircleSecondTagLookup = SystemAPI.GetComponentLookup<SkillArcaneCircleSecondTag>(true);
             _skillArcaneCircleTagLookup = SystemAPI.GetComponentLookup<SkillArcaneCircleTag>(true);
             _skillElementResonanceTagLookup = SystemAPI.GetComponentLookup<SkillElementResonanceTag>(true);
+            _skillMineBlastTagLookup = SystemAPI.GetComponentLookup<SkillMineBlastTag>(true);
 
 
             batchSize = UnityEngine.SystemInfo.processorCount > 8 ? 64 : 32;
@@ -92,6 +96,7 @@ namespace BlackDawn.DOTS
             _basePropElementResonance = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _combinedElementResonance = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _resonanceMap = new NativeParallelHashMap<Entity, byte>(1024, Allocator.Persistent); // 容量可根据场景调整
+            _mineBlastHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
         }
 
         public void OnUpdate(ref SystemState state)
@@ -109,6 +114,7 @@ namespace BlackDawn.DOTS
             _skillArcaneCircleSecondTagLookup.Update(ref state);
             _skillArcaneCircleTagLookup.Update(ref state);
             _skillElementResonanceTagLookup.Update(ref state);
+            _skillMineBlastTagLookup.Update(ref state);
             //清空区
             _heroHitMonster.Clear();
             _enemyFlightHitHero.Clear();
@@ -122,6 +128,8 @@ namespace BlackDawn.DOTS
             _basePropElementResonance.Clear();
             _combinedElementResonance.Clear();
             _resonanceMap.Clear();
+            //毒爆地雷
+            _mineBlastHitMonster.Clear();
 
             DisposeArrayForCollison();
 
@@ -134,6 +142,7 @@ namespace BlackDawn.DOTS
             var skillElementResonanceQueue = _skillElementResonance.AsParallelWriter();
             var baseFlightElementResonanceQueue = _basePropElementResonance.AsParallelWriter();
             var combinedElementResonanceQueue = _combinedElementResonance.AsParallelWriter();
+            var mineBlastHitMonsterQueue = _mineBlastHitMonster.AsParallelWriter();
    
 
             // 1. 收集触发：把所有碰撞写入自己实体的 buffer,收集碰撞对的标准并行方式
@@ -152,6 +161,7 @@ namespace BlackDawn.DOTS
                 SkillArcaneCircleSecondTagLookup = _skillArcaneCircleSecondTagLookup,
                 SkillArcaneCircleTagLookup = _skillArcaneCircleTagLookup,
                 SkillElementResonanceTagLookup = _skillElementResonanceTagLookup,
+                SkillMineBlastTagLookup = _skillMineBlastTagLookup,
 
                 HeroHitMonsterQueue = heroHitMonsterQueue,
                 EnemyFlightHitHeroQueue = enemyFlightHitHeroQueue,
@@ -163,6 +173,8 @@ namespace BlackDawn.DOTS
                 BaseFlightElementResonanceQueue =baseFlightElementResonanceQueue,
                 CombinedElementResonanceQueue = combinedElementResonanceQueue,
                 ResonanceMap = _resonanceMap,
+                //传入毒爆地雷
+                MineBlastHitMonsterQueue =mineBlastHitMonsterQueue,
 
 
             }
@@ -179,6 +191,7 @@ namespace BlackDawn.DOTS
             skillElementResonanceArray =_skillElementResonance.ToArray(Allocator.Persistent);
             basePropElementResonanceArray = _basePropElementResonance.ToArray(Allocator.Persistent);
             combinedElementResonanceArray =_combinedElementResonance.ToArray(Allocator.Persistent);
+            mineBlastHitMonsterArray =_mineBlastHitMonster.ToArray(Allocator.Persistent);
 
 
            // DevDebug.LogError("元素共鸣结构长度" + combinedElementResonanceArray.Length +"命中共鸣体的基础子弹长度"+basePropElementResonanceArray.Length);
@@ -231,6 +244,7 @@ namespace BlackDawn.DOTS
             _skillElementResonance.Dispose();
             _basePropElementResonance.Dispose();
             _combinedElementResonance.Dispose();
+            _mineBlastHitMonster.Dispose();
             
 
 
@@ -250,6 +264,7 @@ namespace BlackDawn.DOTS
             if (skillElementResonanceArray.IsCreated) skillElementResonanceArray.Dispose();
             if (basePropElementResonanceArray.IsCreated) basePropElementResonanceArray.Dispose();
             if (combinedElementResonanceArray.IsCreated) combinedElementResonanceArray.Dispose();
+            if(mineBlastHitMonsterArray.IsCreated) mineBlastHitMonsterArray.Dispose();
 
 
 
@@ -272,7 +287,12 @@ namespace BlackDawn.DOTS
         [ReadOnly] public ComponentLookup<SkillArcaneCircleTag> SkillArcaneCircleTagLookup; // 技能法阵第一阶段
         [ReadOnly] public ComponentLookup<SkillArcaneCircleSecondTag> SkillArcaneCircleSecondTagLookup; // 技能法阵第二阶段
         [ReadOnly] public ComponentLookup<SkillElementResonanceTag> SkillElementResonanceTagLookup;//元素共鸣体
+        [ReadOnly] public ComponentLookup<SkillMineBlastTag> SkillMineBlastTagLookup;
+       
+        
+        
         public BufferLookup<NearbyHit> HitBufferLookup; // 基础检测系统
+        
 
         public NativeQueue<TriggerPairData>.ParallelWriter HeroHitMonsterQueue;
         public NativeQueue<TriggerPairData>.ParallelWriter EnemyFlightHitHeroQueue;
@@ -289,6 +309,9 @@ namespace BlackDawn.DOTS
 
         // 新增：并行标记表，标记已撞元素共鸣体的攻击者
         public NativeParallelHashMap<Entity, byte> ResonanceMap;
+
+        //毒爆地雷
+        public NativeQueue<TriggerPairData>.ParallelWriter MineBlastHitMonsterQueue;
 
 
         public void Execute(TriggerEvent triggerEvent)
@@ -331,6 +354,11 @@ namespace BlackDawn.DOTS
             //基础飞行道具碰撞到元素共鸣体
             AddIfMatchSimple(a, b, SkillElementResonanceTagLookup, FlightPropDamageCalParLookup,BaseFlightElementResonanceQueue);
             AddIfMatchSimple(b, a, SkillElementResonanceTagLookup, FlightPropDamageCalParLookup, BaseFlightElementResonanceQueue);
+            
+            //怪物与毒爆地雷碰撞
+            AddIfMatch(a, b, SkillMineBlastTagLookup, LiveMonsterLookup, MineBlastHitMonsterQueue, true);
+            AddIfMatch(b, a, SkillMineBlastTagLookup, LiveMonsterLookup, MineBlastHitMonsterQueue, true);
+
         }
 
         private void CheckAndAddNearbyHit(Entity detector, Entity other)
