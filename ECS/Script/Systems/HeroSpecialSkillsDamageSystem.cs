@@ -31,6 +31,7 @@ namespace BlackDawn.DOTS
         private BufferLookup<LinkedEntityGroup> _linkedEntityGroupLookup;
         private ComponentLookup<FlightPropDamageCalPar> _flightPropDamageCalParLookup;
         private ComponentLookup<SkillsDamageCalPar> _skillsDamageCalParLookup;
+        private ComponentLookup<SkillMineBlastExplosionTag> _skillMineBlastExplosionTagLookup;
         /// <summary>
         /// 法阵特殊技能造成的伤害表现为DOT伤害
         /// </summary>
@@ -64,14 +65,7 @@ namespace BlackDawn.DOTS
             _linkedEntityGroupLookup = SystemAPI.GetBufferLookup<LinkedEntityGroup>(true);
             _flightPropDamageCalParLookup = SystemAPI.GetComponentLookup<FlightPropDamageCalPar>(true);
             _skillsDamageCalParLookup = SystemAPI.GetComponentLookup<SkillsDamageCalPar>(true);
-
-        }
-        void UpDataAllComponentLookup(ref SystemState state)
-        {
-            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
-            // 或者用 GetSingletonBuffer 方式（需 DOTS 1.4 以上）
-
-
+            _skillMineBlastExplosionTagLookup = SystemAPI.GetComponentLookup<SkillMineBlastExplosionTag>(true);
 
         }
         public void OnUpdate(ref SystemState state)
@@ -91,6 +85,10 @@ namespace BlackDawn.DOTS
             _flightPropDamageCalParLookup.Update(ref state);
             _skillsDamageCalParLookup.Update(ref state);
 
+            //毒爆地雷爆炸标签
+            _skillMineBlastExplosionTagLookup.Update(ref state);
+
+            var deltaTime =SystemAPI.Time.DeltaTime;
             if (arcaneCircleLinkenBuffer.IsCreated)
                 arcaneCircleLinkenBuffer.Dispose();
            // var ecb = new EntityCommandBuffer(Allocator.TempJob);
@@ -99,6 +97,8 @@ namespace BlackDawn.DOTS
             var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
             var arcanelCorcleHitsArray = detectionSystem.arcaneCircleHitMonsterArray;
             var elementResonanceHitArray =detectionSystem.combinedElementResonanceArray;
+            //获取毒爆地雷碰撞对
+            var mineBlastExplosionHitMonsterArray = detectionSystem.mineBlastExplosionHitMonsterArray;
 
 
             // 为虹吸特效提供buffer，遍历BUFFer  生成特效
@@ -159,6 +159,23 @@ namespace BlackDawn.DOTS
              ThridDamagePar =elementRespnanceThridPar,
            
             }.Schedule(elementResonanceHitArray.Length, 64, state.Dependency);
+
+            // 毒爆地雷B阶段的，毒伤状态计算
+
+           // DevDebug.LogError("毒伤碰撞对长度" + mineBlastExplosionHitMonsterArray.Length);
+
+            state.Dependency = new ApplySpecialMineBlastExplosionPosionDamageJob
+            {
+                DefenseAttrLookup =_monsterDefenseAttrLookup,
+                ECB=ecb.AsParallelWriter(),
+                SkillTagLookup=_skillMineBlastExplosionTagLookup,
+                HitArray = mineBlastExplosionHitMonsterArray,
+                DeltaTime=deltaTime,
+
+
+            }.Schedule(mineBlastExplosionHitMonsterArray.Length, 64, state.Dependency);
+
+
 
 
 
@@ -370,7 +387,61 @@ namespace BlackDawn.DOTS
         }
     }
 
+    /// <summary>
+    /// 毒爆地雷B 阶段毒伤地雷 计算,持续性的技能可以计算秒变/不用buffer?
+    /// </summary>
+    struct ApplySpecialMineBlastExplosionPosionDamageJob:IJobParallelFor
+    {
+        public EntityCommandBuffer.ParallelWriter ECB;
+        [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
+        [ReadOnly] public ComponentLookup<SkillMineBlastExplosionTag> SkillTagLookup;
+        [ReadOnly] public NativeArray<TriggerPairData> HitArray;//收集毒伤地雷碰撞对
+        public float DeltaTime;
+
+        public void Execute(int i)
+        {
+           
+            // 1) 拿到碰撞实体对
+            var pair = HitArray[i];
+            Entity skill = pair.EntityA;
+            Entity target = pair.EntityB;
+            if (!SkillTagLookup.HasComponent(skill))
+            {
+                skill = pair.EntityB;
+                target = pair.EntityA;
+            }
+
+            var d = DefenseAttrLookup[target];
+            var st = SkillTagLookup[skill];
+            //DevDebug.Log("进入计算");
+
+            if (st.enableSecondB)
+            {
+              //  DevDebug.Log("计算减少值");
+                d.armor -= (20 + st.level * 2)*DeltaTime;
+                d.resistances.poison -= (10+ st.level * 1)*DeltaTime;
+                        
+            }
+            //制造掩码
+            float maskPoison =st.enableSecondB ? 1 : 0;
+
+            if (st.enableSecondC)
+            {
+              //  DevDebug.Log("计算减少值");
+              d.resistances.frost -=(st.level*0.5f+10*maskPoison) * DeltaTime;
+              d.resistances.fire -= (st.level * 0.5f + 10 * maskPoison) * DeltaTime;
+              d.resistances.lightning -= (st.level * 0.5f + 10 * maskPoison) * DeltaTime;
+              d.resistances.shadow -= (st.level * 0.5f + 10 * maskPoison) * DeltaTime;
+              d.resistances.poison -= (st.level * 0.5f ) * DeltaTime;
+              d.armor -= (st.level * 1) * DeltaTime; ;
+
+            }
+
+            //写回计算数据
+            ECB.SetComponent(i, target, d);
+        }
 
 
+    }
 
 }

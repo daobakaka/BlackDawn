@@ -172,7 +172,8 @@ namespace BlackDawn.DOTS
                 target = pair.EntityA;
             }
 
-
+            if (!RecordBufferLookup.HasBuffer(skill))
+                return; // 保护性返回，防止没Buffer时崩溃
             // 拿到道具的记录缓冲
             var buffer = RecordBufferLookup[skill];
 
@@ -250,7 +251,7 @@ namespace BlackDawn.DOTS
             //牵引或者爆炸是直接执行，不由累加进行触发
             if (d.enablePull)
             {
-                c.pull = h.controlAbilityAttribute.pull;
+                 c.pull = h.controlAbilityAttribute.pull;
                  c.pullCenter = Transform[skill].Position;
          
             }
@@ -468,7 +469,7 @@ namespace BlackDawn.DOTS
             //10) 标记道具销毁，这样就可以执行穿透逻辑，而不必持续检测
             {
                 var pd = d;
-                pd.destory = true;
+              //  pd.destory = true;
                 ECB.SetComponent(i, skill, pd);
             }
 

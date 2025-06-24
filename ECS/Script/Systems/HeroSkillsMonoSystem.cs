@@ -110,11 +110,9 @@ namespace BlackDawn.DOTS
                     else
                     {
 
-                       // collider.ValueRW.Value.Value.SetCollisionFilter(new CollisionFilter());
-                      //collider.ValueRW = new PhysicsCollider();
-                      //  ecb.RemoveComponent<SkillPulseTag>(entity);
-                        ecb.DestroyEntity(entity);     
-                     // ecb.SetComponentEnabled<PhysicsCollider>(entity, false);
+    
+                        //ecb.DestroyEntity(entity);
+                        skillCal.ValueRW.destory = true;    
 
                     }                
                 }
@@ -171,7 +169,8 @@ namespace BlackDawn.DOTS
                 {
                   
                       
-                        ecb.DestroyEntity(entity);
+                       // ecb.DestroyEntity(entity);
+                    skillCal.ValueRW.destory = true;
                  
                     
                 }
@@ -233,8 +232,10 @@ namespace BlackDawn.DOTS
                 skillTag.ValueRW.tagSurvivalTime -= timer;
                 if (skillTag.ValueRW.tagSurvivalTime <= 0f)
                 {
-                   
-                        ecb.DestroyEntity(entity);
+
+                    //  ecb.DestroyEntity(entity);
+                    skillCal.ValueRW.destory = true;
+
                     
                 }
             }
@@ -250,7 +251,8 @@ namespace BlackDawn.DOTS
                 {
 
 
-                    ecb.DestroyEntity(entity);
+                    //ecb.DestroyEntity(entity);
+                    skillCal.ValueRW.destory = true;
                 }
 
 
@@ -270,13 +272,15 @@ namespace BlackDawn.DOTS
 
                     if (heroPar.defenseAttribute.energy <= 0)
                     {
-                        ecb.DestroyEntity(entity);
+                       // ecb.DestroyEntity(entity);
+                        skillCal.ValueRW.destory = true;
                     }
                     ecb.SetComponent(_heroEntity, heroPar);
                 }
                 //存在第二次释放手动关闭
                 if(skillTag.ValueRO.closed)
-                    ecb.DestroyEntity(entity);
+                    skillCal.ValueRW.destory = true;
+               // ecb.DestroyEntity(entity);
 
             }
          
@@ -411,7 +415,8 @@ namespace BlackDawn.DOTS
                 if (skillTag.ValueRO.tagSurvivalTime <= 0)
                 {
 
-                    ecb.DestroyEntity(entity);
+                   // ecb.DestroyEntity(entity);
+                    skillCal.ValueRW.destory = true;
                 }
 
 
@@ -431,15 +436,16 @@ namespace BlackDawn.DOTS
         void SkillMonoElementResonance(ref SystemState state, EntityCommandBuffer ecb)
         {
 
-            foreach (var (skillTag,transform, collider, entity)
-            in SystemAPI.Query<RefRW<SkillElementResonanceTag>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
+            foreach (var (skillTag,skillCal,transform, collider, entity)
+            in SystemAPI.Query<RefRW<SkillElementResonanceTag>, RefRW<SkillsDamageCalPar>,RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
             {
 
                 skillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
 
                 if (skillTag.ValueRW.tagSurvivalTime <= 0)
-                    ecb.DestroyEntity(entity);
-            
+                   // ecb.DestroyEntity(entity);
+                skillCal.ValueRW.destory = true;
+
             }
 
 
@@ -463,7 +469,8 @@ namespace BlackDawn.DOTS
 
                 if (skillTag.ValueRW.tagSurvivalTime <= 0)
                 {
-                    ecb.DestroyEntity(entity);
+                    // ecb.DestroyEntity(entity);
+                    damagePar.ValueRW.destory = true;
                     continue;
                 }
                 //第二阶段雷暴牢笼
@@ -550,15 +557,16 @@ namespace BlackDawn.DOTS
 
 
             //雷暴消除逻辑
-            foreach (var (skillTag, entity)
-          in SystemAPI.Query<RefRW<SkillElectroCageScoendTag>>().WithEntityAccess())
+            foreach (var (skillTag,skillCal,entity)
+          in SystemAPI.Query<RefRW<SkillElectroCageScoendTag>,RefRW<SkillsDamageCalPar>>().WithEntityAccess())
             {
 
                 skillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
                 if (skillTag.ValueRO.tagSurvivalTime <= 0)
                 {
-
-                    ecb.DestroyEntity(entity);
+                    skillCal.ValueRW.destory = true;
+                    //ecb.DestroyEntity(entity);
+                    
                     continue;
                 
                 }

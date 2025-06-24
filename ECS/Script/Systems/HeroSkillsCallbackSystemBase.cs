@@ -246,29 +246,44 @@ namespace BlackDawn.DOTS
                 {
 
                     skillTag.tagSurvivalTime-= timer;
+                    //百分百数字命中，不用添加新变量
+                    if (skillTag.tagSurvivalTime <= 1f && skillTag.tagSurvivalTime > 1f - timer)
+                    {
+                        vfx.SendEvent("stop");
+                     
+                    }
                     if (skillTag.tagSurvivalTime <= 0)
                     {
-                        ecb.DestroyEntity(entity);
+                        // ecb.DestroyEntity(entity);
+                        damageCalPar.destory = true;
                         return;
+
                     }
-                    for (int i = 0; i < mineBlastArray.Length; i++)
-                    {
-
-                        if (mineBlastArray[i].EntityA == entity || mineBlastArray[i].EntityB == entity)
-
+                    //保持检测，因为要计算毒爆之后的毒伤效果,这里跑起来的碰撞对太多了，应当分离开
+ 
+                        for (int i = 0; i < mineBlastArray.Length; i++)
                         {
-                            vfx.SendEvent("hit");
-                            ecb.SetComponentEnabled<SkillMineBlastTag>(entity,false);
-                            //开启爆炸
-                            ecb.SetComponentEnabled<SkillMineBlastExplosionTag>(entity, true);
-                            //赋予新的伤害
-                            damageCalPar.damageChangePar = skillTag.skillDamageChangeParTag;
-                            transform.Scale =skillTag.scaleChangePar;
-                            break;
+
+                            if (mineBlastArray[i].EntityA == entity || mineBlastArray[i].EntityB == entity)
+
+                            {
+                                vfx.SendEvent("hit");
+                                ecb.SetComponentEnabled<SkillMineBlastTag>(entity, false);
+                                //开启爆炸
+                                ecb.SetComponentEnabled<SkillMineBlastExplosionTag>(entity, true);
+                                //赋予新的伤害
+                                damageCalPar.damageChangePar = skillTag.skillDamageChangeParTag;
+                                //赋予爆炸效果
+                                damageCalPar.enableExplosion = true;
+                                //范围增大
+                                transform.Scale = skillTag.scaleChangePar;
+                                //200点恐惧效果， 恐惧3秒
+                                damageCalPar.tempFear = 200;
+                                break;
+                            }
+
                         }
                     
-                    }
-
                 })
                 .WithoutBurst().Run();
 
@@ -282,12 +297,46 @@ namespace BlackDawn.DOTS
                     ref LocalTransform transform) =>
                 {
                     skillTag.tagSurvivalTime -= timer;
+               
+
                     if (skillTag.tagSurvivalTime <= 0)
                     {
-                        ecb.DestroyEntity(entity);
-                        return;
+                       
+                         if (!skillTag.enableSecondA)
+                         {
+                                //ecb.DestroyEntity(entity);
+                            damageCalPar.destory = true;
+                                return;
+                         }                      
+                        else //允许第一阶段 变化情况
+                        {
+                            skillTag.tagSurvivalTimeSecond -= timer;
+                            if (!skillTag.startSecondA)
+                            {
+                                skillTag.startSecondA = true;
+                                vfx.SendEvent("buildup");
+                                //传入变化参数
+                                transform.Scale = skillTag.scaleChangePar;
+                                //传入伤害参数
+                                damageCalPar.damageChangePar = skillTag.skillDamageChangeParTag;
+                                //修正恐惧值
+                                damageCalPar.tempFear = 0;
+                                //修正爆炸值
+                                damageCalPar.enableExplosion = false;
+                                //增加吸引值
+                                damageCalPar.enablePull = true;
+                            }
+                            if (skillTag.tagSurvivalTimeSecond <= 0)
+                            {
+                                //ecb.DestroyEntity(entity);
+                                damageCalPar.destory = true;
+                                return;                           
+                            }
+
+                        }
                     }
-             
+                    //允许第二阶段变化，写在特殊技能job 里面？
+                
 
                 })
                 .WithoutBurst().Run();

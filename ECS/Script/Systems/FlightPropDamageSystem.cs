@@ -169,9 +169,10 @@ namespace BlackDawn.DOTS
                 target = pair.EntityA;
             }
 
-
-            // 拿到道具的记录缓冲
-            var buffer = RecordBufferLookup[prop];
+            if (!RecordBufferLookup.HasBuffer(prop))
+                return;
+                // 拿到道具的记录缓冲
+                var buffer = RecordBufferLookup[prop];
 
             // 先检查是否已经记录过这个 target
             for (int j = 0; j < buffer.Length; j++)

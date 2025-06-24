@@ -316,12 +316,19 @@ namespace BlackDawn.DOTS
     {
 
         public float tagSurvivalTime;
+        //爆炸遗留时间
+        public float tagSurvivalTimeSecond;
         //形变参数
         public float scaleChangePar;
         public bool enableSecondA;
         public bool enableSecondB;
+        public bool enableSecondC;
         //伤害变化参数,默认为0，外部赋值1+
         public float skillDamageChangeParTag;
+        //开始第二阶段
+        public bool startSecondA;
+        //等级
+        public int level;
     }
 
 

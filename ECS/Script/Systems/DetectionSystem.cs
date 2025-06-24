@@ -5,6 +5,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
+using UnityEditor.Search;
 
 namespace BlackDawn.DOTS
 {
@@ -36,6 +37,7 @@ namespace BlackDawn.DOTS
         private ComponentLookup<SkillArcaneCircleTag> _skillArcaneCircleTagLookup;
         private ComponentLookup<SkillElementResonanceTag> _skillElementResonanceTagLookup;
         private ComponentLookup<SkillMineBlastTag> _skillMineBlastTagLookup;
+        private ComponentLookup<SkillMineBlastExplosionTag> _skillMineExplosionTagLookup;
 
 
         // 所有用于分类的碰撞对容器
@@ -49,6 +51,7 @@ namespace BlackDawn.DOTS
         private NativeQueue<TriggerPairData> _basePropElementResonance;
         private NativeQueue<TriggerPairData> _combinedElementResonance;
         private NativeQueue<TriggerPairData> _mineBlastHitMonster;
+        private NativeQueue<TriggerPairData> _mineBlastExplosionHitMonster;
 
         //用于在job中并行的array
         public NativeArray<TriggerPairData> heroHitMonsterArray;
@@ -62,6 +65,7 @@ namespace BlackDawn.DOTS
         public NativeArray<TriggerPairData> combinedElementResonanceArray; // 如需后续使用
         private NativeParallelHashMap<Entity, byte> _resonanceMap;
         public NativeArray<TriggerPairData> mineBlastHitMonsterArray;
+        public NativeArray<TriggerPairData> mineBlastExplosionHitMonsterArray;
 
 
         public void OnCreate(ref SystemState state)
@@ -82,6 +86,7 @@ namespace BlackDawn.DOTS
             _skillArcaneCircleTagLookup = SystemAPI.GetComponentLookup<SkillArcaneCircleTag>(true);
             _skillElementResonanceTagLookup = SystemAPI.GetComponentLookup<SkillElementResonanceTag>(true);
             _skillMineBlastTagLookup = SystemAPI.GetComponentLookup<SkillMineBlastTag>(true);
+            _skillMineExplosionTagLookup = SystemAPI.GetComponentLookup<SkillMineBlastExplosionTag>(true);
 
 
             batchSize = UnityEngine.SystemInfo.processorCount > 8 ? 64 : 32;
@@ -97,10 +102,27 @@ namespace BlackDawn.DOTS
             _combinedElementResonance = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _resonanceMap = new NativeParallelHashMap<Entity, byte>(1024, Allocator.Persistent); // 容量可根据场景调整
             _mineBlastHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
+            _mineBlastExplosionHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
         }
-
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            var speedEcb = new EntityCommandBuffer(Allocator.Temp);
+
+           //最开始的全局消除
+            foreach (var (skillCal, entity) in SystemAPI.Query<RefRO<SkillsDamageCalPar>>().WithEntityAccess())
+            {
+
+                if (skillCal.ValueRO.destory == true)
+
+                    speedEcb.DestroyEntity(entity);
+            
+            }
+            speedEcb.Playback(state.EntityManager);
+            speedEcb.Dispose();
+            
+                   
+            
             // 更新查找
             _detectionLookup.Update(ref state);
             _transformLookup.Update(ref state);
@@ -115,6 +137,7 @@ namespace BlackDawn.DOTS
             _skillArcaneCircleTagLookup.Update(ref state);
             _skillElementResonanceTagLookup.Update(ref state);
             _skillMineBlastTagLookup.Update(ref state);
+            _skillMineExplosionTagLookup.Update(ref state);
             //清空区
             _heroHitMonster.Clear();
             _enemyFlightHitHero.Clear();
@@ -130,6 +153,7 @@ namespace BlackDawn.DOTS
             _resonanceMap.Clear();
             //毒爆地雷
             _mineBlastHitMonster.Clear();
+            _mineBlastExplosionHitMonster.Clear();
 
             DisposeArrayForCollison();
 
@@ -143,6 +167,7 @@ namespace BlackDawn.DOTS
             var baseFlightElementResonanceQueue = _basePropElementResonance.AsParallelWriter();
             var combinedElementResonanceQueue = _combinedElementResonance.AsParallelWriter();
             var mineBlastHitMonsterQueue = _mineBlastHitMonster.AsParallelWriter();
+            var mineBlastExplosionHitMonsterQueue = _mineBlastExplosionHitMonster.AsParallelWriter();
    
 
             // 1. 收集触发：把所有碰撞写入自己实体的 buffer,收集碰撞对的标准并行方式
@@ -162,6 +187,7 @@ namespace BlackDawn.DOTS
                 SkillArcaneCircleTagLookup = _skillArcaneCircleTagLookup,
                 SkillElementResonanceTagLookup = _skillElementResonanceTagLookup,
                 SkillMineBlastTagLookup = _skillMineBlastTagLookup,
+                SkillMineBlastExplosionTagLookup= _skillMineExplosionTagLookup,
 
                 HeroHitMonsterQueue = heroHitMonsterQueue,
                 EnemyFlightHitHeroQueue = enemyFlightHitHeroQueue,
@@ -175,6 +201,7 @@ namespace BlackDawn.DOTS
                 ResonanceMap = _resonanceMap,
                 //传入毒爆地雷
                 MineBlastHitMonsterQueue =mineBlastHitMonsterQueue,
+                MineBlastExplosionHitMonsterQueue =mineBlastExplosionHitMonsterQueue,
 
 
             }
@@ -192,6 +219,7 @@ namespace BlackDawn.DOTS
             basePropElementResonanceArray = _basePropElementResonance.ToArray(Allocator.Persistent);
             combinedElementResonanceArray =_combinedElementResonance.ToArray(Allocator.Persistent);
             mineBlastHitMonsterArray =_mineBlastHitMonster.ToArray(Allocator.Persistent);
+            mineBlastExplosionHitMonsterArray =_mineBlastExplosionHitMonster.ToArray(Allocator.Persistent);
 
 
            // DevDebug.LogError("元素共鸣结构长度" + combinedElementResonanceArray.Length +"命中共鸣体的基础子弹长度"+basePropElementResonanceArray.Length);
@@ -265,6 +293,7 @@ namespace BlackDawn.DOTS
             if (basePropElementResonanceArray.IsCreated) basePropElementResonanceArray.Dispose();
             if (combinedElementResonanceArray.IsCreated) combinedElementResonanceArray.Dispose();
             if(mineBlastHitMonsterArray.IsCreated) mineBlastHitMonsterArray.Dispose();
+            if (mineBlastExplosionHitMonsterArray.IsCreated) mineBlastExplosionHitMonsterArray.Dispose();
 
 
 
@@ -287,7 +316,8 @@ namespace BlackDawn.DOTS
         [ReadOnly] public ComponentLookup<SkillArcaneCircleTag> SkillArcaneCircleTagLookup; // 技能法阵第一阶段
         [ReadOnly] public ComponentLookup<SkillArcaneCircleSecondTag> SkillArcaneCircleSecondTagLookup; // 技能法阵第二阶段
         [ReadOnly] public ComponentLookup<SkillElementResonanceTag> SkillElementResonanceTagLookup;//元素共鸣体
-        [ReadOnly] public ComponentLookup<SkillMineBlastTag> SkillMineBlastTagLookup;
+        [ReadOnly] public ComponentLookup<SkillMineBlastTag> SkillMineBlastTagLookup;//毒爆地雷
+        [ReadOnly] public ComponentLookup<SkillMineBlastExplosionTag> SkillMineBlastExplosionTagLookup;//爆炸后的瘟疫地雷
        
         
         
@@ -312,6 +342,8 @@ namespace BlackDawn.DOTS
 
         //毒爆地雷
         public NativeQueue<TriggerPairData>.ParallelWriter MineBlastHitMonsterQueue;
+        //毒爆地雷爆炸后的瘟疫地雷
+        public NativeQueue<TriggerPairData>.ParallelWriter MineBlastExplosionHitMonsterQueue;
 
 
         public void Execute(TriggerEvent triggerEvent)
@@ -358,6 +390,9 @@ namespace BlackDawn.DOTS
             //怪物与毒爆地雷碰撞
             AddIfMatch(a, b, SkillMineBlastTagLookup, LiveMonsterLookup, MineBlastHitMonsterQueue, true);
             AddIfMatch(b, a, SkillMineBlastTagLookup, LiveMonsterLookup, MineBlastHitMonsterQueue, true);
+            //怪物与毒爆地雷爆炸后的碰撞对，用于计算B效果
+            AddIfMatch(a, b, SkillMineBlastExplosionTagLookup, LiveMonsterLookup, MineBlastExplosionHitMonsterQueue, true);
+            AddIfMatch(b, a, SkillMineBlastExplosionTagLookup, LiveMonsterLookup, MineBlastExplosionHitMonsterQueue, true);
 
         }
 

@@ -10,6 +10,7 @@ using Random = Unity.Mathematics.Random;
 using Unity.Collections;
 using ProjectDawn.Entities;
 using System;
+using Unity.Entities.UniversalDelegates;
 
 
 namespace BlackDawn
@@ -388,7 +389,6 @@ namespace BlackDawn
                     }
 
                     break;
-
                 //元素共鸣,非技能标签，不会造成伤害,可以读取等级展示伤害
                 case HeroSkillID.ElementResonance:
                     switch (psionicType)
@@ -468,8 +468,7 @@ namespace BlackDawn
                     }
 
                     break;
-
-                //毒爆地雷
+                //毒爆地雷,第一个3阶变化技能
                 case HeroSkillID.MineBlast:
                     switch (psionicType)
                     {
@@ -480,17 +479,97 @@ namespace BlackDawn
                             {
                                 var entityMineBlast = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10*i,0,0), float3.zero, 1, false, false);
                                 _entityManager.AddComponentData(entityMineBlast, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2 ,skillDamageChangeParTag=3});
-                                _entityManager.AddComponentData(entityMineBlast, new SkillMineBlastExplosionTag() { tagSurvivalTime = 5 });
+                                _entityManager.AddComponentData(entityMineBlast, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1 });
                             }
                             break;
                         case HeroSkillPsionicType.PsionicA:
-                          
+                            for (int i = 0; i < 3; i++)
+                            {
+                                var entityMineBlastA = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10 * i, 0, 0), float3.zero, 1, false, false);
+                                _entityManager.AddComponentData(entityMineBlastA, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
+                                _entityManager.AddComponentData(entityMineBlastA, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, skillDamageChangeParTag = 1.5f, enableSecondA = true, tagSurvivalTimeSecond = 5,scaleChangePar=4 });
+                            }
                             break;
                         case HeroSkillPsionicType.PsionicB:
+                            for (int i = 0; i < 3; i++)
+                            {
+                                var entityMineBlastB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10 * i, 0, 0), float3.zero, 1, false, false);
+                                _entityManager.AddComponentData(entityMineBlastB, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
+                                _entityManager.AddComponentData(entityMineBlastB, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, enableSecondB = true });
+                            }
                             break;
-
+                            //十字地雷
+                        case HeroSkillPsionicType.PsionicC:
+                            for (int i = 0; i < 3; i++)
+                            {
+                                var entityMineBlastC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10 * i, 0, 0), float3.zero, 1, false, false);
+                                _entityManager.AddComponentData(entityMineBlastC, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
+                                _entityManager.AddComponentData(entityMineBlastC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, enableSecondC = true,level=1 });
+                            }
+                            for (int i = 0; i < 2; i++)
+                            {
+                                var par = 1 - 2 * i;
+                                var entityMineBlastC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10 , 0, 10 * par), float3.zero, 1, false, false);
+                                _entityManager.AddComponentData(entityMineBlastC, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
+                                _entityManager.AddComponentData(entityMineBlastC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, enableSecondC = true,level=1 });
+                            }
+                            break;
                         case HeroSkillPsionicType.PsionicAB:
-                           
+
+                            for (int i = 0; i < 3; i++)
+                            {
+                                var entityMineBlastAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10 * i, 0, 0), float3.zero, 1, false, false);
+                                _entityManager.AddComponentData(entityMineBlastAB, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
+                                _entityManager.AddComponentData(entityMineBlastAB, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, skillDamageChangeParTag = 1.5f, enableSecondA = true, tagSurvivalTimeSecond = 5, scaleChangePar = 4 ,enableSecondB=true});
+                            }
+
+                            break;
+                        //十字地雷加后续遗留
+                        case HeroSkillPsionicType.PsionicAC:
+                            for (int i = 0; i < 3; i++)
+                            {
+                                var entityMineBlastAC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10 * i, 0, 0), float3.zero, 1, false, false);
+                                _entityManager.AddComponentData(entityMineBlastAC, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
+                                _entityManager.AddComponentData(entityMineBlastAC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, skillDamageChangeParTag = 1.5f, enableSecondA = true, tagSurvivalTimeSecond = 5, scaleChangePar = 4, enableSecondC = true, level = 1 });
+                            }
+                            for (int i = 0; i < 2; i++)
+                            {
+                                var par = 1 - 2 * i;
+                                var entityMineBlastAC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10, 0, 10 * par), float3.zero, 1, false, false);
+                                _entityManager.AddComponentData(entityMineBlastAC, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
+                                _entityManager.AddComponentData(entityMineBlastAC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, skillDamageChangeParTag = 1.5f, enableSecondA = true, tagSurvivalTimeSecond = 5, scaleChangePar = 4, enableSecondC = true, level = 1 });
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicBC:
+                            for (int i = 0; i < 3; i++)
+                            {
+                                var entityMineBlastBC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10 * i, 0, 0), float3.zero, 1, false, false);
+                                _entityManager.AddComponentData(entityMineBlastBC, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
+                                _entityManager.AddComponentData(entityMineBlastBC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, enableSecondB = true, enableSecondC = true, level = 1 });
+                            }
+                            for (int i = 0; i < 2; i++)
+                            {
+                                var par = 1 - 2 * i;
+                                var entityMineBlastBC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10, 0, 10 * par), float3.zero, 1, false, false);
+                                _entityManager.AddComponentData(entityMineBlastBC, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
+                                _entityManager.AddComponentData(entityMineBlastBC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, enableSecondB = true, enableSecondC = true, level = 1 });
+                            }
+                            break;
+                            //终极三灵能效果
+                        case HeroSkillPsionicType.PsionicABC:
+                            for (int i = 0; i < 3; i++)
+                            {
+                                var entityMineBlastABC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10 * i, 0, 0), float3.zero, 1, false, false);
+                                _entityManager.AddComponentData(entityMineBlastABC, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
+                                _entityManager.AddComponentData(entityMineBlastABC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, skillDamageChangeParTag = 1.5f, enableSecondA = true, enableSecondB=true,tagSurvivalTimeSecond = 5, scaleChangePar = 4, enableSecondC = true, level = 1 });
+                            }
+                            for (int i = 0; i < 2; i++)
+                            {
+                                var par = 1 - 2 * i;
+                                var entityMineBlastABC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10, 0, 10 * par), float3.zero, 1, false, false);
+                                _entityManager.AddComponentData(entityMineBlastABC, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
+                                _entityManager.AddComponentData(entityMineBlastABC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, skillDamageChangeParTag = 1.5f, enableSecondA = true,enableSecondB=true, tagSurvivalTimeSecond = 5, scaleChangePar = 4, enableSecondC = true, level = 1 });
+                            }
                             break;
 
                     }
