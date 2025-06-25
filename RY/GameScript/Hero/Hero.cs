@@ -681,6 +681,8 @@ namespace BlackDawn
 
             //增加 伤害变化参数,默认为1
             skillsDamageCalPar.damageChangePar = 1;
+            //默认并行数量最高100
+            skillsDamageCalPar.ParallelCount = 100;
             //传入 skillDamage 的伤害类型
             skillsDamageCalPar.damageTriggerType = CalculateDamageTriggerType(critTriggered, vulTriggered, supTriggered, dotCritTriggered, elemCritTriggered);
         }

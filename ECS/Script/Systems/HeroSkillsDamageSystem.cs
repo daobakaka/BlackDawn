@@ -106,8 +106,9 @@ namespace BlackDawn.DOTS
             }
             .Schedule(hitsArray.Length, 64, state.Dependency);
 
-          //  state.Dependency.Complete();
-
+            //  state.Dependency.Complete()
+            // 更新一次 抵消诡异快照机制？还是不行
+            _skillDamage.Update(ref state);
             // 3. 回放并清理
             //ecb.Playback(state.EntityManager);
             //ecb.Dispose();
@@ -187,8 +188,7 @@ namespace BlackDawn.DOTS
                     return;
                 }
             }
-            // 只有没记录过，才加进来,这里要注意并行写入限制，使用并行写入方法         
-            ECB.AppendToBuffer(i, skill, new HitRecord { other = target });
+
 
             // 2) 读取组件 & 随机数
             var d = DamageParLookup[skill];
@@ -205,6 +205,18 @@ namespace BlackDawn.DOTS
             var tempText = TempDamageText[textRenderEntity];
             var tempDotText = TempDotDamageText[textDotRenderEntity];
             var rnd = new Unity.Mathematics.Random(a.rngState);
+
+
+            // 只有没记录过，才加进来,这里要注意并行写入限制，使用并行写入方法
+            //添加并行数量上限，防止buffer无序扩张
+            //这里的限定完全不起作用
+            //if (buffer.Length < 100)
+            //{
+                ECB.AppendToBuffer(i, skill, new HitRecord { other = target });
+               // DevDebug.Log("bufferLength:   " + buffer.Length);
+            //}
+            //else
+            //    return;
 
             // 3) 闪避判定-这里应该展现闪避字体
             if (rnd.NextFloat() < a.dodge)
@@ -229,7 +241,7 @@ namespace BlackDawn.DOTS
             //常规控制可以每次击打刷新，而强力控制必须是周期性累加
 
             //减速， 这个可以是为常规控制，常规控制击中则清零
-             c.slow += h.controlAbilityAttribute.slow;
+             c.slow += h.controlAbilityAttribute.slow+d.tempSlow;
              c.slowTimer = 0;
             //击退,不进行叠加
             c.knockback = h.controlAbilityAttribute.knockback;

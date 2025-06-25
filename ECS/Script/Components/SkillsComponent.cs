@@ -41,12 +41,15 @@ namespace BlackDawn.DOTS
         /// <summary>流血持续性伤害，由物理伤害触发</summary>
         public float bleedDotDamage;
 
+        /// <summary>并行处理数量,默认100，根据技能调整</summary>
+        public int ParallelCount;
         // —— 临时性（控制属性） ——
         /// <summary>临时性控制属性</summary>
         public float tempFreeze;
         public float tempStun;
         public float tempFear;
         public float tempRoot;
+        public float tempSlow;
 
         /// <summary>用于技能变化的整体伤害参，这里看到是在池化中进行计算的，也应该在技能表现中增加，默认值为1</summary>
         public float damageChangePar;
@@ -262,8 +265,6 @@ namespace BlackDawn.DOTS
     /// </summary>
     public struct SkillElectroCageTag : IComponentData
     {
-
-
         public float tagSurvivalTime;
         //形变参数
         public float scaleChangePar;
@@ -331,6 +332,32 @@ namespace BlackDawn.DOTS
         public int level;
     }
 
+    /// <summary>
+    /// 毒雨
+    /// </summary>
+    public struct SkillPoisonRainTag : IComponentData
+    {
+
+        public float tagSurvivalTime;
+        //形变参数
+        public float scaleChangePar;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        public bool enableSecondC;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+        //开始第二阶段
+        public bool startSecondA;
+        //等级
+        public int level;
+    }
+    /// <summary>
+    /// 毒雨A 阶段TAG
+    /// </summary>
+    public struct SkillPoisonRainATag : IComponentData
+    {
+        public int level;
+    }
 
 
 }

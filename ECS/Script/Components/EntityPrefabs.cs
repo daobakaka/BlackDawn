@@ -102,7 +102,7 @@ namespace BlackDawn.DOTS
                     HeroSkill_FrostTrail = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.FrostTrail),
                     HeroSkill_LightningChain = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.LightningChain),
                     HeroSkill_ShadowStab = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.ShadowStab),
-                    HeroSkill_GasTrap = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.GasTrap),
+                    HeroSkill_PoisonRain = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.PoisonRain),
                     HeroSkill_ElementBurst = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.ElementBurst),
                     HeroSkill_PhantomStep = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.PhantomStep),
                     HeroSkill_Shadowless = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.Shadowless),
@@ -137,6 +137,7 @@ namespace BlackDawn.DOTS
                     HeroSkillAssistive_IceFireFire =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.IceFireFire),
                     HeroSkillAssistive_Frost = GetSafe(auth.skillAssistivePrefabs, HeroSkillAssistiveID.Frost_Fragment),
                     HeroSkillAssistive_ElectroCage_Lightning =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.ElectroCage_Lightning),
+                    HeroSkillAssistive_PoisonRainB =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.PoisonRainB),
 
 
 
@@ -331,7 +332,7 @@ namespace BlackDawn.DOTS
             public Entity HeroSkill_FrostTrail;
             public Entity HeroSkill_LightningChain;
             public Entity HeroSkill_ShadowStab;
-            public Entity HeroSkill_GasTrap;
+            public Entity HeroSkill_PoisonRain;
             public Entity HeroSkill_ElementBurst;
             public Entity HeroSkill_PhantomStep;
             public Entity HeroSkill_Shadowless;
@@ -364,7 +365,8 @@ namespace BlackDawn.DOTS
           //英雄辅助skill
             public Entity HeroSkillAssistive_IceFireFire;
             public Entity HeroSkillAssistive_Frost;
-        public Entity HeroSkillAssistive_ElectroCage_Lightning;
+            public Entity HeroSkillAssistive_ElectroCage_Lightning;
+            public Entity HeroSkillAssistive_PoisonRainB;    
             // Monster Skills
             public Entity MonsterSkill_DeathPulse;
             // Monster Entities

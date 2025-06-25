@@ -107,8 +107,8 @@ namespace BlackDawn
 
         ShadowStab,        // 暗影之刺：瞬间闪烁至目标身后，造成暗影伤害并使其昏迷2秒  
                            // 释放方式：Teleport/Control；伤害类型：暗影
-
-        GasTrap,           // 毒雾陷阱：放置一个毒雾陷阱，触发后生成持续4秒的毒云  
+       //毒雨 -技能名称更改    
+        PoisonRain,           // 毒雾陷阱：降下一片毒雨，造成毒素伤害 
                            // 释放方式：Release/Summon；伤害类型：毒素
 
         ElementBurst,      // 元素爆发：根据当前武器元素类型释放对应范围爆炸  
@@ -213,6 +213,7 @@ namespace BlackDawn
      IceFireFire,
      Frost_Fragment,
      ElectroCage_Lightning,
+     PoisonRainB,
 
     }
     /// <summary>

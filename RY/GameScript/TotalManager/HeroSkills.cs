@@ -435,8 +435,8 @@ namespace BlackDawn
                             var entityElectroCageA = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ElectroCage, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             //构造定身效果
                             var skillParA = _entityManager.GetComponentData<SkillsDamageCalPar>(entityElectroCageA);
-                            skillPar.tempRoot = 101;
-                            skillPar.tempStun = 101;
+                            skillParA.tempRoot = 101;
+                            skillParA.tempStun = 101;
                             _entityManager.SetComponentData(entityElectroCageA, skillParA);
                             _entityManager.AddComponentData(entityElectroCageA, new SkillElectroCageTag() { tagSurvivalTime = 4,enableSecondA =true,skillDamageChangeParTag=2,intervalTimer=0.2f });
                             break;
@@ -446,8 +446,8 @@ namespace BlackDawn
                             var entityElectroCageB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ElectroCage, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             //构造定身效果
                             var skillParB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityElectroCageB);
-                            skillPar.tempRoot = 101;
-                            skillPar.tempStun = 101;
+                            skillParB.tempRoot = 101;
+                            skillParB.tempStun = 101;
                             _entityManager.SetComponentData(entityElectroCageB, skillParB);
                             _entityManager.AddComponentData(entityElectroCageB, new SkillElectroCageTag() { tagSurvivalTime = 4,enableSecondB=true });
                             break;
@@ -458,8 +458,8 @@ namespace BlackDawn
                             var entityElectroCageAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ElectroCage, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             //构造定身效果
                             var skillParAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityElectroCageAB);
-                            skillPar.tempRoot = 101;
-                            skillPar.tempStun = 101;
+                            skillParAB.tempRoot = 101;
+                            skillParAB.tempStun = 101;
                             _entityManager.SetComponentData(entityElectroCageAB, skillParAB);
                             _entityManager.AddComponentData(entityElectroCageAB, new SkillElectroCageTag() { tagSurvivalTime = 4, enableSecondA = true,enableSecondB=true, skillDamageChangeParTag = 2, intervalTimer = 0.2f });
                             break;
@@ -573,6 +573,70 @@ namespace BlackDawn
                             break;
 
                     }
+                    break;
+                    //毒雨,技能附带的控制参数， 可以通过配置表进行配置
+                case HeroSkillID.PoisonRain:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+                            var entityPoisonRain= DamageSkillsFlightProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityPoisonRain, new SkillPoisonRainTag { tagSurvivalTime = 15 ,level=1});
+                            var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entityPoisonRain);
+                            skillPar.tempSlow = 30;                            
+                            _entityManager.SetComponentData(entityPoisonRain, skillPar);
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            var entityPoisonRainA = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityPoisonRainA, new SkillPoisonRainTag { tagSurvivalTime = 15 ,level=1});
+                            var skillParA = _entityManager.GetComponentData<SkillsDamageCalPar>(entityPoisonRainA);
+                            skillParA.tempSlow = 30;
+                            _entityManager.SetComponentData(entityPoisonRainA, skillParA);
+                            //添加A阶段标签，用于收集判断，非buffer的处理结构？或用于持续性计算
+                            _entityManager.AddComponentData(entityPoisonRainA, new SkillPoisonRainATag { level = 1 });
+                            break;
+                            //进行 B技能触发，火焰效果
+                        case HeroSkillPsionicType.PsionicB:
+                            var entityPoisonRainB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityPoisonRainB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
+                            int level = 3;
+                            var skillParB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityPoisonRainB);
+                            skillParB.tempSlow = 30;
+                            //添加昏迷值
+                            skillParB.tempStun = 200;
+                            //添加火焰参数
+                            skillParB.fireDamage += skillParB.poisonDamage*(1+level*0.2f);
+                            skillParB.fireDotDamage += skillParB.poisonDotDamage* (1 + level * 0.2f); 
+                            _entityManager.SetComponentData(entityPoisonRainB, skillParB);
+
+                            //--火焰雨,仅仅增加一个效果，无实际计算
+                            var entityPoisonRainBFire = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityPoisonRainBFire, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
+                         
+                            break;
+                        //进行 B技能触发，混合终极效果
+                        case HeroSkillPsionicType.PsionicAB:
+                            var entityPoisonRainAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityPoisonRainAB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
+                            //添加A阶段标签，用于收集判断，非buffer的处理结构？或用于持续性计算
+                            _entityManager.AddComponentData(entityPoisonRainAB, new SkillPoisonRainATag { level = 1 });
+                            int levelAB = 3;
+                            var skillParAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityPoisonRainAB);
+                            skillParAB.tempSlow = 30;
+                            //添加昏迷值
+                            skillParAB.tempStun = 200;
+                            //添加火焰参数
+                            skillParAB.fireDamage += skillParAB.poisonDamage * (1 + levelAB * 0.2f);
+                            skillParAB.fireDotDamage += skillParAB.poisonDotDamage * (1 + levelAB * 0.2f);
+                            _entityManager.SetComponentData(entityPoisonRainAB, skillParAB);
+
+                            //--火焰雨,仅仅增加一个效果，无实际计算
+                            var entityPoisonRainABFire = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityPoisonRainABFire, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
+                        
+                            break;
+
+                    }
+
                     break;
 
             }

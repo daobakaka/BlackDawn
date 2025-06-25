@@ -26,19 +26,21 @@ namespace BlackDawn.DOTS
         private ComponentLookup<MonsterDefenseAttribute> _monsterDefenseAttrLookup;
         private ComponentLookup<MonsterLossPoolAttribute> _monsterLossPoolAttrLookip;
         private ComponentLookup<MonsterControlledEffectAttribute> _monsterControlledEffectAttrLookup;
+        private ComponentLookup<MonsterDebuffAttribute> _monsterDebufferAttributeLookup;
         private ComponentLookup<HeroAttributeCmpt> _heroAttrLookup;
         private BufferLookup<HitElementResonanceRecord> _hitElementResonanceRecordBufferLookup;
         private BufferLookup<LinkedEntityGroup> _linkedEntityGroupLookup;
         private ComponentLookup<FlightPropDamageCalPar> _flightPropDamageCalParLookup;
         private ComponentLookup<SkillsDamageCalPar> _skillsDamageCalParLookup;
         private ComponentLookup<SkillMineBlastExplosionTag> _skillMineBlastExplosionTagLookup;
+        private ComponentLookup<SkillPoisonRainATag> _skillPoisonRainATagLookup;
         /// <summary>
         /// 法阵特殊技能造成的伤害表现为DOT伤害
         /// </summary>
        // private BufferLookup<MonsterDotDamageBuffer> _monsterDotDamageBufferLookup;
 
         //带有技能等级
-        private  ComponentLookup<SkillArcaneCircleTag> _skillArcaneCircleTagLookup;
+        private ComponentLookup<SkillArcaneCircleTag> _skillArcaneCircleTagLookup;
         //buffer用于收集进阶后的dot情况
         public BufferLookup<SkillArcaneCircleSecondBufferTag> _skillArcaneCircleSecondBufferLookup;
         //侦测系统缓存
@@ -50,7 +52,7 @@ namespace BlackDawn.DOTS
         {
             //外部控制
             state.RequireForUpdate<EnableHeroSpecialSkillsDamageSystemTag>();
-            
+
             m_transform = SystemAPI.GetComponentLookup<LocalTransform>(true);
 
             _detectionSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
@@ -66,15 +68,18 @@ namespace BlackDawn.DOTS
             _flightPropDamageCalParLookup = SystemAPI.GetComponentLookup<FlightPropDamageCalPar>(true);
             _skillsDamageCalParLookup = SystemAPI.GetComponentLookup<SkillsDamageCalPar>(true);
             _skillMineBlastExplosionTagLookup = SystemAPI.GetComponentLookup<SkillMineBlastExplosionTag>(true);
+            _monsterDebufferAttributeLookup = SystemAPI.GetComponentLookup<MonsterDebuffAttribute>(true);
+            _skillPoisonRainATagLookup = SystemAPI.GetComponentLookup<SkillPoisonRainATag>(true);
 
         }
         public void OnUpdate(ref SystemState state)
         {
-            m_transform.Update(ref state);
+             m_transform.Update(ref state);
             _monsterDefenseAttrLookup.Update(ref state);
             _monsterControlledEffectAttrLookup.Update(ref state);
             _monsterLossPoolAttrLookip.Update(ref state);
             _heroAttrLookup.Update(ref state);
+            _monsterDebufferAttributeLookup.Update(ref state);
 
             _skillArcaneCircleTagLookup.Update(ref state);
             _skillArcaneCircleSecondBufferLookup.Update(ref state);
@@ -87,18 +92,23 @@ namespace BlackDawn.DOTS
 
             //毒爆地雷爆炸标签
             _skillMineBlastExplosionTagLookup.Update(ref state);
+            //毒雨 二阶段增伤标签
+            _skillPoisonRainATagLookup.Update(ref state);
+            
 
-            var deltaTime =SystemAPI.Time.DeltaTime;
+            var deltaTime = SystemAPI.Time.DeltaTime;
             if (arcaneCircleLinkenBuffer.IsCreated)
                 arcaneCircleLinkenBuffer.Dispose();
-           // var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            // var ecb = new EntityCommandBuffer(Allocator.TempJob);
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             //获取收集世界单例
             var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
             var arcanelCorcleHitsArray = detectionSystem.arcaneCircleHitMonsterArray;
-            var elementResonanceHitArray =detectionSystem.combinedElementResonanceArray;
+            var elementResonanceHitArray = detectionSystem.combinedElementResonanceArray;
             //获取毒爆地雷碰撞对
             var mineBlastExplosionHitMonsterArray = detectionSystem.mineBlastExplosionHitMonsterArray;
+            //获取毒雨碰撞对
+            var poisonRainAHitMonterArray = detectionSystem.posionRainAHitMonsterArray;
 
 
             // 为虹吸特效提供buffer，遍历BUFFer  生成特效
@@ -112,9 +122,9 @@ namespace BlackDawn.DOTS
                 HitArray = arcanelCorcleHitsArray,
 
             }.Schedule(arcanelCorcleHitsArray.Length, 64, state.Dependency);
-  
-    
-            var collectedPositions = new NativeList<float3>(5000,Allocator.TempJob);
+
+
+            var collectedPositions = new NativeList<float3>(5000, Allocator.TempJob);
 
             // 3. 创建这里是为了  法阵的链解特效做的代码块
             var collectJobHandle = new CollectArcaneCircleLinkJob
@@ -142,38 +152,57 @@ namespace BlackDawn.DOTS
                 elementResonanceSecondPar = skillTagE.ValueRO.secondDamagePar;
                 elementRespnanceThridPar = skillTagE.ValueRO.thridDamagePar;
                 break;
-             }
+            }
 
             state.Dependency = new ApplySpecialSkillElementResonanceDamageJob
-            { DefenseAttrLookup =_monsterDefenseAttrLookup,
-             ECB = ecb.AsParallelWriter(),
-             FlightPropDamageCalParLookip =_flightPropDamageCalParLookup,
-             SkillDamageCalParLookup =_skillsDamageCalParLookup,
-             LossPoolAttrLookup =_monsterLossPoolAttrLookip,
-             HitArray=elementResonanceHitArray,
-             LinkedLookup= _linkedEntityGroupLookup,
-             RecordElementResonanceBufferLookup=_hitElementResonanceRecordBufferLookup,
-             EnableSecond=elementResonanceEnableSecond,
-             EnableThrid =elementResonanceEnableThird,
-             SecondDamagePar =elementResonanceSecondPar,
-             ThridDamagePar =elementRespnanceThridPar,
-           
+            {
+                DefenseAttrLookup = _monsterDefenseAttrLookup,
+                ECB = ecb.AsParallelWriter(),
+                FlightPropDamageCalParLookip = _flightPropDamageCalParLookup,
+                SkillDamageCalParLookup = _skillsDamageCalParLookup,
+                LossPoolAttrLookup = _monsterLossPoolAttrLookip,
+                HitArray = elementResonanceHitArray,
+                LinkedLookup = _linkedEntityGroupLookup,
+                RecordElementResonanceBufferLookup = _hitElementResonanceRecordBufferLookup,
+                EnableSecond = elementResonanceEnableSecond,
+                EnableThrid = elementResonanceEnableThird,
+                SecondDamagePar = elementResonanceSecondPar,
+                ThridDamagePar = elementRespnanceThridPar,
+
             }.Schedule(elementResonanceHitArray.Length, 64, state.Dependency);
 
             // 毒爆地雷B阶段的，毒伤状态计算
 
-           // DevDebug.LogError("毒伤碰撞对长度" + mineBlastExplosionHitMonsterArray.Length);
+            // DevDebug.LogError("毒伤碰撞对长度" + mineBlastExplosionHitMonsterArray.Length);
 
             state.Dependency = new ApplySpecialMineBlastExplosionPosionDamageJob
             {
-                DefenseAttrLookup =_monsterDefenseAttrLookup,
-                ECB=ecb.AsParallelWriter(),
-                SkillTagLookup=_skillMineBlastExplosionTagLookup,
+                DefenseAttrLookup = _monsterDefenseAttrLookup,
+                ECB = ecb.AsParallelWriter(),
+                SkillTagLookup = _skillMineBlastExplosionTagLookup,
                 HitArray = mineBlastExplosionHitMonsterArray,
-                DeltaTime=deltaTime,
-
+                DeltaTime = deltaTime,
+                DebufferAttrLoopup=_monsterDebufferAttributeLookup,
 
             }.Schedule(mineBlastExplosionHitMonsterArray.Length, 64, state.Dependency);
+
+
+
+           // DevDebug.LogError("毒雨碰撞对长度" + poisonRainAHitMonterArray.Length);
+            //毒雨 伤害加深的buff
+            state.Dependency = new ApplySpecialPoisonRainDamageAJob
+            {
+                DefenseAttrLookup = _monsterDefenseAttrLookup,
+                ECB = ecb.AsParallelWriter(),
+                HitArray = poisonRainAHitMonterArray,
+                DeltaTime = deltaTime,
+                DebuffAttrLookup=_monsterDebufferAttributeLookup,
+                SkillTagLookup =_skillPoisonRainATagLookup,
+
+            }.Schedule(poisonRainAHitMonterArray.Length, 64, state.Dependency);
+
+
+
 
 
 
@@ -199,15 +228,15 @@ namespace BlackDawn.DOTS
         [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
         [ReadOnly] public BufferLookup<SkillArcaneCircleSecondBufferTag> SkillArcaneCirelBufferLookup;
         [ReadOnly] public NativeArray<TriggerPairData> HitArray;//这里收集的是第二种 添加了特定标签之后的碰撞队
-       // [ReadOnly] public ComponentLookup<HeroAttributeCmpt> HeroAttrLookup;
-        //攻击记录buffer,道具的buffer是加在飞行道具身上
-       // [ReadOnly] public BufferLookup<HitRecord> RecordBufferLookup;
-        //技能位置信息
-       // [ReadOnly] public ComponentLookup<LocalTransform> Transform;
-        //debuffer 效果
-       // [ReadOnly] public ComponentLookup<MonsterDebuffAttribute> DebufferAttrLookup;
-        //buffer累加
-       // [ReadOnly] public BufferLookup<MonsterDotDamageBuffer> DotDamageBufferLookup;
+                                                                // [ReadOnly] public ComponentLookup<HeroAttributeCmpt> HeroAttrLookup;
+                                                                //攻击记录buffer,道具的buffer是加在飞行道具身上
+                                                                // [ReadOnly] public BufferLookup<HitRecord> RecordBufferLookup;
+                                                                //技能位置信息
+                                                                // [ReadOnly] public ComponentLookup<LocalTransform> Transform;
+                                                                //debuffer 效果
+                                                                // [ReadOnly] public ComponentLookup<MonsterDebuffAttribute> DebufferAttrLookup;
+                                                                //buffer累加
+                                                                // [ReadOnly] public BufferLookup<MonsterDotDamageBuffer> DotDamageBufferLookup;
 
         public void Execute(int i)
         {
@@ -236,7 +265,7 @@ namespace BlackDawn.DOTS
             // 2) 读取组件 & 随机数
             var d = DamageParLookup[skill];//这里需要取出来等级
             var a = DefenseAttrLookup[target];//这里取出生命变化
-           // var db = DotDamageBufferLookup[target];//这里是dot伤害总值
+                                              // var db = DotDamageBufferLookup[target];//这里是dot伤害总值
 
             var newBuffer = new SkillArcaneCircleSecondBufferTag();
             //将怪物的位置加给buffer,这里做一个链接特效？上千个链接？性能如何解决 时间预定义6秒,和buffer时间统一
@@ -275,9 +304,9 @@ namespace BlackDawn.DOTS
             {
 
                 float3 pos = TargetTransformLookup[bufferElement[i].target].Position;
-              //强制钳制到5000
-                if(bufferElement.Length<5000)
-                OutputPositions.AddNoResize(pos); // 或者根据情况 Add()
+                //强制钳制到5000
+                if (bufferElement.Length < 5000)
+                    OutputPositions.AddNoResize(pos); // 或者根据情况 Add()
             }
         }
     }
@@ -302,7 +331,7 @@ namespace BlackDawn.DOTS
         public bool EnableThrid;
         public float SecondDamagePar;
         public float ThridDamagePar;
-                  
+
         public void Execute(int i)
         {
             var pair = HitArray[i];
@@ -325,8 +354,8 @@ namespace BlackDawn.DOTS
             // 添加元素共鸣buffer,添加一个判断， 后期整改
             if (!RecordElementResonanceBufferLookup.HasBuffer(damage))
                 return;
-                ECB.AppendToBuffer(i, damage, new HitElementResonanceRecord { other = target });
-    
+            ECB.AppendToBuffer(i, damage, new HitElementResonanceRecord { other = target });
+
             // 计算dotNum: 分支变掩码
             float dotCount = l.fireActive + l.frostActive + l.lightningActive + l.poisonActive + l.shadowActive;
             float mask2 = math.select(0f, 1f, EnableSecond && dotCount >= 12 && dotCount < 20);
@@ -358,9 +387,9 @@ namespace BlackDawn.DOTS
                 shadow = flight.shadowDamage;
             }
 
-            float totalDamage = (frost + fire + lightning + poison + shadow) * (1-d.damageReduction) * dotNum;
+            float totalDamage = (frost + fire + lightning + poison + shadow) * (1 - d.damageReduction) * dotNum;
 
-           // DevDebug.LogError("开始共鸣伤害计算"+totalDamage);
+            // DevDebug.LogError("开始共鸣伤害计算"+totalDamage);
             // 用掩码方式、全部都写，最后只激活一种
             int skillMask = isSkill ? 1 : 0;
             int flightMask = isFlight ? 1 : 0;
@@ -390,17 +419,18 @@ namespace BlackDawn.DOTS
     /// <summary>
     /// 毒爆地雷B 阶段毒伤地雷 计算,持续性的技能可以计算秒变/不用buffer?
     /// </summary>
-    struct ApplySpecialMineBlastExplosionPosionDamageJob:IJobParallelFor
+    struct ApplySpecialMineBlastExplosionPosionDamageJob : IJobParallelFor
     {
         public EntityCommandBuffer.ParallelWriter ECB;
         [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
+        [ReadOnly] public ComponentLookup<MonsterDebuffAttribute> DebufferAttrLoopup;
         [ReadOnly] public ComponentLookup<SkillMineBlastExplosionTag> SkillTagLookup;
         [ReadOnly] public NativeArray<TriggerPairData> HitArray;//收集毒伤地雷碰撞对
         public float DeltaTime;
 
         public void Execute(int i)
         {
-           
+
             // 1) 拿到碰撞实体对
             var pair = HitArray[i];
             Entity skill = pair.EntityA;
@@ -412,36 +442,82 @@ namespace BlackDawn.DOTS
             }
 
             var d = DefenseAttrLookup[target];
+            var db = DebufferAttrLoopup[target];
             var st = SkillTagLookup[skill];
             //DevDebug.Log("进入计算");
 
             if (st.enableSecondB)
             {
-              //  DevDebug.Log("计算减少值");
-                d.armor -= (20 + st.level * 2)*DeltaTime;
-                d.resistances.poison -= (10+ st.level * 1)*DeltaTime;
-                        
+                //  DevDebug.Log("计算减少值");
+                db.armorReduction -= (20 + st.level * 2) * DeltaTime;
+                db.resistanceReduction.poison -= (10 + st.level * 1) * DeltaTime;
+
             }
             //制造掩码
-            float maskPoison =st.enableSecondB ? 1 : 0;
+            float maskPoison = st.enableSecondB ? 1 : 0;
 
             if (st.enableSecondC)
             {
-              //  DevDebug.Log("计算减少值");
-              d.resistances.frost -=(st.level*0.5f+10*maskPoison) * DeltaTime;
-              d.resistances.fire -= (st.level * 0.5f + 10 * maskPoison) * DeltaTime;
-              d.resistances.lightning -= (st.level * 0.5f + 10 * maskPoison) * DeltaTime;
-              d.resistances.shadow -= (st.level * 0.5f + 10 * maskPoison) * DeltaTime;
-              d.resistances.poison -= (st.level * 0.5f ) * DeltaTime;
-              d.armor -= (st.level * 1) * DeltaTime; ;
+                //  DevDebug.Log("计算减少值");
+                db.resistanceReduction.frost -= (st.level * 0.5f + 10 * maskPoison) * DeltaTime;
+                db.resistanceReduction.fire -= (st.level * 0.5f + 10 * maskPoison) * DeltaTime;
+                db.resistanceReduction.lightning -= (st.level * 0.5f + 10 * maskPoison) * DeltaTime;
+                db.resistanceReduction.shadow -= (st.level * 0.5f + 10 * maskPoison) * DeltaTime;
+                db.resistanceReduction.poison -= (st.level * 0.5f) * DeltaTime;
+                db.armorReduction -= (st.level * 1) * DeltaTime; ;
 
             }
 
             //写回计算数据
-            ECB.SetComponent(i, target, d);
+            ECB.SetComponent(i, target, db);
         }
 
 
     }
+   
+    
+    
+    /// <summary>
+    /// 毒雨A阶段，伤害加深
+    /// </summary>
+    struct ApplySpecialPoisonRainDamageAJob : IJobParallelFor
+    {
+        public EntityCommandBuffer.ParallelWriter ECB;
+        [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
+        [ReadOnly] public ComponentLookup<MonsterDebuffAttribute> DebuffAttrLookup;
+        [ReadOnly] public ComponentLookup<SkillPoisonRainATag> SkillTagLookup;
+        [ReadOnly] public NativeArray<TriggerPairData> HitArray;//收集毒雨碰撞对
+        public float DeltaTime;
 
+        public void Execute(int i)
+        {
+
+            // 1) 拿到碰撞实体对
+            var pair = HitArray[i];
+            Entity skill = pair.EntityA;
+            Entity target = pair.EntityB;
+            if (!SkillTagLookup.HasComponent(skill))
+            {
+                skill = pair.EntityB;
+                target = pair.EntityA;
+            }
+
+            var d = DefenseAttrLookup[target];
+            var db = DebuffAttrLookup[target];
+            var st = SkillTagLookup[skill];
+
+
+
+            db.damageAmplification -= DeltaTime*(st.level+1);
+
+
+
+
+            //写回计算数据
+            ECB.SetComponent(i, target, db);
+        }
+
+
+
+    }
 }

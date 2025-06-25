@@ -54,8 +54,8 @@ namespace BlackDawn.DOTS
 
         protected override void OnUpdate()
         {
-           // var ecb = new EntityCommandBuffer(Allocator.Temp);
-           // var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            // var ecb = new EntityCommandBuffer(Allocator.Temp);
+            // var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             var ecb = World.GetOrCreateSystemManaged<EndSimulationEntityCommandBufferSystem>().CreateCommandBuffer();
 
             var timer = SystemAPI.Time.DeltaTime;
@@ -65,38 +65,38 @@ namespace BlackDawn.DOTS
 
             var detctionSystem = World.Unmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
             //渲染链接
-            var arcaneCircleLinkedArray = specialDanafeSystem.arcaneCircleLinkenBuffer; 
+            var arcaneCircleLinkedArray = specialDanafeSystem.arcaneCircleLinkenBuffer;
             //获取侦测系统的  碰撞对
-            var mineBlastArray =detctionSystem.mineBlastHitMonsterArray;
+            var mineBlastArray = detctionSystem.mineBlastHitMonsterArray;
 
 
 
             // **遍历所有打了请求标记的实体**,这里需要为方法传入ECB，这样可以在foreach里面同一帧使用
             //这是针对粒子特效的方法
             if (false)
-            Entities
-                .WithName("SkillPulseSceondExplosionCallback") //程序底层打签名，用于标记
-                .WithAll<SkillPulseSecondExplosionRequestTag>() //匹配ABC 所有组件,默认匹配没有被disnable的组件
-                //in 只读，需要放到ref 后面
-                .ForEach((Entity e,ref SkillsDamageCalPar damageCalPar,ref SkillPulseTag pulseTag,in LocalTransform t ) =>   
-                {
-                   // 调用 Mono 层的爆炸逻辑，继续设连锁阶段
-                 var entity=   _heroSkills.DamageSkillsExplosionProp(
-                        ecb,
-                        _prefabs.ParticleEffect_DefaultEffexts, //爆炸特效                        
-                        t.Position,
-                        t.Rotation,
-                        1,
-                        0, 0, pulseTag.scaleChangePar, false, true
-                    );
-                    ecb.AddComponent(entity, new SkillPulseTag() { tagSurvivalTime = 2 ,scaleChangePar=pulseTag.scaleChangePar});//为二阶段技能生成存活标签,这里传入形变参数,持续两秒
-                    //这种方式不会形成结构改变               
-                    ecb.SetComponentEnabled<SkillPulseSecondExplosionRequestTag>(e,false);
-                    //销毁，此时已经生成了二阶段技能，二阶段技能没有标签，返回到第一阶段进行销毁
-                    ecb.DestroyEntity(e);
-                })                
-                .WithoutBurst()   // 必须关闭 Burst，才能调用任何 UnityEngine/Mono 代码
-                .Run();
+                Entities
+                    .WithName("SkillPulseSceondExplosionCallback") //程序底层打签名，用于标记
+                    .WithAll<SkillPulseSecondExplosionRequestTag>() //匹配ABC 所有组件,默认匹配没有被disnable的组件
+                                                                    //in 只读，需要放到ref 后面
+                    .ForEach((Entity e, ref SkillsDamageCalPar damageCalPar, ref SkillPulseTag pulseTag, in LocalTransform t) =>
+                    {
+                        // 调用 Mono 层的爆炸逻辑，继续设连锁阶段
+                        var entity = _heroSkills.DamageSkillsExplosionProp(
+                           ecb,
+                           _prefabs.ParticleEffect_DefaultEffexts, //爆炸特效                        
+                           t.Position,
+                           t.Rotation,
+                           1,
+                           0, 0, pulseTag.scaleChangePar, false, true
+                       );
+                        ecb.AddComponent(entity, new SkillPulseTag() { tagSurvivalTime = 2, scaleChangePar = pulseTag.scaleChangePar });//为二阶段技能生成存活标签,这里传入形变参数,持续两秒
+                                                                                                                                        //这种方式不会形成结构改变               
+                        ecb.SetComponentEnabled<SkillPulseSecondExplosionRequestTag>(e, false);
+                        //销毁，此时已经生成了二阶段技能，二阶段技能没有标签，返回到第一阶段进行销毁
+                        ecb.DestroyEntity(e);
+                    })
+                    .WithoutBurst()   // 必须关闭 Burst，才能调用任何 UnityEngine/Mono 代码
+                    .Run();
 
 
             //脉冲处理
@@ -107,18 +107,18 @@ namespace BlackDawn.DOTS
                 .ForEach((Entity e, VisualEffect vfx, ref SkillsDamageCalPar damageCalPar, ref SkillPulseTag pulseTag, ref LocalTransform t) =>
                 {
 
-                    vfx.SendEvent("hit");            
+                    vfx.SendEvent("hit");
                     ecb.SetComponentEnabled<SkillPulseSecondExplosionRequestTag>(e, false);
                     //切换引力和爆炸状态
                     damageCalPar.enableExplosion = true;
                     damageCalPar.enablePull = false;
-                    t.Scale *= (1+pulseTag.scaleChangePar);
+                    t.Scale *= (1 + pulseTag.scaleChangePar);
                     //取消第二阶段状态，2秒后销毁
                     pulseTag.tagSurvivalTime = 2;
-                    pulseTag.enableSecond=false;
+                    pulseTag.enableSecond = false;
                     //二阶段停止移动
                     pulseTag.speed = 0;
-              
+
                 })
                 .WithoutBurst()   // 必须关闭 Burst，才能调用任何 UnityEngine/Mono 代码
                 .Run();
@@ -127,7 +127,7 @@ namespace BlackDawn.DOTS
             Entities
                 .WithName("SkillIceFireSceondVFXExplosionCallback") //这里直接标记冰火球的VFX回调标识
                 .WithAll<SkillIceFireSecondExplosionRequestTag>() //匹配ABC 所有组件,默认匹配没有被disnable的组件
-                //in 只读，需要放到ref 后面
+                                                                  //in 只读，需要放到ref 后面
                 .ForEach((Entity e, VisualEffect vfx, ref SkillsDamageCalPar damageCalPar, ref SkillIceFireTag skillTag, ref LocalTransform t) =>
                 {
                     //播放爆炸动画
@@ -139,15 +139,15 @@ namespace BlackDawn.DOTS
                     //爆炸产生引力效果
                     damageCalPar.enablePull = true;
                     //爆炸增加体积
-                    t.Scale *= ( 1+skillTag.scaleChangePar);
+                    t.Scale *= (1 + skillTag.scaleChangePar);
                     //增加爆炸伤害,这里直接增加，因为是进入乘法区，直接加就可以
                     damageCalPar.damageChangePar += skillTag.skillDamageChangeParTag;
                     //取消第二阶段状态，2秒后销毁
                     skillTag.secondSurvivalTime = 4;
                     //允许特殊效果
-                    skillTag.enableSpecialEffect=false;
+                    skillTag.enableSpecialEffect = false;
                     //二阶段停止移动
-                   // skillTag.speed = 0;
+                    // skillTag.speed = 0;
 
                 })
                 .WithoutBurst()   // 必须关闭 Burst，才能调用任何 UnityEngine/Mono 代码
@@ -160,12 +160,12 @@ namespace BlackDawn.DOTS
                 .ForEach((Entity entity, VisualEffect vfx,
                     ref SkillIceFireTag skillTag,
                     ref SkillsDamageCalPar damageCalPar,
-                    ref LocalTransform transform)=>
+                    ref LocalTransform transform) =>
                 {
-                 
+
                     skillTag.secondSurvivalTime -= timer;
                     //两秒执行一次恢复判断，必须播放爆炸特效2秒之后进行
-                    if (!skillTag.enableSpecialEffect&&skillTag.secondSurvivalTime<3)
+                    if (!skillTag.enableSpecialEffect && skillTag.secondSurvivalTime < 3)
                     {
                         vfx.SendEvent("create");
                         //恢复尺寸
@@ -174,12 +174,12 @@ namespace BlackDawn.DOTS
                         damageCalPar.damageChangePar = 1;
                         //恢复引力
                         damageCalPar.enablePull = false;
-                        skillTag.enableSpecialEffect = true;                    
+                        skillTag.enableSpecialEffect = true;
                     }
-                             
-                
+
+
                 })
-                .WithoutBurst() .Run();
+                .WithoutBurst().Run();
 
 
             //法阵buffer的效果 ，需要在外面清除,目前暂时使用这种方式，感觉其他方式有BUG,特比是关于buffer的清除比麻烦
@@ -187,34 +187,34 @@ namespace BlackDawn.DOTS
             {
                 _arcaneCirclegraphicsBuffer.Dispose();
             }
-        
 
-        //法阵的链接特效,传入buffer数组
-        Entities
-                .WithName("Enable_ArcaneCircleSecond")
-                .WithAll<HeroEffectsLinked>()
-                .ForEach((Entity entity, VisualEffect vfx
-                  ) =>
-                {
 
-                    if (arcaneCircleLinkedArray.Length > 0)
+            //法阵的链接特效,传入buffer数组
+            Entities
+                    .WithName("Enable_ArcaneCircleSecond")
+                    .WithAll<HeroEffectsLinked>()
+                    .ForEach((Entity entity, VisualEffect vfx
+                      ) =>
                     {
-                        var targetPositions = arcaneCircleLinkedArray;
 
-                        _arcaneCirclegraphicsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, targetPositions.Length, sizeof(float) * 3);
-                        vfx.SetInt("_LinkedTargetsCount", targetPositions.Length);
-            
-                        _arcaneCirclegraphicsBuffer.SetData(targetPositions);
-                        // 传入 VFX
-                        vfx.SetGraphicsBuffer("_LinkedTargets", _arcaneCirclegraphicsBuffer);  // 与 VFX 中匹配
+                        if (arcaneCircleLinkedArray.Length > 0)
+                        {
+                            var targetPositions = arcaneCircleLinkedArray;
 
-                        //缓冲数据准备完毕之后，进行buffer清除
-                        vfx.SendEvent("Custom5");
-                        // buffer.Dispose();
-                        resetVFXPartical = false;
-                    }
-                })
-                .WithoutBurst().Run();
+                            _arcaneCirclegraphicsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, targetPositions.Length, sizeof(float) * 3);
+                            vfx.SetInt("_LinkedTargetsCount", targetPositions.Length);
+
+                            _arcaneCirclegraphicsBuffer.SetData(targetPositions);
+                            // 传入 VFX
+                            vfx.SetGraphicsBuffer("_LinkedTargets", _arcaneCirclegraphicsBuffer);  // 与 VFX 中匹配
+
+                            //缓冲数据准备完毕之后，进行buffer清除
+                            vfx.SendEvent("Custom5");
+                            // buffer.Dispose();
+                            resetVFXPartical = false;
+                        }
+                    })
+                    .WithoutBurst().Run();
 
             //法阵的链接特效,这里是恢复
             Entities
@@ -225,12 +225,12 @@ namespace BlackDawn.DOTS
                 {
                     if (!resetVFXPartical)
                     {
-                     
-                        
+
+
                         vfx.Reinit();
                         resetVFXPartical = true;
                     }
-                   
+
                 })
                 .WithoutBurst().Run();
 
@@ -238,19 +238,19 @@ namespace BlackDawn.DOTS
 
             //毒爆地雷一级阶段处理
             Entities
-                .WithName("SkillMineBlast")               
+                .WithName("SkillMineBlast")
                 .ForEach((Entity entity, VisualEffect vfx,
                     ref SkillMineBlastTag skillTag,
                     ref SkillsDamageCalPar damageCalPar,
                     ref LocalTransform transform) =>
                 {
 
-                    skillTag.tagSurvivalTime-= timer;
+                    skillTag.tagSurvivalTime -= timer;
                     //百分百数字命中，不用添加新变量
                     if (skillTag.tagSurvivalTime <= 1f && skillTag.tagSurvivalTime > 1f - timer)
                     {
                         vfx.SendEvent("stop");
-                     
+
                     }
                     if (skillTag.tagSurvivalTime <= 0)
                     {
@@ -260,30 +260,30 @@ namespace BlackDawn.DOTS
 
                     }
                     //保持检测，因为要计算毒爆之后的毒伤效果,这里跑起来的碰撞对太多了，应当分离开
- 
-                        for (int i = 0; i < mineBlastArray.Length; i++)
+
+                    for (int i = 0; i < mineBlastArray.Length; i++)
+                    {
+
+                        if (mineBlastArray[i].EntityA == entity || mineBlastArray[i].EntityB == entity)
+
                         {
-
-                            if (mineBlastArray[i].EntityA == entity || mineBlastArray[i].EntityB == entity)
-
-                            {
-                                vfx.SendEvent("hit");
-                                ecb.SetComponentEnabled<SkillMineBlastTag>(entity, false);
-                                //开启爆炸
-                                ecb.SetComponentEnabled<SkillMineBlastExplosionTag>(entity, true);
-                                //赋予新的伤害
-                                damageCalPar.damageChangePar = skillTag.skillDamageChangeParTag;
-                                //赋予爆炸效果
-                                damageCalPar.enableExplosion = true;
-                                //范围增大
-                                transform.Scale = skillTag.scaleChangePar;
-                                //200点恐惧效果， 恐惧3秒
-                                damageCalPar.tempFear = 200;
-                                break;
-                            }
-
+                            vfx.SendEvent("hit");
+                            ecb.SetComponentEnabled<SkillMineBlastTag>(entity, false);
+                            //开启爆炸
+                            ecb.SetComponentEnabled<SkillMineBlastExplosionTag>(entity, true);
+                            //赋予新的伤害
+                            damageCalPar.damageChangePar = skillTag.skillDamageChangeParTag;
+                            //赋予爆炸效果
+                            damageCalPar.enableExplosion = true;
+                            //范围增大
+                            transform.Scale = skillTag.scaleChangePar;
+                            //200点恐惧效果， 恐惧3秒
+                            damageCalPar.tempFear = 200;
+                            break;
                         }
-                    
+
+                    }
+
                 })
                 .WithoutBurst().Run();
 
@@ -297,17 +297,17 @@ namespace BlackDawn.DOTS
                     ref LocalTransform transform) =>
                 {
                     skillTag.tagSurvivalTime -= timer;
-               
+
 
                     if (skillTag.tagSurvivalTime <= 0)
                     {
-                       
-                         if (!skillTag.enableSecondA)
-                         {
-                                //ecb.DestroyEntity(entity);
+
+                        if (!skillTag.enableSecondA)
+                        {
+                            //ecb.DestroyEntity(entity);
                             damageCalPar.destory = true;
-                                return;
-                         }                      
+                            return;
+                        }
                         else //允许第一阶段 变化情况
                         {
                             skillTag.tagSurvivalTimeSecond -= timer;
@@ -330,27 +330,49 @@ namespace BlackDawn.DOTS
                             {
                                 //ecb.DestroyEntity(entity);
                                 damageCalPar.destory = true;
-                                return;                           
+                                return;
                             }
 
                         }
                     }
-                    //允许第二阶段变化，写在特殊技能job 里面？
-                
+                    //允许第二阶段变化，写在特殊技能job 里面？               
 
                 })
                 .WithoutBurst().Run();
 
+            //技能毒雨
+            Entities
+           .WithName("SkillPoisonRain")
+           .ForEach((Entity entity, VisualEffect vfx,
+               ref SkillPoisonRainTag skillTag,
+               ref SkillsDamageCalPar damageCalPar,
+               ref LocalTransform transform) =>
+           {
+               skillTag.tagSurvivalTime -= timer;
+
+               if (skillTag.tagSurvivalTime <= 2f && skillTag.tagSurvivalTime >2f - timer)
+               {
+                   vfx.Stop();
+                   
+               
+               }
+               if (skillTag.tagSurvivalTime <= 0)
+                   damageCalPar.destory = true;
+
+
+           }).WithoutBurst().Run();
+           
 
 
 
 
-            // 播放并清理
-            //ecb.Playback(base.EntityManager);
-            //ecb.Dispose();
+
+               // 播放并清理
+               //ecb.Playback(base.EntityManager);
+               //ecb.Dispose();
 
 
-        }
+           }
 
 
 
