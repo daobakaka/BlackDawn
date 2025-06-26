@@ -19,7 +19,7 @@ namespace BlackDawn.DOTS
     [RequireMatchingQueriesForUpdate]
     [BurstCompile]
     [UpdateInGroup(typeof(ActionSystemGroup))]
-    [UpdateAfter(typeof(HeroSkillsDamageSystem))]
+    [UpdateAfter(typeof(HeroSkillsDamageOverTimeSystem))]
     public partial struct HeroSpecialSkillsDamageSystem : ISystem
     {
         ComponentLookup<LocalTransform> m_transform;

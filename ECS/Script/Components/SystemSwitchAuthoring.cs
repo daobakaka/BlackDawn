@@ -7,7 +7,7 @@ namespace BlackDawn.DOTS
 {
     public class SystemSwitchAuthoring : MonoBehaviour
     {
-        public bool enableTriggerSystem;
+        public bool enableHeroSkillsDamageOverTimeSystem;
         public bool enableDetectionSystem;
         public bool enablePropDamageSystem;
         public bool enablePropMonoSystem;
@@ -29,8 +29,8 @@ namespace BlackDawn.DOTS
             {
                 var entity = GetEntity(authoring.gameObject, TransformUsageFlags.None);
                 
-                if (authoring.enableTriggerSystem)
-                AddComponent(entity, new EnableTriggerSystemTag());
+                if (authoring.enableHeroSkillsDamageOverTimeSystem)
+                AddComponent(entity, new EnableHeroSkillsDamageOverTimeSystemTag());
                 if (authoring.enableDetectionSystem)
                 AddComponent(entity, new EnableDetectionSystemTag());
                 if (authoring.enablePropDamageSystem)
@@ -68,7 +68,7 @@ namespace BlackDawn.DOTS
     /// <summary>
     /// Åö×²¼ì²â
     /// </summary>
-    public struct EnableTriggerSystemTag : IComponentData,IEnableableComponent { };
+    public struct EnableHeroSkillsDamageOverTimeSystemTag : IComponentData,IEnableableComponent { };
     /// <summary>
     /// Íæ¼ÒÕì²ì
     /// </summary>

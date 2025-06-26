@@ -32,6 +32,7 @@ namespace BlackDawn.DOTS
         private ComponentLookup<EnemyFlightProp> _enemyFlightPropLookup;
         private ComponentLookup<FlightPropDamageCalPar> _flightPropDamageCalParLookup;
         private ComponentLookup<SkillsDamageCalPar> _skillsDamageCalParLookup;
+        private ComponentLookup<SkillsOverTimeDamageCalPar> _skillsOverTimeDamageCalParLookup;
         private ComponentLookup<HeroEntityMasterTag> _heroEntityMasterTagLookup;
         private ComponentLookup<SkillArcaneCircleSecondTag> _skillArcaneCircleSecondTagLookup;
         private ComponentLookup<SkillArcaneCircleTag> _skillArcaneCircleTagLookup;
@@ -46,6 +47,7 @@ namespace BlackDawn.DOTS
         private NativeQueue<TriggerPairData> _enemyFlightHitHero;
         private NativeQueue<TriggerPairData> _flightHitMonster;
         private NativeQueue<TriggerPairData> _skillHitMonster;
+        private NativeQueue<TriggerPairData> _skillOverTimeHitMonster;
         private NativeQueue<TriggerPairData> _arcaneCircleHitMonster;
         private NativeQueue<TriggerPairData> _arcaneCircleHitHero;
         private NativeQueue<TriggerPairData> _skillElementResonance;
@@ -60,6 +62,7 @@ namespace BlackDawn.DOTS
         public NativeArray<TriggerPairData> enemyFlightHitHeroArray;
         public NativeArray<TriggerPairData> flightHitMonsterArray;
         public NativeArray<TriggerPairData> skillHitMonsterArray;
+        public NativeArray<TriggerPairData> skillOverTimeHitMonsterArray;
         public NativeArray<TriggerPairData> arcaneCircleHitMonsterArray;
         public NativeArray<TriggerPairData> arcaneCircleHitHeroArray;
         public NativeArray<TriggerPairData> skillElementResonanceArray;
@@ -84,6 +87,8 @@ namespace BlackDawn.DOTS
             _enemyFlightPropLookup = SystemAPI.GetComponentLookup<EnemyFlightProp>(true);
             _flightPropDamageCalParLookup = SystemAPI.GetComponentLookup<FlightPropDamageCalPar>(true);
             _skillsDamageCalParLookup = SystemAPI.GetComponentLookup<SkillsDamageCalPar>(true);
+            _skillsOverTimeDamageCalParLookup = SystemAPI.GetComponentLookup<SkillsOverTimeDamageCalPar>(true);
+
             _heroEntityMasterTagLookup = SystemAPI.GetComponentLookup<HeroEntityMasterTag>(true);
             _skillArcaneCircleSecondTagLookup = SystemAPI.GetComponentLookup<SkillArcaneCircleSecondTag>(true);
             _skillArcaneCircleTagLookup = SystemAPI.GetComponentLookup<SkillArcaneCircleTag>(true);
@@ -99,6 +104,7 @@ namespace BlackDawn.DOTS
             _enemyFlightHitHero = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _flightHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _skillHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
+            _skillOverTimeHitMonster =new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _arcaneCircleHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _arcaneCircleHitHero = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _skillElementResonance = new NativeQueue<TriggerPairData>(Allocator.Persistent);
@@ -113,8 +119,8 @@ namespace BlackDawn.DOTS
         public void OnUpdate(ref SystemState state)
         {
             var speedEcb = new EntityCommandBuffer(Allocator.Temp);
-
-           //最开始的全局消除
+          
+            //最开始的全局飞行技能消除
             foreach (var (skillCal, entity) in SystemAPI.Query<RefRO<SkillsDamageCalPar>>().WithEntityAccess())
             {
 
@@ -123,11 +129,20 @@ namespace BlackDawn.DOTS
                     speedEcb.DestroyEntity(entity);
             
             }
+            //最开始的全局持续性技能消除
+            foreach (var (skillCal, entity) in SystemAPI.Query<RefRO<SkillsOverTimeDamageCalPar>>().WithEntityAccess())
+            {
+
+                if (skillCal.ValueRO.destory == true)
+
+                    speedEcb.DestroyEntity(entity);
+
+            }
             speedEcb.Playback(state.EntityManager);
             speedEcb.Dispose();
-            
-                   
-            
+          //  DetectionTriggerJob._enqueueCounter = 0;
+
+
             // 更新查找
             _detectionLookup.Update(ref state);
             _transformLookup.Update(ref state);
@@ -137,6 +152,7 @@ namespace BlackDawn.DOTS
             _enemyFlightPropLookup.Update(ref state);
             _flightPropDamageCalParLookup.Update(ref state);
             _skillsDamageCalParLookup.Update(ref state);
+            _skillsOverTimeDamageCalParLookup.Update(ref state);
             _heroEntityMasterTagLookup.Update(ref state);
             _skillArcaneCircleSecondTagLookup.Update(ref state);
             _skillArcaneCircleTagLookup.Update(ref state);
@@ -149,6 +165,7 @@ namespace BlackDawn.DOTS
             _enemyFlightHitHero.Clear();
             _flightHitMonster.Clear();
             _skillHitMonster.Clear();
+            _skillOverTimeHitMonster.Clear();
             //法阵技能二阶
             _arcaneCircleHitMonster.Clear();
             _arcaneCircleHitHero.Clear();
@@ -169,6 +186,7 @@ namespace BlackDawn.DOTS
             var enemyFlightHitHeroQueue = _enemyFlightHitHero.AsParallelWriter();
             var flightHitMonsterQueue = _flightHitMonster.AsParallelWriter();
             var skillHitMonsterQueue = _skillHitMonster.AsParallelWriter();
+            var skillOverTimeHitMonsterQueue = _skillOverTimeHitMonster.AsParallelWriter();
             var arcaneCircleHitMonsterQueue = _arcaneCircleHitMonster.AsParallelWriter();
             var arcaneCircleHitHeroQueue = _arcaneCircleHitHero.AsParallelWriter();
             var skillElementResonanceQueue = _skillElementResonance.AsParallelWriter();
@@ -191,6 +209,7 @@ namespace BlackDawn.DOTS
                 EnemyFlightPropLookup = _enemyFlightPropLookup,
                 FlightPropDamageCalParLookup = _flightPropDamageCalParLookup,
                 SkillPropDamageCalParLookup = _skillsDamageCalParLookup,
+                SkillOverTimePropDamageCalParLookup=_skillsOverTimeDamageCalParLookup,
                 HeroEntityMasterTagLookup = _heroEntityMasterTagLookup,
                 SkillArcaneCircleSecondTagLookup = _skillArcaneCircleSecondTagLookup,
                 SkillArcaneCircleTagLookup = _skillArcaneCircleTagLookup,
@@ -203,6 +222,7 @@ namespace BlackDawn.DOTS
                 EnemyFlightHitHeroQueue = enemyFlightHitHeroQueue,
                 FlightHitMonsterQueue = flightHitMonsterQueue,
                 SkillHitMonsterQueue = skillHitMonsterQueue,
+                SkillOverTimeHitMonsterQueue =skillOverTimeHitMonsterQueue,
                 ArcaneCircleHitMonsterQueue = arcaneCircleHitMonsterQueue,
                 ArcaneCircleHitHeroQueue =arcaneCircleHitHeroQueue,
                 SkillElementResonanceQueue=skillElementResonanceQueue,
@@ -217,6 +237,8 @@ namespace BlackDawn.DOTS
 
 
             }
+
+
             .Schedule(sim, state.Dependency);
             // 等待收集完成，这里收集原始碰撞数据，要等待完成
              state.Dependency.Complete();
@@ -225,6 +247,7 @@ namespace BlackDawn.DOTS
             enemyFlightHitHeroArray = _enemyFlightHitHero.ToArray(Allocator.Persistent);
             flightHitMonsterArray = _flightHitMonster.ToArray(Allocator.Persistent);
             skillHitMonsterArray = _skillHitMonster.ToArray(Allocator.Persistent);
+            skillOverTimeHitMonsterArray=_skillOverTimeHitMonster.ToArray(Allocator.Persistent);
             arcaneCircleHitMonsterArray = _arcaneCircleHitMonster.ToArray(Allocator.Persistent);
             arcaneCircleHitHeroArray = _arcaneCircleHitHero.ToArray(Allocator.Persistent);
             skillElementResonanceArray =_skillElementResonance.ToArray(Allocator.Persistent);
@@ -300,6 +323,7 @@ namespace BlackDawn.DOTS
             if (enemyFlightHitHeroArray.IsCreated) enemyFlightHitHeroArray.Dispose();
             if (flightHitMonsterArray.IsCreated) flightHitMonsterArray.Dispose();
             if (skillHitMonsterArray.IsCreated) skillHitMonsterArray.Dispose();
+            if (skillOverTimeHitMonsterArray.IsCreated) skillOverTimeHitMonsterArray.Dispose();
             if (arcaneCircleHitMonsterArray.IsCreated) arcaneCircleHitMonsterArray.Dispose();
             if (arcaneCircleHitHeroArray.IsCreated) arcaneCircleHitHeroArray.Dispose();
             if (skillElementResonanceArray.IsCreated) skillElementResonanceArray.Dispose();
@@ -317,7 +341,7 @@ namespace BlackDawn.DOTS
     /// 综合碰撞对收集
     /// </summary>
     [BurstCompile]
-    struct DetectionTriggerJob : ITriggerEventsJob
+  public  struct DetectionTriggerJob : ITriggerEventsJob
     {
         [ReadOnly] public ComponentLookup<Detection_DefaultCmpt> DetectionLookup; // 基础检测组件
         [ReadOnly] public ComponentLookup<LocalTransform> TransformLookup; // 用于计算距离
@@ -326,6 +350,7 @@ namespace BlackDawn.DOTS
         [ReadOnly] public ComponentLookup<EnemyFlightProp> EnemyFlightPropLookup; // 怪物飞行道具
         [ReadOnly] public ComponentLookup<FlightPropDamageCalPar> FlightPropDamageCalParLookup; // 基础飞行道具
         [ReadOnly] public ComponentLookup<SkillsDamageCalPar> SkillPropDamageCalParLookup; // 技能飞行道具
+        [ReadOnly] public ComponentLookup<SkillsOverTimeDamageCalPar> SkillOverTimePropDamageCalParLookup; // 技能飞行道具
         [ReadOnly] public ComponentLookup<HeroEntityMasterTag> HeroEntityMasterTagLookup; // 英雄主体
         [ReadOnly] public ComponentLookup<SkillArcaneCircleTag> SkillArcaneCircleTagLookup; // 技能法阵第一阶段
         [ReadOnly] public ComponentLookup<SkillArcaneCircleSecondTag> SkillArcaneCircleSecondTagLookup; // 技能法阵第二阶段
@@ -343,6 +368,7 @@ namespace BlackDawn.DOTS
         public NativeQueue<TriggerPairData>.ParallelWriter EnemyFlightHitHeroQueue;
         public NativeQueue<TriggerPairData>.ParallelWriter FlightHitMonsterQueue;
         public NativeQueue<TriggerPairData>.ParallelWriter SkillHitMonsterQueue;
+        public NativeQueue<TriggerPairData>.ParallelWriter SkillOverTimeHitMonsterQueue;
         public NativeQueue<TriggerPairData>.ParallelWriter ArcaneCircleHitMonsterQueue;
         public NativeQueue<TriggerPairData>.ParallelWriter ArcaneCircleHitHeroQueue;
         public NativeQueue<TriggerPairData>.ParallelWriter SkillElementResonanceQueue;
@@ -368,52 +394,60 @@ namespace BlackDawn.DOTS
             var a = triggerEvent.EntityA;
             var b = triggerEvent.EntityB;
 
-            
+           // DevDebug.LogError($"enttyA:{a.Index} entityB{b.Index} ");
 
-            // 检测周围实体（玩家→怪物）
-            CheckAndAddNearbyHit(a, b);
-            CheckAndAddNearbyHit(b, a);
-            // 2) 处理元素共鸣同时碰撞的效果
-            ProcessCombined(a, b);
+           // // 检测周围实体（玩家→怪物）
+           CheckAndAddNearbyHit(a, b);
+           // CheckAndAddNearbyHit(b, a);
+           // // 2) 处理元素共鸣同时碰撞的效果
+           //ProcessCombined(a, b);
 
-            // 分类写入碰撞对容器
-            AddIfMatch(a, b, HeroEntityMasterTagLookup, LiveMonsterLookup, HeroHitMonsterQueue, true);
-            AddIfMatch(b, a, HeroEntityMasterTagLookup, LiveMonsterLookup, HeroHitMonsterQueue, true);
+           // // 分类写入碰撞对容器
+           // AddIfMatch(a, b, HeroEntityMasterTagLookup, LiveMonsterLookup, HeroHitMonsterQueue, true);
+           // AddIfMatch(b, a, HeroEntityMasterTagLookup, LiveMonsterLookup, HeroHitMonsterQueue, true);
 
-            AddIfMatch(a, b, EnemyFlightPropLookup, HeroEntityMasterTagLookup, EnemyFlightHitHeroQueue, false);
-            AddIfMatch(b, a, EnemyFlightPropLookup, HeroEntityMasterTagLookup, EnemyFlightHitHeroQueue, false);
+           // AddIfMatch(a, b, EnemyFlightPropLookup, HeroEntityMasterTagLookup, EnemyFlightHitHeroQueue, false);
+           // AddIfMatch(b, a, EnemyFlightPropLookup, HeroEntityMasterTagLookup, EnemyFlightHitHeroQueue, false);
 
-            AddIfMatch(a, b, FlightPropDamageCalParLookup, LiveMonsterLookup, FlightHitMonsterQueue, true);
-            AddIfMatch(b, a, FlightPropDamageCalParLookup, LiveMonsterLookup, FlightHitMonsterQueue, true);
+           // AddIfMatch(a, b, FlightPropDamageCalParLookup, LiveMonsterLookup, FlightHitMonsterQueue, true);
+           // AddIfMatch(b, a, FlightPropDamageCalParLookup, LiveMonsterLookup, FlightHitMonsterQueue, true);
 
-            AddIfMatch(a, b, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
-            AddIfMatch(b, a, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
-            //怪物与法阵碰撞
-            AddIfMatch(a, b, SkillArcaneCircleSecondTagLookup, LiveMonsterLookup, ArcaneCircleHitMonsterQueue, true);
-            AddIfMatch(b, a, SkillArcaneCircleSecondTagLookup, LiveMonsterLookup, ArcaneCircleHitMonsterQueue, true);
+            //飞行技能
+           // AddIfMatch(a, b, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
+            // AddIfMatch(b, a, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
 
-            //英雄与法阵本体碰撞,英雄可以在阶段内自行判断
-            AddIfMatchSimple(a, b, HeroEntityMasterTagLookup, SkillArcaneCircleTagLookup, ArcaneCircleHitHeroQueue);
-            AddIfMatchSimple(b, a, HeroEntityMasterTagLookup, SkillArcaneCircleTagLookup, ArcaneCircleHitHeroQueue);
+            //持续性技能
+            AddIfMatch(a, b, SkillOverTimePropDamageCalParLookup, LiveMonsterLookup, SkillOverTimeHitMonsterQueue, true);
+            // AddIfMatch(b, a, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
 
-            //技能碰撞到元素共鸣体,元素共鸣体自身不检测自己
-            AddIfMatchSimple(a, b, SkillElementResonanceTagLookup, SkillPropDamageCalParLookup, SkillElementResonanceQueue);
-            AddIfMatchSimple(b, a, SkillElementResonanceTagLookup, SkillPropDamageCalParLookup, SkillElementResonanceQueue);
+            // //怪物与法阵碰撞
+            // AddIfMatch(a, b, SkillArcaneCircleSecondTagLookup, LiveMonsterLookup, ArcaneCircleHitMonsterQueue, true);
+            // AddIfMatch(b, a, SkillArcaneCircleSecondTagLookup, LiveMonsterLookup, ArcaneCircleHitMonsterQueue, true);
 
-            //基础飞行道具碰撞到元素共鸣体
-            AddIfMatchSimple(a, b, SkillElementResonanceTagLookup, FlightPropDamageCalParLookup,BaseFlightElementResonanceQueue);
-            AddIfMatchSimple(b, a, SkillElementResonanceTagLookup, FlightPropDamageCalParLookup, BaseFlightElementResonanceQueue);
-            
-            //怪物与毒爆地雷碰撞
-            AddIfMatch(a, b, SkillMineBlastTagLookup, LiveMonsterLookup, MineBlastHitMonsterQueue, true);
-            AddIfMatch(b, a, SkillMineBlastTagLookup, LiveMonsterLookup, MineBlastHitMonsterQueue, true);
-            //怪物与毒爆地雷爆炸后的碰撞对，用于计算B效果
-            AddIfMatch(a, b, SkillMineBlastExplosionTagLookup, LiveMonsterLookup, MineBlastExplosionHitMonsterQueue, true);
-            AddIfMatch(b, a, SkillMineBlastExplosionTagLookup, LiveMonsterLookup, MineBlastExplosionHitMonsterQueue, true);
-            //毒雨A阶段
-            AddIfMatch(a, b, SkillPoisonRainATaglookup, LiveMonsterLookup, PoisonRainAHitMonsterQueue, true);
-            AddIfMatch(b, a, SkillPoisonRainATaglookup, LiveMonsterLookup, PoisonRainAHitMonsterQueue, true);
+            // //英雄与法阵本体碰撞,英雄可以在阶段内自行判断
+            // AddIfMatchSimple(a, b, HeroEntityMasterTagLookup, SkillArcaneCircleTagLookup, ArcaneCircleHitHeroQueue);
+            // AddIfMatchSimple(b, a, HeroEntityMasterTagLookup, SkillArcaneCircleTagLookup, ArcaneCircleHitHeroQueue);
 
+            // //技能碰撞到元素共鸣体,元素共鸣体自身不检测自己
+            // AddIfMatchSimple(a, b, SkillElementResonanceTagLookup, SkillPropDamageCalParLookup, SkillElementResonanceQueue);
+            // AddIfMatchSimple(b, a, SkillElementResonanceTagLookup, SkillPropDamageCalParLookup, SkillElementResonanceQueue);
+
+            // //基础飞行道具碰撞到元素共鸣体
+            // AddIfMatchSimple(a, b, SkillElementResonanceTagLookup, FlightPropDamageCalParLookup, BaseFlightElementResonanceQueue);
+            // AddIfMatchSimple(b, a, SkillElementResonanceTagLookup, FlightPropDamageCalParLookup, BaseFlightElementResonanceQueue);
+
+            // //怪物与毒爆地雷碰撞
+            // AddIfMatch(a, b, SkillMineBlastTagLookup, LiveMonsterLookup, MineBlastHitMonsterQueue, true);
+            // AddIfMatch(b, a, SkillMineBlastTagLookup, LiveMonsterLookup, MineBlastHitMonsterQueue, true);
+            // //怪物与毒爆地雷爆炸后的碰撞对，用于计算B效果
+            // AddIfMatch(a, b, SkillMineBlastExplosionTagLookup, LiveMonsterLookup, MineBlastExplosionHitMonsterQueue, true);
+            // AddIfMatch(b, a, SkillMineBlastExplosionTagLookup, LiveMonsterLookup, MineBlastExplosionHitMonsterQueue, true);
+            // //毒雨A阶段
+            // AddIfMatch(a, b, SkillPoisonRainATaglookup, LiveMonsterLookup, PoisonRainAHitMonsterQueue, true);
+            // AddIfMatch(b, a, SkillPoisonRainATaglookup, LiveMonsterLookup, PoisonRainAHitMonsterQueue, true);
+
+
+            // AddIfMatchSingle(a, b, SkillPoisonRainATaglookup, LiveMonsterLookup, PoisonRainAHitMonsterQueue, true);
 
 
         }
@@ -442,6 +476,8 @@ namespace BlackDawn.DOTS
             }
         }
 
+      // public static int _enqueueCounter = 0;
+
         private void AddIfMatch<TA, TB>(
             Entity a, Entity b,
             ComponentLookup<TA> lookupA,
@@ -451,13 +487,44 @@ namespace BlackDawn.DOTS
             where TA : unmanaged, IComponentData
             where TB : unmanaged, IComponentData
         {
+           
             if (lookupA.HasComponent(a) && lookupB.HasComponent(b))
             {
+               
                 if (!checkLiveMonster || LiveMonsterLookup.IsComponentEnabled(b))
                 {
+                    //int currentIdx = System.Threading.Interlocked.Increment(ref _enqueueCounter);
+                    // DevDebug.LogError($"入队第次：a={a.Index}, b={b.Index}");
+                   // DevDebug.LogError($"加入内部碰撞enttyA:{a.Index} entityB{b.Index} ");
                     queue.Enqueue(new TriggerPairData { EntityA = a, EntityB = b });
                 }
             }
+        }
+        private void AddIfMatchSingle<TA, TB>(
+    Entity a, Entity b,
+    ComponentLookup<TA> lookupA,
+    ComponentLookup<TB> lookupB,
+    NativeQueue<TriggerPairData>.ParallelWriter queue,
+    bool checkLiveMonster)
+    where TA : unmanaged, IComponentData
+    where TB : unmanaged, IComponentData
+        {
+            // 检查 a→b 或 b→a 哪一种是我们要的组合
+            bool isAB = lookupA.HasComponent(a) && lookupB.HasComponent(b);
+            bool isBA = lookupA.HasComponent(b) && lookupB.HasComponent(a);
+            if (!isAB && !isBA)
+                return; // 两种情况都不符合，直接跳过
+
+            // 统一“攻击者→目标”的顺序
+            Entity attacker = isAB ? a : b;
+            Entity target = isAB ? b : a;
+
+            // 如果需要判断存活状态，放到这里
+            if (checkLiveMonster && !LiveMonsterLookup.IsComponentEnabled(target))
+                return;
+
+            // 最终只入一次队
+            queue.Enqueue(new TriggerPairData { EntityA = attacker, EntityB = target });
         }
 
         private void AddIfMatchSimple<TA, TB>(
@@ -520,7 +587,8 @@ namespace BlackDawn.DOTS
                 && LiveMonsterLookup.IsComponentEnabled(b))
             {
                 var pair = new TriggerPairData { EntityA = a, EntityB = b };
-                queue.Enqueue(pair);
+                //这里的幽灵BUG
+               // queue.Enqueue(pair);
                 if (ResonanceMap.ContainsKey(a))
                     CombinedElementResonanceQueue.Enqueue(pair);
             }

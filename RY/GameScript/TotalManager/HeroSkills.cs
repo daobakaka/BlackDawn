@@ -579,16 +579,16 @@ namespace BlackDawn
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
-                            var entityPoisonRain= DamageSkillsFlightProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entityPoisonRain= DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRain, new SkillPoisonRainTag { tagSurvivalTime = 15 ,level=1});
-                            var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entityPoisonRain);
+                            var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRain);
                             skillPar.tempSlow = 30;                            
                             _entityManager.SetComponentData(entityPoisonRain, skillPar);
                             break;
                         case HeroSkillPsionicType.PsionicA:
-                            var entityPoisonRainA = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entityPoisonRainA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainA, new SkillPoisonRainTag { tagSurvivalTime = 15 ,level=1});
-                            var skillParA = _entityManager.GetComponentData<SkillsDamageCalPar>(entityPoisonRainA);
+                            var skillParA = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainA);
                             skillParA.tempSlow = 30;
                             _entityManager.SetComponentData(entityPoisonRainA, skillParA);
                             //添加A阶段标签，用于收集判断，非buffer的处理结构？或用于持续性计算
@@ -596,10 +596,10 @@ namespace BlackDawn
                             break;
                             //进行 B技能触发，火焰效果
                         case HeroSkillPsionicType.PsionicB:
-                            var entityPoisonRainB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entityPoisonRainB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                             int level = 3;
-                            var skillParB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityPoisonRainB);
+                            var skillParB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainB);
                             skillParB.tempSlow = 30;
                             //添加昏迷值
                             skillParB.tempStun = 200;
@@ -609,18 +609,18 @@ namespace BlackDawn
                             _entityManager.SetComponentData(entityPoisonRainB, skillParB);
 
                             //--火焰雨,仅仅增加一个效果，无实际计算
-                            var entityPoisonRainBFire = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entityPoisonRainBFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainBFire, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                          
                             break;
                         //进行 B技能触发，混合终极效果
                         case HeroSkillPsionicType.PsionicAB:
-                            var entityPoisonRainAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entityPoisonRainAB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainAB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                             //添加A阶段标签，用于收集判断，非buffer的处理结构？或用于持续性计算
                             _entityManager.AddComponentData(entityPoisonRainAB, new SkillPoisonRainATag { level = 1 });
                             int levelAB = 3;
-                            var skillParAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityPoisonRainAB);
+                            var skillParAB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainAB);
                             skillParAB.tempSlow = 30;
                             //添加昏迷值
                             skillParAB.tempStun = 200;
@@ -630,7 +630,7 @@ namespace BlackDawn
                             _entityManager.SetComponentData(entityPoisonRainAB, skillParAB);
 
                             //--火焰雨,仅仅增加一个效果，无实际计算
-                            var entityPoisonRainABFire = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entityPoisonRainABFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainABFire, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                         
                             break;
@@ -714,6 +714,75 @@ namespace BlackDawn
 
             return entity;
         }
+        /// <summary>
+        /// 持续性技能，取消hitRecord 的buffer遍历，且在system中进行更新，不享受快照机制（毒雨）
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <param name="posion"></param>
+        /// <param name="quaternion"></param>
+        /// <param name="damageChangePar"></param>
+        /// <param name="positionOffset"></param>
+        /// <param name="rotationOffsetEuler"></param>
+        /// <param name="scaleFactor"></param>
+        /// <param name="enablePull"></param>
+        /// <param name="enableExplosion"></param>
+        /// <returns></returns>
+        public Entity DamageSkillsOverTimeProp(
+         Entity prefab,
+         float3 posion,
+         quaternion quaternion,
+         float damageChangePar = 1,//默认伤害参数为1
+         float3 positionOffset = default,
+         float3 rotationOffsetEuler = default,  // 传入度数
+         float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
+        {
+            DevDebug.Log("释放伤害型飞行技能");
+
+            // 1) 实例化
+            var entity = _entityManager.Instantiate(prefab);
+
+            // 2) 取出可变的 LocalTransform
+            var transform = _entityManager.GetComponentData<LocalTransform>(entity);
+
+
+            // 3) 从英雄获取基础位置/旋转/缩放
+            float3 heroPos = posion;
+            quaternion heroRot = quaternion;
+            float baseScale = transform.Scale; // 保留预制体的原始 scale
+
+            // 4) 计算欧拉偏移的四元数
+            //    math.radians 将度数转为弧度
+            quaternion eulerOffsetQuat = quaternion.EulerXYZ(
+                math.radians(rotationOffsetEuler)
+            );
+
+            // 5) 叠加偏移
+            transform.Position = heroPos
+                                + math.mul(heroRot, positionOffset);
+            //计算整合旋转
+            var combineRotation = math.mul(heroRot, eulerOffsetQuat);
+            //叠加本体旋转
+            transform.Rotation = math.mul(transform.Rotation, combineRotation);
+            transform.Scale = baseScale * scaleFactor * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange);
+
+            // 6) 写回组件
+            _entityManager.SetComponentData(entity, transform);
+
+            // 7) 添加持续伤害参数
+            _entityManager.AddComponentData(entity, Hero.instance.skillsOverTimeDamageCalPar);
+
+            var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entity);
+
+            skillPar.enablePull = enablePull;
+            skillPar.enableExplosion = enableExplosion;
+            skillPar.damageChangePar = damageChangePar;
+            _entityManager.SetComponentData(entity, skillPar);
+
+            _entityManager.AddBuffer<HitElementResonanceRecord>(entity);
+
+            return entity;
+        }
+
 
 
         /// <summary>

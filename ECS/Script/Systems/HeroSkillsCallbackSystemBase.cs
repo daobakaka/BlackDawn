@@ -342,10 +342,10 @@ namespace BlackDawn.DOTS
 
             //¼¼ÄÜ¶¾Óê
             Entities
-           .WithName("SkillPoisonRain")
+           .WithName("SkillOverTimePoisonRain")
            .ForEach((Entity entity, VisualEffect vfx,
                ref SkillPoisonRainTag skillTag,
-               ref SkillsDamageCalPar damageCalPar,
+               ref SkillsOverTimeDamageCalPar damageCalPar,
                ref LocalTransform transform) =>
            {
                skillTag.tagSurvivalTime -= timer;

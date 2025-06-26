@@ -370,6 +370,10 @@ namespace BlackDawn
 
         /// <summary>死亡判定，json无值默认false</summary>
         public bool death;
+
+        /// <summary>持续伤害记数器</summary>
+        public float overTimeDamageCount;
+
     }
 
     /// <summary>
