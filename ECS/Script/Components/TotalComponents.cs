@@ -33,8 +33,27 @@ namespace BlackDawn.DOTS
         public Entity EntityA;
         public Entity EntityB;
 
-  
     }
+
+    /// <summary>
+    /// 主动范围查询结构
+    /// </summary>
+    public struct OverlapQueryCenter : IComponentData
+    {
+        public float3 Center;
+        public float Radius;
+        public CollisionFilter Filter; // 每个Overlap可自定义过滤规则
+    }
+
+    /// <summary>
+    /// 主动范围查询Buffer
+    /// </summary>
+    [InternalBufferCapacity(100)]
+    public struct OverlapDetectionResult : IBufferElementData
+    {
+        public Entity Target;
+    }
+
     #region 怪物标签
     /// <summary>
     /// 标签用于特殊情况控制以及播放动画等

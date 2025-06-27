@@ -124,7 +124,16 @@ namespace BlackDawn
 
             //添加侦擦器 --------------------,添加bufferOwner的引用            
             entityManager.AddComponentData(detectionEntity, new Detection_DefaultCmpt() { bufferOwner =heroEntity});
-            //添加动态距离侦察buffer,默认分配50个槽位
+
+            var filter = new CollisionFilter
+            {
+                BelongsTo = 1u << 8,
+                CollidesWith = 1u << 6,
+                GroupIndex = 0
+            };
+            //添加范围侦测的标签
+            entityManager.AddComponentData(detectionEntity, new OverlapQueryCenter { Center = Hero.instance.transform.position, Radius = 50 ,Filter=filter});
+        
 
 
             //未免疫状态标识，默认构造为1

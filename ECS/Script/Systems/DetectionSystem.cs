@@ -397,7 +397,7 @@ namespace BlackDawn.DOTS
            // DevDebug.LogError($"enttyA:{a.Index} entityB{b.Index} ");
 
            // // 检测周围实体（玩家→怪物）
-           CheckAndAddNearbyHit(a, b);
+            CheckAndAddNearbyHit(a, b);
            // CheckAndAddNearbyHit(b, a);
            // // 2) 处理元素共鸣同时碰撞的效果
            //ProcessCombined(a, b);
