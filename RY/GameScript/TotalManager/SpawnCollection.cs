@@ -123,7 +123,7 @@ namespace BlackDawn
 
 
             //添加侦擦器 --------------------,添加bufferOwner的引用            
-            entityManager.AddComponentData(detectionEntity, new Detection_DefaultCmpt() { bufferOwner =heroEntity});
+            entityManager.AddComponentData(detectionEntity, new Detection_DefaultCmpt() { bufferOwner =heroEntity,originalRadius=20});
 
             var filter = new CollisionFilter
             {
@@ -132,8 +132,8 @@ namespace BlackDawn
                 GroupIndex = 0
             };
             //添加范围侦测的标签
-            entityManager.AddComponentData(detectionEntity, new OverlapQueryCenter { Center = Hero.instance.transform.position, Radius = 50 ,Filter=filter});
-        
+            entityManager.AddComponentData(detectionEntity, new OverlapQueryCenter { Center = Hero.instance.transform.position, Radius = 20, Filter = filter });
+
 
 
             //未免疫状态标识，默认构造为1
@@ -190,6 +190,18 @@ namespace BlackDawn
             for (int i = 0; i < total; ++i)
             {
                 var monster = EntityInstantiateOnCircle(entityPrefab, Hero.instance.transform.position, 70, i, total);
+
+
+                //var filter = new CollisionFilter
+                //{
+                //    BelongsTo = 1u << 6,
+                //    CollidesWith = 1u << 8,
+                //    GroupIndex = 0
+                //};
+                ////添加范围侦测的标签
+                //ecb.AddComponent(monster ,new OverlapQueryCenter { Center = Hero.instance.transform.position, Radius = 1, Filter = filter });
+
+
                 //添加怪物标签 锁轴？
                 ecb.AddComponent(monster, new MonsterComponent());
                 //添加怪物激活标签

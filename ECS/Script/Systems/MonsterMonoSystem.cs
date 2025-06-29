@@ -16,7 +16,7 @@ namespace BlackDawn.DOTS
     //在渲染之后
     [BurstCompile]
     [UpdateAfter(typeof(HeroSkillsCallbackSystemBase))]
-    [UpdateInGroup(typeof(ActionSystemGroup))]
+    [UpdateInGroup(typeof(MainThreadSystemGroup))]
     public partial struct  MonsterMonoSystem : ISystem
 {
 
@@ -37,16 +37,34 @@ namespace BlackDawn.DOTS
           //等待其他地方job完成，最后执行清理
            // state.Dependency.Complete();
 
-            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            var ecb = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             //ecb 都是临时定义
           //  var ecb = new EntityCommandBuffer(Allocator.Temp);
             _timer = SystemAPI.Time.DeltaTime;
 
+
+            //销毁敌人飞行道具、技能等
+            foreach (var (enemyFlightProp,trans,entity) in SystemAPI.Query<RefRW<EnemyFlightProp>, RefRW<LocalTransform>>().WithEntityAccess())
+            {
+                if (enemyFlightProp.ValueRO.destory == true)
+                {
+                    ecb.DestroyEntity(entity);
+                
+                }
+            }
+
+
+
+
+
+
+
             //entiy 销毁回到主线程,查找活怪标签，减少job判断，模拟状态机,貌似1.4 只能执行一次？1
-            foreach (var (attrRW,collider,agent,agentShape,liveMonster,animatorAspect, entity) in SystemAPI.Query<RefRW<MonsterDefenseAttribute>,RefRW<PhysicsCollider>,
+            foreach (var(attrRW,collider,agent,agentShape,liveMonster,animatorAspect, entity) in SystemAPI.Query<RefRW<MonsterDefenseAttribute>,RefRW<PhysicsCollider>,
                 RefRW<AgentBody>, RefRW<AgentShape>,
                 RefRW<LiveMonster>,GpuEcsAnimatorAspect> ().WithEntityAccess())
             {
+         
                 if (attrRW.ValueRW.hp <= 0.00f)
                 //固定死亡动画
                 {

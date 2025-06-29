@@ -42,6 +42,7 @@ namespace BlackDawn.DOTS
     {
         public float3 Center;
         public float Radius;
+        public float3 offset;
         public CollisionFilter Filter; // 每个Overlap可自定义过滤规则
     }
 
@@ -109,9 +110,11 @@ namespace BlackDawn.DOTS
     /// <summary>
     /// 侦测系统
     /// </summary>
-    public struct Detection_DefaultCmpt : IComponentData,IEnableableComponent
+    public struct Detection_DefaultCmpt : IComponentData
     {
         public Entity bufferOwner; // 用于写入 NearbyHit 的实体
+
+        public float originalRadius;//原始半径
     }
 
     public struct HeroAttackTarget : IComponentData

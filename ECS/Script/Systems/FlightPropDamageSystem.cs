@@ -5,6 +5,7 @@ using Unity.Jobs;
 using Unity.Physics;
 using Unity.Mathematics;
 using Unity.Transforms;
+using System.Globalization;
 
 namespace BlackDawn.DOTS
 {
@@ -53,7 +54,7 @@ namespace BlackDawn.DOTS
             _heroAttrLookup = SystemAPI.GetComponentLookup<HeroAttributeCmpt>(true);
             _recordBufferLookup = SystemAPI.GetBufferLookup<HitRecord>(true);
             _transform = SystemAPI.GetComponentLookup<LocalTransform>(true);
-            _monsterTempDamageTextLookup =SystemAPI.GetComponentLookup<MonsterTempDamageText>(false);
+            _monsterTempDamageTextLookup =SystemAPI.GetComponentLookup<MonsterTempDamageText>(true);
             _monsterTempDotDamageTextLookup = SystemAPI.GetComponentLookup<MonsterTempDotDamageText>(false);
             _monsterDebuffAttrLookup = SystemAPI.GetComponentLookup<MonsterDebuffAttribute>(true);
             _monsterDotDamageBufferLookup = SystemAPI.GetBufferLookup<MonsterDotDamageBuffer>(true);
@@ -63,8 +64,8 @@ namespace BlackDawn.DOTS
         }
 
         public void OnUpdate(ref SystemState state)
-        {  
-
+        {
+          // state.Dependency.Complete();
             
             // 更新所有 lookup
             _damageParLookup.Update(ref state);
@@ -108,17 +109,16 @@ namespace BlackDawn.DOTS
                 DebufferAttrLookup=_monsterDebuffAttrLookup,
                 DotDamageBufferLookup=_monsterDotDamageBufferLookup
             }
-            .Schedule(hitsArray.Length, 64, state.Dependency);
+            .ScheduleParallel(hitsArray.Length, 64, state.Dependency);
+             state.Dependency.Complete();
 
-
-            //4.回放清理之后再更改？因该是再之后，因为需要马上更改并行数据，确保多帧命中
-            //这里不用传入参，直接写入，这种方式重新更新，但是不需要.complete() 依赖性更好
-            //结构性改动之前刷新
             state.Dependency = new ApplyFlightPropBufferAggregatesJob
-            {           
-            DamageTextLookop=_monsterTempDamageTextLookup,
-            DamageDotTextLookop=_monsterTempDotDamageTextLookup,
+            {
+                DamageTextLookop = _monsterTempDamageTextLookup,
+                ECB = ecb.AsParallelWriter(),
             }.ScheduleParallel(state.Dependency);
+
+          //  state.Dependency.Complete();  // 等Job完成再操作ECB
 
         }
 
@@ -134,7 +134,7 @@ namespace BlackDawn.DOTS
     /// 对每个碰撞对，读取伤害参数、扣血、销毁道具
     /// </summary>
     [BurstCompile]
-    struct ApplyPropDamageJob : IJobParallelFor
+    struct ApplyPropDamageJob : IJobFor
     {
         public EntityCommandBuffer.ParallelWriter ECB;
         [ReadOnly] public ComponentLookup<FlightPropDamageCalPar> DamageParLookup;
@@ -163,11 +163,11 @@ namespace BlackDawn.DOTS
             var pair = HitArray[i];
             Entity prop = pair.EntityA;
             Entity target = pair.EntityB;
-            if (!DamageParLookup.HasComponent(prop))
-            {
-                prop = pair.EntityB;
-                target = pair.EntityA;
-            }
+            //if (!DamageParLookup.HasComponent(prop))
+            //{
+            //    prop = pair.EntityB;
+            //    target = pair.EntityA;
+            //}
 
             if (!RecordBufferLookup.HasBuffer(prop))
                 return;
@@ -458,9 +458,9 @@ namespace BlackDawn.DOTS
 
             //10) 标记道具销毁，这样就可以执行穿透逻辑，而不必持续检测
             {
-                var pd = d;
-                pd.destory = true;
-                ECB.SetComponent(i, prop, pd);
+
+                d.destory = true;
+                ECB.SetComponent(i, prop, d);
             }
 
         }
@@ -472,18 +472,17 @@ namespace BlackDawn.DOTS
     [BurstCompile]
    partial struct ApplyFlightPropBufferAggregatesJob : IJobEntity
     {
-        [NativeDisableParallelForRestriction]
+        [ReadOnly]
         public ComponentLookup<MonsterTempDamageText> DamageTextLookop;
-        [NativeDisableParallelForRestriction]
-        public ComponentLookup<MonsterTempDotDamageText> DamageDotTextLookop;
+        public EntityCommandBuffer.ParallelWriter ECB;
         void Execute(
             Entity e,
+             [EntityIndexInQuery] int sortKey, // 新增 sortKey（并发安全）
             EnabledRefRO<LiveMonster> live ,
             ref MonsterDefenseAttribute def,
-            ref MonsterControlledEffectAttribute ctl,
             ref MonsterLossPoolAttribute pool, 
             ref MonsterDebuffAttribute dot,
-            ref DynamicBuffer<FlightPropAccumulateData> accBuf,
+             DynamicBuffer<FlightPropAccumulateData> accBuf,
             DynamicBuffer<LinkedEntityGroup>  linkedEntity)
         {
             //长度小于2的时候已经写入不需要聚合
@@ -500,7 +499,6 @@ namespace BlackDawn.DOTS
             {
                 var d = accBuf[i];
                 sum.damage += d.damage;
-                sum.dotDamage += sum.dotDamage;
                 sum.firePool += d.firePool;
                 sum.frostPool += d.frostPool;
                 sum.lightningPool += d.lightningPool;
@@ -535,7 +533,9 @@ namespace BlackDawn.DOTS
             //写回伤害
             damageText.hurtVlue +=sum.damage;
 
-            DamageTextLookop[linkedEntity[2].Value] = damageText;
+           // DamageTextLookop[linkedEntity[2].Value] = damageText;
+
+            ECB.SetComponent(sortKey, linkedEntity[2].Value, damageText);
 
             // 5) 清空 buffer，为下一帧重用
             accBuf.Clear();

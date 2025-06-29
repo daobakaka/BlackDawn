@@ -62,7 +62,7 @@ namespace BlackDawn
         protected internal override void OnEnter(IFsm<Hero> fsm)
         {
        
-            DevDebug.Log("进入idel状态");
+            //DevDebug.Log("进入idel状态");
             fsm.Owner.animator.SetTrigger("Idle");
             InputOperateHandle.PushOperate(_inputOperate);
 

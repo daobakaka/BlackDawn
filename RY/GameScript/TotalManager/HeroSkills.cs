@@ -11,6 +11,7 @@ using Unity.Collections;
 using ProjectDawn.Entities;
 using System;
 using Unity.Entities.UniversalDelegates;
+using Unity.Physics;
 
 
 namespace BlackDawn
@@ -579,14 +580,28 @@ namespace BlackDawn
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
-                            var entityPoisonRain= DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var filter = new CollisionFilter
+                            {
+                                BelongsTo = 1u << 10,
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlap = new OverlapQueryCenter { Center = Hero.instance.skillTargetPositon, Radius = 30, Filter = filter, offset = new float3(0, 0, 0) };
+                            var entityPoisonRain= DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, overlap,Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRain, new SkillPoisonRainTag { tagSurvivalTime = 15 ,level=1});
                             var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRain);
                             skillPar.tempSlow = 30;                            
                             _entityManager.SetComponentData(entityPoisonRain, skillPar);
                             break;
                         case HeroSkillPsionicType.PsionicA:
-                            var entityPoisonRainA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var filterA = new CollisionFilter
+                            {
+                                BelongsTo = 1u << 10,
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlapA = new OverlapQueryCenter { Center = Hero.instance.skillTargetPositon, Radius = 30, Filter = filterA, offset = new float3(0, 0, 0) };
+                            var entityPoisonRainA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapA ,Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainA, new SkillPoisonRainTag { tagSurvivalTime = 15 ,level=1});
                             var skillParA = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainA);
                             skillParA.tempSlow = 30;
@@ -596,7 +611,14 @@ namespace BlackDawn
                             break;
                             //进行 B技能触发，火焰效果
                         case HeroSkillPsionicType.PsionicB:
-                            var entityPoisonRainB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var filterB = new CollisionFilter
+                            {
+                                BelongsTo = 1u << 10,
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlapB = new OverlapQueryCenter { Center = Hero.instance.skillTargetPositon, Radius = 30, Filter = filterB,offset=new float3(0,0,0) };
+                            var entityPoisonRainB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                             int level = 3;
                             var skillParB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainB);
@@ -609,13 +631,20 @@ namespace BlackDawn
                             _entityManager.SetComponentData(entityPoisonRainB, skillParB);
 
                             //--火焰雨,仅仅增加一个效果，无实际计算
-                            var entityPoisonRainBFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entityPoisonRainBFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB,new OverlapQueryCenter(), Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainBFire, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                          
                             break;
                         //进行 B技能触发，混合终极效果
                         case HeroSkillPsionicType.PsionicAB:
-                            var entityPoisonRainAB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var filterAB = new CollisionFilter
+                            {
+                                BelongsTo = 1u << 10,
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlapAB = new OverlapQueryCenter { Center = Hero.instance.skillTargetPositon, Radius = 30, Filter = filterAB, offset = new float3(0, 0, 0) };
+                            var entityPoisonRainAB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapAB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainAB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                             //添加A阶段标签，用于收集判断，非buffer的处理结构？或用于持续性计算
                             _entityManager.AddComponentData(entityPoisonRainAB, new SkillPoisonRainATag { level = 1 });
@@ -630,7 +659,7 @@ namespace BlackDawn
                             _entityManager.SetComponentData(entityPoisonRainAB, skillParAB);
 
                             //--火焰雨,仅仅增加一个效果，无实际计算
-                            var entityPoisonRainABFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entityPoisonRainABFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, new OverlapQueryCenter(),Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainABFire, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                         
                             break;
@@ -729,6 +758,7 @@ namespace BlackDawn
         /// <returns></returns>
         public Entity DamageSkillsOverTimeProp(
          Entity prefab,
+         OverlapQueryCenter queryCenter,
          float3 posion,
          quaternion quaternion,
          float damageChangePar = 1,//默认伤害参数为1
@@ -770,6 +800,10 @@ namespace BlackDawn
 
             // 7) 添加持续伤害参数
             _entityManager.AddComponentData(entity, Hero.instance.skillsOverTimeDamageCalPar);
+
+            //8)添加持续性伤害overlap检测
+            if(queryCenter.Radius!=0)
+            _entityManager.AddComponentData(entity, queryCenter);
 
             var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entity);
 

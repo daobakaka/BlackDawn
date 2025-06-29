@@ -2858,3 +2858,512 @@ public class DamageTextMono : MonoBehaviour
 
         }
     }
+
+
+
+    //-- 毒雨  1对多
+
+
+                        //毒雨,技能附带的控制参数， 可以通过配置表进行配置
+                case HeroSkillID.PoisonRain:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+                            var filter = new CollisionFilter
+                            {
+                                BelongsTo = 1u << 8,
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlap = new OverlapQueryCenter { Center = Hero.instance.skillTargetPositon, Radius = 30, Filter = filter, offset = new float3(0, 0, 0) };
+                            var entityPoisonRain= DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, overlap,Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityPoisonRain, new SkillPoisonRainTag { tagSurvivalTime = 15 ,level=1});
+                            var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRain);
+                            skillPar.tempSlow = 30;                            
+                            _entityManager.SetComponentData(entityPoisonRain, skillPar);
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            var filterA = new CollisionFilter
+                            {
+                                BelongsTo = 1u << 8,
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlapA = new OverlapQueryCenter { Center = Hero.instance.skillTargetPositon, Radius = 30, Filter = filterA, offset = new float3(0, 0, 0) };
+                            var entityPoisonRainA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapA ,Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityPoisonRainA, new SkillPoisonRainTag { tagSurvivalTime = 15 ,level=1});
+                            var skillParA = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainA);
+                            skillParA.tempSlow = 30;
+                            _entityManager.SetComponentData(entityPoisonRainA, skillParA);
+                            //添加A阶段标签，用于收集判断，非buffer的处理结构？或用于持续性计算
+                            _entityManager.AddComponentData(entityPoisonRainA, new SkillPoisonRainATag { level = 1 });
+                            break;
+                            //进行 B技能触发，火焰效果
+                        case HeroSkillPsionicType.PsionicB:
+                            var filterB = new CollisionFilter
+                            {
+                                BelongsTo = 1u << 8,
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlapB = new OverlapQueryCenter { Center = Hero.instance.skillTargetPositon, Radius = 30, Filter = filterB,offset=new float3(0,0,0) };
+                            var entityPoisonRainB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityPoisonRainB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
+                            int level = 3;
+                            var skillParB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainB);
+                            skillParB.tempSlow = 30;
+                            //添加昏迷值
+                            skillParB.tempStun = 200;
+                            //添加火焰参数
+                            skillParB.fireDamage += skillParB.poisonDamage*(1+level*0.2f);
+                            skillParB.fireDotDamage += skillParB.poisonDotDamage* (1 + level * 0.2f); 
+                            _entityManager.SetComponentData(entityPoisonRainB, skillParB);
+
+                            //--火焰雨,仅仅增加一个效果，无实际计算
+                            var entityPoisonRainBFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB,new OverlapQueryCenter(), Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityPoisonRainBFire, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
+                         
+                            break;
+                        //进行 B技能触发，混合终极效果
+                        case HeroSkillPsionicType.PsionicAB:
+                            var filterAB = new CollisionFilter
+                            {
+                                BelongsTo = 1u << 8,
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlapAB = new OverlapQueryCenter { Center = Hero.instance.skillTargetPositon, Radius = 30, Filter = filterAB, offset = new float3(0, 0, 0) };
+                            var entityPoisonRainAB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapAB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityPoisonRainAB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
+                            //添加A阶段标签，用于收集判断，非buffer的处理结构？或用于持续性计算
+                            _entityManager.AddComponentData(entityPoisonRainAB, new SkillPoisonRainATag { level = 1 });
+                            int levelAB = 3;
+                            var skillParAB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainAB);
+                            skillParAB.tempSlow = 30;
+                            //添加昏迷值
+                            skillParAB.tempStun = 200;
+                            //添加火焰参数
+                            skillParAB.fireDamage += skillParAB.poisonDamage * (1 + levelAB * 0.2f);
+                            skillParAB.fireDotDamage += skillParAB.poisonDotDamage * (1 + levelAB * 0.2f);
+                            _entityManager.SetComponentData(entityPoisonRainAB, skillParAB);
+
+                            //--火焰雨,仅仅增加一个效果，无实际计算
+                            var entityPoisonRainABFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, new OverlapQueryCenter(),Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityPoisonRainABFire, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
+                        
+                            break;
+
+                    }
+
+                    break;
+
+
+                     public Entity DamageSkillsOverTimeProp(
+         Entity prefab,
+         OverlapQueryCenter queryCenter,
+         float3 posion,
+         quaternion quaternion,
+         float damageChangePar = 1,//默认伤害参数为1
+         float3 positionOffset = default,
+         float3 rotationOffsetEuler = default,  // 传入度数
+         float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
+        {
+            DevDebug.Log("释放伤害型飞行技能");
+
+            // 1) 实例化
+            var entity = _entityManager.Instantiate(prefab);
+
+            // 2) 取出可变的 LocalTransform
+            var transform = _entityManager.GetComponentData<LocalTransform>(entity);
+
+
+            // 3) 从英雄获取基础位置/旋转/缩放
+            float3 heroPos = posion;
+            quaternion heroRot = quaternion;
+            float baseScale = transform.Scale; // 保留预制体的原始 scale
+
+            // 4) 计算欧拉偏移的四元数
+            //    math.radians 将度数转为弧度
+            quaternion eulerOffsetQuat = quaternion.EulerXYZ(
+                math.radians(rotationOffsetEuler)
+            );
+
+            // 5) 叠加偏移
+            transform.Position = heroPos
+                                + math.mul(heroRot, positionOffset);
+            //计算整合旋转
+            var combineRotation = math.mul(heroRot, eulerOffsetQuat);
+            //叠加本体旋转
+            transform.Rotation = math.mul(transform.Rotation, combineRotation);
+            transform.Scale = baseScale * scaleFactor * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange);
+
+            // 6) 写回组件
+            _entityManager.SetComponentData(entity, transform);
+
+            // 7) 添加持续伤害参数
+            _entityManager.AddComponentData(entity, Hero.instance.skillsOverTimeDamageCalPar);
+
+            //8)添加持续性伤害overlap检测
+            if(queryCenter.Radius!=0)
+            _entityManager.AddComponentData(entity, queryCenter);
+
+            var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entity);
+
+            skillPar.enablePull = enablePull;
+            skillPar.enableExplosion = enableExplosion;
+            skillPar.damageChangePar = damageChangePar;
+            _entityManager.SetComponentData(entity, skillPar);
+
+            _entityManager.AddBuffer<HitElementResonanceRecord>(entity);
+
+            return entity;
+        }
+
+        //----  原始碰撞逻辑
+            /// <summary>
+    /// 综合碰撞对收集
+    /// </summary>
+    [BurstCompile]
+  public  struct DetectionTriggerJob : ITriggerEventsJob
+    {
+        [ReadOnly] public ComponentLookup<Detection_DefaultCmpt> DetectionLookup; // 基础检测组件
+        [ReadOnly] public ComponentLookup<LocalTransform> TransformLookup; // 用于计算距离
+        [ReadOnly] public ComponentLookup<LiveMonster> LiveMonsterLookup; // 怪物存活状态
+
+        [ReadOnly] public ComponentLookup<EnemyFlightProp> EnemyFlightPropLookup; // 怪物飞行道具
+        [ReadOnly] public ComponentLookup<FlightPropDamageCalPar> FlightPropDamageCalParLookup; // 基础飞行道具
+        [ReadOnly] public ComponentLookup<SkillsDamageCalPar> SkillPropDamageCalParLookup; // 技能飞行道具
+        [ReadOnly] public ComponentLookup<SkillsOverTimeDamageCalPar> SkillOverTimePropDamageCalParLookup; // 技能飞行道具
+        [ReadOnly] public ComponentLookup<HeroEntityMasterTag> HeroEntityMasterTagLookup; // 英雄主体
+        [ReadOnly] public ComponentLookup<SkillArcaneCircleTag> SkillArcaneCircleTagLookup; // 技能法阵第一阶段
+        [ReadOnly] public ComponentLookup<SkillArcaneCircleSecondTag> SkillArcaneCircleSecondTagLookup; // 技能法阵第二阶段
+        [ReadOnly] public ComponentLookup<SkillElementResonanceTag> SkillElementResonanceTagLookup;//元素共鸣体
+        [ReadOnly] public ComponentLookup<SkillMineBlastTag> SkillMineBlastTagLookup;//毒爆地雷
+        [ReadOnly] public ComponentLookup<SkillMineBlastExplosionTag> SkillMineBlastExplosionTagLookup;//爆炸后的瘟疫地雷
+        [ReadOnly] public ComponentLookup<SkillPoisonRainATag> SkillPoisonRainATaglookup;//毒雨造成的伤害加深
+       
+        
+        
+        public BufferLookup<NearbyHit> HitBufferLookup; // 基础检测系统
+        
+
+        public NativeQueue<TriggerPairData>.ParallelWriter HeroHitMonsterQueue;
+        public NativeQueue<TriggerPairData>.ParallelWriter EnemyFlightHitHeroQueue;
+        public NativeQueue<TriggerPairData>.ParallelWriter FlightHitMonsterQueue;
+        public NativeQueue<TriggerPairData>.ParallelWriter SkillHitMonsterQueue;
+        public NativeQueue<TriggerPairData>.ParallelWriter SkillOverTimeHitMonsterQueue;
+        public NativeQueue<TriggerPairData>.ParallelWriter ArcaneCircleHitMonsterQueue;
+        public NativeQueue<TriggerPairData>.ParallelWriter ArcaneCircleHitHeroQueue;
+        public NativeQueue<TriggerPairData>.ParallelWriter SkillElementResonanceQueue;
+        public NativeQueue<TriggerPairData>.ParallelWriter BaseFlightElementResonanceQueue;
+
+        // 新增：单一综合队列
+        // 收集：基础飞行道具 & 技能，同步撞到怪物并撞到元素共鸣体
+        public NativeQueue<TriggerPairData>.ParallelWriter CombinedElementResonanceQueue;
+
+        // 新增：并行标记表，标记已撞元素共鸣体的攻击者
+        public NativeParallelHashMap<Entity, byte> ResonanceMap;
+
+        //毒爆地雷
+        public NativeQueue<TriggerPairData>.ParallelWriter MineBlastHitMonsterQueue;
+        //毒爆地雷爆炸后的瘟疫地雷
+        public NativeQueue<TriggerPairData>.ParallelWriter MineBlastExplosionHitMonsterQueue;
+        //毒雨 
+        public NativeQueue<TriggerPairData>.ParallelWriter PoisonRainAHitMonsterQueue;
+
+
+        public void Execute(TriggerEvent triggerEvent)
+        {
+            var a = triggerEvent.EntityA;
+            var b = triggerEvent.EntityB;
+
+           // DevDebug.LogError($"enttyA:{a.Index} entityB{b.Index} ");
+
+           // // 检测周围实体（玩家→怪物）
+          //  CheckAndAddNearbyHit(a, b);
+           // CheckAndAddNearbyHit(b, a);
+           // // 2) 处理元素共鸣同时碰撞的效果
+           //ProcessCombined(a, b);
+
+           // // 分类写入碰撞对容器
+           // AddIfMatch(a, b, HeroEntityMasterTagLookup, LiveMonsterLookup, HeroHitMonsterQueue, true);
+           // AddIfMatch(b, a, HeroEntityMasterTagLookup, LiveMonsterLookup, HeroHitMonsterQueue, true);
+
+           // AddIfMatch(a, b, EnemyFlightPropLookup, HeroEntityMasterTagLookup, EnemyFlightHitHeroQueue, false);
+           // AddIfMatch(b, a, EnemyFlightPropLookup, HeroEntityMasterTagLookup, EnemyFlightHitHeroQueue, false);
+
+           // AddIfMatch(a, b, FlightPropDamageCalParLookup, LiveMonsterLookup, FlightHitMonsterQueue, true);
+           // AddIfMatch(b, a, FlightPropDamageCalParLookup, LiveMonsterLookup, FlightHitMonsterQueue, true);
+
+            //飞行技能
+           // AddIfMatch(a, b, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
+            // AddIfMatch(b, a, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
+
+            //持续性技能
+           // AddIfMatch(a, b, SkillOverTimePropDamageCalParLookup, LiveMonsterLookup, SkillOverTimeHitMonsterQueue, true);
+            // AddIfMatch(b, a, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
+
+            // //怪物与法阵碰撞
+            // AddIfMatch(a, b, SkillArcaneCircleSecondTagLookup, LiveMonsterLookup, ArcaneCircleHitMonsterQueue, true);
+            // AddIfMatch(b, a, SkillArcaneCircleSecondTagLookup, LiveMonsterLookup, ArcaneCircleHitMonsterQueue, true);
+
+            // //英雄与法阵本体碰撞,英雄可以在阶段内自行判断
+            // AddIfMatchSimple(a, b, HeroEntityMasterTagLookup, SkillArcaneCircleTagLookup, ArcaneCircleHitHeroQueue);
+            // AddIfMatchSimple(b, a, HeroEntityMasterTagLookup, SkillArcaneCircleTagLookup, ArcaneCircleHitHeroQueue);
+
+            // //技能碰撞到元素共鸣体,元素共鸣体自身不检测自己
+            // AddIfMatchSimple(a, b, SkillElementResonanceTagLookup, SkillPropDamageCalParLookup, SkillElementResonanceQueue);
+            // AddIfMatchSimple(b, a, SkillElementResonanceTagLookup, SkillPropDamageCalParLookup, SkillElementResonanceQueue);
+
+            // //基础飞行道具碰撞到元素共鸣体
+            // AddIfMatchSimple(a, b, SkillElementResonanceTagLookup, FlightPropDamageCalParLookup, BaseFlightElementResonanceQueue);
+            // AddIfMatchSimple(b, a, SkillElementResonanceTagLookup, FlightPropDamageCalParLookup, BaseFlightElementResonanceQueue);
+
+            // //怪物与毒爆地雷碰撞
+            // AddIfMatch(a, b, SkillMineBlastTagLookup, LiveMonsterLookup, MineBlastHitMonsterQueue, true);
+            // AddIfMatch(b, a, SkillMineBlastTagLookup, LiveMonsterLookup, MineBlastHitMonsterQueue, true);
+            // //怪物与毒爆地雷爆炸后的碰撞对，用于计算B效果
+            // AddIfMatch(a, b, SkillMineBlastExplosionTagLookup, LiveMonsterLookup, MineBlastExplosionHitMonsterQueue, true);
+            // AddIfMatch(b, a, SkillMineBlastExplosionTagLookup, LiveMonsterLookup, MineBlastExplosionHitMonsterQueue, true);
+            // //毒雨A阶段
+            // AddIfMatch(a, b, SkillPoisonRainATaglookup, LiveMonsterLookup, PoisonRainAHitMonsterQueue, true);
+            // AddIfMatch(b, a, SkillPoisonRainATaglookup, LiveMonsterLookup, PoisonRainAHitMonsterQueue, true);
+
+
+            // AddIfMatchSingle(a, b, SkillPoisonRainATaglookup, LiveMonsterLookup, PoisonRainAHitMonsterQueue, true);
+
+
+        }
+
+        private void CheckAndAddNearbyHit(Entity detector, Entity other)
+        {
+            if (!DetectionLookup.HasComponent(detector) ||
+                !TransformLookup.HasComponent(detector) ||
+                !TransformLookup.HasComponent(other) ||
+                !LiveMonsterLookup.HasComponent(other) ||
+                !LiveMonsterLookup.IsComponentEnabled(other))
+                return;
+
+            float d = math.distancesq(
+                TransformLookup[detector].Position,
+                TransformLookup[other].Position);
+
+            var detection = DetectionLookup[detector];
+            Entity bufferTarget = detection.bufferOwner;
+
+            if (HitBufferLookup.HasBuffer(bufferTarget))
+            {
+                var buf = HitBufferLookup[bufferTarget];
+                if (buf.Length < buf.Capacity)
+                    buf.Add(new NearbyHit { other = other, sqrDist = d });
+            }
+        }
+
+      // public static int _enqueueCounter = 0;
+
+        private void AddIfMatch<TA, TB>(
+            Entity a, Entity b,
+            ComponentLookup<TA> lookupA,
+            ComponentLookup<TB> lookupB,
+            NativeQueue<TriggerPairData>.ParallelWriter queue,
+            bool checkLiveMonster)
+            where TA : unmanaged, IComponentData
+            where TB : unmanaged, IComponentData
+        {
+           
+            if (lookupA.HasComponent(a) && lookupB.HasComponent(b))
+            {
+               
+                if (!checkLiveMonster || LiveMonsterLookup.IsComponentEnabled(b))
+                {
+                    //int currentIdx = System.Threading.Interlocked.Increment(ref _enqueueCounter);
+                    // DevDebug.LogError($"入队第次：a={a.Index}, b={b.Index}");
+                   // DevDebug.LogError($"加入内部碰撞enttyA:{a.Index} entityB{b.Index} ");
+                    queue.Enqueue(new TriggerPairData { EntityA = a, EntityB = b });
+                }
+            }
+        }
+        private void AddIfMatchSingle<TA, TB>(
+    Entity a, Entity b,
+    ComponentLookup<TA> lookupA,
+    ComponentLookup<TB> lookupB,
+    NativeQueue<TriggerPairData>.ParallelWriter queue,
+    bool checkLiveMonster)
+    where TA : unmanaged, IComponentData
+    where TB : unmanaged, IComponentData
+        {
+            // 检查 a→b 或 b→a 哪一种是我们要的组合
+            bool isAB = lookupA.HasComponent(a) && lookupB.HasComponent(b);
+            bool isBA = lookupA.HasComponent(b) && lookupB.HasComponent(a);
+            if (!isAB && !isBA)
+                return; // 两种情况都不符合，直接跳过
+
+            // 统一“攻击者→目标”的顺序
+            Entity attacker = isAB ? a : b;
+            Entity target = isAB ? b : a;
+
+            // 如果需要判断存活状态，放到这里
+            if (checkLiveMonster && !LiveMonsterLookup.IsComponentEnabled(target))
+                return;
+
+            // 最终只入一次队
+            queue.Enqueue(new TriggerPairData { EntityA = attacker, EntityB = target });
+        }
+
+        private void AddIfMatchSimple<TA, TB>(
+    Entity a, Entity b,
+    ComponentLookup<TA> lookupA,
+    ComponentLookup<TB> lookupB,
+    NativeQueue<TriggerPairData>.ParallelWriter queue)
+    where TA : unmanaged, IComponentData
+    where TB : unmanaged, IComponentData
+        {
+            if (lookupA.HasComponent(a) && lookupB.HasComponent(b))
+            {
+                queue.Enqueue(new TriggerPairData { EntityA = a, EntityB = b });
+            }
+        }
+
+        // 将标记与分类+综合输出封装
+        void ProcessCombined(Entity a, Entity b)
+        {
+            // 标记：当道具或技能与元素共鸣体碰撞时
+            TryMark(a, b);
+            TryMark(b, a);
+
+            // 飞行道具 ↔ 怪物
+            TryEnqueueAndCombine(a, b,
+                FlightPropDamageCalParLookup,
+                FlightHitMonsterQueue);
+            TryEnqueueAndCombine(b, a,
+                FlightPropDamageCalParLookup,
+                FlightHitMonsterQueue);
+
+            // 技能道具 ↔ 怪物
+            TryEnqueueAndCombine(a, b,
+                SkillPropDamageCalParLookup,
+                SkillHitMonsterQueue);
+            TryEnqueueAndCombine(b, a,
+                SkillPropDamageCalParLookup,
+                SkillHitMonsterQueue);
+        }
+
+        // 如果 a 是共鸣体、b 是道具或技能，则标记 b
+        void TryMark(Entity a, Entity b)
+        {
+            if (!SkillElementResonanceTagLookup.HasComponent(a))
+                return;
+            if (FlightPropDamageCalParLookup.HasComponent(b) || SkillPropDamageCalParLookup.HasComponent(b))
+                ResonanceMap.TryAdd(b, 1);
+        }
+
+        // 分类写入原始队列，并在已标记时写入综合队列
+        void TryEnqueueAndCombine<T>(
+            Entity a,
+            Entity b,
+            ComponentLookup<T> lookup,
+            NativeQueue<TriggerPairData>.ParallelWriter queue)
+            where T : unmanaged, IComponentData
+        {
+            if (lookup.HasComponent(a)
+                && LiveMonsterLookup.HasComponent(b)
+                && LiveMonsterLookup.IsComponentEnabled(b))
+            {
+                var pair = new TriggerPairData { EntityA = a, EntityB = b };
+                //这里的幽灵BUG
+               // queue.Enqueue(pair);
+                if (ResonanceMap.ContainsKey(a))
+                    CombinedElementResonanceQueue.Enqueue(pair);
+            }
+        }
+
+
+
+
+
+
+    }
+    //----莫名奇妙的 依赖关系
+        /// <summary>
+    /// 修正同时多个飞行道具碰撞产生的伤害以及累加池化计算问题
+    /// </summary>
+    [BurstCompile]
+   partial struct ApplyFlightPropBufferAggregatesJob : IJobEntity
+    {
+        [ReadOnly]
+        public ComponentLookup<MonsterTempDamageText> DamageTextLookop;
+        public EntityCommandBuffer.ParallelWriter ECB;
+        void Execute(
+            Entity e,
+             [EntityIndexInQuery] int sortKey, // 新增 sortKey（并发安全）
+            EnabledRefRO<LiveMonster> live ,
+            in MonsterDefenseAttribute def,
+            in MonsterLossPoolAttribute pool, 
+            in MonsterDebuffAttribute dot,
+            DynamicBuffer<FlightPropAccumulateData> accBuf,
+           in DynamicBuffer<LinkedEntityGroup>  linkedEntity)
+        {
+            //长度小于2的时候已经写入不需要聚合
+            if (accBuf.Length < 2)
+            {
+                //返回之前清空buffer
+                accBuf.Clear();
+                return;
+            }
+
+            // 1) 聚合
+            var sum = new FlightPropAccumulateData();
+            var defCopy = def;
+            var poolCopy = pool;
+
+
+            for (int i = 0; i < accBuf.Length - 1; i++)
+            {
+                var d = accBuf[i];
+                sum.damage += d.damage;
+                sum.firePool += d.firePool;
+                sum.frostPool += d.frostPool;
+                sum.lightningPool += d.lightningPool;
+                sum.poisonPool += d.poisonPool;
+                sum.shadowPool += d.shadowPool;
+                sum.bleedPool += d.bleedPool;
+            }
+
+            // 2) 写回血量
+            defCopy.hp = math.max(0f, def.hp - sum.damage);
+           
+
+
+
+
+            // 4) 写回池化值
+            if (true)
+            {
+                poolCopy.firePool = math.min(pool.firePool + sum.firePool, 200);
+                poolCopy.frostPool = math.min(pool.frostPool + sum.frostPool, 200);
+                poolCopy .lightningPool = math.min(pool.lightningPool + sum.lightningPool, 200);
+                poolCopy.poisonPool = math.min(pool.poisonPool + sum.poisonPool, 200);
+                poolCopy.shadowPool = math.min(pool.shadowPool + sum.shadowPool, 200);
+                poolCopy.bleedPool = math.min(pool.bleedPool + sum.bleedPool, 200);
+            }
+            //5)写回dot总伤害
+           // dot.totalDotDamage =sum.dotDamage;
+
+
+            //这两条是去查找字体并且更改
+            var damageText = DamageTextLookop[linkedEntity[2].Value];
+            //写回伤害
+            damageText.hurtVlue +=sum.damage;
+
+            ECB.SetComponent(sortKey, linkedEntity[2].Value, damageText);
+
+            ECB.SetComponent(sortKey, e, defCopy);
+            ECB.SetComponent(sortKey, e, poolCopy);
+
+            // 5) 清空 buffer，为下一帧重用
+            accBuf.Clear();
+
+           // DevDebug.Log("已累加并清空自己的buffer");
+
+        }
+    }

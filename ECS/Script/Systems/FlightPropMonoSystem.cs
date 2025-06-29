@@ -38,7 +38,7 @@ namespace BlackDawn.DOTS
 
             }.ScheduleParallel(state.Dependency);
 
-            state.Dependency.Complete();
+             state.Dependency.Complete();
         }
 
         [BurstCompile]
@@ -65,7 +65,7 @@ namespace BlackDawn.DOTS
             directFlight.originalSurvivalTime -= time;
             if (directFlight.originalSurvivalTime <= 0f)
             {
-                ECB.DestroyEntity(sortKey, entity);
+               // ECB.DestroyEntity(sortKey, entity);
                 return;
             }
 
@@ -74,7 +74,7 @@ namespace BlackDawn.DOTS
             {
                 
                   //  ECB.RemoveComponent<FlightPropDamageCalPar>(sortKey, entity);
-                    ECB.DestroyEntity(sortKey, entity);
+                   // ECB.DestroyEntity(sortKey, entity);
                     return;
                 
             }

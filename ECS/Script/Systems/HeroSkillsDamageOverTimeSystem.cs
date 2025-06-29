@@ -38,6 +38,8 @@ namespace BlackDawn.DOTS
         private BufferLookup<MonsterDotDamageBuffer> _monsterDotDamageBufferLookup;
         //侦测系统缓存
         private SystemHandle _detectionSystemHandle;
+        //持续性overLap检测系统缓存
+        private SystemHandle _overlapDetectionSystemHandle;
 
 
 
@@ -55,13 +57,14 @@ namespace BlackDawn.DOTS
             _skillOverTimeDamage = SystemAPI.GetComponentLookup<SkillsOverTimeDamageCalPar>(true);
             _linkedLookup = SystemAPI.GetBufferLookup<LinkedEntityGroup>(true);
             _transform = SystemAPI.GetComponentLookup<LocalTransform>(true);
-            _monsterTempDamageTextLookup = SystemAPI.GetComponentLookup<MonsterTempDamageText>(false);
+            _monsterTempDamageTextLookup = SystemAPI.GetComponentLookup<MonsterTempDamageText>(true);
             _monsterTempDotDamageTextLookup = SystemAPI.GetComponentLookup<MonsterTempDotDamageText>(false);
             _monsterDebuffAttrLookup = SystemAPI.GetComponentLookup<MonsterDebuffAttribute>(true);
             _monsterDotDamageBufferLookup = SystemAPI.GetBufferLookup<MonsterDotDamageBuffer>(true);
 
 
             _detectionSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
+            _overlapDetectionSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<OverlapDetectionSystem>();
 
         }
         [BurstCompile]
@@ -87,6 +90,9 @@ namespace BlackDawn.DOTS
             var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
             var hitsArray = detectionSystem.skillOverTimeHitMonsterArray;
 
+
+            var overlapSystem = state.WorldUnmanaged.GetUnsafeSystemRef<OverlapDetectionSystem>(_overlapDetectionSystemHandle);
+            var hitsOverTimeArray =overlapSystem.skillOverlapMonsterArray;
             var deltaTime = SystemAPI.Time.DeltaTime;
 
             // DevDebug.LogError("hitaary length     :" + hitsArray.Length);
@@ -102,7 +108,7 @@ namespace BlackDawn.DOTS
                 LossPoolAttrLookup = _monsterLossPoolAttrLookip,
                 ControlledEffectAttrLookup = _monsterControlledEffectAttrLookup,
                 LinkedLookup = _linkedLookup,
-                HitArray = hitsArray,
+                HitArray = hitsOverTimeArray,
                 HeroAttrLookup = _heroAttrLookup,
                 Transform = _transform,
                 TempDamageText = _monsterTempDamageTextLookup,
@@ -110,13 +116,15 @@ namespace BlackDawn.DOTS
                 DebufferAttrLookup = _monsterDebuffAttrLookup,
                 DotDamageBufferLookup = _monsterDotDamageBufferLookup,
                 DeltaTime=deltaTime,
-            }.ScheduleParallel(hitsArray.Length, 64, state.Dependency);
+            }.ScheduleParallel(hitsOverTimeArray.Length, 64, state.Dependency);
+            //state.Dependency.Complete();
 
+            if(false)
             state.Dependency = new ApplyHeroSkillPropOverTimeBufferAggregatesJob
             {
 
                 DamageTextLookop = _monsterTempDamageTextLookup,
-                DamageDotTextLookop = _monsterTempDotDamageTextLookup,
+              ECB=ecbWriter
 
 
             }.ScheduleParallel(state.Dependency);
@@ -170,7 +178,7 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
                 var pair = HitArray[i];
                 Entity skill = pair.EntityA;
                 Entity target = pair.EntityB;
-
+                //DevDebug.Log("进入：" );
 
 
                 // 2) 读取组件 & 随机数
@@ -192,14 +200,17 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
 
                 //0)累加命中记数器，这样可以变相的记录秒数
                 a.overTimeDamageCount+= DeltaTime;
+               // DevDebug.Log("计数器："+a.overTimeDamageCount);
 
                 if (a.overTimeDamageCount < 1)
                 {
                     ECB.SetComponent(i, target, a);
+                   // DevDebug.Log("返回：");
                     return;
                 }
                 else
                 {
+                   // DevDebug.Log("计算：");
                     a.overTimeDamageCount = 0;
                     //3+0）
                     //刷新击中时间,更新击中判定
@@ -355,7 +366,7 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
 
                     // 8) 应用扣血 & 写回
                     a.hp = math.max(0f, a.hp - finalDamage);
-
+                   // DevDebug.Log("伤害：" + finalDamage);
 
                     //8-1) 伤害数字传入
                     //确认收到攻击
@@ -467,12 +478,12 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
     partial struct ApplyHeroSkillPropOverTimeBufferAggregatesJob : IJobEntity
     {
         //采用这种声明不安全的做法，处理更轻量化，但在需要使用前，临时更新一次
-        [NativeDisableParallelForRestriction]
+        [ReadOnly]
         public ComponentLookup<MonsterTempDamageText> DamageTextLookop;
-        [NativeDisableParallelForRestriction]
-        public ComponentLookup<MonsterTempDotDamageText> DamageDotTextLookop;
+        public EntityCommandBuffer.ParallelWriter ECB;
         void Execute(
             Entity e,
+            [EntityIndexInQuery] int sortKey, // 新增 sortKey（并发安全）
             EnabledRefRO<LiveMonster> live,
             ref MonsterDefenseAttribute def,
             ref MonsterControlledEffectAttribute ctl,
@@ -528,8 +539,7 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
             var damageText = DamageTextLookop[linkedEntity[2].Value];
             //写回伤害
             damageText.hurtVlue += sum.damage;
-
-            DamageTextLookop[linkedEntity[2].Value] = damageText;
+            ECB.SetComponent(sortKey, linkedEntity[2].Value, damageText);
 
 
             // 5) 清空 buffer，为下一帧重用

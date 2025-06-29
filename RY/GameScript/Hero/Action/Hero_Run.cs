@@ -65,7 +65,7 @@ namespace BlackDawn
         }
         protected internal override void OnEnter(IFsm<Hero> fsm)
         {
-            DevDebug.Log("进入Run状态");
+           // DevDebug.Log("进入Run状态");
           //s  fsm.Owner.animator.SetTrigger("Run");
             fsm.Owner.animator.SetBool("BoolRun", true);
             InputOperateHandle.PushOperate(_inputOperate);
@@ -76,7 +76,7 @@ namespace BlackDawn
         {
             //攻击
          //  fsm.Owner.HeroAttack(0.1f,1000,360);
-           // fsm.Owner.HeroAttackBurst();
+            fsm.Owner.HeroAttackBurst();
 
             //移动
             var transform = fsm.Owner.transform;

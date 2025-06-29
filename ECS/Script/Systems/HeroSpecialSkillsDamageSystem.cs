@@ -282,8 +282,6 @@ namespace BlackDawn.DOTS
 
             ECB.AppendToBuffer(i, target, dotBuffer);
 
-
-
         }
     }
 

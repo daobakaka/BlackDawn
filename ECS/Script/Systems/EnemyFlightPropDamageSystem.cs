@@ -78,10 +78,10 @@ namespace BlackDawn.DOTS
                 RecordBufferLookup = _recordBufferLookup,
                 IntgratedNoImmunityStateLookup = _heroIntgrateNoImmunityStateLookup,
             }
-            .Schedule(hitsArray.Length, 64, state.Dependency);
+            .ScheduleParallel(hitsArray.Length, 64, state.Dependency);
 
 
-            //state.Dependency.Complete();
+            state.Dependency.Complete();
 
             //// 3. 回放并清理
             //ecb.Playback(state.EntityManager);
@@ -118,7 +118,7 @@ namespace BlackDawn.DOTS
     /// JjobParallerFor 并行写入，支持原生容器和只读限制
     /// </summary>
     [BurstCompile]
-    struct ApplyEnemyPropDamageJob : IJobParallelFor
+    struct ApplyEnemyPropDamageJob : IJobFor
     {
         public EntityCommandBuffer.ParallelWriter ECB;
         [ReadOnly] public ComponentLookup<EnemyFlightProp> DamageParLookup;

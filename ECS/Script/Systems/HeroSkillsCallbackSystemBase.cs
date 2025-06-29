@@ -14,11 +14,11 @@ namespace BlackDawn.DOTS
 /// 由英雄mono开启,在渲染系统之后进行,回调系统， 涉及到传统class交互， 设计在最后进行
 /// </summary>
     [RequireMatchingQueriesForUpdate]
-    [UpdateAfter(typeof(RenderEffectSystem))]
-    [UpdateInGroup(typeof(ActionSystemGroup))]
-    public partial class HeroSkillsCallbackSystemBase : SystemBase,IOneStepFun
+    [UpdateAfter(typeof(HeroSkillsMonoSystem))]
+    [UpdateInGroup(typeof(MainThreadSystemGroup))]
+    public partial class HeroSkillsCallbackSystemBase : SystemBase, IOneStepFun
     {
-        public bool Done { get ; set ; }
+        public bool Done { get; set; }
         HeroSkills _heroSkills;
         ScenePrefabsSingleton _prefabs;
 
@@ -45,7 +45,7 @@ namespace BlackDawn.DOTS
 
         protected override void OnStartRunning()
         {
-           //获取英雄技能单例
+            //获取英雄技能单例
             _heroSkills = HeroSkills.GetInstance();
 
             _prefabs = SystemAPI.GetSingleton<ScenePrefabsSingleton>();
@@ -54,9 +54,10 @@ namespace BlackDawn.DOTS
 
         protected override void OnUpdate()
         {
-            // var ecb = new EntityCommandBuffer(Allocator.Temp);
+            
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
             // var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
-            var ecb = World.GetOrCreateSystemManaged<EndSimulationEntityCommandBufferSystem>().CreateCommandBuffer();
+           // var ecb = World.GetOrCreateSystemManaged<BeginSimulationEntityCommandBufferSystem>().CreateCommandBuffer();
 
             var timer = SystemAPI.Time.DeltaTime;
 
@@ -68,6 +69,14 @@ namespace BlackDawn.DOTS
             var arcaneCircleLinkedArray = specialDanafeSystem.arcaneCircleLinkenBuffer;
             //获取侦测系统的  碰撞对
             var mineBlastArray = detctionSystem.mineBlastHitMonsterArray;
+
+            //测试性绘制
+            Entities
+           .WithName("DrawOverlapSpheres")
+           .ForEach((in OverlapQueryCenter overlap) =>
+           {
+               DebugDrawSphere(overlap.Center, overlap.offset, overlap.Radius, Color.yellow, 0.02f);
+           }).WithoutBurst().Run();
 
 
 
@@ -350,29 +359,29 @@ namespace BlackDawn.DOTS
            {
                skillTag.tagSurvivalTime -= timer;
 
-               if (skillTag.tagSurvivalTime <= 2f && skillTag.tagSurvivalTime >2f - timer)
+               if (skillTag.tagSurvivalTime <= 2f && skillTag.tagSurvivalTime > 2f - timer)
                {
                    vfx.Stop();
-                   
-               
+
+
                }
                if (skillTag.tagSurvivalTime <= 0)
                    damageCalPar.destory = true;
 
 
            }).WithoutBurst().Run();
-           
 
 
 
 
 
-               // 播放并清理
-               //ecb.Playback(base.EntityManager);
-               //ecb.Dispose();
+
+            // 播放并清理
+            ecb.Playback(base.EntityManager);
+            ecb.Dispose();
 
 
-           }
+        }
 
 
 
@@ -384,7 +393,35 @@ namespace BlackDawn.DOTS
             //法阵buffer的效果 ，需要在外面清除
             if (_arcaneCirclegraphicsBuffer != null)
             {
-                _arcaneCirclegraphicsBuffer.Dispose(); 
+                _arcaneCirclegraphicsBuffer.Dispose();
+            }
+        }
+
+        void DebugDrawSphere(float3 center,float3 offset, float radius, Color color, float duration)
+        {
+            // 用12条线段近似一个球
+            for (int i = 0; i < 12; i++)
+            {
+                float angle1 = math.radians(i * 30);
+                float angle2 = math.radians((i + 1) * 30);
+
+                // xy平面
+                Debug.DrawLine(
+                    (Vector3)(center +offset+ new float3(math.cos(angle1), math.sin(angle1), 0) * radius),
+                    (Vector3)(center +offset + new float3(math.cos(angle2), math.sin(angle2), 0) * radius),
+                    color, duration);
+
+                // xz平面
+                Debug.DrawLine(
+                    (Vector3)(center + offset + new float3(math.cos(angle1), 0, math.sin(angle1)) * radius),
+                    (Vector3)(center + offset + new float3(math.cos(angle2), 0, math.sin(angle2)) * radius),
+                    color, duration);
+
+                // yz平面
+                Debug.DrawLine(
+                    (Vector3)(center + offset + new float3(0, math.cos(angle1), math.sin(angle1)) * radius),
+                    (Vector3)(center + offset + new float3(0, math.cos(angle2), math.sin(angle2)) * radius),
+                    color, duration);
             }
         }
     }

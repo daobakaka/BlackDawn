@@ -9,16 +9,16 @@ using Unity.Transforms;
 using Unity.Profiling;
 using Random = Unity.Mathematics.Random;
 using static Pathfinding.TargetMover;
+using Unity.Jobs;
 //用于shader 渲染 材质变更  伤害飘字等逻辑,在英雄技能回调系统之后运行
 namespace BlackDawn.DOTS
 {/// <summary>
 /// 
 /// </summary>
     [BurstCompile]
-    [UpdateAfter(typeof(HeroSystem))]
-    [UpdateInGroup(typeof(ActionSystemGroup))]
+    [UpdateInGroup(typeof(RenderSystemGroup))]
     [RequireMatchingQueriesForUpdate]
-    public partial struct RenderEffectSystem : ISystem,ISystemStartStop
+    public partial struct RenderEffectSystem : ISystem, ISystemStartStop
     {
         private ComponentLookup<MonsterLossPoolAttribute> _monsterLossPoolattrLookup;
         private ComponentLookup<MonsterDefenseAttribute> _monsterDefenseAttrLookup;
@@ -31,7 +31,7 @@ namespace BlackDawn.DOTS
         private NativeArray<char> _UVchar;
         private NativeArray<float4> _UVTable;
         // 持有 EndSimulationEntityCommandBufferSystem 的引用
-     //  private EndSimulationEntityCommandBufferSystem _ecbSystem;
+        //  private EndSimulationEntityCommandBufferSystem _ecbSystem;
 
         public void OnCreate(ref SystemState state)
         {
@@ -46,7 +46,7 @@ namespace BlackDawn.DOTS
             _linkedEntityGroupLookup = SystemAPI.GetBufferLookup<LinkedEntityGroup>(true);
             _fireRandomOffsetLookup = SystemAPI.GetComponentLookup<FireRandomOffset>(true);
             _monsterControlledEffectAttributeLookup = SystemAPI.GetComponentLookup<MonsterControlledEffectAttribute>(true);
-            
+
             _entityManager = state.EntityManager;
 
             //_ecbSystem = state.World.GetOrCreateSystemManaged<EndSimulationEntityCommandBufferSystem>();
@@ -58,7 +58,7 @@ namespace BlackDawn.DOTS
         /// <param name="state"></param>
         public void OnStartRunning(ref SystemState state)
         {
-       
+
             DevDebug.LogError("开启渲染系统");
             //数组初始化问题
             int length = DamageTextUVLookup.CharTable.Length;
@@ -70,16 +70,16 @@ namespace BlackDawn.DOTS
 
             for (int i = 0; i < _UVTable.Length; i++)
             {
-                _UVchar[i]= DamageTextUVLookup.CharTable[i];
-                _UVTable[i] = (float4)DamageTextUVLookup.UVTable[i];    
+                _UVchar[i] = DamageTextUVLookup.CharTable[i];
+                _UVTable[i] = (float4)DamageTextUVLookup.UVTable[i];
             }
-           
+
 
         }
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-          
+
             _monsterLossPoolattrLookup.Update(ref state);
             _monsterDefenseAttrLookup.Update(ref state);
             _monsterTempDamageTextLookup.Update(ref state);
@@ -88,8 +88,15 @@ namespace BlackDawn.DOTS
             _fireRandomOffsetLookup.Update(ref state);
             _monsterControlledEffectAttributeLookup.Update(ref state);
             float dt = SystemAPI.Time.DeltaTime;
-            var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            // var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            //渲染动态ECB,等同于end，写回必须在系统运行顺序之后进行才可以
+            var ecb = SystemAPI.GetSingleton<BeginInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            var ecb1 = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            var ecb2 = SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             var currentTime = SystemAPI.Time.ElapsedTime;
+            //等待action主线程跑完
+            state.Dependency.Complete();
+
 
             //var _ecb = _ecbSystem.CreateCommandBuffer();    
             // —— 3) 构造一个 Query，它一定包含 Parent、RenderParameterAspect，
@@ -97,18 +104,20 @@ namespace BlackDawn.DOTS
 
             //伤害shader特效的渲染,这种方式顺滑依赖回收
             //注意 像这种有额外查询写入的job,必须要有单独的声明hanndel处理依赖关系 进行 complete 才可以， 但有可能造成卡顿
-            var renderEffectsJob = new RenderEffectsJob
+            state.Dependency = new RenderEffectsJob
             {
                 LossPoolLookup = _monsterLossPoolattrLookup,
                 DefenseLookup = _monsterDefenseAttrLookup,
                 LtLookup = _transform,
                 Ecb = ecb.AsParallelWriter(),
                 DeltaTime = SystemAPI.Time.DeltaTime,
-                LinderGroupLookup =_linkedEntityGroupLookup,
-                MonsterControlledEffectAttrLookup =_monsterControlledEffectAttributeLookup,
+                LinderGroupLookup = _linkedEntityGroupLookup,
+                MonsterControlledEffectAttrLookup = _monsterControlledEffectAttributeLookup,
             }.ScheduleParallel(state.Dependency);
 
-           renderEffectsJob.Complete();
+          // state.Dependency.Complete();
+            //   renderEffectsJob.Complete();
+
 
             //伤害漂字的JobECS 渲染
             state.Dependency = new RenderTextJob
@@ -116,9 +125,9 @@ namespace BlackDawn.DOTS
                 UVTable = _UVTable,
                 UVchar = _UVchar,
                 CurrentTime = SystemAPI.Time.ElapsedTime,
-                Ecb = ecb.AsParallelWriter()
+                Ecb = ecb1.AsParallelWriter()
             }.ScheduleParallel(state.Dependency);
-            state.Dependency.Complete();
+            // state.Dependency.Complete();
 
             //伤害漂字的 Dot JobECS 渲染
             state.Dependency = new RenderDotTextJob
@@ -126,16 +135,19 @@ namespace BlackDawn.DOTS
                 UVTable = _UVTable,
                 UVchar = _UVchar,
                 CurrentTime = SystemAPI.Time.ElapsedTime,
-                Ecb = ecb.AsParallelWriter()
+                Ecb = ecb2.AsParallelWriter()
             }.ScheduleParallel(state.Dependency);
-            state.Dependency.Complete();
+            //  state.Dependency.Complete();
 
 
-            ecb.Playback(_entityManager);
-            ecb.Dispose();
+
+
+
+            //ecb.Playback(_entityManager);
+            //ecb.Dispose();
         }
 
-        public void OnDestroy(ref SystemState state) 
+        public void OnDestroy(ref SystemState state)
         {
             //释放 UV表 UV字符索引
             _UVTable.Dispose();
@@ -201,7 +213,7 @@ namespace BlackDawn.DOTS
         }
 
         // 高性能接口：查 index
-        private  int GetCharIndex(char c)
+        private int GetCharIndex(char c)
         {
             for (int i = 0; i < _UVchar.Length; i++)
             {
@@ -238,43 +250,11 @@ namespace BlackDawn.DOTS
         #endregion
         public void OnStopRunning(ref SystemState state)
         {
-          
+
         }
 
 
-        /// <summary>
-        /// 开关子物体燃烧状态
-        /// </summary>
-        /// <param name="parent"></param>
-        /// <param name="index"></param>
-        /// <param name="em"></param>
-        /// <param name="ecb"></param>
-        /// <param name="active"></param>
-        private void ToggleChildActive(Entity parent, int index,
-        EntityManager em, EntityCommandBuffer ecb, bool active)
-        {
-            // 拿到 LinkedEntityGroup 里的子实体
-            var linked = em.GetBuffer<LinkedEntityGroup>(parent);
-            Entity child = linked[index].Value;
-
-            // 先读出当前的 LocalTransform
-            var lt = em.GetComponentData<LocalTransform>(child);
-
-            if (active)
-            {
-                // 恢复原始缩放（假设原先是 1f，或者你可以在某处缓存它）
-                lt.Scale = 1;
-            }
-            else
-            {
-                // 把 Scale 设为 0，Hybrid Renderer 无法绘制零尺度对象,这里GPU相关的代码也无法运行
-                lt.Scale = 0f;
-            }
-
-            ecb.SetComponent(child, lt);
-        }
     }
-
 
 
     /// <summary>
@@ -305,13 +285,13 @@ namespace BlackDawn.DOTS
         void Execute(
             Entity entity,
             [EntityIndexInQuery] int sortKey,
-            RefRO<Parent> parentRO,        
+            in Parent parentRO,        
             RenderParameterAspect mat)
         {
             using (m_Execute.Auto())
             {
                 // DevDebug.Log("进入渲染JOB"); 
-                var monster = parentRO.ValueRO.Value;
+                var monster = parentRO.Value;
                 var linkedGroup = LinderGroupLookup[monster];
                 //获取控制组件
                 var control = MonsterControlledEffectAttrLookup[monster];

@@ -32,7 +32,8 @@ namespace BlackDawn.DOTS
         {
             _monsterTempDotDamage.Update(ref state);
             var timer = SystemAPI.Time.DeltaTime;
-            var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            //var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
 
             //DevDebug.LogError("更新DOT 伤害计算");
@@ -46,10 +47,10 @@ namespace BlackDawn.DOTS
 
             }.ScheduleParallel(state.Dependency);
 
-            state.Dependency.Complete();
+            //state.Dependency.Complete();
 
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
+            //ecb.Playback(state.EntityManager);
+            //ecb.Dispose();
         }
 
 
@@ -125,10 +126,10 @@ namespace BlackDawn.DOTS
                 triggerMask > 0f
             );
 
-            // 4) 写回 monsterDebuff（dotTimer 保持最新）
-            ECB.SetComponent(index, entity, monsterDebuff);
-            //5） 写回 生命变化
-            ECB.SetComponent(index, entity, monsterDefense);
+            //// 4) 写回 monsterDebuff（dotTimer 保持最新）
+            //ECB.SetComponent(index, entity, monsterDebuff);
+            ////5） 写回 生命变化
+            //ECB.SetComponent(index, entity, monsterDefense);
 
         }
     }

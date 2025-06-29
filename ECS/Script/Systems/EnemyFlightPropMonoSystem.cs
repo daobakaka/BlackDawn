@@ -64,9 +64,14 @@ namespace BlackDawn.DOTS
         {
             // 存活时间处理
             enemyFlightProp.survivalTime -= Time;
-            if (enemyFlightProp.survivalTime <= 0f || enemyFlightProp.destory == true)
+
+            if (enemyFlightProp.destory == true)
+                return;
+
+
+            if (enemyFlightProp.survivalTime <= 0f)
             {
-                ECB.DestroyEntity(sortKey, entity);
+                enemyFlightProp.destory = true;
                 return;
             }
 

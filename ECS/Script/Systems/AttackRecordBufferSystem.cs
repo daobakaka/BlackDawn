@@ -60,8 +60,8 @@ namespace BlackDawn.DOTS
 
             }.ScheduleParallel(state.Dependency);
 
-
-
+            //×îºó×èÈû
+            state.Dependency.Complete();
 
         }
 

@@ -6,6 +6,7 @@ using Unity.Physics;
 using Unity.Mathematics;
 using Unity.Transforms;
 using Unity.Profiling;
+using System.Globalization;
 
 //用于英雄技能的检测以及伤害计算,这个系统在基础伤害系统之后进行更新
 namespace BlackDawn.DOTS
@@ -51,7 +52,7 @@ namespace BlackDawn.DOTS
             _skillDamage = SystemAPI.GetComponentLookup<SkillsDamageCalPar>(true);
             _linkedLookup = SystemAPI.GetBufferLookup<LinkedEntityGroup>(true);
             _transform = SystemAPI.GetComponentLookup<LocalTransform>(true);
-            _monsterTempDamageTextLookup = SystemAPI.GetComponentLookup<MonsterTempDamageText>(false);
+            _monsterTempDamageTextLookup = SystemAPI.GetComponentLookup<MonsterTempDamageText>(true);
             _monsterTempDotDamageTextLookup = SystemAPI.GetComponentLookup<MonsterTempDotDamageText>(false);
             _monsterDebuffAttrLookup = SystemAPI.GetComponentLookup<MonsterDebuffAttribute>(true);
             _monsterDotDamageBufferLookup = SystemAPI.GetBufferLookup<MonsterDotDamageBuffer>(true);
@@ -112,7 +113,7 @@ namespace BlackDawn.DOTS
             {
 
                 DamageTextLookop = _monsterTempDamageTextLookup,
-                DamageDotTextLookop = _monsterTempDotDamageTextLookup,
+                ECB=ecbWriter,
 
 
             }.ScheduleParallel(state.Dependency);
@@ -502,12 +503,14 @@ new ProfilerMarker("SkillDamageJob.Execute");
     partial struct ApplyHeroSkillPropBufferAggregatesJob : IJobEntity
     {
         //采用这种声明不安全的做法，处理更轻量化，但在需要使用前，临时更新一次
-        [NativeDisableParallelForRestriction]
+        [ReadOnly]
         public ComponentLookup<MonsterTempDamageText> DamageTextLookop;
-        [NativeDisableParallelForRestriction]
-        public ComponentLookup<MonsterTempDotDamageText> DamageDotTextLookop;
+        public EntityCommandBuffer.ParallelWriter ECB;
+
+
         void Execute(
             Entity e,
+             [EntityIndexInQuery] int sortKey, // 新增 sortKey（并发安全）
             EnabledRefRO<LiveMonster> live,
             ref MonsterDefenseAttribute def,
             ref MonsterControlledEffectAttribute ctl,
@@ -564,9 +567,9 @@ new ProfilerMarker("SkillDamageJob.Execute");
             //写回伤害
             damageText.hurtVlue += sum.damage;
 
-            DamageTextLookop[linkedEntity[2].Value] = damageText;
+          //  DamageTextLookop[linkedEntity[2].Value] = damageText;
 
-
+            ECB.SetComponent(sortKey, linkedEntity[2].Value, damageText);
             // 5) 清空 buffer，为下一帧重用
             accBuf.Clear();
 

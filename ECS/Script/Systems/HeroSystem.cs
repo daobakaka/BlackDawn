@@ -17,8 +17,8 @@ namespace BlackDawn.DOTS
 {
     [BurstCompile]
     //renderEFects 处理所有渲染效果包括文字,在渲染系统之前执行
-    [UpdateBefore(typeof(RenderEffectSystem))]
-    [UpdateInGroup(typeof(ActionSystemGroup))]
+    [UpdateInGroup(typeof(MainThreadSystemGroup))]
+    [UpdateAfter(typeof(MonsterMonoSystem))]
     public partial struct HeroSystem : ISystem, ISystemStartStop
     {
         ComponentLookup<LocalTransform> m_transform;
@@ -29,6 +29,8 @@ namespace BlackDawn.DOTS
         ProjectDawn.Navigation.Sample.Crowd.Spawner _crowdSpawner;
 
         private SystemHandle _detectionSystemHandle;
+
+        private SystemHandle _overlapDetectionSystemHandle;
         public void OnCreate(ref SystemState state)
         {
             //先失活，在mono中激活，便于控制流程，由英雄初始化开启
@@ -36,8 +38,8 @@ namespace BlackDawn.DOTS
             m_transform = state.GetComponentLookup<LocalTransform>(true);
             m_localToWorld = state.GetComponentLookup<LocalToWorld>(true);
             m_detection_DefaultCmpt = state.GetComponentLookup<Detection_DefaultCmpt>(true);
-            //---    侦察系统
-            _detectionSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
+
+           
 
         }
         /// <summary>
@@ -51,6 +53,10 @@ namespace BlackDawn.DOTS
             _heroEntity = Hero.instance.heroEntity;
             //传输目标位置
             targetPosition = float3.zero;
+
+            //---    侦察系统
+            _detectionSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
+            _overlapDetectionSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<OverlapDetectionSystem>();
             Debug.Log("重启系统英雄");
         }
 
@@ -80,17 +86,49 @@ namespace BlackDawn.DOTS
             //获取收集世界单例
             var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
             var arcanelCorcleHitsArray = detectionSystem.arcaneCircleHitHeroArray;
-            //ECB
-            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
-            //  DevDebug.LogError("英雄碰撞对" + arcanelCorcleHitsArray.Length);
-            //处理侦测器
-            foreach (var (transform, dec) in SystemAPI.Query<RefRW<LocalTransform>, RefRW<Detection_DefaultCmpt>>())
+            //主动范围检测系统单例
+            var overlapSystem = state.WorldUnmanaged.GetUnsafeSystemRef<OverlapDetectionSystem>(_overlapDetectionSystemHandle);
+            var detectionHitsOverTimeArray = overlapSystem.detectionOverlapMonsterArray;
 
+            //英雄系统， 对所有怪
+            var ecb = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+
+            //销毁 所有 基础飞行道具，英雄技能等
+            foreach (var (directFlightProp, flightPro, entity) in SystemAPI.Query<RefRW<DirectFlightPropCmpt>, RefRW<FlightPropDamageCalPar>>().WithEntityAccess())
             {
-                transform.ValueRW.Position = targetPosition;
-                // break; 
+                if (directFlightProp.ValueRO.originalSurvivalTime <= 0)
+                {
+                    ecb.DestroyEntity(entity);
+                }
+                else if (flightPro.ValueRO.destory == true)
+                {
+
+                    ecb.DestroyEntity(entity);
+                }
+
             }
+
+            //最开始的全局飞行技能消除
+            foreach (var (skillCal, entity) in SystemAPI.Query<RefRO<SkillsDamageCalPar>>().WithEntityAccess())
+            {
+
+                if (skillCal.ValueRO.destory == true)
+
+                    ecb.DestroyEntity(entity);
+
+            }
+            //最开始的全局持续性技能消除
+            foreach (var (skillCal, entity) in SystemAPI.Query<RefRO<SkillsOverTimeDamageCalPar>>().WithEntityAccess())
+            {
+
+                if (skillCal.ValueRO.destory == true)
+
+                    ecb.DestroyEntity(entity);
+
+            }
+
+
             //处理英雄自身的增益恢复效果
             foreach (var (transform, heroAttr, stateNoImmunity) in SystemAPI.Query<RefRW<HeroEntityMasterTag>, RefRW<HeroAttributeCmpt>, RefRW<HeroIntgratedNoImmunityState>>())
 

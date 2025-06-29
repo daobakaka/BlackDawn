@@ -52,9 +52,7 @@ namespace BlackDawn.DOTS
            
             var hitsArray = detectionSystem.heroHitMonsterArray;
 
-            //var ecb = new EntityCommandBuffer(Allocator.TempJob);
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
-            //var ecbWriter = ecb.AsParallelWriter();
             state.Dependency = new ApplyEnemyBaseDamageJob
             {
                 ECB = ecb.AsParallelWriter(),
@@ -64,11 +62,11 @@ namespace BlackDawn.DOTS
                 RecordBufferLookup = _recordBufferLookup,
                 IntgratedNoImmunityStateLookup =_heroIntgrateNoImmunityStateLookup
                
-            }.Schedule(hitsArray.Length, 64, state.Dependency);
+            }.ScheduleParallel(hitsArray.Length, 64, state.Dependency);
 
-            //state.Dependency.Complete();
-            //ecb.Playback(state.EntityManager);
-            //ecb.Dispose();
+            state.Dependency.Complete();
+
+
         }
 
         void OnDestroy(ref SystemState state) { }
@@ -86,7 +84,7 @@ namespace BlackDawn.DOTS
     /// 敌人近战伤害与英雄的碰撞计算，这里简化逻辑，近战、远程怪，碰到就会掉血
     /// </summary>
     [BurstCompile]
-    struct ApplyEnemyBaseDamageJob : IJobParallelFor
+    struct ApplyEnemyBaseDamageJob : IJobFor
     {
         public EntityCommandBuffer.ParallelWriter ECB;
         //这里就是计算英雄自身扣血逻辑

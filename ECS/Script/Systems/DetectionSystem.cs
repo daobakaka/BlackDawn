@@ -118,28 +118,7 @@ namespace BlackDawn.DOTS
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var speedEcb = new EntityCommandBuffer(Allocator.Temp);
-          
-            //最开始的全局飞行技能消除
-            foreach (var (skillCal, entity) in SystemAPI.Query<RefRO<SkillsDamageCalPar>>().WithEntityAccess())
-            {
 
-                if (skillCal.ValueRO.destory == true)
-
-                    speedEcb.DestroyEntity(entity);
-            
-            }
-            //最开始的全局持续性技能消除
-            foreach (var (skillCal, entity) in SystemAPI.Query<RefRO<SkillsOverTimeDamageCalPar>>().WithEntityAccess())
-            {
-
-                if (skillCal.ValueRO.destory == true)
-
-                    speedEcb.DestroyEntity(entity);
-
-            }
-            speedEcb.Playback(state.EntityManager);
-            speedEcb.Dispose();
           //  DetectionTriggerJob._enqueueCounter = 0;
 
 
@@ -236,10 +215,8 @@ namespace BlackDawn.DOTS
                 PoisonRainAHitMonsterQueue =poisonRainAHitMonsterQueue,
 
 
-            }
+            }.Schedule(sim, state.Dependency);
 
-
-            .Schedule(sim, state.Dependency);
             // 等待收集完成，这里收集原始碰撞数据，要等待完成
              state.Dependency.Complete();
             //这里会分配新的内存， 所以需要在开始释放
@@ -258,16 +235,15 @@ namespace BlackDawn.DOTS
             posionRainAHitMonsterArray =_poisonRainAHitMonster.ToArray(Allocator.Persistent);
 
 
+            //if (skillOverTimeHitMonsterArray.Length > 0)
+            //    DevDebug.Log("event 时间长度" + skillOverTimeHitMonsterArray.Length);
+
            // DevDebug.LogError("元素共鸣结构长度" + combinedElementResonanceArray.Length +"命中共鸣体的基础子弹长度"+basePropElementResonanceArray.Length);
 
             // DevDebug.LogError(arcaneCircleHitMonsterArray.Length);
             //  CheckNumberOfDetection(ref state);
 
 
-
-            // 2. 并行筛选：遍历每个实体的 buffer，选最近的目标并清空 buffer，不需要被依赖
-            state.Dependency = new ApplyNearestJob()
-                .ScheduleParallel(state.Dependency);
 
         }
 
@@ -396,20 +372,18 @@ namespace BlackDawn.DOTS
 
            // DevDebug.LogError($"enttyA:{a.Index} entityB{b.Index} ");
 
-           // // 检测周围实体（玩家→怪物）
-            CheckAndAddNearbyHit(a, b);
-           // CheckAndAddNearbyHit(b, a);
+
            // // 2) 处理元素共鸣同时碰撞的效果
            //ProcessCombined(a, b);
 
            // // 分类写入碰撞对容器
-           // AddIfMatch(a, b, HeroEntityMasterTagLookup, LiveMonsterLookup, HeroHitMonsterQueue, true);
+            AddIfMatch(a, b, HeroEntityMasterTagLookup, LiveMonsterLookup, HeroHitMonsterQueue, true);
            // AddIfMatch(b, a, HeroEntityMasterTagLookup, LiveMonsterLookup, HeroHitMonsterQueue, true);
 
-           // AddIfMatch(a, b, EnemyFlightPropLookup, HeroEntityMasterTagLookup, EnemyFlightHitHeroQueue, false);
-           // AddIfMatch(b, a, EnemyFlightPropLookup, HeroEntityMasterTagLookup, EnemyFlightHitHeroQueue, false);
+            AddIfMatch(a, b, EnemyFlightPropLookup, HeroEntityMasterTagLookup, EnemyFlightHitHeroQueue, false);
+            AddIfMatch(b, a, EnemyFlightPropLookup, HeroEntityMasterTagLookup, EnemyFlightHitHeroQueue, false);
 
-           // AddIfMatch(a, b, FlightPropDamageCalParLookup, LiveMonsterLookup, FlightHitMonsterQueue, true);
+            AddIfMatch(a, b, FlightPropDamageCalParLookup, LiveMonsterLookup, FlightHitMonsterQueue, true);
            // AddIfMatch(b, a, FlightPropDamageCalParLookup, LiveMonsterLookup, FlightHitMonsterQueue, true);
 
             //飞行技能
@@ -417,7 +391,7 @@ namespace BlackDawn.DOTS
             // AddIfMatch(b, a, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
 
             //持续性技能
-            AddIfMatch(a, b, SkillOverTimePropDamageCalParLookup, LiveMonsterLookup, SkillOverTimeHitMonsterQueue, true);
+           // AddIfMatch(a, b, SkillOverTimePropDamageCalParLookup, LiveMonsterLookup, SkillOverTimeHitMonsterQueue, true);
             // AddIfMatch(b, a, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
 
             // //怪物与法阵碰撞
@@ -607,38 +581,6 @@ namespace BlackDawn.DOTS
 
 
 
-        [BurstCompile]
-        partial struct ApplyNearestJob : IJobEntity
-        {
-            public void Execute(ref HeroAttackTarget det, DynamicBuffer<NearbyHit> hits)
-            {
-                // 如果这一帧没有任何命中，就清空目标
-                if (hits.Length == 0)
-                {
-                    det.attackTarget = Entity.Null;
-                    return;
-                }
-
-                // 否则遍历 buffer，找到距离平方最小的实体
-                float best = float.MaxValue;
-                Entity target = Entity.Null;
-
-                for (int i = 0; i < hits.Length; i++)
-                {
-                    var h = hits[i];
-                    if (h.sqrDist < best)
-                    {
-                        best = h.sqrDist;
-                        target = h.other;
-                    }
-                }
-
-                det.attackTarget = target;
-
-                // 清空以备下一帧
-                hits.Clear();
-            }
-        }
 
     
 }

@@ -16,8 +16,7 @@ namespace BlackDawn.DOTS
     //先伤害计算，再更新状态
     [BurstCompile]
     [RequireMatchingQueriesForUpdate]
-    [UpdateAfter(typeof(FlightPropMonoSystem))]
-    [UpdateInGroup(typeof(ActionSystemGroup))]
+    [UpdateInGroup(typeof(MainThreadSystemGroup))]
     public partial struct HeroSkillsMonoSystem : ISystem,ISystemStartStop
     {
         ComponentLookup<LocalTransform> _transform;
@@ -68,8 +67,8 @@ namespace BlackDawn.DOTS
      
 
 
-         
-            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+         //主线成逻辑采用开头写
+            var ecb = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             
         
                 
@@ -156,7 +155,7 @@ namespace BlackDawn.DOTS
                                     //设置怪物对应的暗影池的值为0
                                     monsterAttr.shadowPool = 0;
                                     //这里写回 仅修改一条， 后期考虑组件拆分
-                                    state.EntityManager.SetComponentData(buffer[i].other, monsterAttr);
+                                    ecb.SetComponent(buffer[i].other, monsterAttr);
                                     //这里播放暗影吞噬特效？                     
                                 }
                                 buffer[i] = temp;
