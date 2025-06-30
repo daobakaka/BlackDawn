@@ -81,7 +81,7 @@ namespace BlackDawn.DOTS
             .ScheduleParallel(hitsArray.Length, 64, state.Dependency);
 
 
-            state.Dependency.Complete();
+           // state.Dependency.Complete();
 
             //// 3. 回放并清理
             //ecb.Playback(state.EntityManager);

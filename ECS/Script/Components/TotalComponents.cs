@@ -6,7 +6,16 @@ using Unity.Physics;
 
 namespace BlackDawn.DOTS
 {
+    /// <summary>
+    /// 形状
+    /// </summary>
+  
+    public enum OverLapShape
+    {
+        Sphere,
+        Box
 
+    }
 
     /// 怪物状态
     /// </summary>
@@ -36,15 +45,19 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// 主动范围查询结构
+    /// 主动范围查询结构/球形/盒形
     /// </summary>
     public struct OverlapQueryCenter : IComponentData
     {
-        public float3 Center;
-        public float Radius;
+        public OverLapShape shape;
+        public float3 box;
+        public float3 center;
+        public float radius;
         public float3 offset;
-        public CollisionFilter Filter; // 每个Overlap可自定义过滤规则
+        public float4 rotaion;
+        public CollisionFilter filter; // 每个Overlap可自定义过滤规则
     }
+
 
     /// <summary>
     /// 主动范围查询Buffer
@@ -52,7 +65,7 @@ namespace BlackDawn.DOTS
     [InternalBufferCapacity(100)]
     public struct OverlapDetectionResult : IBufferElementData
     {
-        public Entity Target;
+        public Entity target;
     }
 
     #region 怪物标签

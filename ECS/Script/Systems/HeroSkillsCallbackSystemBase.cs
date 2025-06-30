@@ -27,6 +27,12 @@ namespace BlackDawn.DOTS
 
         private SystemHandle _detectionSystemHandle;
 
+        private Entity _heroEntity;
+        //直接引用mono的单例位置，会卡顿
+        private ComponentLookup<LocalTransform> _transformLookup;
+        //英雄属性
+        private ComponentLookup<HeroAttributeCmpt> _heroAttribute;
+
 
         //法阵技能的GPUbuffer
         GraphicsBuffer _arcaneCirclegraphicsBuffer;
@@ -40,6 +46,8 @@ namespace BlackDawn.DOTS
             _specialSkillsDamageSystemHandle = World.Unmanaged.GetExistingUnmanagedSystem<HeroSpecialSkillsDamageSystem>();
             _arcaneCirclegraphicsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, 5000, sizeof(float) * 3);
             _detectionSystemHandle = World.Unmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
+            _transformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true);
+            _heroAttribute = SystemAPI.GetComponentLookup<HeroAttributeCmpt>(true);
 
         }
 
@@ -49,18 +57,24 @@ namespace BlackDawn.DOTS
             _heroSkills = HeroSkills.GetInstance();
 
             _prefabs = SystemAPI.GetSingleton<ScenePrefabsSingleton>();
+            //获取英雄entity
+            _heroEntity = Hero.instance.heroEntity;
 
         }
 
         protected override void OnUpdate()
         {
-            
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
-            // var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
-           // var ecb = World.GetOrCreateSystemManaged<BeginSimulationEntityCommandBufferSystem>().CreateCommandBuffer();
+            //base系统更新
+            _transformLookup.Update(this);
+            //hero属性更新
+            _heroAttribute.Update(this);
+
+            //获取英雄属性
+            var heroPar = _heroAttribute[_heroEntity];
+
+            var ecb = World.GetOrCreateSystemManaged<BeginSimulationEntityCommandBufferSystem>().CreateCommandBuffer();
 
             var timer = SystemAPI.Time.DeltaTime;
-
 
             var specialDanafeSystem = World.Unmanaged.GetUnsafeSystemRef<HeroSpecialSkillsDamageSystem>(_specialSkillsDamageSystemHandle);
 
@@ -75,7 +89,15 @@ namespace BlackDawn.DOTS
            .WithName("DrawOverlapSpheres")
            .ForEach((in OverlapQueryCenter overlap) =>
            {
-               DebugDrawSphere(overlap.Center, overlap.offset, overlap.Radius, Color.yellow, 0.02f);
+
+               if (overlap.shape == OverLapShape.Sphere)
+                   DebugDrawSphere(overlap.center, overlap.offset, overlap.radius, Color.yellow, 0.02f);
+               else if (overlap.shape == OverLapShape.Box)
+               {
+                   quaternion rot = new quaternion(overlap.rotaion); // 四元数
+                   DebugDrawBox(overlap.center, overlap.offset, overlap.box, rot, Color.green, 0.02f);
+               }
+
            }).WithoutBurst().Run();
 
 
@@ -372,13 +394,95 @@ namespace BlackDawn.DOTS
            }).WithoutBurst().Run();
 
 
+            //技能 暗影洪流,引导，跟随，旋转
+            Entities
+            .WithName("SkillOverTimeShadowTide")
+            .ForEach((Entity entity, VisualEffect vfx,
+               ref SkillShadowTideTag skillTag,
+               ref OverlapQueryCenter overlap,
+               ref SkillsOverTimeDamageCalPar damageCalPar,
+               ref LocalTransform transform) =>
+            {
+                skillTag.tagSurvivalTime -= timer;
+
+                //同步碰撞体
+                overlap.center = _transformLookup[_heroEntity].Position;
+                overlap.rotaion = _transformLookup[_heroEntity].Rotation.value;
+                //偏移Y1的距离
+                transform.Position = _transformLookup[_heroEntity].Position+new float3(0,1,0);
+                transform.Rotation = _transformLookup[_heroEntity].Rotation;
+                 if (skillTag.tagSurvivalTime <= 0)
+                    {
+                        //钳制到0 每秒消耗5点
+                        heroPar.defenseAttribute.energy = math.max(0, heroPar.defenseAttribute.energy - 5 * timer);
+
+                        if (heroPar.defenseAttribute.energy <= 0)
+                        {
+
+                            skillTag.closed = true;
+                        }
+                        ecb.SetComponent(_heroEntity, heroPar);
+
+                    }
+                if (skillTag.closed == true)
+                {
+                    vfx.Stop();
+                    skillTag.effectDissolveTime += timer;
+                    if(skillTag.effectDissolveTime>=1)
+                    damageCalPar.destory = true;
+                }
+                if (skillTag.enableSecondB)
+                {
+                    skillTag.secondBTimer += timer;
+                    //5秒一次的进入
+                    if (skillTag.secondBTimer <= 3f && skillTag.secondBTimer > 3f - timer)
+                      {
+                        skillTag.secondBTimer = 0;
+                        //进入清零，进行30%概率随机判断，成功则释放技能,转化型伤害 默认白色
+                        if (UnityEngine.Random.Range(0, 1f) < 0.5f)
+
+                        {  //释放技能b
+                            var shadowTideB = ecb.Instantiate(_prefabs.HeroSkillAssistive_ShadowTideB);
+                            var currentTransform = _transformLookup[entity]; 
+
+                          var skillsDamageCalPar = new SkillsDamageCalPar();
+                            //继承2倍暗影伤害
+                            skillsDamageCalPar.fireDamage = damageCalPar.shadowDamage;
+                            //造成等量的DOT 伤害
+                            skillsDamageCalPar.fireDotDamage = damageCalPar.shadowDamage;
+                            skillsDamageCalPar.damageChangePar = skillTag.skillDamageChangeParTag * 2 * (1 + 0.1f * skillTag.level);
+                            skillsDamageCalPar.heroRef = _heroEntity;
+
+                            ecb.AddComponent(shadowTideB, skillsDamageCalPar);
+                            //添加专属技能标签,持续3秒？
+                            ecb.AddComponent(shadowTideB, new SkillShadowTideBTag() { tagSurvivalTime = 1.0f });
+
+                            ecb.SetComponent(shadowTideB, new LocalTransform
+                            {
+                                Position = currentTransform.Position,
+                                Rotation = currentTransform.Rotation,
+                                Scale = 1f
+                            });
+                            // 6) 添加碰撞记录缓冲区
+                            var hits = ecb.AddBuffer<HitRecord>(shadowTideB);
+                            ecb.AddBuffer<HitElementResonanceRecord>(shadowTideB);
+                        }
+
+                    }
+                               
+                }
+   
+
+            }).WithoutBurst().Run();
+
+
 
 
 
 
             // 播放并清理
-            ecb.Playback(base.EntityManager);
-            ecb.Dispose();
+            //ecb.Playback(base.EntityManager);
+            //ecb.Dispose();
 
 
         }
@@ -424,5 +528,50 @@ namespace BlackDawn.DOTS
                     color, duration);
             }
         }
+
+        void DebugDrawBox(float3 center, float3 offset, float3 boxSize, quaternion rotation, Color color, float duration)
+        {
+            float3 halfExtents = boxSize * 0.5f;
+
+            // 旋转 offset
+            float3 rotatedOffset = math.mul(rotation, offset);
+
+            // 实际中心
+            float3 boxCenter = center + rotatedOffset;
+
+            // 8 个角点（在本地坐标下）
+            float3[] localCorners = new float3[8]
+            {
+                new float3(-1, -1, -1),
+                new float3( 1, -1, -1),
+                new float3( 1,  1, -1),
+                new float3(-1,  1, -1),
+                new float3(-1, -1,  1),
+                new float3( 1, -1,  1),
+                new float3( 1,  1,  1),
+                new float3(-1,  1,  1),
+            };
+
+            // 应用缩放和旋转，得到世界空间角点
+            for (int i = 0; i < 8; i++)
+            {
+                localCorners[i] *= halfExtents;
+                localCorners[i] = math.mul(rotation, localCorners[i]) + boxCenter;
+            }
+
+            // 画边线（连接 12 条边）
+            int3[] edges = new int3[12]
+            {
+                new int3(0,1,0), new int3(1,2,0), new int3(2,3,0), new int3(3,0,0),
+                new int3(4,5,0), new int3(5,6,0), new int3(6,7,0), new int3(7,4,0),
+                new int3(0,4,0), new int3(1,5,0), new int3(2,6,0), new int3(3,7,0),
+            };
+
+            for (int i = 0; i < 12; i++)
+            {
+                Debug.DrawLine(localCorners[edges[i].x], localCorners[edges[i].y], color, duration);
+            }
+        }
+
     }
 }

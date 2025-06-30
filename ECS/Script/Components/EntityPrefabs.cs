@@ -138,6 +138,8 @@ namespace BlackDawn.DOTS
                     HeroSkillAssistive_Frost = GetSafe(auth.skillAssistivePrefabs, HeroSkillAssistiveID.Frost_Fragment),
                     HeroSkillAssistive_ElectroCage_Lightning =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.ElectroCage_Lightning),
                     HeroSkillAssistive_PoisonRainB =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.PoisonRainB),
+                    HeroSkillAssistive_ShadowTideA = GetSafe(auth.skillAssistivePrefabs, HeroSkillAssistiveID.ShadowTideA),
+                    HeroSkillAssistive_ShadowTideB = GetSafe(auth.skillAssistivePrefabs, HeroSkillAssistiveID.ShadowTideB),
 
 
 
@@ -366,7 +368,9 @@ namespace BlackDawn.DOTS
             public Entity HeroSkillAssistive_IceFireFire;
             public Entity HeroSkillAssistive_Frost;
             public Entity HeroSkillAssistive_ElectroCage_Lightning;
-            public Entity HeroSkillAssistive_PoisonRainB;    
+            public Entity HeroSkillAssistive_PoisonRainB;
+            public Entity HeroSkillAssistive_ShadowTideA;
+            public Entity HeroSkillAssistive_ShadowTideB;//瞬时伤害？    
             // Monster Skills
             public Entity MonsterSkill_DeathPulse;
             // Monster Entities

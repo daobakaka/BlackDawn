@@ -91,6 +91,8 @@ namespace BlackDawn.DOTS
           //var ecb = new EntityCommandBuffer(Allocator.TempJob);
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             var ecbWriter = ecb.AsParallelWriter();
+            //自定义 更新系统组
+            var ecb1 = SystemAPI.GetSingleton<CustomEndActionECBSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             state.Dependency= new ApplySkillDamageJob
             {
                 ECB = ecbWriter,
@@ -113,7 +115,7 @@ namespace BlackDawn.DOTS
             {
 
                 DamageTextLookop = _monsterTempDamageTextLookup,
-                ECB=ecbWriter,
+                ECB=ecb1.AsParallelWriter(),
 
 
             }.ScheduleParallel(state.Dependency);

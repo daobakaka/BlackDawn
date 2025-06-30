@@ -64,7 +64,7 @@ namespace BlackDawn.DOTS
                
             }.ScheduleParallel(hitsArray.Length, 64, state.Dependency);
 
-            state.Dependency.Complete();
+           // state.Dependency.Complete();
 
 
         }

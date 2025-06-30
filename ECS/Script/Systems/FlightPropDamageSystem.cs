@@ -91,6 +91,9 @@ namespace BlackDawn.DOTS
             // 2. 并行应用伤害 & 销毁道具,重要job 结构
 
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            //自定义ECB buffer ,位于RenderEffects 之前运行
+            var ecb1 = SystemAPI.GetSingleton<CustomEndActionECBSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+
 
             state.Dependency = new ApplyPropDamageJob
             {
@@ -110,12 +113,12 @@ namespace BlackDawn.DOTS
                 DotDamageBufferLookup=_monsterDotDamageBufferLookup
             }
             .ScheduleParallel(hitsArray.Length, 64, state.Dependency);
-             state.Dependency.Complete();
+            // state.Dependency.Complete();
 
             state.Dependency = new ApplyFlightPropBufferAggregatesJob
             {
                 DamageTextLookop = _monsterTempDamageTextLookup,
-                ECB = ecb.AsParallelWriter(),
+                ECB = ecb1.AsParallelWriter(),
             }.ScheduleParallel(state.Dependency);
 
           //  state.Dependency.Complete();  // 等Job完成再操作ECB

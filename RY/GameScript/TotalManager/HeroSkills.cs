@@ -30,8 +30,11 @@ namespace BlackDawn
         CoroutineController _coroutineController;
 
         Entity _heroEntity;
-        //技能查询模块
+        //技能查询模块,法阵，唯一
         EntityQuery _arcaneCircleQuery;
+        //暗影洪流，引导唯一
+        EntityQuery _shadowTideQuery;
+
         //动态英雄结构查询模块
         EntityQuery _heroRealTimeAttr;
 
@@ -60,6 +63,8 @@ namespace BlackDawn
             _heroEntity = Hero.instance.heroEntity;
             //建立查询
             _arcaneCircleQuery = _entityManager.CreateEntityQuery(typeof(SkillArcaneCircleTag));
+            //暗影洪流
+            _shadowTideQuery = _entityManager.CreateEntityQuery(typeof(SkillShadowTideTag));
             //实时英雄组件查询
             _heroRealTimeAttr = _entityManager.CreateEntityQuery(typeof(HeroAttributeCmpt), typeof(HeroEntityMasterTag));
            
@@ -80,7 +85,7 @@ namespace BlackDawn
             switch (iD)
                 
             {
-                //脉冲
+                //脉冲，瞬时
                 case HeroSkillID.Pulse:
                     switch (psionicType)
                     {
@@ -122,7 +127,7 @@ namespace BlackDawn
 
                     }
                     break;
-                //暗能
+                //暗能，瞬时
                 case HeroSkillID.DarkEnergy:
                     switch (psionicType)
                     {
@@ -145,7 +150,7 @@ namespace BlackDawn
                     }
 
                     break;
-                //冰火
+                //冰火，瞬时？
                 case HeroSkillID.IceFire:
                     switch (psionicType)
                     {
@@ -193,7 +198,7 @@ namespace BlackDawn
                             break;
                     }
                     break;
-               //落雷
+               //落雷，瞬时
                 case HeroSkillID.ThunderStrike:
 
                     switch (psionicType)
@@ -232,7 +237,7 @@ namespace BlackDawn
 
 
                     break;
-                //法阵
+                //法阵，持续
                 case HeroSkillID.ArcaneCircle:
 
                     switch (psionicType)
@@ -364,7 +369,7 @@ namespace BlackDawn
 
 
                     break;
-                //寒冰    
+                //寒冰，瞬时    
                 case HeroSkillID.Frost:
                     switch (psionicType)
                     {
@@ -390,7 +395,7 @@ namespace BlackDawn
                     }
 
                     break;
-                //元素共鸣,非技能标签，不会造成伤害,可以读取等级展示伤害
+                //元素共鸣,持续？，非技能标签，不会造成伤害,可以读取等级展示伤害
                 case HeroSkillID.ElementResonance:
                     switch (psionicType)
                     { case HeroSkillPsionicType.Basic:
@@ -414,7 +419,7 @@ namespace BlackDawn
 
                     }
                     break;
-                //静电牢笼13
+                //静电牢笼，瞬时，持续
                 case HeroSkillID.ElectroCage:
 
                     switch (psionicType)
@@ -469,7 +474,7 @@ namespace BlackDawn
                     }
 
                     break;
-                //毒爆地雷,第一个3阶变化技能
+                //毒爆地雷,瞬时，持续，第一个3阶变化技能
                 case HeroSkillID.MineBlast:
                     switch (psionicType)
                     {
@@ -575,7 +580,179 @@ namespace BlackDawn
 
                     }
                     break;
-                    //毒雨,技能附带的控制参数， 可以通过配置表进行配置
+                //暗影洪流，瞬时,持续，引导
+                case HeroSkillID.ShadowTide:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+
+                            //基础能量大于
+                            bool hasShadowTide = _shadowTideQuery.CalculateEntityCount() > 0;
+
+                            //这里获取世界中的事实entity
+                            var realAttr = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
+                            if (!hasShadowTide)
+                            {
+                                if (realAttr.defenseAttribute.energy >= 20)
+                                {
+                                    realAttr.defenseAttribute.energy -= 20;
+                                    _entityManager.SetComponentData(_heroEntity, realAttr);
+                                    var filter = new CollisionFilter
+                                    {
+                                        //属于道具层
+                                        BelongsTo = 1u << 10,
+                                        //检测敌人
+                                        CollidesWith = 1u << 6,
+                                        GroupIndex = 0
+                                    };
+                                    var overlap = new OverlapQueryCenter { center = Hero.instance.transform.position,radius=1, filter = filter, offset = new float3(0, 0, 15), box = new float3(6, 6,40 ), shape = OverLapShape.Box };
+                                    var entityShadowTide = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_ShadowTide, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                                    _entityManager.AddComponentData(entityShadowTide, new SkillShadowTideTag { tagSurvivalTime = 10, level = 1 });
+                                    var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityShadowTide);
+                                    _entityManager.SetComponentData(entityShadowTide, skillPar);
+                                }
+                            }
+                            else
+                            {
+                                //再次点击手动关闭
+                                var shadowTideEntity = _shadowTideQuery.GetSingletonRW<SkillShadowTideTag>();
+
+                                shadowTideEntity.ValueRW.closed = true;
+
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+
+                            //基础能量大于20 
+                            bool hasShadowTideA = _shadowTideQuery.CalculateEntityCount() > 0;
+
+                            //这里获取世界中的事实entity
+                            var realAttrA = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
+                            if (!hasShadowTideA)
+                            {
+                                if (realAttrA.defenseAttribute.energy >= 20)
+                                {
+                                    realAttrA.defenseAttribute.energy -= 20;
+                                    _entityManager.SetComponentData(_heroEntity, realAttrA);
+                                    var filter = new CollisionFilter
+                                    {
+                                        //属于道具层
+                                        BelongsTo = 1u << 10,
+                                        //检测敌人
+                                        CollidesWith = 1u << 6,
+                                        GroupIndex = 0
+                                    };
+                                    var overlapA = new OverlapQueryCenter { center = Hero.instance.transform.position, radius = 1, filter = filter, offset = new float3(0, 0, 15), box = new float3(3, 3, 40), shape = OverLapShape.Box };
+                                    var entityShadowTideA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_ShadowTideA, overlapA, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                                    _entityManager.AddComponentData(entityShadowTideA, new SkillShadowTideTag { tagSurvivalTime = 3, level = 1 ,skillDamageChangeParTag=2});
+                                    var skillParA = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityShadowTideA);
+                                    //添加引力特效
+                                    skillParA.enablePull = true;
+                                    //伤害翻倍
+                                    skillParA.damageChangePar = 2;
+                                    _entityManager.SetComponentData(entityShadowTideA, skillParA);
+                                }
+                            }
+                            else
+                            {
+                                //再次点击手动关闭
+                                var shadowTideEntity = _shadowTideQuery.GetSingletonRW<SkillShadowTideTag>();
+
+                                shadowTideEntity.ValueRW.closed = true;
+
+                            }
+
+                            break;
+
+                        case HeroSkillPsionicType.PsionicB:
+
+                            //基础能量大于20 
+                            bool hasShadowTideB = _shadowTideQuery.CalculateEntityCount() > 0;
+
+                            //这里获取世界中的事实entity
+                            var realAttrB = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
+                            if (!hasShadowTideB)
+                            {
+                                if (realAttrB.defenseAttribute.energy >= 20)
+                                {
+                                    realAttrB.defenseAttribute.energy -= 20;
+                                    _entityManager.SetComponentData(_heroEntity, realAttrB);
+                                    var filter = new CollisionFilter
+                                    {
+                                        //属于道具层
+                                        BelongsTo = 1u << 10,
+                                        //检测敌人
+                                        CollidesWith = 1u << 6,
+                                        GroupIndex = 0
+                                    };
+                                    var overlapB = new OverlapQueryCenter { center = Hero.instance.transform.position, radius = 1, filter = filter, offset = new float3(0, 0, 15), box = new float3(3, 3, 40), shape = OverLapShape.Box };
+                                    var entityShadowTideB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_ShadowTide, overlapB, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                                    _entityManager.AddComponentData(entityShadowTideB, new SkillShadowTideTag { tagSurvivalTime =3, level = 1, skillDamageChangeParTag = 1,enableSecondB=true });
+                                    var skillParB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityShadowTideB);
+                                    _entityManager.SetComponentData(entityShadowTideB, skillParB);
+                                }
+                            }
+                            else
+                            {
+                                //再次点击手动关闭
+                                var shadowTideEntity = _shadowTideQuery.GetSingletonRW<SkillShadowTideTag>();
+
+                                shadowTideEntity.ValueRW.closed = true;
+
+                            }
+
+                            break;
+
+
+                        case HeroSkillPsionicType.PsionicAB:
+
+                            //基础能量大于20
+                            bool hasShadowTideAB = _shadowTideQuery.CalculateEntityCount() > 0;
+
+                            //这里获取世界中的事实entity
+                            var realAttrAB = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
+                            if (!hasShadowTideAB)
+                            {
+                                if (realAttrAB.defenseAttribute.energy >= 20)
+                                {
+                                    realAttrAB.defenseAttribute.energy -= 20;
+                                    _entityManager.SetComponentData(_heroEntity, realAttrAB);
+                                    var filter = new CollisionFilter
+                                    {
+                                        //属于道具层
+                                        BelongsTo = 1u << 10,
+                                        //检测敌人
+                                        CollidesWith = 1u << 6,
+                                        GroupIndex = 0
+                                    };
+                                    var overlapAB = new OverlapQueryCenter { center = Hero.instance.transform.position, radius = 1, filter = filter, offset = new float3(0, 0, 15), box = new float3(3, 3, 40), shape = OverLapShape.Box };
+                                    var entityShadowTideAB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_ShadowTideA, overlapAB, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                                    _entityManager.AddComponentData(entityShadowTideAB, new SkillShadowTideTag { tagSurvivalTime = 3, level = 1, skillDamageChangeParTag = 2 ,enableSecondB=true});
+                                    var skillParAB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityShadowTideAB);
+                                    //添加引力特效
+                                    skillParAB.enablePull = true;
+                                    //伤害翻倍
+                                    skillParAB.damageChangePar = 2;
+                                    _entityManager.SetComponentData(entityShadowTideAB, skillParAB);
+                                }
+                            }
+                            else
+                            {
+                                //再次点击手动关闭
+                                var shadowTideEntity = _shadowTideQuery.GetSingletonRW<SkillShadowTideTag>();
+
+                                shadowTideEntity.ValueRW.closed = true;
+
+                            }
+
+                            break;
+
+
+
+                    }
+
+                    break;                                      
+                //毒雨,持续,技能附带的控制参数， 可以通过配置表进行配置
                 case HeroSkillID.PoisonRain:
                     switch (psionicType)
                     {
@@ -586,7 +763,7 @@ namespace BlackDawn
                                 CollidesWith = 1u << 6,
                                 GroupIndex = 0
                             };
-                            var overlap = new OverlapQueryCenter { Center = Hero.instance.skillTargetPositon, Radius = 30, Filter = filter, offset = new float3(0, 0, 0) };
+                            var overlap = new OverlapQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filter, offset = new float3(0, 0, 0) };
                             var entityPoisonRain= DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, overlap,Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRain, new SkillPoisonRainTag { tagSurvivalTime = 15 ,level=1});
                             var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRain);
@@ -600,7 +777,7 @@ namespace BlackDawn
                                 CollidesWith = 1u << 6,
                                 GroupIndex = 0
                             };
-                            var overlapA = new OverlapQueryCenter { Center = Hero.instance.skillTargetPositon, Radius = 30, Filter = filterA, offset = new float3(0, 0, 0) };
+                            var overlapA = new OverlapQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filterA, offset = new float3(0, 0, 0) };
                             var entityPoisonRainA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapA ,Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainA, new SkillPoisonRainTag { tagSurvivalTime = 15 ,level=1});
                             var skillParA = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainA);
@@ -617,7 +794,7 @@ namespace BlackDawn
                                 CollidesWith = 1u << 6,
                                 GroupIndex = 0
                             };
-                            var overlapB = new OverlapQueryCenter { Center = Hero.instance.skillTargetPositon, Radius = 30, Filter = filterB,offset=new float3(0,0,0) };
+                            var overlapB = new OverlapQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filterB,offset=new float3(0,0,0) };
                             var entityPoisonRainB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                             int level = 3;
@@ -643,7 +820,7 @@ namespace BlackDawn
                                 CollidesWith = 1u << 6,
                                 GroupIndex = 0
                             };
-                            var overlapAB = new OverlapQueryCenter { Center = Hero.instance.skillTargetPositon, Radius = 30, Filter = filterAB, offset = new float3(0, 0, 0) };
+                            var overlapAB = new OverlapQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filterAB, offset = new float3(0, 0, 0) };
                             var entityPoisonRainAB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapAB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainAB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                             //添加A阶段标签，用于收集判断，非buffer的处理结构？或用于持续性计算
@@ -802,7 +979,7 @@ namespace BlackDawn
             _entityManager.AddComponentData(entity, Hero.instance.skillsOverTimeDamageCalPar);
 
             //8)添加持续性伤害overlap检测
-            if(queryCenter.Radius!=0)
+            if(queryCenter.radius!=0)
             _entityManager.AddComponentData(entity, queryCenter);
 
             var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entity);

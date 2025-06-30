@@ -435,7 +435,40 @@ namespace BlackDawn.DOTS
         public int level;
     }
 
+    /// <summary>
+    /// 暗影洪流
+    /// </summary>
+    public struct SkillShadowTideTag : IComponentData
+    {
 
+        public float tagSurvivalTime;
+        //形变参数
+        public float scaleChangePar;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        public bool enableSecondC;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+        //开始第二阶段
+        public bool startSecondA;
+        //等级
+        public int level;
+        //手动关闭
+        public bool closed;
+        //特效消亡时间
+        public float effectDissolveTime;
+        //B 阶段的时间计数器
+        public float secondBTimer;
+    }
+    /// <summary>
+    ///暗影洪流形成的烈焰喷射技能，仅储存一个时间标签即可，仅继承火焰伤害
+    /// </summary>
+    public struct SkillShadowTideBTag : IComponentData
+    {
+
+        public float tagSurvivalTime;
+
+    }
 }
 
 

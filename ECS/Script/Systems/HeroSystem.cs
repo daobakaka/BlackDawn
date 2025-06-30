@@ -134,7 +134,7 @@ namespace BlackDawn.DOTS
 
             {
                 //精力恢复,这里要添加原始精力
-                heroAttr.ValueRW.defenseAttribute.energy += heroAttr.ValueRW.gainAttribute.energyRegen * timer;
+                heroAttr.ValueRW.defenseAttribute.energy += (heroAttr.ValueRW.gainAttribute.energyRegen+10) * timer;
 
                 heroAttr.ValueRW.defenseAttribute.hp += heroAttr.ValueRW.gainAttribute.hpRegen * timer;
 

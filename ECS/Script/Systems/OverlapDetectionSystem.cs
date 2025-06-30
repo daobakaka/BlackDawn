@@ -1,4 +1,4 @@
-using Unity.Burst;
+ï»¿using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
@@ -7,6 +7,7 @@ using Unity.Physics;
 using Unity.Physics.Systems;
 using Unity.Profiling;
 using Unity.Transforms;
+using UnityEditor.Search;
 
 namespace BlackDawn.DOTS
 {
@@ -16,15 +17,15 @@ namespace BlackDawn.DOTS
     [BurstCompile]
     public partial struct OverlapDetectionSystem : ISystem
     {
-        // ¼ì²â½á¹û·ÖÀà¶ÓÁĞ
+        // æ£€æµ‹ç»“æœåˆ†ç±»é˜Ÿåˆ—
         private NativeQueue<TriggerPairData> _detectionOverlapMonster;
         private NativeQueue<TriggerPairData> _skillOverlapMonster;
 
-        // ¶ÔÍâÖ»¶ÁÊı×é
+        // å¯¹å¤–åªè¯»æ•°ç»„
         public NativeArray<TriggerPairData> detectionOverlapMonsterArray;
         public NativeArray<TriggerPairData> skillOverlapMonsterArray;
 
-        // ²éÑ¯¾ä±ú
+        // æŸ¥è¯¢å¥æŸ„
         private EntityQuery _overlapQuery;
         private ComponentLookup<Detection_DefaultCmpt> _detectionTagLookup;
         private ComponentLookup<LiveMonster> _monsterTagLookup;
@@ -32,6 +33,7 @@ namespace BlackDawn.DOTS
         private ComponentLookup<LocalTransform> _transformLookup;
         private BufferLookup<NearbyHit> _hitBufferLookup;
         private ComponentLookup<OverlapQueryCenter> _overlapQueryCenterLookup;
+        private ComponentLookup<LocalToWorld> _localToWorldLookup;
 
        
 
@@ -40,7 +42,7 @@ namespace BlackDawn.DOTS
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            //ÓĞÍâ²¿Í³Ò»¿ªÆô
+            //æœ‰å¤–éƒ¨ç»Ÿä¸€å¼€å¯
             state.RequireForUpdate<EnableOverlapDetectionSystemTag>();
 
             _detectionOverlapMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
@@ -51,7 +53,7 @@ namespace BlackDawn.DOTS
 
             _overlapQuery = state.GetEntityQuery(ComponentType.ReadOnly<OverlapQueryCenter>());
 
-            // ÕâÀï¼ÙÉèÄãÓĞ PlayerTag¡¢MonsterTag¡¢SkillTag
+            // è¿™é‡Œå‡è®¾ä½ æœ‰ PlayerTagã€MonsterTagã€SkillTag
             _detectionTagLookup = state.GetComponentLookup<Detection_DefaultCmpt>(true);
             _monsterTagLookup = state.GetComponentLookup<LiveMonster>(true);
             _skillTagLookup = state.GetComponentLookup<SkillsOverTimeDamageCalPar>(true);
@@ -59,6 +61,7 @@ namespace BlackDawn.DOTS
             _transformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true);
             _hitBufferLookup = SystemAPI.GetBufferLookup<NearbyHit>(false);
             _overlapQueryCenterLookup =SystemAPI.GetComponentLookup<OverlapQueryCenter>(false);
+            _localToWorldLookup = SystemAPI.GetComponentLookup<LocalToWorld>(true);
         }
 
 
@@ -76,13 +79,14 @@ namespace BlackDawn.DOTS
             DisposeOverLapArrays();
             _skillOverlapMonster.Clear();
 
-            // Ã¿Ö¡Í¬²½Lookup£¬·ÀÖ¹Ê§Ğ§
+            // æ¯å¸§åŒæ­¥Lookupï¼Œé˜²æ­¢å¤±æ•ˆ
             _detectionTagLookup.Update(ref state);
             _monsterTagLookup.Update(ref state);
             _skillTagLookup.Update(ref state);
             _transformLookup.Update(ref state);
             _hitBufferLookup.Update(ref state);
             _overlapQueryCenterLookup.Update(ref state);
+            _localToWorldLookup.Update(ref state);
 
 
             var physicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld;
@@ -98,7 +102,7 @@ namespace BlackDawn.DOTS
               heroEntity = SystemAPI.GetSingletonEntity<HeroEntityMasterTag>();
 
 
-            // JOB×¼±¸£ºÃ¿Ö¡¼ì²âµã²ÎÊı
+            // 1:é€šç”¨æŒç»­æ€§æŠ€èƒ½çš„æ£€æµ‹
             state.Dependency= new SkillOverlapDetectionJob
             {
                 PhysicsWorld = physicsWorld,
@@ -106,12 +110,13 @@ namespace BlackDawn.DOTS
                 Centers = centers,
                 MonsterTagLookup = _monsterTagLookup,
                 SkillTagLookup = _skillTagLookup,
-
+                LocalToWorldLookup=_localToWorldLookup,
+                
                 SkillOverlapMonsterQueue = _skillOverlapMonster.AsParallelWriter(),
             }.ScheduleParallel(entities.Length, 1, state.Dependency);
             state.Dependency.Complete();
 
-            // 2. µ¥¶ÀµÄÕì²âÆ÷µÄbuffer¼ì²â£¬×ßµ¥Ò»µÄµ÷¶È
+            // 2. å•ç‹¬çš„ä¾¦æµ‹å™¨çš„bufferæ£€æµ‹ï¼Œèµ°å•ä¸€çš„è°ƒåº¦
             state.Dependency = new DetectionBufferWriteJob
             {
                 PhysicsWorld = physicsWorld,
@@ -121,23 +126,22 @@ namespace BlackDawn.DOTS
                 TransformTagLookup = _transformLookup,
                 HitBufferLookup = _hitBufferLookup,
                 OverlapQueryLookup=_overlapQueryCenterLookup,
+                
             }.Schedule();
 
 
-            // 2. ²¢ĞĞÉ¸Ñ¡£º±éÀúÃ¿¸öÊµÌåµÄ buffer£¬Ñ¡×î½üµÄÄ¿±ê²¢Çå¿Õ buffer£¬²»ĞèÒª±»ÒÀÀµ
+            // 2. å¹¶è¡Œç­›é€‰ï¼šéå†æ¯ä¸ªå®ä½“çš„ bufferï¼Œé€‰æœ€è¿‘çš„ç›®æ ‡å¹¶æ¸…ç©º bufferï¼Œä¸éœ€è¦è¢«ä¾èµ–
             state.Dependency = new ApplyNearestJob 
             {DetectionTagLookup=_detectionTagLookup,
             OverlapQueryLookup = _overlapQueryCenterLookup,
-            Detector    =detectionEntiy,                 
+            Detector =detectionEntiy,                 
             }
             .ScheduleParallel(state.Dependency);
 
-            // JOBºó£º¶ÓÁĞ×ªÊı×é£¬¶ÔÍâ±©Â¶
+            // JOBåï¼šé˜Ÿåˆ—è½¬æ•°ç»„ï¼Œå¯¹å¤–æš´éœ²
             skillOverlapMonsterArray = _skillOverlapMonster.ToArray(Allocator.Persistent);
-
-
             //if (skillOverlapMonsterArray.Length > 0)
-            //    DevDebug.Log("¼ì²âµ½µÄÊıÁ¿" + skillOverlapMonsterArray.Length);
+            //    DevDebug.Log("æ£€æµ‹åˆ°çš„æ•°é‡" + skillOverlapMonsterArray.Length);
         }
 
         public void OnDestroy(ref SystemState state)
@@ -146,12 +150,14 @@ namespace BlackDawn.DOTS
             _skillOverlapMonster.Dispose();
 
             DisposeOverLapArrays();
+           
         }
 
     }
     /// <summary>
-    ///³ÖĞøĞÔ¼¼ÄÜ¼ì²â
+    ///æŒç»­æ€§æŠ€èƒ½æ£€æµ‹,çƒä½“ï¼Œé•¿æ–¹ä½“
     /// </summary>
+
     [BurstCompile]
     struct SkillOverlapDetectionJob : IJobFor
     {
@@ -160,48 +166,135 @@ namespace BlackDawn.DOTS
         [ReadOnly] public NativeArray<OverlapQueryCenter> Centers;
         [ReadOnly] public ComponentLookup<SkillsOverTimeDamageCalPar> SkillTagLookup;
         [ReadOnly] public ComponentLookup<LiveMonster> MonsterTagLookup;
-
+        [ReadOnly] public ComponentLookup<LocalToWorld> LocalToWorldLookup; // âœ… æ–°å¢ä¸–ç•Œå˜æ¢ç»„ä»¶
+        //é€šç”¨é˜Ÿåˆ—
         public NativeQueue<TriggerPairData>.ParallelWriter SkillOverlapMonsterQueue;
+        //åé¢é€šè¿‡ æŠ€èƒ½è¯»å–ç±»çš„æ¡ä»¶åˆ¤æ–­ï¼Œå¼•å…¥æ–°çš„é˜Ÿåˆ—ï¼Œä»¥ç­›é€‰æ–°çš„æ ‡è¯†ï¼Ÿ
 
         public void Execute(int index)
         {
             var entity = Entities[index];
-            var center = Centers[index].Center;
+            var shape = Centers[index].shape;
+            var center = Centers[index].center;
             var offset = Centers[index].offset;
-            var radius = Centers[index].Radius;
-            var filter = Centers[index].Filter;
+            var radius = Centers[index].radius;
+            var box = Centers[index].box;
+            var filter = Centers[index].filter;
+            var rotation = Centers[index].rotaion;
 
-            var hits = new NativeList<DistanceHit>(Allocator.Temp);
-            var input = new PointDistanceInput
+            // âœ… è·å– LocalToWorld å˜æ¢ï¼ˆç”¨äºå°† offset ä»æœ¬åœ°å˜ä¸ºä¸–ç•Œç©ºé—´ï¼‰
+            var ltw = LocalToWorldLookup[entity];
+            var worldOffset = math.transform(ltw.Value, offset);
+            var actualCenter = center + worldOffset;
+
+            switch (shape)
             {
-                Position = center + offset,
-                MaxDistance = radius,
-                Filter = filter
-            };
-            PhysicsWorld.CalculateDistance(input, ref hits);
+                case OverLapShape.Sphere:
+                    {
+                        var hits = new NativeList<DistanceHit>(Allocator.Temp);
+                        var input = new PointDistanceInput
+                        {
+                            Position = actualCenter,
+                            MaxDistance = radius,
+                            Filter = filter
+                        };
+                        PhysicsWorld.CalculateDistance(input, ref hits);
 
-            for (int j = 0; j < hits.Length; j++)
-            {
-                var targetEntity = PhysicsWorld.Bodies[hits[j].RigidBodyIndex].Entity;
-                if (targetEntity == entity) continue;
+                        for (int j = 0; j < hits.Length; j++)
+                        {
+                            var targetEntity = PhysicsWorld.Bodies[hits[j].RigidBodyIndex].Entity;
+                            if (targetEntity == entity) continue;
 
-                bool isSkill = SkillTagLookup.HasComponent(entity);
-                bool isTargetMonster = MonsterTagLookup.HasComponent(targetEntity);
+                            bool isSkill = SkillTagLookup.HasComponent(entity);
+                            bool isTargetMonster = MonsterTagLookup.HasComponent(targetEntity);
 
-                if (isSkill && isTargetMonster)
-                {
-                    SkillOverlapMonsterQueue.Enqueue(new TriggerPairData { EntityA = entity, EntityB = targetEntity });
-                }
-            }
-            hits.Dispose();
+                            if (isSkill && isTargetMonster)
+                            {
+                                SkillOverlapMonsterQueue.Enqueue(new TriggerPairData { EntityA = entity, EntityB = targetEntity });
+                            }
+                        }
+
+                        hits.Dispose();
+                        break;
+                    }
+
+                case OverLapShape.Box:
+                    {
+                        var hitsBox = new NativeList<DistanceHit>(Allocator.Temp);
+                        float3 halfExtents = box * 0.5f;
+
+                        quaternion rotationQuat = new quaternion(rotation);
+
+                        float3 rotatedOffset = math.mul(rotationQuat, offset);
+                        float3 actualBoxCenter = center + rotatedOffset;
+                                              
+                      
+                        PhysicsWorld.OverlapBox(
+                            actualBoxCenter,
+                            rotationQuat,
+                            halfExtents,
+                            ref hitsBox,
+                            filter
+                        );
+                    
+                        for (int j = 0; j < hitsBox.Length; j++)
+                        {
+                            var targetEntity = PhysicsWorld.Bodies[hitsBox[j].RigidBodyIndex].Entity;
+                            if (targetEntity == entity) continue;
+
+                            if (SkillTagLookup.HasComponent(entity) && MonsterTagLookup.HasComponent(targetEntity))
+                            {
+                                SkillOverlapMonsterQueue.Enqueue(new TriggerPairData
+                                {
+                                    EntityA = entity,
+                                    EntityB = targetEntity
+                                });
+                            }
+                        }
+
+                        hitsBox.Dispose();
+                        break;
+                    }
+
+                    }
         }
+
+        /// <summary>
+        /// job å†…çš„æ–¹æ³•ï¼Œ ä½¿ç”¨é™æ€æ–¹æ³•å†…è”ï¼Œ ç¬¦åˆ burstCompileçš„ç¼–è¯‘è§„åˆ™
+        /// </summary>
+        /// <param name="center"></param>
+        /// <param name="halfExtents"></param>
+        /// <param name="yRotationInRadians"></param>
+        /// <returns></returns>
+       private static Aabb GetRotatedBoxApproximateAABB(float3 center, float3 halfExtents, float yRotationInRadians)
+        {
+            // è®¡ç®—æ—‹è½¬åçš„åŒ…å›´ç›’èŒƒå›´
+            float cos = math.abs(math.cos(yRotationInRadians));
+            float sin = math.abs(math.sin(yRotationInRadians));
+
+            // æ—‹è½¬å XZ æ–¹å‘çš„æœ€å¤§æŠ•å½±é•¿åº¦ï¼ˆç”¨æ¥è®¡ç®— AABBï¼‰
+            float newHalfX = halfExtents.x * cos + halfExtents.z * sin;
+            float newHalfZ = halfExtents.x * sin + halfExtents.z * cos;
+
+            // Y ä¸å˜ï¼ˆä¸è€ƒè™‘å‚ç›´æ—‹è½¬ï¼‰
+            float3 newHalfExtents = new float3(newHalfX, halfExtents.y, newHalfZ);
+
+            return new Aabb
+            {
+                Min = center - newHalfExtents,
+                Max = center + newHalfExtents
+            };
+        }
+
     }
 
 
 
 
+
+
     /// <summary>
-    /// Õì²âÆ÷¼ì²â
+    /// ä¾¦æµ‹å™¨æ£€æµ‹,é»˜è®¤çƒå½¢
     /// </summary>
     struct DetectionBufferWriteJob : IJob
     {
@@ -221,10 +314,10 @@ namespace BlackDawn.DOTS
                 return;
 
             var overlap = OverlapQueryLookup[Detector];
-            var center = overlap.Center;
+            var center = overlap.center;
             var offset = overlap.offset;
-            var radius = overlap.Radius;
-            var filter = overlap.Filter;
+            var radius = overlap.radius;
+            var filter = overlap.filter;
 
             var hits = new NativeList<DistanceHit>(Allocator.Temp);
             var input = new PointDistanceInput
@@ -261,7 +354,9 @@ namespace BlackDawn.DOTS
             hits.Dispose();
         }
     }
-
+    /// <summary>
+    /// ä¾¦æµ‹å™¨bufferçš„å¤„ç†å•ç‹¬è°ƒåº¦å¤„ç†
+    /// </summary>
     [BurstCompile]
     partial struct ApplyNearestJob : IJobEntity
     {
@@ -275,20 +370,20 @@ namespace BlackDawn.DOTS
             var detection_DefaultCmpt = DetectionTagLookup[Detector];
             var overlap = OverlapQueryLookup[Detector];
 
-            overlap.Center = transform.Position;
+            overlap.center = transform.Position;
 
             if (hits.Length > 20)
-                overlap.Radius = math.max(overlap.Radius - 1f, 5f); // ×îĞ¡5
+                overlap.radius = math.max(overlap.radius - 1f, 5f); // æœ€å°5
             else if (hits.Length <= 0)
 
             {
-                overlap.Radius = math.min(overlap.Radius + 1f, detection_DefaultCmpt.originalRadius); // ×î´óoriginalRadius
+                overlap.radius = math.min(overlap.radius + 1f, detection_DefaultCmpt.originalRadius); // æœ€å¤§originalRadius
                 det.attackTarget = Entity.Null;
                 OverlapQueryLookup[Detector] = overlap;
                 return;
             }
 
-            // ·ñÔò±éÀú buffer£¬ÕÒµ½¾àÀëÆ½·½×îĞ¡µÄÊµÌå
+            // å¦åˆ™éå† bufferï¼Œæ‰¾åˆ°è·ç¦»å¹³æ–¹æœ€å°çš„å®ä½“
             float best = float.MaxValue;
             Entity target = Entity.Null;
 
@@ -305,7 +400,7 @@ namespace BlackDawn.DOTS
             det.attackTarget = target;
             OverlapQueryLookup[Detector] = overlap;
 
-            // Çå¿ÕÒÔ±¸ÏÂÒ»Ö¡
+            // æ¸…ç©ºä»¥å¤‡ä¸‹ä¸€å¸§
             hits.Clear();
         }
     }

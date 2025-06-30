@@ -1,9 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Physics.Systems;
 using Unity.Transforms;
 using UnityEngine;
+using Unity.Collections.LowLevel.Unsafe;
+using Unity.Entities.UniversalDelegates;
 
 namespace BlackDawn.DOTS
 {
@@ -38,6 +41,106 @@ namespace BlackDawn.DOTS
 
 
 
+ 
+
 }
+namespace BlackDawn.DOTS
+{
+    //自定义 ecb buffer
+    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateBefore(typeof(RenderEffectSystem))]
+    public partial class CustomEndActionECBSystem : EntityCommandBufferSystem
+    {
+        // The singleton component data access pattern should be used to safely access
+        // the command buffer system. This data will be stored in the derived ECB System's
+        // system entity.
+
+        public unsafe struct Singleton : IComponentData, IECBSingleton
+        {
+            internal UnsafeList<EntityCommandBuffer>* pendingBuffers;
+            internal AllocatorManager.AllocatorHandle allocator;
+
+            public EntityCommandBuffer CreateCommandBuffer(WorldUnmanaged world)
+            {
+                return EntityCommandBufferSystem
+                    .CreateCommandBuffer(ref *pendingBuffers, allocator, world);
+            }
+
+            // Required by IECBSingleton
+            public void SetPendingBufferList(ref UnsafeList<EntityCommandBuffer> buffers)
+            {
+                var ptr = UnsafeUtility.AddressOf(ref buffers);
+                pendingBuffers = (UnsafeList<EntityCommandBuffer>*)ptr;
+            }
+
+            // Required by IECBSingleton
+            public void SetAllocator(Allocator allocatorIn)
+            {
+                allocator = allocatorIn;
+            }
+
+            // Required by IECBSingleton
+            public  void SetAllocator(AllocatorManager.AllocatorHandle allocatorIn)
+            {
+                allocator = allocatorIn;
+            }
+        }
+
+        protected override void OnCreate()
+        {
+            base.OnCreate();
+
+            this.RegisterSingleton<Singleton>(ref PendingBuffers, World.Unmanaged);
+        }
+    }
 
 
+
+    //自定义 渲染中途系统组
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateBefore(typeof(EndInitializationEntityCommandBufferSystem))]
+    public partial class CustomMiddleInitializationECBSystem : EntityCommandBufferSystem
+    {
+        // The singleton component data access pattern should be used to safely access
+        // the command buffer system. This data will be stored in the derived ECB System's
+        // system entity.
+
+        public unsafe struct Singleton : IComponentData, IECBSingleton
+        {
+            internal UnsafeList<EntityCommandBuffer>* pendingBuffers;
+            internal AllocatorManager.AllocatorHandle allocator;
+
+            public EntityCommandBuffer CreateCommandBuffer(WorldUnmanaged world)
+            {
+                return EntityCommandBufferSystem
+                    .CreateCommandBuffer(ref *pendingBuffers, allocator, world);
+            }
+
+            // Required by IECBSingleton
+            public void SetPendingBufferList(ref UnsafeList<EntityCommandBuffer> buffers)
+            {
+                var ptr = UnsafeUtility.AddressOf(ref buffers);
+                pendingBuffers = (UnsafeList<EntityCommandBuffer>*)ptr;
+            }
+
+            // Required by IECBSingleton
+            public void SetAllocator(Allocator allocatorIn)
+            {
+                allocator = allocatorIn;
+            }
+
+            // Required by IECBSingleton
+            public void SetAllocator(AllocatorManager.AllocatorHandle allocatorIn)
+            {
+                allocator = allocatorIn;
+            }
+        }
+
+        protected override void OnCreate()
+        {
+            base.OnCreate();
+
+            this.RegisterSingleton<Singleton>(ref PendingBuffers, World.Unmanaged);
+        }
+    }
+}

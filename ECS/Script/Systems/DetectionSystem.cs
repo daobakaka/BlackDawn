@@ -387,7 +387,7 @@ namespace BlackDawn.DOTS
            // AddIfMatch(b, a, FlightPropDamageCalParLookup, LiveMonsterLookup, FlightHitMonsterQueue, true);
 
             //飞行技能
-           // AddIfMatch(a, b, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
+            AddIfMatch(a, b, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
             // AddIfMatch(b, a, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
 
             //持续性技能

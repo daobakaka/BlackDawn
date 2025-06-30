@@ -56,7 +56,7 @@ namespace BlackDawn
         //毒爆地雷
         MineBlast,         // 毒爆地雷：布置3颗隐形毒雷，触发时造成范围中毒并降低敌人30%移动速度  
                            // 释放方式：Release/Summon；伤害类型：毒素
-
+        //暗影洪流
         ShadowTide,        // 暗影洪流：引导1.5秒，释放一道持续3秒的暗影光束（穿透所有敌人，每秒造成120%伤害）  
                            // 释放方式：Channel；伤害类型：魔法
 
@@ -214,6 +214,8 @@ namespace BlackDawn
      Frost_Fragment,
      ElectroCage_Lightning,
      PoisonRainB,
+     ShadowTideA,
+     ShadowTideB,
 
     }
     /// <summary>
