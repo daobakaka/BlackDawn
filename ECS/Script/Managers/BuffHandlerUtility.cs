@@ -153,7 +153,7 @@ namespace BlackDawn.DOTS
     /// Buffer 元素：记录一次触发碰撞的“另一方实体 + 距离平方”
     /// </summary>
     [Serializable]
-    [InternalBufferCapacity(100)]
+    [InternalBufferCapacity(50)]
     public struct NearbyHit : IBufferElementData
     {
         public Entity other;

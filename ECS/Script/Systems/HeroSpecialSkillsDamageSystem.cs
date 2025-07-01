@@ -7,7 +7,10 @@ using Unity.Physics;
 using Unity.Transforms;
 using Unity.Mathematics;
 using Unity.Jobs;
+#if UNITY_EDITOR
 using UnityEditor.Experimental.GraphView;
+#endif
+
 
 //执行特殊技能的伤害处理
 namespace BlackDawn.DOTS
@@ -110,99 +113,100 @@ namespace BlackDawn.DOTS
             //获取毒雨碰撞对
             var poisonRainAHitMonterArray = detectionSystem.posionRainAHitMonsterArray;
 
-
-            // 为虹吸特效提供buffer，遍历BUFFer  生成特效
-            var damageJobHandle = new ApplySpecialSkillArcaneCircleDamageJob
+            if (false)
             {
-                ECB = ecb.AsParallelWriter(),
-                DamageParLookup = _skillArcaneCircleTagLookup,
-                DefenseAttrLookup = _monsterDefenseAttrLookup,
-                SkillArcaneCirelBufferLookup = _skillArcaneCircleSecondBufferLookup,
-                //DotDamageBufferLookup=_monsterDotDamageBufferLookup,
-                HitArray = arcanelCorcleHitsArray,
+                // 为虹吸特效提供buffer，遍历BUFFer  生成特效
+                var damageJobHandle = new ApplySpecialSkillArcaneCircleDamageJob
+                {
+                    ECB = ecb.AsParallelWriter(),
+                    DamageParLookup = _skillArcaneCircleTagLookup,
+                    DefenseAttrLookup = _monsterDefenseAttrLookup,
+                    SkillArcaneCirelBufferLookup = _skillArcaneCircleSecondBufferLookup,
+                    //DotDamageBufferLookup=_monsterDotDamageBufferLookup,
+                    HitArray = arcanelCorcleHitsArray,
 
-            }.Schedule(arcanelCorcleHitsArray.Length, 64, state.Dependency);
+                }.Schedule(arcanelCorcleHitsArray.Length, 64, state.Dependency);
 
 
-            var collectedPositions = new NativeList<float3>(5000, Allocator.TempJob);
+                var collectedPositions = new NativeList<float3>(5000, Allocator.TempJob);
 
-            // 3. 创建这里是为了  法阵的链解特效做的代码块
-            var collectJobHandle = new CollectArcaneCircleLinkJob
-            {
-                TargetTransformLookup = m_transform,
-                OutputPositions = collectedPositions.AsParallelWriter()
-            }.ScheduleParallel(damageJobHandle);
+                // 3. 创建这里是为了  法阵的链解特效做的代码块
+                var collectJobHandle = new CollectArcaneCircleLinkJob
+                {
+                    TargetTransformLookup = m_transform,
+                    OutputPositions = collectedPositions.AsParallelWriter()
+                }.ScheduleParallel(damageJobHandle);
 
-            state.Dependency = collectJobHandle;
-            //这里转换回主线程，获取数组
-            state.Dependency.Complete();
-            arcaneCircleLinkenBuffer = collectedPositions.ToArray(Allocator.Persistent);
-            collectedPositions.Dispose();
+                state.Dependency = collectJobHandle;
+                //这里转换回主线程，获取数组
+                state.Dependency.Complete();
+                arcaneCircleLinkenBuffer = collectedPositions.ToArray(Allocator.Persistent);
+                collectedPositions.Dispose();
 
-            //元素共鸣的相关计算
-            var elementResonanceEnableSecond = false;
-            var elementResonanceEnableThird = false;
-            float elementResonanceSecondPar = 0;
-            float elementRespnanceThridPar = 0;
+                //元素共鸣的相关计算
+                var elementResonanceEnableSecond = false;
+                var elementResonanceEnableThird = false;
+                float elementResonanceSecondPar = 0;
+                float elementRespnanceThridPar = 0;
 
-            foreach (var (skillTagE, entity) in SystemAPI.Query<RefRW<SkillElementResonanceTag>>().WithEntityAccess())
-            {
-                elementResonanceEnableSecond = skillTagE.ValueRO.enableSecondA;
-                elementResonanceEnableThird = skillTagE.ValueRO.enableSecondB;
-                elementResonanceSecondPar = skillTagE.ValueRO.secondDamagePar;
-                elementRespnanceThridPar = skillTagE.ValueRO.thridDamagePar;
-                break;
+                foreach (var (skillTagE, entity) in SystemAPI.Query<RefRW<SkillElementResonanceTag>>().WithEntityAccess())
+                {
+                    elementResonanceEnableSecond = skillTagE.ValueRO.enableSecondA;
+                    elementResonanceEnableThird = skillTagE.ValueRO.enableSecondB;
+                    elementResonanceSecondPar = skillTagE.ValueRO.secondDamagePar;
+                    elementRespnanceThridPar = skillTagE.ValueRO.thridDamagePar;
+                    break;
+                }
+
+                state.Dependency = new ApplySpecialSkillElementResonanceDamageJob
+                {
+                    DefenseAttrLookup = _monsterDefenseAttrLookup,
+                    ECB = ecb.AsParallelWriter(),
+                    FlightPropDamageCalParLookip = _flightPropDamageCalParLookup,
+                    SkillDamageCalParLookup = _skillsDamageCalParLookup,
+                    LossPoolAttrLookup = _monsterLossPoolAttrLookip,
+                    HitArray = elementResonanceHitArray,
+                    LinkedLookup = _linkedEntityGroupLookup,
+                    RecordElementResonanceBufferLookup = _hitElementResonanceRecordBufferLookup,
+                    EnableSecond = elementResonanceEnableSecond,
+                    EnableThrid = elementResonanceEnableThird,
+                    SecondDamagePar = elementResonanceSecondPar,
+                    ThridDamagePar = elementRespnanceThridPar,
+
+                }.Schedule(elementResonanceHitArray.Length, 64, state.Dependency);
+
+                // 毒爆地雷B阶段的，毒伤状态计算
+
+                // DevDebug.LogError("毒伤碰撞对长度" + mineBlastExplosionHitMonsterArray.Length);
+
+                state.Dependency = new ApplySpecialMineBlastExplosionPosionDamageJob
+                {
+                    DefenseAttrLookup = _monsterDefenseAttrLookup,
+                    ECB = ecb.AsParallelWriter(),
+                    SkillTagLookup = _skillMineBlastExplosionTagLookup,
+                    HitArray = mineBlastExplosionHitMonsterArray,
+                    DeltaTime = deltaTime,
+                    DebufferAttrLoopup = _monsterDebufferAttributeLookup,
+
+                }.Schedule(mineBlastExplosionHitMonsterArray.Length, 64, state.Dependency);
+
+
+
+                // DevDebug.LogError("毒雨碰撞对长度" + poisonRainAHitMonterArray.Length);
+                //毒雨 伤害加深的buff
+                state.Dependency = new ApplySpecialPoisonRainDamageAJob
+                {
+                    DefenseAttrLookup = _monsterDefenseAttrLookup,
+                    ECB = ecb.AsParallelWriter(),
+                    HitArray = poisonRainAHitMonterArray,
+                    DeltaTime = deltaTime,
+                    DebuffAttrLookup = _monsterDebufferAttributeLookup,
+                    SkillTagLookup = _skillPoisonRainATagLookup,
+
+                }.Schedule(poisonRainAHitMonterArray.Length, 64, state.Dependency);
+
+
             }
-
-            state.Dependency = new ApplySpecialSkillElementResonanceDamageJob
-            {
-                DefenseAttrLookup = _monsterDefenseAttrLookup,
-                ECB = ecb.AsParallelWriter(),
-                FlightPropDamageCalParLookip = _flightPropDamageCalParLookup,
-                SkillDamageCalParLookup = _skillsDamageCalParLookup,
-                LossPoolAttrLookup = _monsterLossPoolAttrLookip,
-                HitArray = elementResonanceHitArray,
-                LinkedLookup = _linkedEntityGroupLookup,
-                RecordElementResonanceBufferLookup = _hitElementResonanceRecordBufferLookup,
-                EnableSecond = elementResonanceEnableSecond,
-                EnableThrid = elementResonanceEnableThird,
-                SecondDamagePar = elementResonanceSecondPar,
-                ThridDamagePar = elementRespnanceThridPar,
-
-            }.Schedule(elementResonanceHitArray.Length, 64, state.Dependency);
-
-            // 毒爆地雷B阶段的，毒伤状态计算
-
-            // DevDebug.LogError("毒伤碰撞对长度" + mineBlastExplosionHitMonsterArray.Length);
-
-            state.Dependency = new ApplySpecialMineBlastExplosionPosionDamageJob
-            {
-                DefenseAttrLookup = _monsterDefenseAttrLookup,
-                ECB = ecb.AsParallelWriter(),
-                SkillTagLookup = _skillMineBlastExplosionTagLookup,
-                HitArray = mineBlastExplosionHitMonsterArray,
-                DeltaTime = deltaTime,
-                DebufferAttrLoopup=_monsterDebufferAttributeLookup,
-
-            }.Schedule(mineBlastExplosionHitMonsterArray.Length, 64, state.Dependency);
-
-
-
-           // DevDebug.LogError("毒雨碰撞对长度" + poisonRainAHitMonterArray.Length);
-            //毒雨 伤害加深的buff
-            state.Dependency = new ApplySpecialPoisonRainDamageAJob
-            {
-                DefenseAttrLookup = _monsterDefenseAttrLookup,
-                ECB = ecb.AsParallelWriter(),
-                HitArray = poisonRainAHitMonterArray,
-                DeltaTime = deltaTime,
-                DebuffAttrLookup=_monsterDebufferAttributeLookup,
-                SkillTagLookup =_skillPoisonRainATagLookup,
-
-            }.Schedule(poisonRainAHitMonterArray.Length, 64, state.Dependency);
-
-
-
 
 
 

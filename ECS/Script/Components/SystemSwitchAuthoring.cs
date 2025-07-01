@@ -24,6 +24,7 @@ namespace BlackDawn.DOTS
         public bool enableDotDamageSystem;
         public bool enableHeroSpecialSkillsDamageSystem;
         public bool enableOverlapDetectionSystem;
+        public bool enableHeoSkillsDamageBurstSystem;
         public class SystemSwitchBaker : Baker<SystemSwitchAuthoring>
         {
             public override void Bake(SystemSwitchAuthoring authoring)
@@ -64,6 +65,8 @@ namespace BlackDawn.DOTS
                     AddComponent(entity, new EnableHeroSpecialSkillsDamageSystemTag());
                 if (authoring.enableOverlapDetectionSystem)
                     AddComponent(entity, new EnableOverlapDetectionSystemTag());
+                if (authoring.enableHeoSkillsDamageBurstSystem)
+                    AddComponent(entity, new EnableHeroSkillsDamageBurstSystemTag());
             }
         }
 
@@ -155,5 +158,10 @@ namespace BlackDawn.DOTS
     /// 范围高性能并行检测标签（侦测、 范围技能）
     /// </summary>
     public struct EnableOverlapDetectionSystemTag : IComponentData, IEnableableComponent { };
+
+    /// <summary>
+    /// 爆发性技能标签
+    /// </summary>
+    public struct EnableHeroSkillsDamageBurstSystemTag : IComponentData, IEnableableComponent { };
 
 }

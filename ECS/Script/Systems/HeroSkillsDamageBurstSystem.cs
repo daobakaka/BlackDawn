@@ -9,36 +9,40 @@ using Unity.Physics;
 using Unity.Profiling;
 using Unity.Transforms;
 using UnityEngine;
-//ä¹‹å‰çš„ç¢°æ’å¯¹å¤„ç†ç³»ç»Ÿï¼Œé»˜è®¤å…³é—­
+
+
+
 namespace BlackDawn.DOTS
 {
+
+
     /// <summary>
-    /// å¤„ç†æŒç»­æ€§ä¼¤å®³æŠ€èƒ½ï¼Œ é‡‡å–æ¯å¸§è®¡ç®—çš„æ–¹å¼è¿›è¡Œï¼Œ é˜²æ­¢ä¼¤å®³é”å®šçš„bufferæ— åºæ‰©å¼ ï¼Œæ˜¯å¦éœ€è¦æ•´ç†æ–°çš„æŠ€èƒ½ä¼¤å®³é£˜å­è¡¨è¾¾ï¼Ÿ
+    /// ´¦Àí±¬·¢ĞÔ¼¼ÄÜ£¬¼¼ÄÜ±êÇ©ÓÉ³õÊ¼ÉËº¦±êÇ©¼Ì³Ğ£¬Ôö¼Ó¶ÀÁ¢µÄÌØ¶¨±êÇ©¼ÆËã
     /// </summary>
-    [RequireMatchingQueriesForUpdate]   // è‹¥æ‰€æœ‰ Query éƒ½åŒ¹é…ä¸åˆ°å®ä½“ï¼Œåˆ™ç³»ç»Ÿæ°¸ä¸æ‰§è¡Œ
+    [RequireMatchingQueriesForUpdate]   // ÈôËùÓĞ Query ¶¼Æ¥Åä²»µ½ÊµÌå£¬ÔòÏµÍ³ÓÀ²»Ö´ĞĞ
     [UpdateInGroup(typeof(ActionSystemGroup))]
-    [UpdateAfter(typeof(HeroSkillsDamageSystem))]
+    [UpdateAfter(typeof(HeroSkillsDamageOverTimeSystem))]
     [BurstCompile]
-    public partial struct HeroSkillsDamageOverTimeSystem : ISystem
+    public partial struct HeroSkillsDamageBurstSystem : ISystem
     {
         private ComponentLookup<LiveMonster> _liveMonster;
         private ComponentLookup<MonsterDefenseAttribute> _monsterDefenseAttrLookup;
         private ComponentLookup<MonsterLossPoolAttribute> _monsterLossPoolAttrLookip;
         private ComponentLookup<MonsterControlledEffectAttribute> _monsterControlledEffectAttrLookup;
         private ComponentLookup<HeroAttributeCmpt> _heroAttrLookup;
-        private ComponentLookup<SkillsOverTimeDamageCalPar> _skillOverTimeDamage;
+        private ComponentLookup<SkillsBurstDamageCalPar> _skillBurstDamage;
         private BufferLookup<HitRecord> _hitRecordBufferLookup;
         private ComponentLookup<LocalTransform> _transform;
         private BufferLookup<LinkedEntityGroup> _linkedLookup;
         private ComponentLookup<MonsterTempDamageText> _monsterTempDamageTextLookup;
         private ComponentLookup<MonsterTempDotDamageText> _monsterTempDotDamageTextLookup;
-        //debufferä¼¤å®³ç»„ä»¶æŸ¥è¯¢
+        //debufferÉËº¦×é¼ş²éÑ¯
         private ComponentLookup<MonsterDebuffAttribute> _monsterDebuffAttrLookup;
-        //dotç»„ä»¶æŸ¥è¯¢
+        //dot×é¼ş²éÑ¯
         private BufferLookup<MonsterDotDamageBuffer> _monsterDotDamageBufferLookup;
-        //ä¾¦æµ‹ç³»ç»Ÿç¼“å­˜
+        //Õì²âÏµÍ³»º´æ
         private SystemHandle _detectionSystemHandle;
-        //æŒç»­æ€§overLapæ£€æµ‹ç³»ç»Ÿç¼“å­˜
+        //³ÖĞøĞÔoverLap¼ì²âÏµÍ³»º´æ
         private SystemHandle _overlapDetectionSystemHandle;
 
 
@@ -46,15 +50,15 @@ namespace BlackDawn.DOTS
         void OnCreate(ref SystemState state)
 
         {
-            //å¤–éƒ¨æ§åˆ¶æ›´æ–°
-            state.RequireForUpdate<EnableHeroSkillsDamageOverTimeSystemTag>();
+            //Íâ²¿¿ØÖÆ¸üĞÂ
+            state.RequireForUpdate<EnableHeroSkillsDamageBurstSystemTag>();
             _liveMonster = SystemAPI.GetComponentLookup<LiveMonster>(true);
             _monsterDefenseAttrLookup = SystemAPI.GetComponentLookup<MonsterDefenseAttribute>(true);
             _monsterLossPoolAttrLookip = SystemAPI.GetComponentLookup<MonsterLossPoolAttribute>(true);
             _monsterControlledEffectAttrLookup = SystemAPI.GetComponentLookup<MonsterControlledEffectAttribute>(true);
             _heroAttrLookup = SystemAPI.GetComponentLookup<HeroAttributeCmpt>(true);
             _hitRecordBufferLookup = SystemAPI.GetBufferLookup<HitRecord>(true);
-            _skillOverTimeDamage = SystemAPI.GetComponentLookup<SkillsOverTimeDamageCalPar>(true);
+            _skillBurstDamage = SystemAPI.GetComponentLookup<SkillsBurstDamageCalPar>(true);
             _linkedLookup = SystemAPI.GetBufferLookup<LinkedEntityGroup>(true);
             _transform = SystemAPI.GetComponentLookup<LocalTransform>(true);
             _monsterTempDamageTextLookup = SystemAPI.GetComponentLookup<MonsterTempDamageText>(true);
@@ -71,14 +75,14 @@ namespace BlackDawn.DOTS
 
         void OnUpdate(ref SystemState state)
         {
-            //æ›´æ–°ç›¸å…³å‚æ•°
+            //¸üĞÂÏà¹Ø²ÎÊı
             _monsterDefenseAttrLookup.Update(ref state);
             _liveMonster.Update(ref state);
             _monsterControlledEffectAttrLookup.Update(ref state);
             _monsterLossPoolAttrLookip.Update(ref state);
             _heroAttrLookup.Update(ref state);
             _hitRecordBufferLookup.Update(ref state);
-            _skillOverTimeDamage.Update(ref state);
+            _skillBurstDamage.Update(ref state);
             _transform.Update(ref state);
             _linkedLookup.Update(ref state);
             _monsterTempDamageTextLookup.Update(ref state);
@@ -86,50 +90,38 @@ namespace BlackDawn.DOTS
             _monsterDebuffAttrLookup.Update(ref state);
             _monsterDotDamageBufferLookup.Update(ref state);
 
-            //è·å–æ”¶é›†ä¸–ç•Œå•ä¾‹
+            //»ñÈ¡ÊÕ¼¯ÊÀ½çµ¥Àı
             var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
             var hitsArray = detectionSystem.skillOverTimeHitMonsterArray;
 
 
             var overlapSystem = state.WorldUnmanaged.GetUnsafeSystemRef<OverlapDetectionSystem>(_overlapDetectionSystemHandle);
-            var hitsOverTimeArray =overlapSystem.skillOverTimeOverlapMonsterArray;
+            var hitsBurstArray = overlapSystem.skillBurstOverlapMonsterArray;
             var deltaTime = SystemAPI.Time.DeltaTime;
 
             // DevDebug.LogError("hitaary length     :" + hitsArray.Length);
-            // 2. å¹¶è¡Œåº”ç”¨ä¼¤å®³ æŠ€èƒ½& æ ‡è®°æŠ€èƒ½ç»“æŸï¼Ÿ,é‡è¦job ç»“æ„
+            // 2. ²¢ĞĞÓ¦ÓÃÉËº¦ ¼¼ÄÜ& ±ê¼Ç¼¼ÄÜ½áÊø£¿,ÖØÒªjob ½á¹¹
             //var ecb = new EntityCommandBuffer(Allocator.TempJob);
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             var ecbWriter = ecb.AsParallelWriter();
-            state.Dependency = new ApplySkillDamageOverTimeJob
+            state.Dependency = new ApplySkillDamageBurstJob
             {
                 ECB = ecbWriter,
-                DamageParLookup = _skillOverTimeDamage,
+                DamageParLookup = _skillBurstDamage,
                 DefenseAttrLookup = _monsterDefenseAttrLookup,
                 LossPoolAttrLookup = _monsterLossPoolAttrLookip,
                 ControlledEffectAttrLookup = _monsterControlledEffectAttrLookup,
                 LinkedLookup = _linkedLookup,
-                HitArray = hitsOverTimeArray,
+                HitArray = hitsBurstArray,
                 HeroAttrLookup = _heroAttrLookup,
                 Transform = _transform,
                 TempDamageText = _monsterTempDamageTextLookup,
                 TempDotDamageText = _monsterTempDotDamageTextLookup,
                 DebufferAttrLookup = _monsterDebuffAttrLookup,
                 DotDamageBufferLookup = _monsterDotDamageBufferLookup,
-                DeltaTime=deltaTime,
-            }.ScheduleParallel(hitsOverTimeArray.Length, 64, state.Dependency);
+                DeltaTime = deltaTime,
+            }.ScheduleParallel(hitsBurstArray.Length, 64, state.Dependency);
             //state.Dependency.Complete();
-
-            if(false)
-            state.Dependency = new ApplyHeroSkillPropOverTimeBufferAggregatesJob
-            {
-
-                DamageTextLookop = _monsterTempDamageTextLookup,
-              ECB=ecbWriter
-
-
-            }.ScheduleParallel(state.Dependency);
-
-
 
         }
 
@@ -139,176 +131,190 @@ namespace BlackDawn.DOTS
 
 
     /// <summary>
-    /// æŠ€èƒ½çš„æŒç»­æ€§ä¼¤å®³ï¼Œé˜²æ­¢é”å®šbufferçš„æ— åºæ‰©å¼ ï¼Œ æŒç»­æ€§ä¼¤å®³æ˜¯éƒ½éœ€è¦æ–°çš„ ä¼¤å®³ç»“æ„ä½“ï¼Ÿå…ç–«é—ªé¿å’Œæ ¼æŒ¡ä»¥åŠæ± åŒ–å‡å…ï¼Œæ˜¯å¦å¯ä»¥å‹åˆ¶ï¼Ÿæ˜¯å¦ç›´æ¥èµ°dotè·¯çº¿
+    /// ¼¼ÄÜµÄ³ÖĞøĞÔÉËº¦£¬·ÀÖ¹Ëø¶¨bufferµÄÎŞĞòÀ©ÕÅ£¬ ³ÖĞøĞÔÉËº¦ÊÇ¶¼ĞèÒªĞÂµÄ±¬·¢ĞÔ¼¼ÄÜ £¬Ö´ĞĞÖÜÆÚÓÉ¼¼ÄÜ±êÇ©¿ØÖÆ
     /// </summary>
     [BurstCompile]
-    struct ApplySkillDamageOverTimeJob : IJobFor
+    struct ApplySkillDamageBurstJob : IJobFor
     {
         public EntityCommandBuffer.ParallelWriter ECB;
-        [ReadOnly] public ComponentLookup<SkillsOverTimeDamageCalPar> DamageParLookup;
+        [ReadOnly] public ComponentLookup<SkillsBurstDamageCalPar> DamageParLookup;
         [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
         [ReadOnly] public ComponentLookup<MonsterControlledEffectAttribute> ControlledEffectAttrLookup;
         [ReadOnly] public ComponentLookup<MonsterLossPoolAttribute> LossPoolAttrLookup;
         [ReadOnly] public BufferLookup<LinkedEntityGroup> LinkedLookup;
         [ReadOnly] public NativeArray<TriggerPairData> HitArray;
         [ReadOnly] public ComponentLookup<HeroAttributeCmpt> HeroAttrLookup;
-        //æŠ€èƒ½ä½ç½®ä¿¡æ¯
+        //¼¼ÄÜÎ»ÖÃĞÅÏ¢
         [ReadOnly] public ComponentLookup<LocalTransform> Transform;
         [ReadOnly] public float DeltaTime;
 
-        //ä¼¤å®³é£˜å­—
+        //ÉËº¦Æ®×Ö
         [ReadOnly] public ComponentLookup<MonsterTempDamageText> TempDamageText;
-        //Dotä¼¤å®³é£˜å­—çš„å®šä¹‰
+        //DotÉËº¦Æ®×ÖµÄ¶¨Òå
         [ReadOnly] public ComponentLookup<MonsterTempDotDamageText> TempDotDamageText;
-        //debuffer æ•ˆæœ
+        //debuffer Ğ§¹û
         [ReadOnly] public ComponentLookup<MonsterDebuffAttribute> DebufferAttrLookup;
-        //bufferç´¯åŠ 
+        //bufferÀÛ¼Ó
         [ReadOnly] public BufferLookup<MonsterDotDamageBuffer> DotDamageBufferLookup;
 
 
-        static readonly ProfilerMarker mPO_Execute =
-new ProfilerMarker("SkillDamageOverTimeJob.Execute");
+        static readonly ProfilerMarker mPB_Execute =
+new ProfilerMarker("SkillBurstDamageJob.Execute");
 
         public void Execute(int i)
         {
-            using (mPO_Execute.Auto())
+            using (mPB_Execute.Auto())
             {
 
-                // 1) æ‹¿åˆ°ç¢°æ’å®ä½“å¯¹
+                // 1) ÄÃµ½Åö×²ÊµÌå¶Ô
                 var pair = HitArray[i];
                 Entity skill = pair.EntityA;
                 Entity target = pair.EntityB;
-                //DevDebug.Log("è¿›å…¥ï¼š" );
+                //DevDebug.Log("½øÈë£º" );
 
 
-                // 2) è¯»å–ç»„ä»¶ & éšæœºæ•°
+                // 2) ¶ÁÈ¡×é¼ş & Ëæ»úÊı
                 var d = DamageParLookup[skill];
-                var a = DefenseAttrLookup[target];
-                var c = ControlledEffectAttrLookup[target];
-                var l = LossPoolAttrLookup[target];
-                var h = HeroAttrLookup[d.heroRef];
-                var db = DebufferAttrLookup[target];
-                var dbd = DotDamageBufferLookup[target];
-                //è¿™é‡Œæ³¨æ„æ‹¿å–çš„æ—¶å€™å’Œæ·»åŠ çš„æ—¶å€™ä¸ä¸€æ ·ï¼Œ æ·»åŠ çš„æ—¶å€™çƒ˜ç„™å®Œäº†ä¹‹åï¼Œè²Œä¼¼åˆæ²¡æœ‰åŠ¨ï¼Ÿ
-                var textRenderEntity = LinkedLookup[target][2].Value;
-                //è¿™é‡Œæ‹¿å–DOTçš„ä¼¤å®³é£˜å­—
-                var textDotRenderEntity = LinkedLookup[target][3].Value;
-                var tempText = TempDamageText[textRenderEntity];
-                var tempDotText = TempDotDamageText[textDotRenderEntity];
-                var rnd = new Unity.Mathematics.Random(a.rngState);
 
 
-                //0)ç´¯åŠ å‘½ä¸­è®°æ•°å™¨ï¼Œè¿™æ ·å¯ä»¥å˜ç›¸çš„è®°å½•ç§’æ•°
-                a.overTimeDamageCount+= DeltaTime;
-               // DevDebug.Log("è®¡æ•°å™¨ï¼š"+a.overTimeDamageCount);
-
-                if (a.overTimeDamageCount < 1)
+               // DevDebug.Log("½øÈë");
+                    
+                //³¬¹ı1Ö¡Ö±½ÓÍË»Ø£¬ ½øĞĞµ¥´ÎÉËº¦¼ÆËã
+                if (d.burstTime>DeltaTime)
                 {
-                    ECB.SetComponent(i, target, a);
-                   // DevDebug.Log("è¿”å›ï¼š");
+                   // DevDebug.Log("·µ»Ø");
                     return;
                 }
                 else
                 {
-                   // DevDebug.Log("è®¡ç®—ï¼š");
-                    a.overTimeDamageCount = 0;
-                    //3+0ï¼‰
-                    //åˆ·æ–°å‡»ä¸­æ—¶é—´,æ›´æ–°å‡»ä¸­åˆ¤å®š
+
+                   // DevDebug.Log("¼ÆËã");
+                    var a = DefenseAttrLookup[target];
+                    var c = ControlledEffectAttrLookup[target];
+                    var l = LossPoolAttrLookup[target];
+                    var h = HeroAttrLookup[d.heroRef];
+                    var db = DebufferAttrLookup[target];
+                    var dbd = DotDamageBufferLookup[target];
+                    //ÕâÀï×¢ÒâÄÃÈ¡µÄÊ±ºòºÍÌí¼ÓµÄÊ±ºò²»Ò»Ñù£¬ Ìí¼ÓµÄÊ±ºòºæ±ºÍêÁËÖ®ºó£¬Ã²ËÆÓÖÃ»ÓĞ¶¯£¿
+                    var textRenderEntity = LinkedLookup[target][2].Value;
+                    //ÕâÀïÄÃÈ¡DOTµÄÉËº¦Æ®×Ö
+                    var textDotRenderEntity = LinkedLookup[target][3].Value;
+                    var tempText = TempDamageText[textRenderEntity];
+                    var tempDotText = TempDotDamageText[textDotRenderEntity];
+                    var rnd = new Unity.Mathematics.Random(a.rngState);
+
+
+                    // 3) ÉÁ±ÜÅĞ¶¨-ÕâÀïÓ¦¸ÃÕ¹ÏÖÉÁ±Ü×ÖÌå
+                    if (rnd.NextFloat() < a.dodge)
+                    {
+                        // 9) ±£´æĞÂµÄ RNG ×´Ì¬
+                        a.rngState = rnd.state;
+                        ECB.SetComponent(i, target, a);
+                        tempText.underAttack = true;
+                        tempText.damageTriggerType = DamageTriggerType.Miss;
+                        //Ğ´»ØÉÁ±Ü×ÖÑù
+                        ECB.SetComponentEnabled<MonsterTempDamageText>(i, textRenderEntity, true);
+                        ECB.SetComponent(i, textRenderEntity, tempText);
+                        return;
+                    }
+
+                    //3+0£©
+                    //Ë¢ĞÂ»÷ÖĞÊ±¼ä,¸üĞÂ»÷ÖĞÅĞ¶¨
                     d.hitSurvivalTime = 1;
                     d.hit = true;
 
-                    //3+1) æ§åˆ¶ç³»ç»Ÿå‚æ•°ï¼Œä¼ å…¥ç›¸å…³çš„æ§åˆ¶å‚æ•°ï¼Œ è¾¾åˆ°é˜ˆå€¼ä¹‹åäº§ç”Ÿæ§åˆ¶æ•ˆæœ
-                    //æ§åˆ¶ç³»ç»Ÿæ˜¯ä»¥å åŠ å‘¨æœŸçš„æ–¹å¼è¿›è¡Œï¼Œè€Œä¸æ˜¯æ¦‚ç‡æ–¹å¼è¿›è¡Œ
-                    //å¸¸è§„æ§åˆ¶å¯ä»¥æ¯æ¬¡å‡»æ‰“åˆ·æ–°ï¼Œè€Œå¼ºåŠ›æ§åˆ¶å¿…é¡»æ˜¯å‘¨æœŸæ€§ç´¯åŠ 
+                    //3+1) ¿ØÖÆÏµÍ³²ÎÊı£¬´«ÈëÏà¹ØµÄ¿ØÖÆ²ÎÊı£¬ ´ïµ½ãĞÖµÖ®ºó²úÉú¿ØÖÆĞ§¹û
+                    //¿ØÖÆÏµÍ³ÊÇÒÔµş¼ÓÖÜÆÚµÄ·½Ê½½øĞĞ£¬¶ø²»ÊÇ¸ÅÂÊ·½Ê½½øĞĞ
+                    //³£¹æ¿ØÖÆ¿ÉÒÔÃ¿´Î»÷´òË¢ĞÂ£¬¶øÇ¿Á¦¿ØÖÆ±ØĞëÊÇÖÜÆÚĞÔÀÛ¼Ó
 
-                    //å‡é€Ÿï¼Œ è¿™ä¸ªå¯ä»¥æ˜¯ä¸ºå¸¸è§„æ§åˆ¶ï¼Œå¸¸è§„æ§åˆ¶å‡»ä¸­åˆ™æ¸…é›¶
+                    //¼õËÙ£¬ Õâ¸ö¿ÉÒÔÊÇÎª³£¹æ¿ØÖÆ£¬³£¹æ¿ØÖÆ»÷ÖĞÔòÇåÁã
                     c.slow += h.controlAbilityAttribute.slow + d.tempSlow;
                     c.slowTimer = 0;
-                    //å‡»é€€,ä¸è¿›è¡Œå åŠ 
+                    //»÷ÍË,²»½øĞĞµş¼Ó
                     c.knockback = h.controlAbilityAttribute.knockback;
                     c.knockbackTimer = 0;
 
 
-                    //çŠ¶æ€æ§åˆ¶ï¼Œåè€…å¯è¦†ç›–å‰è€…çŠ¶æ€ï¼Œä½†æ§åˆ¶çŠ¶æ€æ ‡è¯†ä¾æ—§åœ¨ï¼Œç”¨äºè®¡ç®—ä¼¤å®³
-                    //ææƒ§
+                    //×´Ì¬¿ØÖÆ£¬ºóÕß¿É¸²¸ÇÇ°Õß×´Ì¬£¬µ«¿ØÖÆ×´Ì¬±êÊ¶ÒÀ¾ÉÔÚ£¬ÓÃÓÚ¼ÆËãÉËº¦
+                    //¿Ö¾å
                     c.fear += h.controlAbilityAttribute.fear + d.tempFear;
-                    //å®šèº«
+                    //¶¨Éí
                     c.root += h.controlAbilityAttribute.root + d.tempRoot;
-                    //æ˜è¿·
+                    //»èÃÔ
                     c.stun += h.controlAbilityAttribute.stun + d.tempStun;
-                    //å†»ç»“
+                    //¶³½á
                     c.freeze += h.controlAbilityAttribute.freeze + d.tempFreeze;
 
-                    //ç”±æŠ€èƒ½æ ‡ç­¾çš„åŠ è½½å†³å®šç‰µå¼•çŠ¶æ€,é€šå¸¸å¯ä»¥è·å¾—é“å…·æˆ–è€…æŠ€èƒ½å¯ä»¥è·å¾—ä¸´æ—¶æˆ–è€…æ°¸ä¹…ç‰µå¼•æˆ–è€…çˆ†ç‚¸å€¼
-                    //ç‰µå¼•æˆ–è€…çˆ†ç‚¸æœ‰1ç§’é—´éš”ï¼Œå› ä¸ºæœ‰bufferçš„é—´éš”ï¼Œæ‰€ä»¥è¿™é‡Œåˆ¤æ–­å¹¶ä¸èƒ½å’Œæ‰§è¡Œ
-                    //ç‰µå¼•æˆ–è€…çˆ†ç‚¸æ˜¯ç›´æ¥æ‰§è¡Œï¼Œä¸ç”±ç´¯åŠ è¿›è¡Œè§¦å‘
+                    //ÓÉ¼¼ÄÜ±êÇ©µÄ¼ÓÔØ¾ö¶¨Ç£Òı×´Ì¬,Í¨³£¿ÉÒÔ»ñµÃµÀ¾ß»òÕß¼¼ÄÜ¿ÉÒÔ»ñµÃÁÙÊ±»òÕßÓÀ¾ÃÇ£Òı»òÕß±¬Õ¨Öµ
+                    //Ç£Òı»òÕß±¬Õ¨ÓĞ1Ãë¼ä¸ô£¬ÒòÎªÓĞbufferµÄ¼ä¸ô£¬ËùÒÔÕâÀïÅĞ¶Ï²¢²»ÄÜºÍÖ´ĞĞ
+                    //Ç£Òı»òÕß±¬Õ¨ÊÇÖ±½ÓÖ´ĞĞ£¬²»ÓÉÀÛ¼Ó½øĞĞ´¥·¢
                     if (d.enablePull)
                     {
                         c.pull = h.controlAbilityAttribute.pull;
                         c.pullCenter = Transform[skill].Position;
 
                     }
-                    //çˆ†ç‚¸
+                    //±¬Õ¨
                     if (d.enableExplosion)
                     {
                         c.explosion = h.controlAbilityAttribute.explosion;
                         c.explosionCenter = Transform[skill].Position;
-                        //ç‰µå¼•æˆ–è€…çˆ†ç‚¸æœ‰ä¸¤ç§’é—´éš”ï¼Œå› ä¸ºæœ‰bufferçš„é—´éš”ï¼Œæ‰€ä»¥è¿™é‡Œåˆ¤æ–­å¹¶ä¸èƒ½å’Œæ‰§è¡Œ            
+                        //Ç£Òı»òÕß±¬Õ¨ÓĞÁ½Ãë¼ä¸ô£¬ÒòÎªÓĞbufferµÄ¼ä¸ô£¬ËùÒÔÕâÀïÅĞ¶Ï²¢²»ÄÜºÍÖ´ĞĞ            
                     }
-                    //-- æ§åˆ¶åŒºåŸŸ
-                    // 4) è®¡ç®—ç¼©å‡åçš„â€œç¬æ—¶ä¼¤å®³â€å’Œâ€œDOTä¼¤å®³â€
+                    //-- ¿ØÖÆÇøÓò
+                    // 4) ¼ÆËãËõ¼õºóµÄ¡°Ë²Ê±ÉËº¦¡±ºÍ¡°DOTÉËº¦¡±
                     float instTotal = 0f, dotTotal = 0f;
                     {
-                        // ç‰©ç†å­è®¡ç®—
+                        // ÎïÀí×Ó¼ÆËã
                         float CalcPhysicalSub(float armor, float breakVal, float pen)
                         {
                             float eff = armor - (breakVal + math.max(0f, 1f - pen) * armor);
                             return eff / (eff + 100f);
                         }
 
-                        // å…ƒç´ å­è®¡ç®—
+                        // ÔªËØ×Ó¼ÆËã
                         float CalcElementSub(float res, float breakVal, float pen)
                         {
                             float eff = res - (breakVal + math.max(0f, 1f - pen) * res);
                             return eff / (eff + 50f);
                         }
 
-                        // ç‰©ç†,åŠ ä¸Šå‡ç›Šæ•ˆæœçš„æŠ¤ç”²å‰Šå¼±,åŸæœ¬çš„æ€ªçš„å‡ç›Šäºæ•ˆæœçš„è®¾è®¡ï¼ˆä¿ç•™ï¼‰ï¼Œè¿™é‡Œå¯ä»¥é…åˆç±»ä¼¼é±¼äººç”µç¯ç±»çš„æŠ€èƒ½ï¼ˆè®¾è®¡ï¼‰
+                        // ÎïÀí,¼ÓÉÏ¼õÒæĞ§¹ûµÄ»¤¼×Ï÷Èõ,Ô­±¾µÄ¹ÖµÄ¼õÒæÓÚĞ§¹ûµÄÉè¼Æ£¨±£Áô£©£¬ÕâÀï¿ÉÒÔÅäºÏÀàËÆÓãÈËµçµÆÀàµÄ¼¼ÄÜ£¨Éè¼Æ£©
                         float physSub = CalcPhysicalSub(a.armor - db.armorReduction,
                                                         h.attackAttribute.armorBreak,
                                                         h.attackAttribute.armorPenetration);
                         instTotal += d.instantPhysicalDamage * (1f - physSub);
                         dotTotal += d.bleedDotDamage * (1f - physSub);
 
-                        // ç«
+                        // »ğ
                         float fireSub = CalcElementSub(a.resistances.fire - db.resistanceReduction.fire,
                                                        h.attackAttribute.elementalBreak,
                                                        h.attackAttribute.elementalPenetration);
                         instTotal += d.fireDamage * (1f - fireSub);
                         dotTotal += d.fireDotDamage * (1f - fireSub);
 
-                        // å†°
+                        // ±ù
                         float frostSub = CalcElementSub(a.resistances.frost - db.resistanceReduction.frost,
                                                         h.attackAttribute.elementalBreak,
                                                         h.attackAttribute.elementalPenetration);
                         instTotal += d.frostDamage * (1f - frostSub);
                         dotTotal += d.frostDotDamage * (1f - frostSub);
 
-                        // é—ªç”µ
+                        // ÉÁµç
                         float lightSub = CalcElementSub(a.resistances.lightning - db.resistanceReduction.lightning,
                                                         h.attackAttribute.elementalBreak,
                                                         h.attackAttribute.elementalPenetration);
                         instTotal += d.lightningDamage * (1f - lightSub);
                         dotTotal += d.lightningDotDamage * (1f - lightSub);
 
-                        // æ¯’ç´ 
+                        // ¶¾ËØ
                         float poisonSub = CalcElementSub(a.resistances.poison - db.resistanceReduction.poison,
                                                          h.attackAttribute.elementalBreak,
                                                          h.attackAttribute.elementalPenetration);
                         instTotal += d.poisonDamage * (1f - poisonSub);
                         dotTotal += d.poisonDotDamage * (1f - poisonSub);
 
-                        // æš—å½±
+                        // °µÓ°
                         float shadowSub = CalcElementSub(a.resistances.shadow - db.resistanceReduction.shadow,
                                                          h.attackAttribute.elementalBreak,
                                                          h.attackAttribute.elementalPenetration);
@@ -317,12 +323,12 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
                     }
 
 
-                    // 5) æ± åŒ–ååº”ï¼ˆåŸºäº raw dmgï¼Œä¸å—ä»»ä½•å‡å…ï¼Œå·²é—ªé¿è¿‡æ»¤ï¼Œæ§åˆ¶å¢åŠ æ± åŒ–å€¼ï¼Ÿï¼‰
+                    // 5) ³Ø»¯·´Ó¦£¨»ùÓÚ raw dmg£¬²»ÊÜÈÎºÎ¼õÃâ£¬ÒÑÉÁ±Ü¹ıÂË£¬¿ØÖÆÔö¼Ó³Ø»¯Öµ£¿£©
                     l.attackTimer = 0.07f;
 
                     float origHp = a.originalHp;
                     const float mult = 20f, cap = 200f;
-                    //æ± åŒ–ååº”ä¹Ÿè¦ä¹˜å¯¹åº”çš„ä¼¤å®³changeå‚æ•°,10% ä¼¤å®³å¯¹åº”200ç‚¹æ± åŒ–å€¼ï¼Œä¸”ä¸å—ä»»ä½•å‡å…å½±å“
+                    //³Ø»¯·´Ó¦Ò²Òª³Ë¶ÔÓ¦µÄÉËº¦change²ÎÊı,10% ÉËº¦¶ÔÓ¦200µã³Ø»¯Öµ£¬ÇÒ²»ÊÜÈÎºÎ¼õÃâÓ°Ïì
                     float Gain(float raw, float dot) => math.min(((raw + dot) * (d.damageChangePar) / origHp) * 100f * mult, cap);
                     var addFirePool = Gain(d.fireDamage, d.fireDotDamage);
                     var addFrostPool = Gain(d.frostDamage, d.fireDotDamage);
@@ -337,12 +343,12 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
                     l.lightningPool = math.min(l.lightningPool + addLightningPool, cap);
                     l.poisonPool = math.min(l.poisonPool + addPosionPool, cap);
                     l.shadowPool = math.min(l.shadowPool + addShadowPool, cap);
-                    //æµè¡€æ± åªä½¿ç”¨25%ç‰©ç†ä¼¤å®³è®¡ç®—
+                    //Á÷Ñª³ØÖ»Ê¹ÓÃ25%ÎïÀíÉËº¦¼ÆËã
                     l.bleedPool = math.min(l.bleedPool + addBleedPool, cap) * 0.25f;
 
 
 
-                    // 6) æ ¼æŒ¡åˆ¤å®šï¼ˆä»…å¯¹ç¬æ—¶ï¼‰,éšæœºå‡å…20%-80%ä¼¤å®³
+                    // 6) ¸ñµ²ÅĞ¶¨£¨½ö¶ÔË²Ê±£©,Ëæ»ú¼õÃâ20%-80%ÉËº¦
                     var tempBlock = false;
                     if (rnd.NextFloat() < a.block)
                     {
@@ -351,41 +357,41 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
                         tempBlock = true;
                     }
 
-                    // 7) å›ºå®šå‡ä¼¤ï¼ˆå¯¹ç¬æ—¶+DOTï¼Œ0-50%çš„å›ºå®šéšæœºå‡ä¼¤ï¼Œç”¨äºæ§åˆ¶æ•°å­—è·³åŠ¨),è¿™é‡Œçš„DOTä¼¤å®³æ˜¯è®¡ç®—è¿‡æš´å‡»å’ŒæŠ—æ€§ä¹‹å,è¡¥å……ä¸Šä¼¤å®³åŠ æ·±çš„debuffer
-                    //è¿™é‡Œä¹˜ä»¥ä¼¤å®³å˜åŒ–å‚æ•°
-                    var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//å›ºå®šéšæœºå‡ä¼¤
+                    // 7) ¹Ì¶¨¼õÉË£¨¶ÔË²Ê±+DOT£¬0-50%µÄ¹Ì¶¨Ëæ»ú¼õÉË£¬ÓÃÓÚ¿ØÖÆÊı×ÖÌø¶¯),ÕâÀïµÄDOTÉËº¦ÊÇ¼ÆËã¹ı±©»÷ºÍ¿¹ĞÔÖ®ºó,²¹³äÉÏÉËº¦¼ÓÉîµÄdebuffer
+                    //ÕâÀï³ËÒÔÉËº¦±ä»¯²ÎÊı
+                    var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//¹Ì¶¨Ëæ»ú¼õÉË
                     float finalDamage = (instTotal + dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification) * d.damageChangePar;
-                    //è¿™é‡Œåˆ†ç¦»dotä¼¤å®³
+                    //ÕâÀï·ÖÀëdotÉËº¦
                     float finalDotDamage = (dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification) * d.damageChangePar;
 
 
-                    //ï¼ˆ7-1ï¼‰å†™å›dotä¼¤å®³çš„æ‰£è¡€æ€»é‡,é‡‡ç”¨åŒæ ·çš„bufferç´¯åŠ æ–¹å¼
+                    //£¨7-1£©Ğ´»ØdotÉËº¦µÄ¿ÛÑª×ÜÁ¿,²ÉÓÃÍ¬ÑùµÄbufferÀÛ¼Ó·½Ê½
                     db.totalDotDamage += finalDotDamage;
 
 
 
-                    // 8) åº”ç”¨æ‰£è¡€ & å†™å›
+                    // 8) Ó¦ÓÃ¿ÛÑª & Ğ´»Ø
                     a.hp = math.max(0f, a.hp - finalDamage);
-                   // DevDebug.Log("ä¼¤å®³ï¼š" + finalDamage);
+                    // DevDebug.Log("ÉËº¦£º" + finalDamage);
 
-                    //8-1) ä¼¤å®³æ•°å­—ä¼ å…¥
-                    //ç¡®è®¤æ”¶åˆ°æ”»å‡»
+                    //8-1) ÉËº¦Êı×Ö´«Èë
+                    //È·ÈÏÊÕµ½¹¥»÷
                     tempText.underAttack = true;
-                    //ä¼ å…¥ä¼¤å®³æ•°å­—
+                    //´«ÈëÉËº¦Êı×Ö
                     tempText.hurtVlue = finalDamage;
-                    //ä¼ å…¥ç¬æ—¶ä¼¤å®³ç±»å‹,å°†å­å¼¹çš„ä¼¤å®³æšä¸¾ç±»å‹ä¼ å…¥ä¸´æ—¶ç»“æ„ä½“ä¸­ï¼ŒæŒç»­ä¼¤å®³ä¼šè¦†ç›–
+                    //´«ÈëË²Ê±ÉËº¦ÀàĞÍ,½«×Óµ¯µÄÉËº¦Ã¶¾ÙÀàĞÍ´«ÈëÁÙÊ±½á¹¹ÌåÖĞ£¬³ÖĞøÉËº¦»á¸²¸Ç
                     tempText.damageTriggerType = d.damageTriggerType;
-                    //å†™å›æ ¼æŒ¡,å¤§å¤šæ•°æƒ…å†µä¸‹ä¸‰å…ƒåˆ¤æ–­èƒ½è¢«ç¼–è¯‘ä¸ºåˆ†æ”¯çš„ csel æŒ‡ä»¤
+                    //Ğ´»Ø¸ñµ²,´ó¶àÊıÇé¿öÏÂÈıÔªÅĞ¶ÏÄÜ±»±àÒëÎª·ÖÖ§µÄ csel Ö¸Áî
                     tempText.damageTriggerType = tempBlock ? DamageTriggerType.Block : tempText.damageTriggerType;
 
-                    //-- DOTç±»å‹ä¼ å…¥,è¿™é‡Œç”¨æ¥æµ‹è¯•
+                    //-- DOTÀàĞÍ´«Èë,ÕâÀïÓÃÀ´²âÊÔ
 
 
-                    //8-2 è¿™é‡Œä¿ç•™åŸæœ¬çš„å†™å…¥ï¼Œ è¿™æ ·åœ¨åç»­çš„ä»£ç ä¸­ä»…éœ€è¦éå†é•¿åº¦>=2çš„bufferï¼ŒåŒæ—¶ä¿ç•™åŸç»“æ„ä¸å˜
+                    //8-2 ÕâÀï±£ÁôÔ­±¾µÄĞ´Èë£¬ ÕâÑùÔÚºóĞøµÄ´úÂëÖĞ½öĞèÒª±éÀú³¤¶È>=2µÄbuffer£¬Í¬Ê±±£ÁôÔ­½á¹¹²»±ä
                     var dd = new HeroSkillPropAccumulateData();
-                    dd.damage = finalDamage;//åˆå¹¶ä½¿ç”¨ä¼¤å®³æ•°å­—ï¼Œåˆ°è¿™ä¸ªjobä¹‹åæ›´æ–°
+                    dd.damage = finalDamage;//ºÏ²¢Ê¹ÓÃÉËº¦Êı×Ö£¬µ½Õâ¸öjobÖ®ºó¸üĞÂ
 
-                    // å„æ± åŒ–å¢é‡
+                    // ¸÷³Ø»¯ÔöÁ¿
                     dd.firePool = addFirePool;
                     dd.frostPool = addFrostPool;
                     dd.lightningPool = addLightningPool;
@@ -393,26 +399,26 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
                     dd.shadowPool = addShadowPool;
                     dd.bleedPool = addBleedPool;
 
-                    //8-3 å†™å…¥åŠ¨æ€Dotbuffer,æœ€ç»ˆè®¡ç®—çš„dotæ€»ä¼¤å®³ï¼Œå‰©ä½™æ—¶é—´6ç§’
-                    //è¿™é‡Œè²Œä¼¼åªèƒ½è¿™æ ·å†™ æ— æ³•SIMDä¼˜åŒ–
+                    //8-3 Ğ´Èë¶¯Ì¬Dotbuffer,×îÖÕ¼ÆËãµÄdot×ÜÉËº¦£¬Ê£ÓàÊ±¼ä6Ãë
+                    //ÕâÀïÃ²ËÆÖ»ÄÜÕâÑùĞ´ ÎŞ·¨SIMDÓÅ»¯
                     if (finalDotDamage > 0)
                     {
                         var tdbd = new MonsterDotDamageBuffer();
                         tdbd.dotDamage = finalDotDamage;
                         tdbd.survivalTime = 6;
-                        //ç´¯åŠ æ€ªç‰©å—åˆ°çš„buffer
+                        //ÀÛ¼Ó¹ÖÎïÊÜµ½µÄbuffer
                         ECB.AppendToBuffer(i, target, tdbd);
                     }
 
 
-                    //æ”»å‡»é¢œè‰²å˜åŒ–çŠ¶æ€
-                    // 9) å—å‡»é«˜äº®ï¼ŒSIMD æŒ‡ä»¤ä¼˜åŒ–
+                    //¹¥»÷ÑÕÉ«±ä»¯×´Ì¬
+                    // 9) ÊÜ»÷¸ßÁÁ£¬SIMD Ö¸ÁîÓÅ»¯
                     {
-                        // å…ˆç»Ÿä¸€ä¸€ä¸ªæœ¬å¸§èµ‹  3f å€¼çš„å¸¸é‡
+                        // ÏÈÍ³Ò»Ò»¸ö±¾Ö¡¸³  3f ÖµµÄ³£Á¿
                         const float newTimerValue = 3f;
 
-                        // å¯¹æ¯ä¸ªå…ƒç´ éƒ½åšåŒæ ·çš„æ©ç å†™å›ï¼Œjob ä¸­é‡‡ç”¨æ— åˆ†æ”¯å®ç°ï¼Ÿï¼ï¼ï¼è¿™ç‚¹å¾ˆé‡è¦
-                        // math.step(0, x) == (x > 0 ? 1f : 0f) æ— åˆ†æ”¯å®ç°
+                        // ¶ÔÃ¿¸öÔªËØ¶¼×öÍ¬ÑùµÄÑÚÂëĞ´»Ø£¬job ÖĞ²ÉÓÃÎŞ·ÖÖ§ÊµÏÖ£¿£¡£¡£¡ÕâµãºÜÖØÒª
+                        // math.step(0, x) == (x > 0 ? 1f : 0f) ÎŞ·ÖÖ§ÊµÏÖ
                         float frostMask = math.step(1e-6f, d.frostDamage);
                         float fireMask = math.step(1e-6f, d.fireDamage);
                         float poisonMask = math.step(1e-6f, d.poisonDamage);
@@ -420,7 +426,7 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
                         float shadowMask = math.step(1e-6f, d.shadowDamage);
                         float bleedMask = math.step(1e-6f, d.instantPhysicalDamage);
 
-                        // ç„¶åä¸€æ¬¡æ€§å†™å›ï¼Œå…¨éƒ¨éƒ½æ˜¯å•æ¡ç®—å¼ï¼Œæ²¡æœ‰ if
+                        // È»ºóÒ»´ÎĞÔĞ´»Ø£¬È«²¿¶¼ÊÇµ¥ÌõËãÊ½£¬Ã»ÓĞ if
                         l.frostTimer = frostMask * newTimerValue + (1f - frostMask) * l.frostTimer;
                         l.fireTimer = fireMask * newTimerValue + (1f - fireMask) * l.fireTimer;
                         l.poisonTimer = poisonMask * newTimerValue + (1f - poisonMask) * l.poisonTimer;
@@ -428,7 +434,7 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
                         l.shadowTimer = shadowMask * newTimerValue + (1f - shadowMask) * l.shadowTimer;
                         l.bleedTimer = bleedMask * newTimerValue + (1f - bleedMask) * l.bleedTimer;
 
-                        // 2) DOT æ´»åŠ¨å¼€å…³ï¼šå¦‚æœå¯¹åº” dotDamage>0 åˆ™è®¾ä¸º 6ï¼Œå¦åˆ™ä¿æŒåŸå€¼
+                        // 2) DOT »î¶¯¿ª¹Ø£ºÈç¹û¶ÔÓ¦ dotDamage>0 ÔòÉèÎª 6£¬·ñÔò±£³ÖÔ­Öµ
                         float frostDotMask = math.step(1e-6f, d.frostDotDamage);
                         float fireDotMask = math.step(1e-6f, d.fireDotDamage);
                         float poisonDotMask = math.step(1e-6f, d.poisonDotDamage);
@@ -436,7 +442,7 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
                         float shadowDotMask = math.step(1e-6f, d.shadowDotDamage);
                         float bleedDotMask = math.step(1e-6f, d.bleedDotDamage);
 
-                        // å½“ mask==1 æ—¶è®¾ç½®ä¸º 6fï¼›mask==0 æ—¶ä¿æŒä¹‹å‰çš„å€¼
+                        // µ± mask==1 Ê±ÉèÖÃÎª 6f£»mask==0 Ê±±£³ÖÖ®Ç°µÄÖµ
                         l.frostActive = frostDotMask * 6f + (1f - frostDotMask) * l.frostActive;
                         l.fireActive = fireDotMask * 6f + (1f - fireDotMask) * l.fireActive;
                         l.poisonActive = poisonDotMask * 6f + (1f - poisonDotMask) * l.poisonActive;
@@ -445,110 +451,24 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
                         l.bleedActive = bleedDotMask * 6f + (1f - bleedDotMask) * l.bleedActive;
                     }
 
-                    // 9) ä¿å­˜æ–°çš„ RNG çŠ¶æ€
+                    // 9) ±£´æĞÂµÄ RNG ×´Ì¬
                     a.rngState = rnd.state;
                     ECB.SetComponent(i, target, a);
                     ECB.SetComponent(i, target, l);
                     ECB.SetComponent(i, target, c);
-                    //æ¿€æ´»ä¸´æ—¶ç¬æ—¶ä¼¤å®³è¡¨
+                    //¼¤»îÁÙÊ±Ë²Ê±ÉËº¦±í
                     ECB.SetComponentEnabled<MonsterTempDamageText>(i, textRenderEntity, true);
                     ECB.SetComponent(i, textRenderEntity, tempText);
-                    //å†™å›çš„debufferè®°å½•çš„dotä¼¤å®³ï¼Œä»¥åŠä¸€äº›è§¦å‘çš„æŠ‘åˆ¶æ•ˆæœ
+                    //Ğ´»ØµÄdebuffer¼ÇÂ¼µÄdotÉËº¦£¬ÒÔ¼°Ò»Ğ©´¥·¢µÄÒÖÖÆĞ§¹û
                     ECB.SetComponent(i, target, db);
-                    //æ·»åŠ ç´¯åŠ çš„buffer æ•°æ®ï¼Œè§£å†³åŒå¸§æ•°æ®å¹¶è¡Œå†™å…¥ è¦†ç›–çš„é—®é¢˜
+                    //Ìí¼ÓÀÛ¼ÓµÄbuffer Êı¾İ£¬½â¾öÍ¬Ö¡Êı¾İ²¢ĞĞĞ´Èë ¸²¸ÇµÄÎÊÌâ
                     ECB.AppendToBuffer(i, target, dd);
 
-
-                    //10) æ ‡è®°é“å…·é”€æ¯ï¼Œè¿™æ ·å°±å¯ä»¥æ‰§è¡Œç©¿é€é€»è¾‘ï¼Œè€Œä¸å¿…æŒç»­æ£€æµ‹
-                    {
-                        var pd = d;
-                        //  pd.destory = true;
-                        ECB.SetComponent(i, skill, pd);
-                    }
                 }
             }
         }
     }
 
 
-    /// <summary>
-    /// ä¿®æ­£åŒæ—¶å¤šä¸ªé£è¡Œé“å…·ç¢°æ’äº§ç”Ÿçš„ä¼¤å®³ä»¥åŠç´¯åŠ æ± åŒ–è®¡ç®—é—®é¢˜
-    /// </summary>
-    [BurstCompile]
-    partial struct ApplyHeroSkillPropOverTimeBufferAggregatesJob : IJobEntity
-    {
-        //é‡‡ç”¨è¿™ç§å£°æ˜ä¸å®‰å…¨çš„åšæ³•ï¼Œå¤„ç†æ›´è½»é‡åŒ–ï¼Œä½†åœ¨éœ€è¦ä½¿ç”¨å‰ï¼Œä¸´æ—¶æ›´æ–°ä¸€æ¬¡
-        [ReadOnly]
-        public ComponentLookup<MonsterTempDamageText> DamageTextLookop;
-        public EntityCommandBuffer.ParallelWriter ECB;
-        void Execute(
-            Entity e,
-            [EntityIndexInQuery] int sortKey, // æ–°å¢ sortKeyï¼ˆå¹¶å‘å®‰å…¨ï¼‰
-            EnabledRefRO<LiveMonster> live,
-            ref MonsterDefenseAttribute def,
-            ref MonsterControlledEffectAttribute ctl,
-            ref MonsterLossPoolAttribute pool,
-            ref MonsterDebuffAttribute dot,
-            ref DynamicBuffer<HeroSkillPropAccumulateData> accBuf,
-            DynamicBuffer<LinkedEntityGroup> linkedEntity)
-        {
-            //é•¿åº¦å°äº2çš„æ—¶å€™å·²ç»å†™å…¥ä¸éœ€è¦èšåˆ
-            if (accBuf.Length < 2)
-            {
-                //è¿”å›ä¹‹å‰æ¸…ç©ºbuffer
-                accBuf.Clear();
-                return;
-            }
 
-            // 1) èšåˆ
-            var sum = new FlightPropAccumulateData();
-            for (int i = 0; i < accBuf.Length - 1; i++)
-            {
-                var d = accBuf[i];
-                sum.damage += d.damage;
-                sum.dotDamage += sum.dotDamage;
-                sum.firePool += d.firePool;
-                sum.frostPool += d.frostPool;
-                sum.lightningPool += d.lightningPool;
-                sum.poisonPool += d.poisonPool;
-                sum.shadowPool += d.shadowPool;
-                sum.bleedPool += d.bleedPool;
-            }
-
-            // 2) å†™å›è¡€é‡
-            def.hp = math.max(0f, def.hp - sum.damage);
-
-
-
-
-            // 4) å†™å›æ± åŒ–å€¼
-            if (true)
-            {
-                pool.firePool = math.min(pool.firePool + sum.firePool, 200);
-                pool.frostPool = math.min(pool.frostPool + sum.frostPool, 200);
-                pool.lightningPool = math.min(pool.lightningPool + sum.lightningPool, 200);
-                pool.poisonPool = math.min(pool.poisonPool + sum.poisonPool, 200);
-                pool.shadowPool = math.min(pool.shadowPool + sum.shadowPool, 200);
-                pool.bleedPool = math.min(pool.bleedPool + sum.bleedPool, 200);
-            }
-            //5)å†™å›dotæ€»ä¼¤å®³
-            dot.totalDotDamage = sum.dotDamage;
-
-
-            //è¿™ä¸¤æ¡æ˜¯å»æŸ¥æ‰¾å­—ä½“å¹¶ä¸”æ›´æ”¹
-            var damageText = DamageTextLookop[linkedEntity[2].Value];
-            //å†™å›ä¼¤å®³
-            damageText.hurtVlue += sum.damage;
-            ECB.SetComponent(sortKey, linkedEntity[2].Value, damageText);
-
-
-            // 5) æ¸…ç©º bufferï¼Œä¸ºä¸‹ä¸€å¸§é‡ç”¨
-            accBuf.Clear();
-
-            // DevDebug.Log("å·²ç´¯åŠ å¹¶æ¸…ç©ºè‡ªå·±çš„buffer");
-
-        }
-
-
-    }
 }

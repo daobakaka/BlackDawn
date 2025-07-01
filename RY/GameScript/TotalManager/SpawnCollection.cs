@@ -132,7 +132,7 @@ namespace BlackDawn
                 GroupIndex = 0
             };
             //添加范围侦测的标签
-            entityManager.AddComponentData(detectionEntity, new OverlapQueryCenter { center = Hero.instance.transform.position, radius = 20, filter = filter });
+            entityManager.AddComponentData(detectionEntity, new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position, radius = 20, filter = filter });
 
 
 

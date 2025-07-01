@@ -8,7 +8,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 using ProjectDawn.Navigation;
-using UnityEditor.Search;
+
 using ProjectDawn.ContinuumCrowds;
 using Unity.Physics;
 using Unity.Collections;
@@ -128,6 +128,15 @@ namespace BlackDawn.DOTS
 
             }
 
+            //由技能生成的爆发式技能
+            foreach (var (skillCal, entity) in SystemAPI.Query<RefRO<SkillsBurstDamageCalPar>>().WithEntityAccess())
+            {
+
+                if (skillCal.ValueRO.destory == true)
+
+                    ecb.DestroyEntity(entity);
+
+            }
 
             //处理英雄自身的增益恢复效果
             foreach (var (transform, heroAttr, stateNoImmunity) in SystemAPI.Query<RefRW<HeroEntityMasterTag>, RefRW<HeroAttributeCmpt>, RefRW<HeroIntgratedNoImmunityState>>())

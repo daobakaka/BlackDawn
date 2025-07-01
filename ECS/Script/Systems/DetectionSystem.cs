@@ -5,7 +5,9 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
+#if UNITY_EDITOR
 using UnityEditor.Search;
+#endif
 
 namespace BlackDawn.DOTS
 {
@@ -235,10 +237,10 @@ namespace BlackDawn.DOTS
             posionRainAHitMonsterArray =_poisonRainAHitMonster.ToArray(Allocator.Persistent);
 
 
-            //if (skillOverTimeHitMonsterArray.Length > 0)
-            //    DevDebug.Log("event 时间长度" + skillOverTimeHitMonsterArray.Length);
+            //if (heroHitMonsterArray.Length > 0)
+            //    DevDebug.Log("event 英雄碰到怪物数量" + heroHitMonsterArray.Length);
 
-           // DevDebug.LogError("元素共鸣结构长度" + combinedElementResonanceArray.Length +"命中共鸣体的基础子弹长度"+basePropElementResonanceArray.Length);
+            // DevDebug.LogError("元素共鸣结构长度" + combinedElementResonanceArray.Length +"命中共鸣体的基础子弹长度"+basePropElementResonanceArray.Length);
 
             // DevDebug.LogError(arcaneCircleHitMonsterArray.Length);
             //  CheckNumberOfDetection(ref state);

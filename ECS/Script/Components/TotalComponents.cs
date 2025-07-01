@@ -45,9 +45,9 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// 主动范围查询结构/球形/盒形
+    /// 主动范围查询结构/球形/盒形，默认持续性技能
     /// </summary>
-    public struct OverlapQueryCenter : IComponentData
+    public struct OverlapOverTimeQueryCenter : IComponentData
     {
         public OverLapShape shape;
         public float3 box;
@@ -58,6 +58,19 @@ namespace BlackDawn.DOTS
         public CollisionFilter filter; // 每个Overlap可自定义过滤规则
     }
 
+    /// <summary>
+    /// 主动爆发性技能 查询
+    /// </summary>
+    public struct OverlapBurstQueryCenter : IComponentData
+    {
+        public OverLapShape shape;
+        public float3 box;
+        public float3 center;
+        public float radius;
+        public float3 offset;
+        public float4 rotaion;
+        public CollisionFilter filter; // 每个Overlap可自定义过滤规则
+    }
 
     /// <summary>
     /// 主动范围查询Buffer

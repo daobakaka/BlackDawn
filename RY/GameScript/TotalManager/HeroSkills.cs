@@ -605,7 +605,7 @@ namespace BlackDawn
                                         CollidesWith = 1u << 6,
                                         GroupIndex = 0
                                     };
-                                    var overlap = new OverlapQueryCenter { center = Hero.instance.transform.position,radius=1, filter = filter, offset = new float3(0, 0, 15), box = new float3(6, 6,40 ), shape = OverLapShape.Box };
+                                    var overlap = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position,radius=1, filter = filter, offset = new float3(0, 0, 15), box = new float3(6, 6,40 ), shape = OverLapShape.Box };
                                     var entityShadowTide = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_ShadowTide, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                                     _entityManager.AddComponentData(entityShadowTide, new SkillShadowTideTag { tagSurvivalTime = 10, level = 1 });
                                     var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityShadowTide);
@@ -642,7 +642,7 @@ namespace BlackDawn
                                         CollidesWith = 1u << 6,
                                         GroupIndex = 0
                                     };
-                                    var overlapA = new OverlapQueryCenter { center = Hero.instance.transform.position, radius = 1, filter = filter, offset = new float3(0, 0, 15), box = new float3(3, 3, 40), shape = OverLapShape.Box };
+                                    var overlapA = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position, radius = 1, filter = filter, offset = new float3(0, 0, 15), box = new float3(3, 3, 40), shape = OverLapShape.Box };
                                     var entityShadowTideA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_ShadowTideA, overlapA, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                                     _entityManager.AddComponentData(entityShadowTideA, new SkillShadowTideTag { tagSurvivalTime = 3, level = 1 ,skillDamageChangeParTag=2});
                                     var skillParA = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityShadowTideA);
@@ -685,7 +685,7 @@ namespace BlackDawn
                                         CollidesWith = 1u << 6,
                                         GroupIndex = 0
                                     };
-                                    var overlapB = new OverlapQueryCenter { center = Hero.instance.transform.position, radius = 1, filter = filter, offset = new float3(0, 0, 15), box = new float3(3, 3, 40), shape = OverLapShape.Box };
+                                    var overlapB = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position, radius = 1, filter = filter, offset = new float3(0, 0, 15), box = new float3(3, 3, 40), shape = OverLapShape.Box };
                                     var entityShadowTideB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_ShadowTide, overlapB, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                                     _entityManager.AddComponentData(entityShadowTideB, new SkillShadowTideTag { tagSurvivalTime =3, level = 1, skillDamageChangeParTag = 1,enableSecondB=true });
                                     var skillParB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityShadowTideB);
@@ -725,7 +725,7 @@ namespace BlackDawn
                                         CollidesWith = 1u << 6,
                                         GroupIndex = 0
                                     };
-                                    var overlapAB = new OverlapQueryCenter { center = Hero.instance.transform.position, radius = 1, filter = filter, offset = new float3(0, 0, 15), box = new float3(3, 3, 40), shape = OverLapShape.Box };
+                                    var overlapAB = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position, radius = 1, filter = filter, offset = new float3(0, 0, 15), box = new float3(3, 3, 40), shape = OverLapShape.Box };
                                     var entityShadowTideAB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_ShadowTideA, overlapAB, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                                     _entityManager.AddComponentData(entityShadowTideAB, new SkillShadowTideTag { tagSurvivalTime = 3, level = 1, skillDamageChangeParTag = 2 ,enableSecondB=true});
                                     var skillParAB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityShadowTideAB);
@@ -763,7 +763,7 @@ namespace BlackDawn
                                 CollidesWith = 1u << 6,
                                 GroupIndex = 0
                             };
-                            var overlap = new OverlapQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filter, offset = new float3(0, 0, 0) };
+                            var overlap = new OverlapOverTimeQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filter, offset = new float3(0, 0, 0) };
                             var entityPoisonRain= DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, overlap,Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRain, new SkillPoisonRainTag { tagSurvivalTime = 15 ,level=1});
                             var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRain);
@@ -777,7 +777,7 @@ namespace BlackDawn
                                 CollidesWith = 1u << 6,
                                 GroupIndex = 0
                             };
-                            var overlapA = new OverlapQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filterA, offset = new float3(0, 0, 0) };
+                            var overlapA = new OverlapOverTimeQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filterA, offset = new float3(0, 0, 0) };
                             var entityPoisonRainA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapA ,Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainA, new SkillPoisonRainTag { tagSurvivalTime = 15 ,level=1});
                             var skillParA = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainA);
@@ -794,7 +794,7 @@ namespace BlackDawn
                                 CollidesWith = 1u << 6,
                                 GroupIndex = 0
                             };
-                            var overlapB = new OverlapQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filterB,offset=new float3(0,0,0) };
+                            var overlapB = new OverlapOverTimeQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filterB,offset=new float3(0,0,0) };
                             var entityPoisonRainB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                             int level = 3;
@@ -808,7 +808,7 @@ namespace BlackDawn
                             _entityManager.SetComponentData(entityPoisonRainB, skillParB);
 
                             //--火焰雨,仅仅增加一个效果，无实际计算
-                            var entityPoisonRainBFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB,new OverlapQueryCenter(), Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entityPoisonRainBFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB,new OverlapOverTimeQueryCenter(), Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainBFire, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                          
                             break;
@@ -820,7 +820,7 @@ namespace BlackDawn
                                 CollidesWith = 1u << 6,
                                 GroupIndex = 0
                             };
-                            var overlapAB = new OverlapQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filterAB, offset = new float3(0, 0, 0) };
+                            var overlapAB = new OverlapOverTimeQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filterAB, offset = new float3(0, 0, 0) };
                             var entityPoisonRainAB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapAB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainAB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                             //添加A阶段标签，用于收集判断，非buffer的处理结构？或用于持续性计算
@@ -836,7 +836,7 @@ namespace BlackDawn
                             _entityManager.SetComponentData(entityPoisonRainAB, skillParAB);
 
                             //--火焰雨,仅仅增加一个效果，无实际计算
-                            var entityPoisonRainABFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, new OverlapQueryCenter(),Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entityPoisonRainABFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, new OverlapOverTimeQueryCenter(),Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainABFire, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                         
                             break;
@@ -935,7 +935,7 @@ namespace BlackDawn
         /// <returns></returns>
         public Entity DamageSkillsOverTimeProp(
          Entity prefab,
-         OverlapQueryCenter queryCenter,
+         OverlapOverTimeQueryCenter queryCenter,
          float3 posion,
          quaternion quaternion,
          float damageChangePar = 1,//默认伤害参数为1

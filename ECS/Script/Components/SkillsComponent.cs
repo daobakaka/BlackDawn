@@ -155,6 +155,82 @@ namespace BlackDawn.DOTS
         public bool enableExplosion;
 
     }
+
+
+
+
+
+
+    /// <summary>
+    /// 爆发性伤害技能标签，只能继承于原技能，并与其联动，靠技能标签进行单次计算
+    /// </summary>
+    [Serializable]
+    public struct SkillsBurstDamageCalPar : IComponentData
+    {
+
+        public Entity heroRef;
+        /// <summary>物理瞬时带暴击伤害</summary>
+        public float instantPhysicalDamage;
+
+        // —— 元素瞬时伤害 ——
+        /// <summary>冰霜瞬时伤害</summary>
+        public float frostDamage;
+        /// <summary>闪电瞬时伤害</summary>
+        public float lightningDamage;
+        /// <summary>毒素瞬时伤害</summary>
+        public float poisonDamage;
+        /// <summary>暗影瞬时伤害</summary>
+        public float shadowDamage;
+        /// <summary>火焰瞬时伤害</summary>
+        public float fireDamage;
+
+        // —— 持续性（DOT）伤害 ——
+        /// <summary>冰霜持续性伤害</summary>
+        public float frostDotDamage;
+        /// <summary>闪电持续性伤害</summary>
+        public float lightningDotDamage;
+        /// <summary>毒素持续性伤害</summary>
+        public float poisonDotDamage;
+        /// <summary>暗影持续性伤害</summary>
+        public float shadowDotDamage;
+        /// <summary>火焰持续性伤害</summary>
+        public float fireDotDamage;
+        /// <summary>流血持续性伤害，由物理伤害触发</summary>
+        public float bleedDotDamage;
+
+        /// <summary>并行处理数量,默认100，根据技能调整</summary>
+        public int ParallelCount;
+        // —— 临时性（控制属性） ——
+        /// <summary>临时性控制属性</summary>
+        public float tempFreeze;
+        public float tempStun;
+        public float tempFear;
+        public float tempRoot;
+        public float tempSlow;
+
+        /// <summary>用于技能变化的整体伤害参，这里看到是在池化中进行计算的，也应该在技能表现中增加，默认值为1</summary>
+        public float damageChangePar;
+
+        //伤害类型枚举
+        public DamageTriggerType damageTriggerType;
+        //击中后存活时间，用于构建爆炸或者其他属性(如分裂)
+        public float hitSurvivalTime;
+        public bool hit;
+        //原始存活时间
+        public float originalSurvivalTime;
+        //销毁标识
+        public bool destory;
+
+        ///技能特殊的牵引和爆炸属性标签
+        public bool enablePull;
+        public bool enableExplosion;
+
+
+        ///！！爆发时间
+        public float burstTime;
+
+    }
+
     /// <summary>
     /// 可关闭标签脉冲标签,初始化一个时间，用于存活判断,可以使用标签来定义 速度  二阶 存活时间
     /// </summary>
