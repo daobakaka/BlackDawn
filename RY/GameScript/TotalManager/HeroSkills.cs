@@ -17,25 +17,25 @@ using Unity.Physics;
 namespace BlackDawn
 
 {/// <summary>
-/// Ö÷¹ÜÓ¢ÐÛ¼¼ÄÜµÄºËÐÄÀà£¬ÔÚÓ¢ÐÛMono½Å±¾ÖÐ³õÊ¼»¯Ö®ºó£¬Í¨¹ý»ñÈ¡µ¥Àý´Ó¹¹Ôìº¯Êý½øÐÐ³õÊ¼»¯
+/// ï¿½ï¿½ï¿½ï¿½Ó¢ï¿½Û¼ï¿½ï¿½ÜµÄºï¿½ï¿½ï¿½ï¿½à£¬ï¿½ï¿½Ó¢ï¿½ï¿½Monoï¿½Å±ï¿½ï¿½Ð³ï¿½Ê¼ï¿½ï¿½Ö®ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ó¹ï¿½ï¿½ìº¯ï¿½ï¿½ï¿½ï¿½ï¿½Ð³ï¿½Ê¼ï¿½ï¿½
 /// </summary>
     public class HeroSkills : Singleton<HeroSkills>
     {
         ScenePrefabsSingleton _skillPrefabs;
         EntityManager _entityManager;
-        //¼¼ÄÜÎ»ÖÃ
+        //ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
         Transform _transform;
-        //Ó¢ÐÛÊôÐÔ,ÕâÀïµÄÊôÐÔ£¬»ù±¾Ö»ÄÜÓÃÓÚÖ»¶Á£¬Ö´ÐÐ¹ý³ÌÖÐ£¬Ó¦¸Ã²ÉÓÃ²éÑ¯ÊôÐÔ
+        //Ó¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ð¹ï¿½ï¿½ï¿½ï¿½Ð£ï¿½Ó¦ï¿½Ã²ï¿½ï¿½Ã²ï¿½Ñ¯ï¿½ï¿½ï¿½ï¿½
        [ReadOnly] HeroAttributeCmpt _heroAttributeCmptOriginal;
         CoroutineController _coroutineController;
 
         Entity _heroEntity;
-        //¼¼ÄÜ²éÑ¯Ä£¿é,·¨Õó£¬Î¨Ò»
+        //ï¿½ï¿½ï¿½Ü²ï¿½Ñ¯Ä£ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½Î¨Ò»
         EntityQuery _arcaneCircleQuery;
-        //°µÓ°ºéÁ÷£¬Òýµ¼Î¨Ò»
+        //ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¨Ò»
         EntityQuery _shadowTideQuery;
 
-        //¶¯Ì¬Ó¢ÐÛ½á¹¹²éÑ¯Ä£¿é
+        //ï¿½ï¿½Ì¬Ó¢ï¿½Û½á¹¹ï¿½ï¿½Ñ¯Ä£ï¿½ï¿½
         EntityQuery _heroRealTimeAttr;
 
 
@@ -43,37 +43,37 @@ namespace BlackDawn
         {
 
 
-            //»ñÈ¡±ä»»
+            //ï¿½ï¿½È¡ï¿½ä»»
             _transform = Hero.instance.skillTransforms[0];
 
-            //»ñÈ¡entityManager ¹ÜÀíÆ÷
+            //ï¿½ï¿½È¡entityManager ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
-            //»ñÈ¡Ô¤ÖÆÌå,MonoÖÐÐèÒªÊ¹ÓÃentity ²éÑ¯½øÐÐÏà¹ØµÄ×ª»»
+            //ï¿½ï¿½È¡Ô¤ï¿½ï¿½ï¿½ï¿½,Monoï¿½ï¿½ï¿½ï¿½ÒªÊ¹ï¿½ï¿½entity ï¿½ï¿½Ñ¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½×ªï¿½ï¿½
             _skillPrefabs = _entityManager.CreateEntityQuery(typeof(ScenePrefabsSingleton)).GetSingleton<ScenePrefabsSingleton>();
 
-            //Ó¢ÐÛÊôÐÔ
+            //Ó¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             _heroAttributeCmptOriginal = Hero.instance.attributeCmpt;
 
-            //»ñÈ¡È«¾ÖÐ­³Ì¿ØÖÆÆ÷
+            //ï¿½ï¿½È¡È«ï¿½ï¿½Ð­ï¿½Ì¿ï¿½ï¿½ï¿½ï¿½ï¿½
             _coroutineController =Hero.instance.coroutineController;
 
 
-            //»ñÈ¡Ó¢ÐÛentity
+            //ï¿½ï¿½È¡Ó¢ï¿½ï¿½entity
             _heroEntity = Hero.instance.heroEntity;
-            //½¨Á¢²éÑ¯
+            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¯
             _arcaneCircleQuery = _entityManager.CreateEntityQuery(typeof(SkillArcaneCircleTag));
-            //°µÓ°ºéÁ÷
+            //ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½
             _shadowTideQuery = _entityManager.CreateEntityQuery(typeof(SkillShadowTideTag));
-            //ÊµÊ±Ó¢ÐÛ×é¼þ²éÑ¯
+            //ÊµÊ±Ó¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¯
             _heroRealTimeAttr = _entityManager.CreateEntityQuery(typeof(HeroAttributeCmpt), typeof(HeroEntityMasterTag));
            
 
         }
 
         /// <summary>
-        /// ´«Èë¼¼ÄÜID ÕâÀïÓÐ7ÖÖÁéÄÜ±ä»¯ÀàÐÍ£¬Ä¬ÈÏ¶¼Îª»ù´¡ÐÍ£¬¸¨Öú»òÕßÎ»ÒÆ¼¼ÄÜ1ÖÖ±ä»¯£¬ºËÐÄ¼¼ÄÜ3ÖÖ±ä»¯£¬ÖÕ¼«¼¼ÄÜ6ÖÖ±ä»¯
-        ///·ÉÐÐµÀ¾ßÊÍ·ÅÉËº¦Àà¼¼ÄÜ PulseÂö³å£¬ 
+        /// ï¿½ï¿½ï¿½ë¼¼ï¿½ï¿½ID ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½7ï¿½ï¿½ï¿½ï¿½ï¿½Ü±ä»¯ï¿½ï¿½ï¿½Í£ï¿½Ä¬ï¿½Ï¶ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Æ¼ï¿½ï¿½ï¿½1ï¿½Ö±ä»¯ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½3ï¿½Ö±ä»¯ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½ï¿½6ï¿½Ö±ä»¯
+        ///ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ëºï¿½ï¿½à¼¼ï¿½ï¿½ Pulseï¿½ï¿½ï¿½å£¬ 
         ///
         /// </summary>
         /// <param name="iD"></param>
@@ -85,26 +85,26 @@ namespace BlackDawn
             switch (iD)
                 
             {
-                //Âö³å£¬Ë²Ê±
+                //ï¿½ï¿½ï¿½å£¬Ë²Ê±
                 case HeroSkillID.Pulse:
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
                             var entity = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_Pulse, _transform.position, Hero.instance.transform.rotation, 1, 0, 0, 1, true, false);
-                            //Ìí¼Ó¼¼ÄÜ×¨ÓÃ±êÇ©ÓÃÓÚ¼ì²âµÈÔË¶¯µÈ    
+                            //ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½×¨ï¿½Ã±ï¿½Ç©ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½    
                             _entityManager.AddComponentData(entity, new SkillPulseTag() { tagSurvivalTime = 3, speed = 5 });
                             break;
                         case HeroSkillPsionicType.PsionicA:
-                            //¿ªÆô¶þ½×¶ÎÐ§¹û
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¶ï¿½Ð§ï¿½ï¿½
                             var entity1 = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_Pulse, _transform.position, Hero.instance.transform.rotation, 1, 0, 0, 1, true, false);
-                            //Ìí¼Ó¼¼ÄÜ×¨ÓÃ±êÇ©ÓÃÓÚ¼ì²âµÈÔË¶¯µÈ    
+                            //ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½×¨ï¿½Ã±ï¿½Ç©ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½    
                             _entityManager.AddComponentData(entity1, new SkillPulseTag() { tagSurvivalTime = 3, speed = 5, enableSecond = true, scaleChangePar = 1f });
                             _entityManager.AddComponentData(entity1, new SkillPulseSecondExplosionRequestTag { });
                             _entityManager.SetComponentEnabled<SkillPulseSecondExplosionRequestTag>(entity1, false);
                             break;
                         case HeroSkillPsionicType.PsionicB:
 
-                            //Éú³É3¸öÄÜÁ¿Ìå
+                            //ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                             for (int i = 0; i < 3; i++)
                             {
                                 var entity2 = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_Pulse, _transform.position, Hero.instance.transform.rotation, 1.4f, float3.zero, new float3(0, -30 + i * 30, 0), 0.5f, true, false);
@@ -114,7 +114,7 @@ namespace BlackDawn
                             break;
                         case HeroSkillPsionicType.PsionicAB:
 
-                            //Éú³É3¸öÄÜÁ¿Ìå,¿ªÆô¶þ½××´Ì¬
+                            //ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬
                             for (int i = 0; i < 3; i++)
                             {
                                 var entity3 = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_Pulse, _transform.position, Hero.instance.transform.rotation, 1.4f, float3.zero, new float3(0, -30 + i * 30, 0), 0.5f, true, false);
@@ -127,22 +127,22 @@ namespace BlackDawn
 
                     }
                     break;
-                //°µÄÜ£¬Ë²Ê±
+                //ï¿½ï¿½ï¿½Ü£ï¿½Ë²Ê±
                 case HeroSkillID.DarkEnergy:
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
                             WeaponEnchantmentSkillDarkEnergy(5);
                             break;
-                          //Ôö¼ÓÁ½´Î³äÄÜ£¬Ëæ×Å¼¼ÄÜµÈ¼¶³É³¤£¬Ôö¼Ó³äÄÜ´ÎÊý
+                          //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î³ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½Å¼ï¿½ï¿½ÜµÈ¼ï¿½ï¿½É³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó³ï¿½ï¿½Ü´ï¿½ï¿½ï¿½
                         case HeroSkillPsionicType.PsionicA:
                             WeaponEnchantmentSkillDarkEnergy(7);
                             break;
-                            //°µÓ°ÍÌÊÉµÄ¼¼ÄÜ£¬ÕâÀïÓ¦¸ÃÔö¼ÓÒ»¸öÐÂ±êÇ©
+                            //ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ÉµÄ¼ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Â±ï¿½Ç©
                         case HeroSkillPsionicType.PsionicB:
                             WeaponEnchantmentSkillDarkEnergy(5);
                             break;
-                        //°µÓ°ÍÌÊÉµÄ¼¼ÄÜ£¬ÕâÀïÓ¦¸ÃÔö¼ÓÒ»¸öÐÂ±êÇ©
+                        //ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ÉµÄ¼ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Â±ï¿½Ç©
                         case HeroSkillPsionicType.PsionicAB:
                             Hero.instance.skillAttackPar.enableSpecialEffect = true;
                             WeaponEnchantmentSkillDarkEnergy(7);
@@ -150,35 +150,35 @@ namespace BlackDawn
                     }
 
                     break;
-                //±ù»ð£¬Ë²Ê±£¿
+                //ï¿½ï¿½ï¿½ï¿½Ë²Ê±ï¿½ï¿½
                 case HeroSkillID.IceFire:
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
                             var entityIce = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_IceFire, _transform.position, Hero.instance.transform.rotation, 1, new float3(0,0.3f,0), 0, 1, false, false);
-                            //Ìí¼Ó¼¼ÄÜ×¨ÓÃ±êÇ©ÓÃÓÚ¼ì²âµÈÔË¶¯µÈ    
+                            //ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½×¨ï¿½Ã±ï¿½Ç©ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½    
                             _entityManager.AddComponentData(entityIce, new SkillIceFireTag() { tagSurvivalTime =20, speed = 3,radius=5 ,currentAngle=1.72f});
                             var entityFire = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_IceFireFire, _transform.position, Hero.instance.transform.rotation, 1, new float3(0, 0.3f, 0), 0, 1, false, false);
-                            //Ìí¼Ó¼¼ÄÜ×¨ÓÃ±êÇ©ÓÃÓÚ¼ì²âµÈÔË¶¯µÈ    
+                            //ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½×¨ï¿½Ã±ï¿½Ç©ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½    
                             _entityManager.AddComponentData(entityFire, new SkillIceFireTag() { tagSurvivalTime = 20, speed = 3, radius = 5, currentAngle = -1.72f });
                             break;
-                            //¶þ½×±ù»ð¼¼ÄÜÔö¼ÓÉËº¦¡¢°ë¾¶¡¢Ìå»ý¡¢ËÙ¶È¡¢³ÖÐøÊ±¼ä
+                            //ï¿½ï¿½ï¿½×±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ë¾¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
                         case HeroSkillPsionicType.PsionicA:
                             var entityIce1 = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_IceFire, _transform.position, Hero.instance.transform.rotation, 1.3f, new float3(0, 0.5f, 0), 0, 1.5f, false, false);
-                            //Ìí¼Ó¼¼ÄÜ×¨ÓÃ±êÇ©ÓÃÓÚ¼ì²âµÈÔË¶¯µÈ    
+                            //ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½×¨ï¿½Ã±ï¿½Ç©ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½    
                             _entityManager.AddComponentData(entityIce1, new SkillIceFireTag() { tagSurvivalTime = 25, speed = 4, radius = 7, currentAngle = 1.72f ,originalScale=2.6f});
                             var entityFire1 = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_IceFireFire, _transform.position, Hero.instance.transform.rotation, 1.3f, new float3(0, 0.5f, 0), 0, 1.3f, false, false);
-                            //Ìí¼Ó¼¼ÄÜ×¨ÓÃ±êÇ©ÓÃÓÚ¼ì²âµÈÔË¶¯µÈ    
+                            //ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½×¨ï¿½Ã±ï¿½Ç©ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½    
                             _entityManager.AddComponentData(entityFire1, new SkillIceFireTag() { tagSurvivalTime = 25, speed = 4, radius = 7, currentAngle = -1.72f , originalScale = 2.6f });
                             break;
                         case HeroSkillPsionicType.PsionicB:
                             var entityIce2 = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_IceFire, _transform.position, Hero.instance.transform.rotation, 1, new float3(0, 0.3f, 0), 0, 1, false, false);
-                            //Ìí¼Ó¼¼ÄÜ×¨ÓÃ±êÇ©ÓÃÓÚ¼ì²âµÈÔË¶¯µÈ    
+                            //ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½×¨ï¿½Ã±ï¿½Ç©ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½    
                             _entityManager.AddComponentData(entityIce2, new SkillIceFireTag() { tagSurvivalTime = 25, speed = 4, radius = 7, currentAngle = 1.72f ,enableSecond=true,scaleChangePar =1,skillDamageChangeParTag=1, originalScale = 2f });
                             _entityManager.AddComponentData(entityIce2, new SkillIceFireSecondExplosionRequestTag { });
                             _entityManager.SetComponentEnabled<SkillIceFireSecondExplosionRequestTag>(entityIce2, false);
                             var entityFire2 = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_IceFireFire, _transform.position, Hero.instance.transform.rotation, 1, new float3(0, 0.3f, 0), 0, 1, false, false);
-                            //Ìí¼Ó¼¼ÄÜ×¨ÓÃ±êÇ©ÓÃÓÚ¼ì²âµÈÔË¶¯µÈ    
+                            //ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½×¨ï¿½Ã±ï¿½Ç©ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½    
                             _entityManager.AddComponentData(entityFire2, new SkillIceFireTag() { tagSurvivalTime = 25, speed = 4, radius = 7, currentAngle = -1.72f,enableSecond=true,scaleChangePar = 1, skillDamageChangeParTag = 1, originalScale = 2f });
                             _entityManager.AddComponentData(entityFire2, new SkillIceFireSecondExplosionRequestTag { });
                             _entityManager.SetComponentEnabled<SkillIceFireSecondExplosionRequestTag>(entityFire2, false);
@@ -186,32 +186,34 @@ namespace BlackDawn
                         case HeroSkillPsionicType.PsionicAB:
 
                             var entityIce3 = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_IceFire, _transform.position, Hero.instance.transform.rotation, 0.3f, new float3(0, 1.3f, 0), 0, 1.5f, false, false);
-                            //Ìí¼Ó¼¼ÄÜ×¨ÓÃ±êÇ©ÓÃÓÚ¼ì²âµÈÔË¶¯µÈ    
+                            //ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½×¨ï¿½Ã±ï¿½Ç©ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½    
                             _entityManager.AddComponentData(entityIce3, new SkillIceFireTag() { tagSurvivalTime = 30, speed = 6f, radius = 9, currentAngle = -1.72f ,enableSecond = true, scaleChangePar = 1, skillDamageChangeParTag = 1 , originalScale = 2.6f });
                             _entityManager.AddComponentData(entityIce3, new SkillIceFireSecondExplosionRequestTag { });
                             _entityManager.SetComponentEnabled<SkillIceFireSecondExplosionRequestTag>(entityIce3, false);
                             var entityFire3 = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_IceFireFire, _transform.position, Hero.instance.transform.rotation, 0.3f, new float3(0, 1.3f, 0), 0, 1.5f, false, false);
-                            //Ìí¼Ó¼¼ÄÜ×¨ÓÃ±êÇ©ÓÃÓÚ¼ì²âµÈÔË¶¯µÈ    
+                            //ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½×¨ï¿½Ã±ï¿½Ç©ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½    
                             _entityManager.AddComponentData(entityFire3, new SkillIceFireTag() { tagSurvivalTime = 30, speed = 6f, radius = 9, currentAngle = 1.72f, enableSecond = true, scaleChangePar = 1, skillDamageChangeParTag = 1, originalScale = 2.6f });
                             _entityManager.AddComponentData(entityFire3, new SkillIceFireSecondExplosionRequestTag { });
                             _entityManager.SetComponentEnabled<SkillIceFireSecondExplosionRequestTag>(entityFire3, false);
                             break;
                     }
                     break;
-               //ÂäÀ×£¬Ë²Ê±
+
+        
+               //ï¿½ï¿½ï¿½×£ï¿½Ë²Ê±
                 case HeroSkillID.ThunderStrike:
 
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
                             
-                            //ÊÍ·Å³õ¼¶ÂäÀ×¼¼ÄÜ,²âÊÔ¸úËæÐÔÂäÀ×
+                            //ï¿½Í·Å³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¼ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Ô¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                              DamageSkillsFlightPropConsecutiveCasting<SkillThunderStrikeTag>(_skillPrefabs.HeroSkill_ThunderStrike,new SkillThunderStrikeTag() {tagSurvivalTime=0.5f},12,1, _transform.position, 
                                  Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false,false);                      
 
                             break;
                         case HeroSkillPsionicType.PsionicA:
-                            //ÊÍ·Å³õ¼¶ÂäÀ×¼¼ÄÜ,ÕâÀïµÄÐÐÎª¿ÉÒÔÅäÖÃ,¸úËæÓ¢ÐÛÊýÁ¿+1
+                            //ï¿½Í·Å³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¼ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½Ó¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½+1
                            DamageSkillsFlightPropConsecutiveCasting<SkillThunderStrikeTag>(_skillPrefabs.HeroSkill_ThunderStrike, new SkillThunderStrikeTag() { tagSurvivalTime = 0.5f }, 16, 1, _transform.position,
                                 Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false, true);
 
@@ -219,14 +221,14 @@ namespace BlackDawn
 
 
                         case HeroSkillPsionicType.PsionicB:
-                            //ÊÍ·Å³õ¼¶ÂäÀ×¼¼ÄÜ,ÕâÀïµÄÐÐÎª¿ÉÒÔÅäÖÃ
+                            //ï¿½Í·Å³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¼ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                             DamageSkillsFlightPropConsecutiveCasting<SkillThunderStrikeTag>(_skillPrefabs.HeroSkill_ThunderStrike, new SkillThunderStrikeTag() { tagSurvivalTime = 1f }, 12, 0.5f, _transform.position,
                                  Hero.instance.transform.rotation, 1.3f, float3.zero, float3.zero, 1, false, false, false);
                             break;
 
                         case HeroSkillPsionicType.PsionicAB:
 
-                            //ÊÍ·Å³õ¼¶ÂäÀ×¼¼ÄÜ,ÕâÀïµÄÐÐÎª¿ÉÒÔÅäÖÃ
+                            //ï¿½Í·Å³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¼ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                             DamageSkillsFlightPropConsecutiveCasting<SkillThunderStrikeTag>(_skillPrefabs.HeroSkill_ThunderStrike, new SkillThunderStrikeTag() { tagSurvivalTime = 1f }, 16, 0.5f, _transform.position,
                                  Hero.instance.transform.rotation, 1.3f, float3.zero, float3.zero, 1, false, false, true);
                  
@@ -237,23 +239,23 @@ namespace BlackDawn
 
 
                     break;
-                //·¨Õó£¬³ÖÐø
+                //ï¿½ï¿½ï¿½ó£¬³ï¿½ï¿½ï¿½
                 case HeroSkillID.ArcaneCircle:
 
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
 
-                            //»ù´¡ÄÜÁ¿´óÓÚ20 ·ÅÖÃ·¨Õó£¬¿É·ñ×ÔÓÉ¹Ø±Õ£¿
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½20 ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ó£¬¿É·ï¿½ï¿½ï¿½ï¿½É¹Ø±Õ£ï¿½
                             bool hasArcaneCircle = _arcaneCircleQuery.CalculateEntityCount() > 0;
                             
-                            //ÕâÀï»ñÈ¡ÊÀ½çÖÐµÄÊÂÊµentity
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½Êµentity
                             var realAttr = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
                             if (!hasArcaneCircle)
                             {
                                 if (realAttr.defenseAttribute.energy >= 20)
                                 {
-                                   //¿ªÆôÔò½µµÍ10µãÄÜÁ¿³ÖÐø3Ãë
+                                   //ï¿½ï¿½ï¿½ï¿½ï¿½ò½µµï¿½10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½
                                     realAttr.defenseAttribute.energy -= 20; 
                                     _entityManager.SetComponentData(_heroEntity, realAttr);
                                     var entityArcaneCircle = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ArcaneCircle, _transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
@@ -262,7 +264,7 @@ namespace BlackDawn
                             }
                             else
                             {
-                                //ÔÙ´Îµã»÷ÊÖ¶¯¹Ø±Õ
+                                //ï¿½Ù´Îµï¿½ï¿½ï¿½Ö¶ï¿½ï¿½Ø±ï¿½
                                 var arcaneCircleEntity = _arcaneCircleQuery.GetSingletonRW<SkillArcaneCircleTag>();
 
                                 arcaneCircleEntity.ValueRW.closed = true;
@@ -272,32 +274,32 @@ namespace BlackDawn
                         case HeroSkillPsionicType.PsionicA:
 
 
-                            //»ù´¡ÄÜÁ¿´óÓÚ20 ·ÅÖÃ·¨Õó£¬¿É·ñ×ÔÓÉ¹Ø±Õ£¿
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½20 ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ó£¬¿É·ï¿½ï¿½ï¿½ï¿½É¹Ø±Õ£ï¿½
                             bool hasArcaneCircleA = _arcaneCircleQuery.CalculateEntityCount() > 0;
 
-                            //ÕâÀï»ñÈ¡ÊÀ½çÖÐµÄÊÂÊµentity
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½Êµentity
                             var realAttrA = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
                             if (!hasArcaneCircleA)
                             {
                                 if (realAttrA.defenseAttribute.energy >= 20)
                                 {
-                                    //¿ªÆôÔò½µµÍ10µãÄÜÁ¿³ÖÐø3Ãë
+                                    //ï¿½ï¿½ï¿½ï¿½ï¿½ò½µµï¿½10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½
                                     realAttrA.defenseAttribute.energy -= 20;
                                     _entityManager.SetComponentData(_heroEntity, realAttrA);
                                     var entityArcaneCircle = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ArcaneCircle, _transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                                     _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleTag() { tagSurvivalTime = 3 ,enableSecondA=true});
-                                    _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleSecondTag());//Ìí¼Ó±êÊ¶£¬ÓÃÓÚÊÕ¼¯Åö×²¶Ô
-                                    _entityManager.AddBuffer<SkillArcaneCircleSecondBufferTag>(entityArcaneCircle);//Ìí¼Ó¼¼ÄÜ×¨Êôbuffer±êÇ©£¬ÓÃÓÚ¹¹½¨ºçÎüÐ§¹ûµÄ»ù´¡Êý¾Ý
-                                    //Ìí¼ÓÁ´½ÓÐ§¹ûäÖÈ¾±êÇ©
+                                    _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleSecondTag());//ï¿½ï¿½ï¿½Ó±ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½×²ï¿½ï¿½
+                                    _entityManager.AddBuffer<SkillArcaneCircleSecondBufferTag>(entityArcaneCircle);//ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½×¨ï¿½ï¿½bufferï¿½ï¿½Ç©ï¿½ï¿½ï¿½ï¿½ï¿½Ú¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                                    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½Ç©
                                   //  ecb.AddComponent(_entityManager.GetBuffer<LinkedEntityGroup>(_heroEntity)[1].Value, new HeroEffectsLinked());
                                 }
                             }
                             else
                             {
-                                //ÔÙ´Îµã»÷ÊÖ¶¯¹Ø±Õ
+                                //ï¿½Ù´Îµï¿½ï¿½ï¿½Ö¶ï¿½ï¿½Ø±ï¿½
                                 var arcaneCircleEntity = _arcaneCircleQuery.GetSingletonRW<SkillArcaneCircleTag>();
                                 arcaneCircleEntity.ValueRW.closed = true;
-                                //¹Ø±Õ·¨ÕóÊ±£¬ÐèÒªÉèÖÃÁ´½ÓÎª0
+                                //ï¿½Ø±Õ·ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª0
                                // ecb.SetComponentEnabled<HeroEffectsLinked>(_entityManager.GetBuffer<LinkedEntityGroup>(_heroEntity)[1].Value, false);
                             }
 
@@ -306,26 +308,26 @@ namespace BlackDawn
 
                         case HeroSkillPsionicType.PsionicB:
 
-                            //»ù´¡ÄÜÁ¿´óÓÚ20 ·ÅÖÃ·¨Õó£¬¿É·ñ×ÔÓÉ¹Ø±Õ£¿
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½20 ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ó£¬¿É·ï¿½ï¿½ï¿½ï¿½É¹Ø±Õ£ï¿½
                             bool hasArcaneCircleB = _arcaneCircleQuery.CalculateEntityCount() > 0;
 
-                            //ÕâÀï»ñÈ¡ÊÀ½çÖÐµÄÊÂÊµentity
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½Êµentity
                             var realAttrB = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
                             if (!hasArcaneCircleB)
                             {
                                 if (realAttrB.defenseAttribute.energy >= 20)
                                 {
-                                    //¿ªÆôÔò½µµÍ10µãÄÜÁ¿³ÖÐø3Ãë
+                                    //ï¿½ï¿½ï¿½ï¿½ï¿½ò½µµï¿½10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½
                                     realAttrB.defenseAttribute.energy -= 20;
                                     _entityManager.SetComponentData(_heroEntity, realAttrB);
-                                    //Ìå»ý¼Ó´ó50%
+                                    //ï¿½ï¿½ï¿½ï¿½Ó´ï¿½50%
                                     var entityArcaneCircle = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ArcaneCircle, _transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1.5f, false, false);
                                     _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleTag() { tagSurvivalTime = 3,enableSecondB=true });
                                 }
                             }
                             else
                             {
-                                //ÔÙ´Îµã»÷ÊÖ¶¯¹Ø±Õ
+                                //ï¿½Ù´Îµï¿½ï¿½ï¿½Ö¶ï¿½ï¿½Ø±ï¿½
                                 var arcaneCircleEntity = _arcaneCircleQuery.GetSingletonRW<SkillArcaneCircleTag>();
                                 arcaneCircleEntity.ValueRW.closed = true;
 
@@ -335,30 +337,30 @@ namespace BlackDawn
 
                         case HeroSkillPsionicType.PsionicAB:
 
-                            //»ù´¡ÄÜÁ¿´óÓÚ20 ·ÅÖÃ·¨Õó£¬¿É·ñ×ÔÓÉ¹Ø±Õ£¿
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½20 ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ó£¬¿É·ï¿½ï¿½ï¿½ï¿½É¹Ø±Õ£ï¿½
                             bool hasArcaneCircleAB = _arcaneCircleQuery.CalculateEntityCount() > 0;
-                            //ÕâÀï»ñÈ¡ÊÀ½çÖÐµÄÊÂÊµentity
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½Êµentity
                             var realAttrAB = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
                             if (!hasArcaneCircleAB)
                             {
                                 if (realAttrAB.defenseAttribute.energy >= 20)
                                 {
-                                    //¿ªÆôÔò½µµÍ10µãÄÜÁ¿³ÖÐø3Ãë
+                                    //ï¿½ï¿½ï¿½ï¿½ï¿½ò½µµï¿½10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½
                                     realAttrAB.defenseAttribute.energy -= 20;
                                     _entityManager.SetComponentData(_heroEntity, realAttrAB);
                                     var entityArcaneCircle = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ArcaneCircle, _transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1.5f, false, false);
                                     _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleTag() { tagSurvivalTime = 3, enableSecondA = true,enableSecondB=true });
-                                    _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleSecondTag());//Ìí¼Ó±êÊ¶£¬ÓÃÓÚÊÕ¼¯Åö×²¶Ô
-                                    _entityManager.AddBuffer<SkillArcaneCircleSecondBufferTag>(entityArcaneCircle);//Ìí¼Ó¼¼ÄÜ×¨Êôbuffer±êÇ©£¬ÓÃÓÚ¹¹½¨ºçÎüÐ§¹ûµÄ»ù´¡Êý¾Ý
+                                    _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleSecondTag());//ï¿½ï¿½ï¿½Ó±ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½×²ï¿½ï¿½
+                                    _entityManager.AddBuffer<SkillArcaneCircleSecondBufferTag>(entityArcaneCircle);//ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½×¨ï¿½ï¿½bufferï¿½ï¿½Ç©ï¿½ï¿½ï¿½ï¿½ï¿½Ú¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                          
                                 }
                             }
                             else
                             {
-                                //ÔÙ´Îµã»÷ÊÖ¶¯¹Ø±Õ
+                                //ï¿½Ù´Îµï¿½ï¿½ï¿½Ö¶ï¿½ï¿½Ø±ï¿½
                                 var arcaneCircleEntity = _arcaneCircleQuery.GetSingletonRW<SkillArcaneCircleTag>();
                                 arcaneCircleEntity.ValueRW.closed = true;
-                                //¹Ø±Õ·¨ÕóÊ±£¬ÐèÒªÉèÖÃÁ´½ÓÎª0
+                                //ï¿½Ø±Õ·ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª0
                              //   ecb.SetComponentEnabled<HeroEffectsLinked>(_entityManager.GetBuffer<LinkedEntityGroup>(_heroEntity)[1].Value, false);
                             }
 
@@ -369,24 +371,24 @@ namespace BlackDawn
 
 
                     break;
-                //º®±ù£¬Ë²Ê±    
+                //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë²Ê±    
                 case HeroSkillID.Frost:
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
                             WeaponEnchantmentSkillFrost();
                             break;
-                        //Ôö¼Ó·ÖÁÑ¹¦ÄÜ
+                        //ï¿½ï¿½ï¿½Ó·ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½
                         case HeroSkillPsionicType.PsionicA:
                             WeaponEnchantmentSkillFrost( true,5,5);
                             break;
-                        //Ôö¼ÓËéÆ¬´ÎÊý,²»ÄÜ·ÖÁÑ£¬µ«ÊÇ¿ÉÒÔ¶³½á
+                        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Ü·ï¿½ï¿½Ñ£ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½
                         case HeroSkillPsionicType.PsionicB:
                             WeaponEnchantmentSkillFrost(false,5,2);
                             Hero.instance.skillAttackPar.tempFreeze = 101;
                             Hero.instance.skillAttackPar.enableSpecialEffect = true;
                             break;
-                        //·ÖÁÑºÍËéÆ¬¶¼Ôö¼Ó
+                        //ï¿½ï¿½ï¿½Ñºï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                         case HeroSkillPsionicType.PsionicAB:
                             WeaponEnchantmentSkillFrost(true, 15, 17,0.1f);
                             Hero.instance.skillAttackPar.tempFreeze = 101;
@@ -395,7 +397,7 @@ namespace BlackDawn
                     }
 
                     break;
-                //ÔªËØ¹²Ãù,³ÖÐø£¿£¬·Ç¼¼ÄÜ±êÇ©£¬²»»áÔì³ÉÉËº¦,¿ÉÒÔ¶ÁÈ¡µÈ¼¶Õ¹Ê¾ÉËº¦
+                //Ôªï¿½Ø¹ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¼ï¿½ï¿½Ü±ï¿½Ç©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½,ï¿½ï¿½ï¿½Ô¶ï¿½È¡ï¿½È¼ï¿½Õ¹Ê¾ï¿½Ëºï¿½
                 case HeroSkillID.ElementResonance:
                     switch (psionicType)
                     { case HeroSkillPsionicType.Basic:
@@ -419,7 +421,7 @@ namespace BlackDawn
 
                     }
                     break;
-                //¾²µçÀÎÁý£¬Ë²Ê±£¬³ÖÐø
+                //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë²Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 case HeroSkillID.ElectroCage:
 
                     switch (psionicType)
@@ -427,7 +429,7 @@ namespace BlackDawn
                         case HeroSkillPsionicType.Basic:
 
                             var entityElectroCage = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ElectroCage, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                            //¹¹Ôì¶¨ÉíÐ§¹û
+                            //ï¿½ï¿½ï¿½ì¶¨ï¿½ï¿½Ð§ï¿½ï¿½
                             var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entityElectroCage);
                             skillPar.tempRoot = 101;
                             skillPar.tempStun = 101;
@@ -435,22 +437,22 @@ namespace BlackDawn
                             _entityManager.AddComponentData(entityElectroCage, new SkillElectroCageTag() { tagSurvivalTime = 4 });
                             break;
 
-                            //¿ªÆô¶þ½×¶Î£¬ÔöÉË100%
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¶Î£ï¿½ï¿½ï¿½ï¿½ï¿½100%
                         case HeroSkillPsionicType.PsionicA:
 
                             var entityElectroCageA = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ElectroCage, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                            //¹¹Ôì¶¨ÉíÐ§¹û
+                            //ï¿½ï¿½ï¿½ì¶¨ï¿½ï¿½Ð§ï¿½ï¿½
                             var skillParA = _entityManager.GetComponentData<SkillsDamageCalPar>(entityElectroCageA);
                             skillParA.tempRoot = 101;
                             skillParA.tempStun = 101;
                             _entityManager.SetComponentData(entityElectroCageA, skillParA);
                             _entityManager.AddComponentData(entityElectroCageA, new SkillElectroCageTag() { tagSurvivalTime = 4,enableSecondA =true,skillDamageChangeParTag=2,intervalTimer=0.2f });
                             break;
-                            //¿ªÆôµÚÈý½×¶Î£¬¾²µç´«µ¼
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¶Î£ï¿½ï¿½ï¿½ï¿½ç´«ï¿½ï¿½
                         case HeroSkillPsionicType.PsionicB:
 
                             var entityElectroCageB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ElectroCage, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                            //¹¹Ôì¶¨ÉíÐ§¹û
+                            //ï¿½ï¿½ï¿½ì¶¨ï¿½ï¿½Ð§ï¿½ï¿½
                             var skillParB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityElectroCageB);
                             skillParB.tempRoot = 101;
                             skillParB.tempStun = 101;
@@ -458,11 +460,11 @@ namespace BlackDawn
                             _entityManager.AddComponentData(entityElectroCageB, new SkillElectroCageTag() { tagSurvivalTime = 4,enableSecondB=true });
                             break;
 
-                        //¿ªÆô¶þ½×¶Î£¬ÔöÉË100%,¿ªÆô¾²µç´«µ¼±êÊ¶
+                        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¶Î£ï¿½ï¿½ï¿½ï¿½ï¿½100%,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ç´«ï¿½ï¿½ï¿½ï¿½Ê¶
                         case HeroSkillPsionicType.PsionicAB:
 
                             var entityElectroCageAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ElectroCage, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                            //¹¹Ôì¶¨ÉíÐ§¹û
+                            //ï¿½ï¿½ï¿½ì¶¨ï¿½ï¿½Ð§ï¿½ï¿½
                             var skillParAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityElectroCageAB);
                             skillParAB.tempRoot = 101;
                             skillParAB.tempStun = 101;
@@ -474,11 +476,11 @@ namespace BlackDawn
                     }
 
                     break;
-                //¶¾±¬µØÀ×,Ë²Ê±£¬³ÖÐø£¬µÚÒ»¸ö3½×±ä»¯¼¼ÄÜ
+                //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,Ë²Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½3ï¿½×±ä»¯ï¿½ï¿½ï¿½ï¿½
                 case HeroSkillID.MineBlast:
                     switch (psionicType)
                     {
-                        //²¼ÖÃ3¿Å¶¾±¬À×  ÊÇ·ñÓÐ±ØÒª£¬²¼ÖÃ·½Ê½£¬ÊÇ·ñ¿ÉÌá¹©Ðý×ª²Ù×÷£¿ÔÝ²»Ìá¹©Ð§¹û£¬ Ô­Éú¼¼ÄÜ×Ô´ø2½×±¬Õ¨Ð§¹û,Ìí¼Ó±¬Õ¨Ð§¹û±êÇ©£¬ÓÃÓÚ±¬Õ¨³ÖÐøÊ±¼ä,300%±¬Õ¨ÉËº¦´«µÝ
+                        //ï¿½ï¿½ï¿½ï¿½3ï¿½Å¶ï¿½ï¿½ï¿½ï¿½ï¿½  ï¿½Ç·ï¿½ï¿½Ð±ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Ã·ï¿½Ê½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½á¹©ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý²ï¿½ï¿½á¹©Ð§ï¿½ï¿½ï¿½ï¿½ Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½2ï¿½×±ï¿½Õ¨Ð§ï¿½ï¿½,ï¿½ï¿½ï¿½Ó±ï¿½Õ¨Ð§ï¿½ï¿½ï¿½ï¿½Ç©ï¿½ï¿½ï¿½ï¿½ï¿½Ú±ï¿½Õ¨ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½,300%ï¿½ï¿½Õ¨ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½
                         case HeroSkillPsionicType.Basic:
 
                             for (int i = 0; i < 3; i++)
@@ -504,7 +506,7 @@ namespace BlackDawn
                                 _entityManager.AddComponentData(entityMineBlastB, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, enableSecondB = true });
                             }
                             break;
-                            //Ê®×ÖµØÀ×
+                            //Ê®ï¿½Öµï¿½ï¿½ï¿½
                         case HeroSkillPsionicType.PsionicC:
                             for (int i = 0; i < 3; i++)
                             {
@@ -530,7 +532,7 @@ namespace BlackDawn
                             }
 
                             break;
-                        //Ê®×ÖµØÀ×¼ÓºóÐøÒÅÁô
+                        //Ê®ï¿½Öµï¿½ï¿½×¼Óºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                         case HeroSkillPsionicType.PsionicAC:
                             for (int i = 0; i < 3; i++)
                             {
@@ -561,7 +563,7 @@ namespace BlackDawn
                                 _entityManager.AddComponentData(entityMineBlastBC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, enableSecondB = true, enableSecondC = true, level = 1 });
                             }
                             break;
-                            //ÖÕ¼«ÈýÁéÄÜÐ§¹û
+                            //ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½
                         case HeroSkillPsionicType.PsionicABC:
                             for (int i = 0; i < 3; i++)
                             {
@@ -580,16 +582,16 @@ namespace BlackDawn
 
                     }
                     break;
-                //°µÓ°ºéÁ÷£¬Ë²Ê±,³ÖÐø£¬Òýµ¼
+                //ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë²Ê±,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 case HeroSkillID.ShadowTide:
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
 
-                            //»ù´¡ÄÜÁ¿´óÓÚ
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                             bool hasShadowTide = _shadowTideQuery.CalculateEntityCount() > 0;
 
-                            //ÕâÀï»ñÈ¡ÊÀ½çÖÐµÄÊÂÊµentity
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½Êµentity
                             var realAttr = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
                             if (!hasShadowTide)
                             {
@@ -599,9 +601,9 @@ namespace BlackDawn
                                     _entityManager.SetComponentData(_heroEntity, realAttr);
                                     var filter = new CollisionFilter
                                     {
-                                        //ÊôÓÚµÀ¾ß²ã
+                                        //ï¿½ï¿½ï¿½Úµï¿½ï¿½ß²ï¿½
                                         BelongsTo = 1u << 10,
-                                        //¼ì²âµÐÈË
+                                        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                                         CollidesWith = 1u << 6,
                                         GroupIndex = 0
                                     };
@@ -614,7 +616,7 @@ namespace BlackDawn
                             }
                             else
                             {
-                                //ÔÙ´Îµã»÷ÊÖ¶¯¹Ø±Õ
+                                //ï¿½Ù´Îµï¿½ï¿½ï¿½Ö¶ï¿½ï¿½Ø±ï¿½
                                 var shadowTideEntity = _shadowTideQuery.GetSingletonRW<SkillShadowTideTag>();
 
                                 shadowTideEntity.ValueRW.closed = true;
@@ -623,10 +625,10 @@ namespace BlackDawn
                             break;
                         case HeroSkillPsionicType.PsionicA:
 
-                            //»ù´¡ÄÜÁ¿´óÓÚ20 
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½20 
                             bool hasShadowTideA = _shadowTideQuery.CalculateEntityCount() > 0;
 
-                            //ÕâÀï»ñÈ¡ÊÀ½çÖÐµÄÊÂÊµentity
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½Êµentity
                             var realAttrA = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
                             if (!hasShadowTideA)
                             {
@@ -636,9 +638,9 @@ namespace BlackDawn
                                     _entityManager.SetComponentData(_heroEntity, realAttrA);
                                     var filter = new CollisionFilter
                                     {
-                                        //ÊôÓÚµÀ¾ß²ã
+                                        //ï¿½ï¿½ï¿½Úµï¿½ï¿½ß²ï¿½
                                         BelongsTo = 1u << 10,
-                                        //¼ì²âµÐÈË
+                                        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                                         CollidesWith = 1u << 6,
                                         GroupIndex = 0
                                     };
@@ -646,16 +648,16 @@ namespace BlackDawn
                                     var entityShadowTideA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_ShadowTideA, overlapA, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                                     _entityManager.AddComponentData(entityShadowTideA, new SkillShadowTideTag { tagSurvivalTime = 3, level = 1 ,skillDamageChangeParTag=2});
                                     var skillParA = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityShadowTideA);
-                                    //Ìí¼ÓÒýÁ¦ÌØÐ§
+                                    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§
                                     skillParA.enablePull = true;
-                                    //ÉËº¦·­±¶
+                                    //ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½
                                     skillParA.damageChangePar = 2;
                                     _entityManager.SetComponentData(entityShadowTideA, skillParA);
                                 }
                             }
                             else
                             {
-                                //ÔÙ´Îµã»÷ÊÖ¶¯¹Ø±Õ
+                                //ï¿½Ù´Îµï¿½ï¿½ï¿½Ö¶ï¿½ï¿½Ø±ï¿½
                                 var shadowTideEntity = _shadowTideQuery.GetSingletonRW<SkillShadowTideTag>();
 
                                 shadowTideEntity.ValueRW.closed = true;
@@ -666,10 +668,10 @@ namespace BlackDawn
 
                         case HeroSkillPsionicType.PsionicB:
 
-                            //»ù´¡ÄÜÁ¿´óÓÚ20 
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½20 
                             bool hasShadowTideB = _shadowTideQuery.CalculateEntityCount() > 0;
 
-                            //ÕâÀï»ñÈ¡ÊÀ½çÖÐµÄÊÂÊµentity
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½Êµentity
                             var realAttrB = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
                             if (!hasShadowTideB)
                             {
@@ -679,9 +681,9 @@ namespace BlackDawn
                                     _entityManager.SetComponentData(_heroEntity, realAttrB);
                                     var filter = new CollisionFilter
                                     {
-                                        //ÊôÓÚµÀ¾ß²ã
+                                        //ï¿½ï¿½ï¿½Úµï¿½ï¿½ß²ï¿½
                                         BelongsTo = 1u << 10,
-                                        //¼ì²âµÐÈË
+                                        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                                         CollidesWith = 1u << 6,
                                         GroupIndex = 0
                                     };
@@ -694,7 +696,7 @@ namespace BlackDawn
                             }
                             else
                             {
-                                //ÔÙ´Îµã»÷ÊÖ¶¯¹Ø±Õ
+                                //ï¿½Ù´Îµï¿½ï¿½ï¿½Ö¶ï¿½ï¿½Ø±ï¿½
                                 var shadowTideEntity = _shadowTideQuery.GetSingletonRW<SkillShadowTideTag>();
 
                                 shadowTideEntity.ValueRW.closed = true;
@@ -706,10 +708,10 @@ namespace BlackDawn
 
                         case HeroSkillPsionicType.PsionicAB:
 
-                            //»ù´¡ÄÜÁ¿´óÓÚ20
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½20
                             bool hasShadowTideAB = _shadowTideQuery.CalculateEntityCount() > 0;
 
-                            //ÕâÀï»ñÈ¡ÊÀ½çÖÐµÄÊÂÊµentity
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½Êµentity
                             var realAttrAB = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
                             if (!hasShadowTideAB)
                             {
@@ -719,9 +721,9 @@ namespace BlackDawn
                                     _entityManager.SetComponentData(_heroEntity, realAttrAB);
                                     var filter = new CollisionFilter
                                     {
-                                        //ÊôÓÚµÀ¾ß²ã
+                                        //ï¿½ï¿½ï¿½Úµï¿½ï¿½ß²ï¿½
                                         BelongsTo = 1u << 10,
-                                        //¼ì²âµÐÈË
+                                        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                                         CollidesWith = 1u << 6,
                                         GroupIndex = 0
                                     };
@@ -729,16 +731,16 @@ namespace BlackDawn
                                     var entityShadowTideAB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_ShadowTideA, overlapAB, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                                     _entityManager.AddComponentData(entityShadowTideAB, new SkillShadowTideTag { tagSurvivalTime = 3, level = 1, skillDamageChangeParTag = 2 ,enableSecondB=true});
                                     var skillParAB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityShadowTideAB);
-                                    //Ìí¼ÓÒýÁ¦ÌØÐ§
+                                    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§
                                     skillParAB.enablePull = true;
-                                    //ÉËº¦·­±¶
+                                    //ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½
                                     skillParAB.damageChangePar = 2;
                                     _entityManager.SetComponentData(entityShadowTideAB, skillParAB);
                                 }
                             }
                             else
                             {
-                                //ÔÙ´Îµã»÷ÊÖ¶¯¹Ø±Õ
+                                //ï¿½Ù´Îµï¿½ï¿½ï¿½Ö¶ï¿½ï¿½Ø±ï¿½
                                 var shadowTideEntity = _shadowTideQuery.GetSingletonRW<SkillShadowTideTag>();
 
                                 shadowTideEntity.ValueRW.closed = true;
@@ -751,8 +753,22 @@ namespace BlackDawn
 
                     }
 
-                    break;                                      
-                //¶¾Óê,³ÖÐø,¼¼ÄÜ¸½´øµÄ¿ØÖÆ²ÎÊý£¬ ¿ÉÒÔÍ¨¹ýÅäÖÃ±í½øÐÐÅäÖÃ
+                    break;
+                //ï¿½ï¿½Ëªï¿½ï¿½ï¿½Ç£ï¿½Ë²Ê±    
+                case HeroSkillID.FrostNova:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+                            var entityFrostNova = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_FrostNova, _transform.position, Hero.instance.transform.rotation, 1, 0, 0, 1, true, false);
+                            //ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½×¨ï¿½Ã±ï¿½Ç©ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½    
+                            _entityManager.AddComponentData(entityFrostNova, new SkillPulseTag() { tagSurvivalTime = 3, speed = 5 });
+                            
+
+
+                            break;
+                    }
+                    break;
+                //ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Ü¸ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½Æ²ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½Ã±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 case HeroSkillID.PoisonRain:
                     switch (psionicType)
                     {
@@ -783,10 +799,10 @@ namespace BlackDawn
                             var skillParA = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainA);
                             skillParA.tempSlow = 30;
                             _entityManager.SetComponentData(entityPoisonRainA, skillParA);
-                            //Ìí¼ÓA½×¶Î±êÇ©£¬ÓÃÓÚÊÕ¼¯ÅÐ¶Ï£¬·ÇbufferµÄ´¦Àí½á¹¹£¿»òÓÃÓÚ³ÖÐøÐÔ¼ÆËã
+                            //ï¿½ï¿½ï¿½ï¿½Aï¿½×¶Î±ï¿½Ç©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½Ð¶Ï£ï¿½ï¿½ï¿½bufferï¿½Ä´ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú³ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½
                             _entityManager.AddComponentData(entityPoisonRainA, new SkillPoisonRainATag { level = 1 });
                             break;
-                            //½øÐÐ B¼¼ÄÜ´¥·¢£¬»ðÑæÐ§¹û
+                            //ï¿½ï¿½ï¿½ï¿½ Bï¿½ï¿½ï¿½Ü´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½
                         case HeroSkillPsionicType.PsionicB:
                             var filterB = new CollisionFilter
                             {
@@ -800,19 +816,19 @@ namespace BlackDawn
                             int level = 3;
                             var skillParB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainB);
                             skillParB.tempSlow = 30;
-                            //Ìí¼Ó»èÃÔÖµ
+                            //ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½Öµ
                             skillParB.tempStun = 200;
-                            //Ìí¼Ó»ðÑæ²ÎÊý
+                            //ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                             skillParB.fireDamage += skillParB.poisonDamage*(1+level*0.2f);
                             skillParB.fireDotDamage += skillParB.poisonDotDamage* (1 + level * 0.2f); 
                             _entityManager.SetComponentData(entityPoisonRainB, skillParB);
 
-                            //--»ðÑæÓê,½ö½öÔö¼ÓÒ»¸öÐ§¹û£¬ÎÞÊµ¼Ê¼ÆËã
+                            //--ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½Ê¼ï¿½ï¿½ï¿½
                             var entityPoisonRainBFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB,new OverlapOverTimeQueryCenter(), Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainBFire, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                          
                             break;
-                        //½øÐÐ B¼¼ÄÜ´¥·¢£¬»ìºÏÖÕ¼«Ð§¹û
+                        //ï¿½ï¿½ï¿½ï¿½ Bï¿½ï¿½ï¿½Ü´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½Ð§ï¿½ï¿½
                         case HeroSkillPsionicType.PsionicAB:
                             var filterAB = new CollisionFilter
                             {
@@ -823,19 +839,19 @@ namespace BlackDawn
                             var overlapAB = new OverlapOverTimeQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filterAB, offset = new float3(0, 0, 0) };
                             var entityPoisonRainAB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapAB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainAB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
-                            //Ìí¼ÓA½×¶Î±êÇ©£¬ÓÃÓÚÊÕ¼¯ÅÐ¶Ï£¬·ÇbufferµÄ´¦Àí½á¹¹£¿»òÓÃÓÚ³ÖÐøÐÔ¼ÆËã
+                            //ï¿½ï¿½ï¿½ï¿½Aï¿½×¶Î±ï¿½Ç©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½Ð¶Ï£ï¿½ï¿½ï¿½bufferï¿½Ä´ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú³ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½
                             _entityManager.AddComponentData(entityPoisonRainAB, new SkillPoisonRainATag { level = 1 });
                             int levelAB = 3;
                             var skillParAB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainAB);
                             skillParAB.tempSlow = 30;
-                            //Ìí¼Ó»èÃÔÖµ
+                            //ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½Öµ
                             skillParAB.tempStun = 200;
-                            //Ìí¼Ó»ðÑæ²ÎÊý
+                            //ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                             skillParAB.fireDamage += skillParAB.poisonDamage * (1 + levelAB * 0.2f);
                             skillParAB.fireDotDamage += skillParAB.poisonDotDamage * (1 + levelAB * 0.2f);
                             _entityManager.SetComponentData(entityPoisonRainAB, skillParAB);
 
-                            //--»ðÑæÓê,½ö½öÔö¼ÓÒ»¸öÐ§¹û£¬ÎÞÊµ¼Ê¼ÆËã
+                            //--ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½Ê¼ï¿½ï¿½ï¿½
                             var entityPoisonRainABFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, new OverlapOverTimeQueryCenter(),Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainABFire, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                         
@@ -852,59 +868,59 @@ namespace BlackDawn
                
         }
         /// <summary>
-        /// ÊµÀý»¯²¢³õÊ¼»¯Ò»¸öÉËº¦ÐÍ·ÉÐÐ¼¼ÄÜÊµÌå£¨Pulse,PulseB£©-
-        /// Ö§³ÖÎ»ÖÃ¡¢Ðý×ª¡¢Ëõ·ÅÆ«ÒÆ£¬ÒÔ¼°¿ÉÑ¡µÄÒýÁ¦/³âÁ¦Ð§¹û¡£
+        /// Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ëºï¿½ï¿½Í·ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½Êµï¿½å£¨Pulse,PulseBï¿½ï¿½-
+        /// Ö§ï¿½ï¿½Î»ï¿½Ã¡ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½Æ£ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="prefab">¼¼ÄÜÔ¤ÖÆÊµÌå¡£</param>
-        /// <param name="positionOffset">ÊÀ½ç¿Õ¼äÎ»ÖÃÆ«ÒÆ£¬Ä¬ÈÏ <c>float3.zero</c>¡£</param>
-        /// <param name="rotationOffsetEuler">Ïà¶ÔÓ¢ÐÛµÄÅ·À­½ÇÐý×ªÆ«ÒÆ£¨¶È£©£¬Ä¬ÈÏ <c>float3.zero</c>¡£</param>
-        /// <param name="scaleFactor">Ëõ·ÅÒò×Ó£¬Ä¬ÈÏ <c>1f</c>¡£</param>
-        /// <param name="enablePull">ÊÇ·ñ¿ªÆôÒýÁ¦Ð§¹û£¬Ä¬ÈÏ <c>false</c>¡£</param>
-        /// <param name="enableExplosion">ÊÇ·ñ¿ªÆô³âÁ¦/±¬Õ¨Ð§¹û£¬Ä¬ÈÏ <c>fasle</c>¡£</param>
-        /// <param name="enableSecond">ÊÇ·ñ¿ªÆô¶þ½×¶Î <c>fasle</c>¡£</param>
-        /// <returns>·µ»ØÐÂÊµÀý»¯µÄÊµÌå¡£</returns>
+        /// <param name="prefab">ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½Êµï¿½å¡£</param>
+        /// <param name="positionOffset">ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½Î»ï¿½ï¿½Æ«ï¿½Æ£ï¿½Ä¬ï¿½ï¿½ <c>float3.zero</c>ï¿½ï¿½</param>
+        /// <param name="rotationOffsetEuler">ï¿½ï¿½ï¿½Ó¢ï¿½Ûµï¿½Å·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªÆ«ï¿½Æ£ï¿½ï¿½È£ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ <c>float3.zero</c>ï¿½ï¿½</param>
+        /// <param name="scaleFactor">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó£ï¿½Ä¬ï¿½ï¿½ <c>1f</c>ï¿½ï¿½</param>
+        /// <param name="enablePull">ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ <c>false</c>ï¿½ï¿½</param>
+        /// <param name="enableExplosion">ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½Õ¨Ð§ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ <c>fasle</c>ï¿½ï¿½</param>
+        /// <param name="enableSecond">ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¶ï¿½ <c>fasle</c>ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½å¡£</returns>
       public  Entity DamageSkillsFlightProp(
           Entity prefab,
           float3 posion,
           quaternion quaternion,
-          float damageChangePar =1,//Ä¬ÈÏÉËº¦²ÎÊýÎª1
+          float damageChangePar =1,//Ä¬ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½Îª1
           float3 positionOffset = default,
-          float3 rotationOffsetEuler = default,  // ´«Èë¶ÈÊý
+          float3 rotationOffsetEuler = default,  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
           float scaleFactor = 1f,bool enablePull =false,bool enableExplosion =false)
         {
-            DevDebug.Log("ÊÍ·ÅÉËº¦ÐÍ·ÉÐÐ¼¼ÄÜ");
+            DevDebug.Log("ï¿½Í·ï¿½ï¿½Ëºï¿½ï¿½Í·ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½");
 
-            // 1) ÊµÀý»¯
+            // 1) Êµï¿½ï¿½ï¿½ï¿½
             var entity = _entityManager.Instantiate(prefab);
 
-            // 2) È¡³ö¿É±äµÄ LocalTransform
+            // 2) È¡ï¿½ï¿½ï¿½É±ï¿½ï¿½ LocalTransform
             var transform = _entityManager.GetComponentData<LocalTransform>(entity);
             
     
-            // 3) ´ÓÓ¢ÐÛ»ñÈ¡»ù´¡Î»ÖÃ/Ðý×ª/Ëõ·Å
+            // 3) ï¿½ï¿½Ó¢ï¿½Û»ï¿½È¡ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½/ï¿½ï¿½×ª/ï¿½ï¿½ï¿½ï¿½
             float3 heroPos = posion;
             quaternion heroRot = quaternion;
-            float baseScale = transform.Scale; // ±£ÁôÔ¤ÖÆÌåµÄÔ­Ê¼ scale
+            float baseScale = transform.Scale; // ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ scale
 
-            // 4) ¼ÆËãÅ·À­Æ«ÒÆµÄËÄÔªÊý
-            //    math.radians ½«¶ÈÊý×ªÎª»¡¶È
+            // 4) ï¿½ï¿½ï¿½ï¿½Å·ï¿½ï¿½Æ«ï¿½Æµï¿½ï¿½ï¿½Ôªï¿½ï¿½
+            //    math.radians ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªÎªï¿½ï¿½ï¿½ï¿½
             quaternion eulerOffsetQuat = quaternion.EulerXYZ(
                 math.radians(rotationOffsetEuler)
             );
 
-            // 5) µþ¼ÓÆ«ÒÆ
+            // 5) ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½
             transform.Position = heroPos
                                 + math.mul(heroRot, positionOffset);
-            //¼ÆËãÕûºÏÐý×ª
+            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ª
             var combineRotation = math.mul(heroRot, eulerOffsetQuat);
-            //µþ¼Ó±¾ÌåÐý×ª
+            //ï¿½ï¿½ï¿½Ó±ï¿½ï¿½ï¿½ï¿½ï¿½×ª
             transform.Rotation = math.mul(transform.Rotation, combineRotation);
             transform.Scale = baseScale * scaleFactor*(1+ _heroAttributeCmptOriginal.gainAttribute.skillRange);
 
-            // 6) Ð´»Ø×é¼þ
+            // 6) Ð´ï¿½ï¿½ï¿½ï¿½ï¿½
             _entityManager.SetComponentData(entity, transform);
 
-            // 7) Ìí¼ÓÉËº¦²ÎÊý
+            // 7) ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½
             _entityManager.AddComponentData(entity, Hero.instance.skillsDamageCalPar);
        
             var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entity);
@@ -914,14 +930,14 @@ namespace BlackDawn
                 skillPar.damageChangePar= damageChangePar;         
             _entityManager.SetComponentData(entity, skillPar);
 
-            // 8) Ìí¼ÓÅö×²¼ÇÂ¼»º³åÇø
+            // 8) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             var hits = _entityManager.AddBuffer<HitRecord>(entity);
             _entityManager.AddBuffer<HitElementResonanceRecord>(entity);
 
             return entity;
         }
         /// <summary>
-        /// ³ÖÐøÐÔ¼¼ÄÜ£¬È¡ÏûhitRecord µÄbuffer±éÀú£¬ÇÒÔÚsystemÖÐ½øÐÐ¸üÐÂ£¬²»ÏíÊÜ¿ìÕÕ»úÖÆ£¨¶¾Óê£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½Ü£ï¿½È¡ï¿½ï¿½hitRecord ï¿½ï¿½bufferï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½systemï¿½Ð½ï¿½ï¿½Ð¸ï¿½ï¿½Â£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü¿ï¿½ï¿½Õ»ï¿½ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ê£©
         /// </summary>
         /// <param name="prefab"></param>
         /// <param name="posion"></param>
@@ -938,47 +954,47 @@ namespace BlackDawn
          OverlapOverTimeQueryCenter queryCenter,
          float3 posion,
          quaternion quaternion,
-         float damageChangePar = 1,//Ä¬ÈÏÉËº¦²ÎÊýÎª1
+         float damageChangePar = 1,//Ä¬ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½Îª1
          float3 positionOffset = default,
-         float3 rotationOffsetEuler = default,  // ´«Èë¶ÈÊý
+         float3 rotationOffsetEuler = default,  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
          float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
         {
-            DevDebug.Log("ÊÍ·ÅÉËº¦ÐÍ·ÉÐÐ¼¼ÄÜ");
+            DevDebug.Log("ï¿½Í·ï¿½ï¿½Ëºï¿½ï¿½Í·ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½");
 
-            // 1) ÊµÀý»¯
+            // 1) Êµï¿½ï¿½ï¿½ï¿½
             var entity = _entityManager.Instantiate(prefab);
 
-            // 2) È¡³ö¿É±äµÄ LocalTransform
+            // 2) È¡ï¿½ï¿½ï¿½É±ï¿½ï¿½ LocalTransform
             var transform = _entityManager.GetComponentData<LocalTransform>(entity);
 
 
-            // 3) ´ÓÓ¢ÐÛ»ñÈ¡»ù´¡Î»ÖÃ/Ðý×ª/Ëõ·Å
+            // 3) ï¿½ï¿½Ó¢ï¿½Û»ï¿½È¡ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½/ï¿½ï¿½×ª/ï¿½ï¿½ï¿½ï¿½
             float3 heroPos = posion;
             quaternion heroRot = quaternion;
-            float baseScale = transform.Scale; // ±£ÁôÔ¤ÖÆÌåµÄÔ­Ê¼ scale
+            float baseScale = transform.Scale; // ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ scale
 
-            // 4) ¼ÆËãÅ·À­Æ«ÒÆµÄËÄÔªÊý
-            //    math.radians ½«¶ÈÊý×ªÎª»¡¶È
+            // 4) ï¿½ï¿½ï¿½ï¿½Å·ï¿½ï¿½Æ«ï¿½Æµï¿½ï¿½ï¿½Ôªï¿½ï¿½
+            //    math.radians ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªÎªï¿½ï¿½ï¿½ï¿½
             quaternion eulerOffsetQuat = quaternion.EulerXYZ(
                 math.radians(rotationOffsetEuler)
             );
 
-            // 5) µþ¼ÓÆ«ÒÆ
+            // 5) ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½
             transform.Position = heroPos
                                 + math.mul(heroRot, positionOffset);
-            //¼ÆËãÕûºÏÐý×ª
+            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ª
             var combineRotation = math.mul(heroRot, eulerOffsetQuat);
-            //µþ¼Ó±¾ÌåÐý×ª
+            //ï¿½ï¿½ï¿½Ó±ï¿½ï¿½ï¿½ï¿½ï¿½×ª
             transform.Rotation = math.mul(transform.Rotation, combineRotation);
             transform.Scale = baseScale * scaleFactor * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange);
 
-            // 6) Ð´»Ø×é¼þ
+            // 6) Ð´ï¿½ï¿½ï¿½ï¿½ï¿½
             _entityManager.SetComponentData(entity, transform);
 
-            // 7) Ìí¼Ó³ÖÐøÉËº¦²ÎÊý
+            // 7) ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½
             _entityManager.AddComponentData(entity, Hero.instance.skillsOverTimeDamageCalPar);
 
-            //8)Ìí¼Ó³ÖÐøÐÔÉËº¦overlap¼ì²â
+            //8)ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½overlapï¿½ï¿½ï¿½
             if(queryCenter.radius!=0)
             _entityManager.AddComponentData(entity, queryCenter);
 
@@ -997,7 +1013,7 @@ namespace BlackDawn
 
 
         /// <summary>
-        /// ÎÞÉËº¦ÀàÐÍÔöÒæ ¼¼ÄÜµÀ¾ß£¬ÈçÔªËØ¹²ÃùÌå
+        /// ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Üµï¿½ï¿½ß£ï¿½ï¿½ï¿½Ôªï¿½Ø¹ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         /// <param name="prefab"></param>
         /// <param name="posion"></param>
@@ -1013,41 +1029,41 @@ namespace BlackDawn
        Entity prefab,
        float3 posion,
        quaternion quaternion,
-       float damageChangePar = 1,//Ä¬ÈÏÉËº¦²ÎÊýÎª1
+       float damageChangePar = 1,//Ä¬ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½Îª1
        float3 positionOffset = default,
-       float3 rotationOffsetEuler = default,  // ´«Èë¶ÈÊý
+       float3 rotationOffsetEuler = default,  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
        float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
         {
-            DevDebug.Log("ÊÍ·ÅÉËº¦ÐÍ·ÉÐÐ¼¼ÄÜ");
+            DevDebug.Log("ï¿½Í·ï¿½ï¿½Ëºï¿½ï¿½Í·ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½");
 
-            // 1) ÊµÀý»¯
+            // 1) Êµï¿½ï¿½ï¿½ï¿½
             var entity = _entityManager.Instantiate(prefab);
 
-            // 2) È¡³ö¿É±äµÄ LocalTransform
+            // 2) È¡ï¿½ï¿½ï¿½É±ï¿½ï¿½ LocalTransform
             var transform = _entityManager.GetComponentData<LocalTransform>(entity);
 
 
-            // 3) ´ÓÓ¢ÐÛ»ñÈ¡»ù´¡Î»ÖÃ/Ðý×ª/Ëõ·Å
+            // 3) ï¿½ï¿½Ó¢ï¿½Û»ï¿½È¡ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½/ï¿½ï¿½×ª/ï¿½ï¿½ï¿½ï¿½
             float3 heroPos = posion;
             quaternion heroRot = quaternion;
-            float baseScale = transform.Scale; // ±£ÁôÔ¤ÖÆÌåµÄÔ­Ê¼ scale
+            float baseScale = transform.Scale; // ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ scale
 
-            // 4) ¼ÆËãÅ·À­Æ«ÒÆµÄËÄÔªÊý
-            //    math.radians ½«¶ÈÊý×ªÎª»¡¶È
+            // 4) ï¿½ï¿½ï¿½ï¿½Å·ï¿½ï¿½Æ«ï¿½Æµï¿½ï¿½ï¿½Ôªï¿½ï¿½
+            //    math.radians ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªÎªï¿½ï¿½ï¿½ï¿½
             quaternion eulerOffsetQuat = quaternion.EulerXYZ(
                 math.radians(rotationOffsetEuler)
             );
 
-            // 5) µþ¼ÓÆ«ÒÆ
+            // 5) ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½
             transform.Position = heroPos
                                 + math.mul(heroRot, positionOffset);
-            //¼ÆËãÕûºÏÐý×ª
+            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ª
             var combineRotation = math.mul(heroRot, eulerOffsetQuat);
-            //µþ¼Ó±¾ÌåÐý×ª
+            //ï¿½ï¿½ï¿½Ó±ï¿½ï¿½ï¿½ï¿½ï¿½×ª
             transform.Rotation = math.mul(transform.Rotation, combineRotation);
             transform.Scale = baseScale * scaleFactor * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange);
 
-            // 6) Ð´»Ø×é¼þ
+            // 6) Ð´ï¿½ï¿½ï¿½ï¿½ï¿½
             _entityManager.SetComponentData(entity, transform);
 
 
@@ -1055,24 +1071,24 @@ namespace BlackDawn
         }
 
         /// <summary>
-        /// ±¬Õ¨ÀàÍ¨ÓÃ¼¼ÄÜ
-        /// ÊµÀý»¯²¢³õÊ¼»¯Ò»¸öÉËº¦ÐÍ·ÉÐÐ¼¼ÄÜÊµÌå£¨PulseC£©-
-        /// Ö§³ÖÎ»ÖÃ¡¢Ðý×ª¡¢Ëõ·ÅÆ«ÒÆ£¬ÒÔ¼°¿ÉÑ¡µÄÒýÁ¦/³âÁ¦Ð§¹û¡£
+        /// ï¿½ï¿½Õ¨ï¿½ï¿½Í¨ï¿½Ã¼ï¿½ï¿½ï¿½
+        /// Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ëºï¿½ï¿½Í·ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½Êµï¿½å£¨PulseCï¿½ï¿½-
+        /// Ö§ï¿½ï¿½Î»ï¿½Ã¡ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½Æ£ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="prefab">¼¼ÄÜÔ¤ÖÆÌåµÄÊµÌå</param>
-        /// <param name="position">Ó¢ÐÛµ±Ç°Î»ÖÃ</param>
-        /// <param name="rotation">Ó¢ÐÛ³¯ÏòËÄÔªÊý</param>
-        /// <param name="positionOffset">Ïà¶ÔÓÚÓ¢ÐÛÎ»ÖÃµÄÆ«ÒÆ£¨ÊÀ½ç¿Õ¼ä£©</param>
-        /// <param name="rotationOffsetEuler">Ïà¶ÔÓÚÓ¢ÐÛ³¯ÏòµÄÅ·À­½ÇÆ«ÒÆ£¨¶È£©</param>
-        /// <param name="scaleFactor">Ëõ·ÅÒò×Ó£¨Ïà¶ÔÓÚÔ¤ÖÆÌåÔ­Ê¼ Scale£©</param>
-        /// <param name="enablePull">ÊÇ·ñ¿ªÆôÎüÒýÐ§¹û</param>
-        /// <param name="enableExplosion">ÊÇ·ñ¿ªÆô±¬Õ¨Ð§¹û</param>
-        /// <returns>ÐÂÊµÀý»¯³öµÄÊµÌå£¨ÈÔÔÚÃüÁî»º³åÇøÖÐ£¬´ý Playback£©</returns>
+        /// <param name="prefab">ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½</param>
+        /// <param name="position">Ó¢ï¿½Ûµï¿½Ç°Î»ï¿½ï¿½</param>
+        /// <param name="rotation">Ó¢ï¿½Û³ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½</param>
+        /// <param name="positionOffset">ï¿½ï¿½ï¿½ï¿½ï¿½Ó¢ï¿½ï¿½Î»ï¿½Ãµï¿½Æ«ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ä£©</param>
+        /// <param name="rotationOffsetEuler">ï¿½ï¿½ï¿½ï¿½ï¿½Ó¢ï¿½Û³ï¿½ï¿½ï¿½ï¿½Å·ï¿½ï¿½ï¿½ï¿½Æ«ï¿½Æ£ï¿½ï¿½È£ï¿½</param>
+        /// <param name="scaleFactor">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ Scaleï¿½ï¿½</param>
+        /// <param name="enablePull">ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½</param>
+        /// <param name="enableExplosion">ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Õ¨Ð§ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½å£¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½î»ºï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ Playbackï¿½ï¿½</returns>
         public Entity SpawnDamageFlightSkillImmediate(
             Entity prefab,
             float3 position,
             quaternion rotation,
-            float damageChangePar = 0,//Ä¬ÈÏÉËº¦²ÎÊýÎª1
+            float damageChangePar = 0,//Ä¬ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½Îª1
             float3 positionOffset = default,
             float3 rotationOffsetEuler = default,
             float scaleFactor = 1f,
@@ -1080,14 +1096,14 @@ namespace BlackDawn
             bool enableExplosion = false
             )
         {
-            // 1) Á¢¿Ì Instantiate
+            // 1) ï¿½ï¿½ï¿½ï¿½ Instantiate
             var entity = _entityManager.Instantiate(prefab);
 
-            // 2) ÄÃ prefab Ô­Ê¼ Transform
+            // 2) ï¿½ï¿½ prefab Ô­Ê¼ Transform
             var prefabTransform = _entityManager.GetComponentData<LocalTransform>(prefab);
             float baseScale = prefabTransform.Scale;
 
-            // 3) ¼ÆËãÐÂ Transform
+            // 3) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Transform
             quaternion offsetQuat = quaternion.EulerXYZ(math.radians(rotationOffsetEuler));
             var newTransform = new LocalTransform
             {
@@ -1096,16 +1112,16 @@ namespace BlackDawn
                 Scale = baseScale * scaleFactor*(1 + _heroAttributeCmptOriginal.gainAttribute.skillRange)
             };
 
-            // 4) Ð´»Ø
+            // 4) Ð´ï¿½ï¿½
             _entityManager.SetComponentData(entity, newTransform);
 
-            // 5) Ìí¼ÓÉËº¦²ÎÊý
+            // 5) ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½
             var damagePar = Hero.instance.skillsDamageCalPar;
             damagePar.enablePull = enablePull;
             damagePar.enableExplosion = enableExplosion;
             damagePar.damageChangePar = damageChangePar;
             _entityManager.AddComponentData(entity, damagePar);
-            // 6) Ìí¼Ó»º³åÇø
+            // 6) ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½
             var hits = _entityManager.AddBuffer<HitRecord>(entity);
             _entityManager.AddBuffer<HitElementResonanceRecord>(entity);
 
@@ -1115,40 +1131,40 @@ namespace BlackDawn
         }
 
 
-        /// ECB °æ±¾ ÓÃÓÚ »Øµ÷BASEÏµÍ³£¬ÔÚÍâ²¿µ÷ÓÃµÄÒýÓÃ,ÓÃÓÚÁ£×ÓÏµÍ³»òÕß×¨ÓÃµÄÓÃÓÚÏú»ÙÔÙ³õÊ¼»¯µÄÏµÍ³µÄ´¦Àí
+        /// ECB ï¿½æ±¾ ï¿½ï¿½ï¿½ï¿½ ï¿½Øµï¿½BASEÏµÍ³ï¿½ï¿½ï¿½ï¿½ï¿½â²¿ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½×¨ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù³ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½Ä´ï¿½ï¿½ï¿½
         public Entity DamageSkillsExplosionProp(
             EntityCommandBuffer ecb,
             Entity prefab,
             float3 position,
             quaternion rotation,
-            float damageChangePar = 1,//Ä¬ÈÏÉËº¦²ÎÊýÎª1
+            float damageChangePar = 1,//Ä¬ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½Îª1
             float3 positionOffset = default,
             float3 rotationOffsetEuler = default,
             float scaleFactor = 1f,
             bool enablePull = false,
             bool enableExplosion = false)
         {
-            // 1) ÑÓ³ÙÊµÀý»¯
+            // 1) ï¿½Ó³ï¿½Êµï¿½ï¿½ï¿½ï¿½
             var entity = ecb.Instantiate(prefab);
 
-            // 2) ¶ÁÈ¡Ô¤ÖÆÌåÉÏÒÑÓÐµÄ LocalTransform£¬½ö¶ÁÈ¡²Ù×÷¿ÉÒÔÖ±½ÓÓÃ EntityManager
+            // 2) ï¿½ï¿½È¡Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ LocalTransformï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ EntityManager
             var prefabTransform = _entityManager.GetComponentData<LocalTransform>(prefab);
             float baseScale = prefabTransform.Scale;
 
-            // 3) ¼ÆËãÐÂµÄ±ä»»
+            // 3) ï¿½ï¿½ï¿½ï¿½ï¿½ÂµÄ±ä»»
             quaternion offsetQuat = quaternion.EulerXYZ(math.radians(rotationOffsetEuler));
             LocalTransform newTransform = new LocalTransform
             {
                 Position = position + math.mul(rotation, positionOffset),
                 Rotation = math.mul(rotation, offsetQuat),
-                //ÕâÀïÓÉ¼¼ÄÜ·¶Î§¾ö¶¨¼¼ÄÜµÄÓ°ÏìÒò×Ó
+                //ï¿½ï¿½ï¿½ï¿½ï¿½É¼ï¿½ï¿½Ü·ï¿½Î§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Üµï¿½Ó°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 Scale = baseScale * scaleFactor*(1 + _heroAttributeCmptOriginal.gainAttribute.skillRange)
             };
 
-            // 4) Ð´ÈëÐÂÊµÌå
+            // 4) Ð´ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
             ecb.SetComponent(entity, newTransform);
 
-            // 5) Ìí¼Ó²¢³õÊ¼»¯ÉËº¦²ÎÊý×é¼þ
+            // 5) ï¿½ï¿½ï¿½Ó²ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             var damagePar = new SkillsDamageCalPar { };
             damagePar = Hero.instance.skillsDamageCalPar;
             damagePar.enablePull = enablePull;
@@ -1156,17 +1172,17 @@ namespace BlackDawn
             damagePar.damageChangePar = damageChangePar;
             ecb.AddComponent(entity, damagePar);
 
-            // 6) Ìí¼ÓÅö×²¼ÇÂ¼»º³åÇø
+            // 6) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             var hits = ecb.AddBuffer<HitRecord>(entity);
            ecb.AddBuffer<HitElementResonanceRecord>(entity);
 
-            //Ð´»Ø
+            //Ð´ï¿½ï¿½
             return entity;
         }
 
 
         /// <summary>
-        /// ÎäÆ÷¸½Ä§Àà¼¼ÄÜ,¸½Ä§£¬°µÄÜ£¬²¢²¹³ä¸½Ä§Ê±¼ä£¬¸½Ä§Àà¼¼ÄÜµÄÌØÐ§£¿
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä§ï¿½à¼¼ï¿½ï¿½,ï¿½ï¿½Ä§ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ä¸½Ä§Ê±ï¿½ä£¬ï¿½ï¿½Ä§ï¿½à¼¼ï¿½Üµï¿½ï¿½ï¿½Ð§ï¿½ï¿½
         /// </summary>
         public void WeaponEnchantmentSkillDarkEnergy(int darkEnergyCount)
         { 
@@ -1179,7 +1195,7 @@ namespace BlackDawn
         }
 
         /// <summary>
-        /// ÎäÆ÷¸½Ä§Àà¼¼ÄÜ£¬ º®±ù
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä§ï¿½à¼¼ï¿½Ü£ï¿½ ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void WeaponEnchantmentSkillFrost( bool enableFrostScenod = false,int frostSplittingCount =5, int frostShardCount =5,float skillDamageChangePar=0.1f)
         {
@@ -1196,12 +1212,12 @@ namespace BlackDawn
        
         }
 
-        #region ´øÁ¬ÐøÊÍ·ÅµÄ´¥·¢Ð¯³ÌÀàµÄ¼¼ÄÜ
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ÅµÄ´ï¿½ï¿½ï¿½Ð¯ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½
 
 
         /// <summary>
-        ///Á¬ÐøÊÍ·Å¼¼ÄÜ£¬ÒòÎªÐ¯³ÌµÄ·µ»ØÖµÎÊÌâ£¬ËùÒÔÖ±½Ó´«Èë1½×¶Î¼¼ÄÜ±êÇ©
-        ///ÕâÀïÒÔÁ¬ÐøµÄÂäÀ×¼¼ÄÜ¿ªÊ¼
+        ///ï¿½ï¿½ï¿½ï¿½ï¿½Í·Å¼ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ÎªÐ¯ï¿½ÌµÄ·ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½â£¬ï¿½ï¿½ï¿½ï¿½Ö±ï¿½Ó´ï¿½ï¿½ï¿½1ï¿½×¶Î¼ï¿½ï¿½Ü±ï¿½Ç©
+        ///ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¼ï¿½ï¿½Ü¿ï¿½Ê¼
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="prefab"></param>
@@ -1217,13 +1233,13 @@ namespace BlackDawn
         public void DamageSkillsFlightPropConsecutiveCasting<T>(
     Entity prefab,
     T componentData,
-    int castCount,//ÊÍ·Å×Ü´ÎÊý
-    float interval,//¼ä¸ô
+    int castCount,//ï¿½Í·ï¿½ï¿½Ü´ï¿½ï¿½ï¿½
+    float interval,//ï¿½ï¿½ï¿½
     float3 posion,
     quaternion quaternion,
-    float damageChangePar = 0,//Ä¬ÈÏÉËº¦²ÎÊýÎª0
+    float damageChangePar = 0,//Ä¬ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½Îª0
     float3 positionOffset = default,
-    float3 rotationOffsetEuler = default,  // ´«Èë¶ÈÊý
+    float3 rotationOffsetEuler = default,  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false,bool fllow =false ) where T :unmanaged,IComponentData
 
 
@@ -1234,16 +1250,16 @@ namespace BlackDawn
                     ,scaleFactor,enablePull,enableExplosion,fllow),
                     tag: "ThunderStrikeSkill",
                     onComplete: () => {
-                        DevDebug.Log("³ÖÐøÐÍÁ¬Ðø¼¼ÄÜÊÍ·ÅÍê³É");
+                        DevDebug.Log("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½");
                     }
                 );
 
         }
         #endregion
 
-        #region Ð¯³ÌÇøÓò
+        #region Ð¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ICommonetData ±ØÐë¼ÓÉÏ unmanaged µÄ·ºÐÍÔ¼Êø£¬ÕâÀïÊÇ·¶Î§ÊÍ·ÅÐÔ¼¼ÄÜ£¬ ¹¥»÷·¶Î§Ôö¼Ó¼¼ÄÜµÄÊÍ·Å·¶Î§
+        /// ICommonetData ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ unmanaged ï¿½Ä·ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Î§ï¿½Í·ï¿½ï¿½Ô¼ï¿½ï¿½Ü£ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½Üµï¿½ï¿½Í·Å·ï¿½Î§
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="entity"></param>
@@ -1259,63 +1275,63 @@ namespace BlackDawn
         /// <returns></returns>
         IEnumerator  ThunderStrikeSkill<T>( Entity prefab,
          T componentData,
-         int castCount,//ÊÍ·Å×Ü´ÎÊý
-         float interval,//¼ä¸ô
+         int castCount,//ï¿½Í·ï¿½ï¿½Ü´ï¿½ï¿½ï¿½
+         float interval,//ï¿½ï¿½ï¿½
          float3 posion,
          quaternion quaternion,
-        float damageChangePar = 0,//Ä¬ÈÏÉËº¦²ÎÊýÎª1
+        float damageChangePar = 0,//Ä¬ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½Îª1
         float3 positionOffset = default,
-        float3 rotationOffsetEuler = default,  // ´«Èë¶ÈÊý
+        float3 rotationOffsetEuler = default,  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false ,bool fllow=false)where T : unmanaged, IComponentData
         {
 
 
             for (int i = 0; i < castCount; i++)
             {
-                // 1) ÊµÀý»¯
+                // 1) Êµï¿½ï¿½ï¿½ï¿½
                 var entity = _entityManager.Instantiate(prefab);
 
-                // 2) È¡³ö¿É±äµÄ LocalTransform
+                // 2) È¡ï¿½ï¿½ï¿½É±ï¿½ï¿½ LocalTransform
                 var transform = _entityManager.GetComponentData<LocalTransform>(entity);
 
 
-                // 3) ´ÓÓ¢ÐÛ»ñÈ¡»ù´¡Î»ÖÃ/Ðý×ª/Ëõ·Å
+                // 3) ï¿½ï¿½Ó¢ï¿½Û»ï¿½È¡ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½/ï¿½ï¿½×ª/ï¿½ï¿½ï¿½ï¿½
               
                 float3 heroPos = posion;                                  
                 quaternion heroRot = quaternion;
 
 
-                //¸úËæÇé¿öÏÂ£¬³ÖÐøÐÔÊÍ·ÅµÄ·ÉÐÐµÀ¾ßµÄÎ»ÖÃ ¸ú×ÅÓ¢ÐÛÒÆ¶¯£¬Ðý×ªÒ²ÊÇÒ»ÑùµÄ
+                //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ÅµÄ·ï¿½ï¿½Ðµï¿½ï¿½ßµï¿½Î»ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ó¢ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½×ªÒ²ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½
                 if (fllow)
                 {
                     heroPos = Hero.instance.transform.position;
                     heroRot =Hero.instance.transform.rotation;
                 }
-                float baseScale = transform.Scale; // ±£ÁôÔ¤ÖÆÌåµÄÔ­Ê¼ scale
+                float baseScale = transform.Scale; // ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ scale
 
-                // 4) ¼ÆËãÅ·À­Æ«ÒÆµÄËÄÔªÊý
-                //    math.radians ½«¶ÈÊý×ªÎª»¡¶È
+                // 4) ï¿½ï¿½ï¿½ï¿½Å·ï¿½ï¿½Æ«ï¿½Æµï¿½ï¿½ï¿½Ôªï¿½ï¿½
+                //    math.radians ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªÎªï¿½ï¿½ï¿½ï¿½
                 quaternion eulerOffsetQuat = quaternion.EulerXYZ(
                     math.radians(rotationOffsetEuler)
                 );
 
-                //4-1) ·¶Î§Î»ÖÃËæ»ú»¯
+                //4-1) ï¿½ï¿½Î§Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 float2 randomInCircle = UnityEngine.Random.insideUnitCircle * 10f*(1+ _heroAttributeCmptOriginal.gainAttribute.skillRange);
-                heroPos += new float3(randomInCircle.x, 0,randomInCircle.y);//Ëæ»ú·¶Î§ÄÚ½øÐÐÏà¹ØµÄ²ÎÊý´¦ÀíÕâÀïÊÇ400Æ½·½Ã×
+                heroPos += new float3(randomInCircle.x, 0,randomInCircle.y);//ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½Ú½ï¿½ï¿½ï¿½ï¿½ï¿½ØµÄ²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½400Æ½ï¿½ï¿½ï¿½ï¿½
 
-                // 5) µþ¼ÓÆ«ÒÆ
+                // 5) ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½
                 transform.Position = heroPos
                                     + math.mul(heroRot, positionOffset);
-                //¼ÆËãÕûºÏÐý×ª
+                //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ª
                 var combineRotation = math.mul(heroRot, eulerOffsetQuat);
-                //µþ¼Ó±¾ÌåÐý×ª
+                //ï¿½ï¿½ï¿½Ó±ï¿½ï¿½ï¿½ï¿½ï¿½×ª
                 transform.Rotation = math.mul(transform.Rotation, combineRotation);
                 transform.Scale = baseScale * scaleFactor * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange);
 
-                // 6) Ð´»Ø×é¼þ
+                // 6) Ð´ï¿½ï¿½ï¿½ï¿½ï¿½
                 _entityManager.SetComponentData(entity, transform);
 
-                // 7) Ìí¼ÓÉËº¦²ÎÊý
+                // 7) ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½
                 _entityManager.AddComponentData(entity, Hero.instance.skillsDamageCalPar);
 
                 var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entity);
@@ -1323,18 +1339,18 @@ namespace BlackDawn
                 skillPar.enablePull = enablePull;
                 skillPar.enableExplosion = enableExplosion;
                 skillPar.damageChangePar = damageChangePar;
-              //  skillPar.lightningDotDamage += 1;//ÕâÑù¾ÍÄÜ³ÖÐø¸Ðµç
+              //  skillPar.lightningDotDamage += 1;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½ï¿½ï¿½Ðµï¿½
                 
                 _entityManager.SetComponentData(entity, skillPar);
 
-                // 8) Ìí¼ÓÅö×²¼ÇÂ¼»º³åÇø
+                // 8) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 var hits = _entityManager.AddBuffer<HitRecord>(entity);
                 _entityManager.AddBuffer<HitElementResonanceRecord>(entity);
 
-                //Ð¯³ÌÄÚÖ±½ÓÌí¼Ó¼¼ÄÜ±êÇ©
+                //Ð¯ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½Ü±ï¿½Ç©
                 _entityManager.AddComponentData<T>(entity, componentData);
 
-               // DevDebug.Log("µÚ  " + i + " ´ÎÊÍ·Å¼¼ÄÜ");
+               // DevDebug.Log("ï¿½ï¿½  " + i + " ï¿½ï¿½ï¿½Í·Å¼ï¿½ï¿½ï¿½");
                 yield return new WaitForSeconds(interval);
             }
         

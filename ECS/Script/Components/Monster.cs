@@ -21,7 +21,9 @@ namespace BlackDawn.DOTS
     {
 
     }
-
-
+        /// <summary>
+        ///测试
+        /// </summary>
+    public struct Monsterkaka: IComponentData{}
 
 }
