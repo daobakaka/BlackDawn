@@ -1,287 +1,287 @@
 
-//ÁéÄÜµÄÒ»Ð©Éè¼Æ
+//çµèƒ½çš„ä¸€äº›è®¾è®¡
 namespace BlackDawn.DOTS
 {
     /// <summary>
-    /// È«Á¿ÁéÄÜ ID Ã¶¾Ù
+    /// å…¨é‡çµèƒ½ ID æžšä¸¾
     /// </summary>
     public enum PsionicsID
     {
-        // ¿ñ±©ÍþÄÜ
+        // ç‹‚æš´å¨èƒ½
         KuangBaoWeiNeng,
-        // ÔªËØ¹²Ãù
+        // å…ƒç´ å…±é¸£
         YuanSuGongMing,
-        // ¼±ËÙÍþÄÜ
+        // æ€¥é€Ÿå¨èƒ½
         JiSuWeiNeng,
-        // À©É¢ÍþÄÜ
+        // æ‰©æ•£å¨èƒ½
         KuoSanWeiNeng,
-        // ÎüÑªÍþÄÜ
+        // å¸è¡€å¨èƒ½
         XiXueWeiNeng,
-        // ´©Í¸ÍþÄÜ
+        // ç©¿é€å¨èƒ½
         ChuanTouWeiNeng,
-        // ÓàÕðÍþÄÜ
+        // ä½™éœ‡å¨èƒ½
         YuZhenWeiNeng,
-        // Á¬ËøÍþÄÜ
+        // è¿žé”å¨èƒ½
         LianSuoWeiNeng,
-        // ÐîÁ¦ÍþÄÜ
+        // è“„åŠ›å¨èƒ½
         XuLiWeiNeng,
-        // ¹ýÔØÍþÄÜ
+        // è¿‡è½½å¨èƒ½
         GuoZaiWeiNeng,
-        // ÄÜÁ¦ÝÍÈ¡
+        // èƒ½åŠ›èƒå–
         NengLiCuiQu,
-        // »Æ½ðÂÉ
+        // é»„é‡‘å¾‹
         HuangJinLv,
-        // ÉËº¦×ª»¯
+        // ä¼¤å®³è½¬åŒ–
         ShangHaiZhuanHua,
-        // ½ÚÄÜ×¨¼Ò
+        // èŠ‚èƒ½ä¸“å®¶
         JieNengZhuanJia,
-        // ²Êºç¹ì¼£
+        // å½©è™¹è½¨è¿¹
         CaiHongGuiJi,
-        // ÉöÉÏÏÙËØ
+        // è‚¾ä¸Šè…ºç´ 
         ShenShangXianSu,
-        // É±Â¾½Ú×à
+        // æ€æˆ®èŠ‚å¥
         ShaLuJieZou,
-        // ¸´³ðÕß
+        // å¤ä»‡è€…
         FuChouZhe,
-        // ÄÜÁ¿Ñ­»·
+        // èƒ½é‡å¾ªçŽ¯
         NengLiangXunHuan,
-        // µ¯Ò©×¨¼Ò
+        // å¼¹è¯ä¸“å®¶
         DanYaoZhuanJia,
-        // ÔªËØÇ×ºÍ
+        // å…ƒç´ äº²å’Œ
         YuanSuQinHe,
-        // ÔªËØ»¤¶Ü
+        // å…ƒç´ æŠ¤ç›¾
         YuanSuHuDun,
-        // ÔªËØÀ©É¢
+        // å…ƒç´ æ‰©æ•£
         YuanSuKuoSan,
-        // ÀäÈ´¼ÓËÙ
+        // å†·å´åŠ é€Ÿ
         LengQueJiaSu,
-        // Âö³åÕðµ´
+        // è„‰å†²éœ‡è¡
         MaiChongZhenDang,
-        // Âö³å·ÖÁÑ
+        // è„‰å†²åˆ†è£‚
         MaiChongFenLie,
-        // °µÄÜ³äÄÜ
+        // æš—èƒ½å……èƒ½
         AnNengChongNeng,
-        // °µÄÜÍÌÊÉ
+        // æš—èƒ½åžå™¬
         AnNengTunShi,
-        // ±ù»ð·ç±©
+        // å†°ç«é£Žæš´
         BingHuoFengBao,
-        // ÔªËØÈÚºÏ
+        // å…ƒç´ èžåˆ
         YuanSuRongHe,
-        // À×±©Ôö·ù
+        // é›·æš´å¢žå¹…
         LeiBaoZengFu,
-        // ¾²µç¸½×Å
+        // é™ç”µé™„ç€
         JingDianFuZhuo,
-        // ÉúÃüºçÎü
+        // ç”Ÿå‘½è™¹å¸
         ShengMingHongXi,
-        // ÉñÊ¥¾»»¯
+        // ç¥žåœ£å‡€åŒ–
         ShenShengJingHua,
-        // ¼«º®´©Í¸
+        // æžå¯’ç©¿é€
         JiHanChuanTou,
-        // ±ùËªÐÂÐÇ
+        // å†°éœœæ–°æ˜Ÿ
         BingShuangXinXing,
-        // °µÓ°Á¬ÉÁ
+        // æš—å½±è¿žé—ª
         AnYingLianShan,
-        // °µÓ°±¬ÆÆ
+        // æš—å½±çˆ†ç ´
         AnYingBaoPo,
-        // À×±©ÀÎÁý
+        // é›·æš´ç‰¢ç¬¼
         LeiBaoLaoLong,
-        // µ¼µçÀÎÁý
+        // å¯¼ç”µç‰¢ç¬¼
         DaoDianLaoLong,
-        // ÎÁÒßµØÀ×
+        // ç˜Ÿç–«åœ°é›·
         WenYiDiLei,
-        // Âé±ÔµØÀ×
+        // éº»ç—¹åœ°é›·
         MaBiDiLei,
-        // ºéÁ÷¾Û½¹
+        // æ´ªæµèšç„¦
         HongLiuJuJiao,
-        // °µÓ°Óà²¨
+        // æš—å½±ä½™æ³¢
         AnYingYuBo,
-        // Ê±¼äÄýÖÍ
+        // æ—¶é—´å‡æ»ž
         ShiJianNingZhi,
-        // ¼ÓËÙÁìÓò
+        // åŠ é€Ÿé¢†åŸŸ
         JiaSuLingYu,
-        // ÁÒÑæ±¬³å
+        // çƒˆç„°çˆ†å†²
         LieYanBaoChong,
-        // ×ÆÈÈÂ·¾¶
+        // ç¼çƒ­è·¯å¾„
         ZhuoReLuJing,
-        // ¼«º®·´ÊÉ
+        // æžå¯’åå™¬
         JiHanFanShi,
-        // ÓÀ¶³»¤¶Ü
+        // æ°¸å†»æŠ¤ç›¾
         YongDongHuDun,
-        // ËÀÍö´®Áª
+        // æ­»äº¡ä¸²è”
         SiWangChuanLian,
-        // °µÓ°¼¢¿Ê
+        // æš—å½±é¥¥æ¸´
         AnYingJiKe,
-        // À×ÉñÖ®ÎÕ
+        // é›·ç¥žä¹‹æ¡
         LeiShenZhiWo,
-        // ¹ýÔØ×¥È¡
+        // è¿‡è½½æŠ“å–
         GuoZaiZhuaQu,
-        // ±¬È¼Ó¡¼Ç
+        // çˆ†ç‡ƒå°è®°
         BaoRanYinJi,
-        // ÁÒÑæ´«È¾
+        // çƒˆç„°ä¼ æŸ“
         LieYanChuanRan,
-        // ¼«º®ÐÂÐÇ
+        // æžå¯’æ–°æ˜Ÿ
         JiHanXinXing,
-        // Ëé±ù³å»÷
+        // ç¢Žå†°å†²å‡»
         SuiBingChongJi,
-        // °µÓ°´óÊ¦
+        // æš—å½±å¤§å¸ˆ
         AnYingDaShi,
-        // ÖÂÃüÍ»Ï®
+        // è‡´å‘½çªè¢­
         ZhiMingTuXi,
-        // ³¬¼¶´«²¥
+        // è¶…çº§ä¼ æ’­
         ChaoJiChuanBo,
-        // ¾ç¶¾±äÒì
+        // å‰§æ¯’å˜å¼‚
         JuDuBianYi,
-        // ÔªËØ¹ýÔØ
+        // å…ƒç´ è¿‡è½½
         YuanSuGuoZai,
-        // ÔªËØµ÷ºÍ
+        // å…ƒç´ è°ƒå’Œ
         YuanSuTiaoHe,
-        // °ÂÊõ¹ýÔØ
+        // å¥¥æœ¯è¿‡è½½
         AoShuGuoZai,
-        // Ä§Á¦Íß½â
+        // é­”åŠ›ç“¦è§£
         MoLiWaJie,
-        // Ê±¿Õ»ØËÝ
+        // æ—¶ç©ºå›žæº¯
         ShiKongHuiSu,
-        // »ÃÏó´óÊ¦
+        // å¹»è±¡å¤§å¸ˆ
         HuanXiangDaShi,
-        // ±¬È¼³å»÷
+        // çˆ†ç‡ƒå†²å‡»
         BaoRanChongJi,
-        // ×ÆÈÈºËÐÄ
+        // ç¼çƒ­æ ¸å¿ƒ
         ZhuoReHeXin,
-        // ¼«º®Ö®Â·
+        // æžå¯’ä¹‹è·¯
         JiHanZhiLu,
-        // ±ù¾§Ö®¾¶
+        // å†°æ™¶ä¹‹å¾„
         BingJingZhiJing,
-        // ³¬µ¼Á´½Ó
+        // è¶…å¯¼é“¾æŽ¥
         ChaoDaoLianJie,
-        // À×öªÉóÅÐ
+        // é›·éœ†å®¡åˆ¤
         LeiTingShenPan,
-        // °µÓ°ÊÕ¸î
+        // æš—å½±æ”¶å‰²
         AnYingShouGe,
-        // Ó°Ï®Á¬»÷
+        // å½±è¢­è¿žå‡»
         YingXiLianJi,
-        // Âé±Ô¶¾Îí
+        // éº»ç—¹æ¯’é›¾
         MaBiDuWu,
-        // ¸¯Ê´¶¾ÔÆ
+        // è…èš€æ¯’äº‘
         FuShiDuYun,
-        // ÔªËØ¾Û½¹
+        // å…ƒç´ èšç„¦
         YuanSuJuJiao,
-        // »ìãç±¬·¢
+        // æ··æ²Œçˆ†å‘
         HunDunBaoFa,
-        // »ÃÓ°´óÊ¦
+        // å¹»å½±å¤§å¸ˆ
         HuanYingDaShi,
-        // ÉÁ±Ü×¨¼Ò
+        // é—ªé¿ä¸“å®¶
         ShanBiZhuanJia,
-        // Ó°ÎäÕß
+        // å½±æ­¦è€…
         YingWuZhe,
-        // °µÓ°Í¬²½
+        // æš—å½±åŒæ­¥
         AnYingTongBu,
-        // ³¬ÐÂÐÇ
+        // è¶…æ–°æ˜Ÿ
         ChaoXinXing,
-        // ¾Û±äÑ¹Ëõ
+        // èšå˜åŽ‹ç¼©
         JuBianYaSuo,
-        // ÔªËØ´óÊ¦
+        // å…ƒç´ å¤§å¸ˆ
         YuanSuDaShi,
-        // ÔªËØÐ­µ÷
+        // å…ƒç´ åè°ƒ
         YuanSuXieTiao,
-        // »ìãçÌ®Ëõ
+        // æ··æ²Œåç¼©
         HunDunTanSuo,
-        // ´¿¾»±¬·¢
+        // çº¯å‡€çˆ†å‘
         ChunJingBaoFa,
-        // Ðé¿ÕÔö·ù
+        // è™šç©ºå¢žå¹…
         XuKongZengFu,
-        // Ðé¿Õ¹²Ãù
+        // è™šç©ºå…±é¸£
         XuKongGongMing,
-        // À×ÉñÖ®Å­
+        // é›·ç¥žä¹‹æ€’
         LeiShenZhiNu,
-        // À×öªÁìÓò
+        // é›·éœ†é¢†åŸŸ
         LeiTingLingYu,
-        // ÓÀºã±ù·â
+        // æ°¸æ’å†°å°
         YongHengBingFeng,
-        // º®±ùÁ¶Óü
+        // å¯’å†°ç‚¼ç‹±
         HanBingLianYu,
-        // µØÓüÈÛÂ¯
+        // åœ°ç‹±ç†”ç‚‰
         DiYuRongLu,
-        // ÁÒÑæ·ç±©
+        // çƒˆç„°é£Žæš´
         LieYanFengBao,
-        // ³¬¼¶ÎÁÒß
+        // è¶…çº§ç˜Ÿç–«
         ChaoJiWenYi,
-        // ¶¾ÔÆ±¬È¼
+        // æ¯’äº‘çˆ†ç‡ƒ
         DuYunBaoRan,
-        // Ê±¿Õ»ØËÝ£¨ÖØ¸´£©
+        // æ—¶ç©ºå›žæº¯ï¼ˆé‡å¤ï¼‰
         ShiKongHuiSu_Repeated,
-        // ÁÑÏ¶Ôö·ù
+        // è£‚éš™å¢žå¹…
         LieXiZengFu,
-        // ¾µÏñ´óÊ¦
+        // é•œåƒå¤§å¸ˆ
         JingXiangDaShi,
-        // ÍêÃÀ¸´ÖÆ
+        // å®Œç¾Žå¤åˆ¶
         WanMeiFuZhi,
-        // Á÷ÐÇÓê
+        // æµæ˜Ÿé›¨
         LiuXingYu,
-        // ÐÇºË±¬ÁÑ
+        // æ˜Ÿæ ¸çˆ†è£‚
         XingHeBaoLie,
-        // ËÀÍöÐ­×à
+        // æ­»äº¡åå¥
         SiWangXieZou,
-        // ¼´ËÀÔÏÂÉ
+        // å³æ­»éŸµå¾‹
         JiSiYunLu,
-        // Ìì»ð·ÙÊÀ
+        // å¤©ç«ç„šä¸–
         TianHuoFenShi,
-        // ÁÒÑæÐÂÐÇ
+        // çƒˆç„°æ–°æ˜Ÿ
         LieYanXinXing,
-        // ¼«º®ÁìÓò
+        // æžå¯’é¢†åŸŸ
         JiHanLingYu,
-        // ±ùËªËÀ¼Å
+        // å†°éœœæ­»å¯‚
         BingShuangSiJi,
-        // À×ÉñÁìÓò
+        // é›·ç¥žé¢†åŸŸ
         LeiShenLingYu,
-        // Á¬ËøÀ×±©
+        // è¿žé”é›·æš´
         LianSuoLeiBao,
-        // °µÓ°Ö÷Ô×
+        // æš—å½±ä¸»å®°
         AnYingZhuZai,
-        // ºÚ°µÍ³Óù
+        // é»‘æš—ç»Ÿå¾¡
         HeiAnTongYu,
-        // ¾ç¶¾¿ñ³±
+        // å‰§æ¯’ç‹‚æ½®
         JuDuKuangChao,
-        // ¶¾±¬ºËÐÄ
+        // æ¯’çˆ†æ ¸å¿ƒ
         DuBaoHeXin,
-        // »ìãç·ç±©
+        // æ··æ²Œé£Žæš´
         HunDunFengBao,
-        // ÔªËØ¾Û½¹£¨ÖØ¸´£©
+        // å…ƒç´ èšç„¦ï¼ˆé‡å¤ï¼‰
         YuanSuJuJiao_Repeated,
-        // Ê±¿Õã£ÂÛ
+        // æ—¶ç©ºæ‚–è®º
         ShiKongBeiLun,
-        // Ê±¼äÃªµã
+        // æ—¶é—´é”šç‚¹
         ShiJianMaoDian,
-        // ËÀÍöÊÕ¸î
+        // æ­»äº¡æ”¶å‰²
         SiWangShouGe,
-        // Áé»ê¼³È¡
+        // çµé­‚æ±²å–
         LingHunJiQu,
-        // ÉñÊ¥Å­»ð
+        // ç¥žåœ£æ€’ç«
         ShenShengNuHuo,
-        // ÌìÊ¹Ö®Òí
+        // å¤©ä½¿ä¹‹ç¿¼
         TianShiZhiYi,
-        // ¼«º®ÍõÈ¨
+        // æžå¯’çŽ‹æƒ
         JiHanWangQuan,
-        // ±ùËªÁìÓò
+        // å†°éœœé¢†åŸŸ
         BingShuangLingYu,
-        // À×öªÖ®Éñ
+        // é›·éœ†ä¹‹ç¥ž
         LeiTingZhiShen,
-        // ÉÁµç¼²ÐÐ
+        // é—ªç”µç–¾è¡Œ
         ShanDianJiXing,
-        // ºÚ°µ´ó¾ü
+        // é»‘æš—å¤§å†›
         HeiAnDaJun,
-        // °µÓ°ÆõÔ¼
+        // æš—å½±å¥‘çº¦
         AnYingQiYue,
-        // ¾ç¶¾Á¶Óü
+        // å‰§æ¯’ç‚¼ç‹±
         JuDuLianYu,
-        // ¶¾±¬³å»÷
+        // æ¯’çˆ†å†²å‡»
         DuBaoChongJi,
-        // »ìãçÈÚºÏ
+        // æ··æ²Œèžåˆ
         HunDunRongHe,
-        // ´¿¾»ÈÚºÏ
+        // çº¯å‡€èžåˆ
         ChunJingRongHe,
-        // Ä©ÈÕÉóÅÐ
+        // æœ«æ—¥å®¡åˆ¤
         MoRiShenPan,
-        // ËÀÍöÁìÓò
+        // æ­»äº¡é¢†åŸŸ
         SiWangLingYu
     }
 }

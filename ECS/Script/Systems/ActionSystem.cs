@@ -14,11 +14,11 @@ using static BlackDawn.HeroAttributes;
 using static Unity.Burst.Intrinsics.X86.Avx;
 
 
-//·Ö¹Ü¹ÖÎïµÄËùÓĞ¶¯×÷JOBÂß¼­£¬ÓëmonoSystem ÅäºÏ
+//åˆ†ç®¡æ€ªç‰©çš„æ‰€æœ‰åŠ¨ä½œJOBé€»è¾‘ï¼Œä¸monoSystem é…åˆ
 namespace BlackDawn.DOTS
 {
     /// <summary>
-    /// Watcher_AĞĞÎªSystem
+    /// Watcher_Aè¡Œä¸ºSystem
     /// </summary>
     [BurstCompile]
     [UpdateAfter(typeof(DetectionSystem))]
@@ -37,11 +37,11 @@ namespace BlackDawn.DOTS
 
         public void OnCreate(ref SystemState state)
         {
-            //¹Ø±ÕÏµÍ³ £¬ÊÖ¶¯¿ØÖÆ£¬ÓÉÓ¢ĞÛ½ÇÉ«³õÊ¼»¯²Ù¿Ø,ECSµÄOnCreateµÄMono Awake Ö®Ç°
+            //å…³é—­ç³»ç»Ÿ ï¼Œæ‰‹åŠ¨æ§åˆ¶ï¼Œç”±è‹±é›„è§’è‰²åˆå§‹åŒ–æ“æ§,ECSçš„OnCreateçš„Mono Awake ä¹‹å‰
             state.Enabled = false;
-            //³¡¾°Ë«Ïò¿ØÖÆ
+            //åœºæ™¯åŒå‘æ§åˆ¶
             state.RequireForUpdate<EnableActionSystemTag>();
-            Debug.Log("ECS Action ³õÊ¼»¯");
+            Debug.Log("ECS Action åˆå§‹åŒ–");
 
         }
         public void OnStartRunning(ref SystemState state)
@@ -67,10 +67,10 @@ namespace BlackDawn.DOTS
             UpdateAllComponentLookup(ref state);
 
 
-            //Ó¢ĞÛÎ»ÖÃ
+            //è‹±é›„ä½ç½®
             float3 heroPositon = m_transform[_heroEntity].Position;
 
-            //ÉèÖÃÈ«¾ÖµÄentityµÄÄ¿±êÎªÓ¢ĞÛ
+            //è®¾ç½®å…¨å±€çš„entityçš„ç›®æ ‡ä¸ºè‹±é›„
             foreach (var (body, lum) in SystemAPI.Query<RefRW<AgentBody>, RefRW<AgentLocomotion>>())
             {
                 body.ValueRW.SetDestination(heroPositon);
@@ -78,13 +78,13 @@ namespace BlackDawn.DOTS
 
             }
 
-            //½üÕ½job
+            //è¿‘æˆ˜job
             // var ecb = new EntityCommandBuffer(Allocator.TempJob);
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
             var parallelECB = ecb.AsParallelWriter();
 
-            // Step 1: µ÷¶È Melee Job
+            // Step 1: è°ƒåº¦ Melee Job
             state.Dependency = new ActionMelee_Job
             {
                 ECB = parallelECB,
@@ -92,7 +92,7 @@ namespace BlackDawn.DOTS
                 TransformLookup = m_transform,
             }.ScheduleParallel(state.Dependency);
 
-            // Step 2: µ÷¶È Ranged Job£¬ÒÀÀµ Melee Íê³É
+            // Step 2: è°ƒåº¦ Ranged Jobï¼Œä¾èµ– Melee å®Œæˆ
             state.Dependency = new ActionRanged_Job
             {
                 ECB = parallelECB,
@@ -100,7 +100,7 @@ namespace BlackDawn.DOTS
                 Prefabs = m_Prefabs,
                 HeroPosition = heroPositon,
                 TransformLookup = m_transform,
-            }.ScheduleParallel(state.Dependency); // ×¢ÒâÒÀÀµ meleeHandle£¡
+            }.ScheduleParallel(state.Dependency); // æ³¨æ„ä¾èµ– meleeHandleï¼
 
      
 
@@ -120,9 +120,9 @@ namespace BlackDawn.DOTS
         {
 
             //var damageCal = new EnemyFlightProDamageCalPar();
-            ////ÎïÀíÉËº¦¸³Öµ
+            ////ç‰©ç†ä¼¤å®³èµ‹å€¼
             //damageCal.instantPhysicalDamage = cmpt.attackAttribute.attackPower;
-            ////ÔªËØÉËº¦¸³Öµ
+            ////å…ƒç´ ä¼¤å®³èµ‹å€¼
             //damageCal.frostDamage = cmpt.attackAttribute.elementalDamage.frostDamage;
             //damageCal.fireDamage = cmpt.attackAttribute.elementalDamage.fireDamage;
             //damageCal.shadowDamage = cmpt.attackAttribute.elementalDamage.shadowDamage;
@@ -131,7 +131,7 @@ namespace BlackDawn.DOTS
 
             //var rng = cmpt.defenseAttribute.rngState;
 
-            ////dot ÉËº¦¸³Öµ
+            ////dot ä¼¤å®³èµ‹å€¼
             //var dotBaseDamage = cmpt.attackAttribute.attackPower;
 
 
@@ -140,7 +140,7 @@ namespace BlackDawn.DOTS
 
     }
     /// <summary>
-    /// ÎŞÃªµã½üÕ½¹ÖÂß¼­
+    /// æ— é”šç‚¹è¿‘æˆ˜æ€ªé€»è¾‘
     /// </summary>
     [BurstCompile]
     public partial struct ActionMelee_Job : IJobEntity
@@ -150,9 +150,9 @@ namespace BlackDawn.DOTS
         public float Time;
 
         /// <summary>
-        /// £¡ASPECT µ×²ãÒÑ¾­Ê¹ÓÃref ½øĞĞ·â×°,¿Õ×é¼ş±êÇ©Ò²²»ÄÜÊ¹ÓÃref ÒòÎªÃ»±ØÒª£¬×¢Òâ²å¼şÖĞ±¾ÉíµÄisStoppedµÄÅĞ¶ÏÔÚjobÖĞÃ²ËÆ²¢²»×¼È·,
-        /// Õë¶ÔÎŞÃªµãµÄ½üÕ½¹Ö
-        /// 1.4 Ê¹ÓÃEnabledRefRO<LiveMonster> À´Ö±½ÓÉ¸Ñ¡Ê§»î×é¼ş
+        /// ï¼ASPECT åº•å±‚å·²ç»ä½¿ç”¨ref è¿›è¡Œå°è£…,ç©ºç»„ä»¶æ ‡ç­¾ä¹Ÿä¸èƒ½ä½¿ç”¨ref å› ä¸ºæ²¡å¿…è¦ï¼Œæ³¨æ„æ’ä»¶ä¸­æœ¬èº«çš„isStoppedçš„åˆ¤æ–­åœ¨jobä¸­è²Œä¼¼å¹¶ä¸å‡†ç¡®,
+        /// é’ˆå¯¹æ— é”šç‚¹çš„è¿‘æˆ˜æ€ª
+        /// 1.4 ä½¿ç”¨EnabledRefRO<LiveMonster> æ¥ç›´æ¥ç­›é€‰å¤±æ´»ç»„ä»¶
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="agentBody"></param>
@@ -164,7 +164,7 @@ namespace BlackDawn.DOTS
             in LocalTransform transform, GpuEcsAnimatorAspect animatorAspect, [ChunkIndexInQuery] int index)
         {
 
-            // 0. ¼ÆËã delta ºÍ¾àÀë
+            // 0. è®¡ç®— delta å’Œè·ç¦»
             float3 currentPos = transform.Position;
             float3 destPos = agentBody.Destination;
             float3 delta = destPos - currentPos;
@@ -178,28 +178,28 @@ namespace BlackDawn.DOTS
                 {
                     case 0:
                         animation.isAttack = true;
-                        // DevDebug.Log("¶¯»­²¥·Å¿ªÊ¼---");
+                        // DevDebug.Log("åŠ¨ç”»æ’­æ”¾å¼€å§‹---");
                         break;
                     case 1:
                         animation.isAttack = false;
                         break;
-                    //s DevDebug.Log("¶¯»­²¥·Å½áÊø---");
+                    //s DevDebug.Log("åŠ¨ç”»æ’­æ”¾ç»“æŸ---");
                     case 2:
                         animation.isAttack = true;
-                        // DevDebug.Log("¶¯»­²¥·Å¿ªÊ¼---");
+                        // DevDebug.Log("åŠ¨ç”»æ’­æ”¾å¼€å§‹---");
                         break;
                     case 3:
                         animation.isAttack = false;
                         break;
-                        // ¡­ÆäËüÊÂ¼ş                   
+                        // â€¦å…¶å®ƒäº‹ä»¶                   
                 }
             }
-            //Ã¿Ö¡Çå¿Õbuffer
+            //æ¯å¸§æ¸…ç©ºbuffer
             eventBuffer.Clear();
-            // 2. Èç¹ûµ½´ï¹¥»÷·¶Î§£¬ÇĞ»»µ½ Attack ×´Ì¬
+            // 2. å¦‚æœåˆ°è¾¾æ”»å‡»èŒƒå›´ï¼Œåˆ‡æ¢åˆ° Attack çŠ¶æ€
             if (distSqr <= rangeSqr)
             {
-                //¿ªÆô¹¥»÷Ä£Ê½
+                //å¼€å¯æ”»å‡»æ¨¡å¼
                 animatorAspect.RunAnimation(1, 0, 1f);
 
             }
@@ -214,14 +214,14 @@ namespace BlackDawn.DOTS
             {
                 agentLocomotion.Speed = 0;
 
-                ////Í£Ö¹ÒÆ¶¯Ö®ºó£¬½øĞĞÊÖ¶¯×ªÏò
+                ////åœæ­¢ç§»åŠ¨ä¹‹åï¼Œè¿›è¡Œæ‰‹åŠ¨è½¬å‘
                 //float3 dir = math.normalize(delta);
-                //// Éú³É½öÎ§ÈÆ Y ÖáµÄĞı×ª
+                //// ç”Ÿæˆä»…å›´ç»• Y è½´çš„æ—‹è½¬
                 //float yaw = math.atan2(dir.x, dir.z);
                 //quaternion rot = quaternion.AxisAngle(math.up(), yaw);
                 //transform.Rotation = rot;
 
-                //¶¯»­ÊÂ¼şĞŞÕı£¿¶¯»­ÊÂ¼şÎ´´¥·¢£¿Ä¿Ç°Ã»ÓĞÕÒµ½Ô­Òò
+                //åŠ¨ç”»äº‹ä»¶ä¿®æ­£ï¼ŸåŠ¨ç”»äº‹ä»¶æœªè§¦å‘ï¼Ÿç›®å‰æ²¡æœ‰æ‰¾åˆ°åŸå› 
                 if (agentBody.RemainingDistance > 10)
                 {
                     animation.isAttack = false;
@@ -234,7 +234,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ÓĞÃªµãÔ¶³Ì¹ÖÂß¼­
+    /// æœ‰é”šç‚¹è¿œç¨‹æ€ªé€»è¾‘
     /// </summary>
     [BurstCompile]
     public partial struct ActionRanged_Job : IJobEntity
@@ -252,11 +252,11 @@ namespace BlackDawn.DOTS
         {
 
             float3 currentPos = transform.Position;
-            float3 destPos = agentBody.Destination;  // AgentBody ÖĞµÄÄ¿±êÎ»ÖÃ
+            float3 destPos = agentBody.Destination;  // AgentBody ä¸­çš„ç›®æ ‡ä½ç½®
             float3 delta = destPos - currentPos;
             delta.y = 0;
             float distSqr = math.lengthsq(delta);
-            //ÕâÀï¿ÉÒÔ¸ù¾İ¹ÖÎïµÄ¹¥»÷·¶Î§ÊôĞÔ¶¨Òå
+            //è¿™é‡Œå¯ä»¥æ ¹æ®æ€ªç‰©çš„æ”»å‡»èŒƒå›´å±æ€§å®šä¹‰
             float attackRange = gainAttribute.atkRange;
             float rangeSqr = attackRange * attackRange;
 
@@ -265,11 +265,11 @@ namespace BlackDawn.DOTS
             {
                 switch (evt.eventId)
                 {
-                    //ÕâÀï¾ÍÊÇÔ¶³Ì¹ÖµÄfire
+                    //è¿™é‡Œå°±æ˜¯è¿œç¨‹æ€ªçš„fire
 
                     case 0:
                         animation.isAttack = true;
-                        // DevDebug.Log("¶¯»­²¥·Å¿ªÊ¼---");
+                        // DevDebug.Log("åŠ¨ç”»æ’­æ”¾å¼€å§‹---");
                         break;
                     case 1:
                         animation.isAttack = false;
@@ -279,7 +279,7 @@ namespace BlackDawn.DOTS
                         animation.isAttack = true;
                         break;
                     case 3:
-                        //¿ª»ğ
+                        //å¼€ç«
                         Fire(index, transform, anchorBuffer, gainAttribute, entity);
                         break;
                     case 4:
@@ -290,12 +290,12 @@ namespace BlackDawn.DOTS
 
                 }
             }
-            //Ã¿Ö¡Çå¿Õbuffer
+            //æ¯å¸§æ¸…ç©ºbuffer
             eventBuffer.Clear();
-            // 2. Èç¹ûµ½´ï¹¥»÷·¶Î§£¬ÇĞ»»µ½ Attack ×´Ì¬
+            // 2. å¦‚æœåˆ°è¾¾æ”»å‡»èŒƒå›´ï¼Œåˆ‡æ¢åˆ° Attack çŠ¶æ€
             if (distSqr <= rangeSqr)
             {
-                //¿ªÆô¹¥»÷Ä£Ê½
+                //å¼€å¯æ”»å‡»æ¨¡å¼
                 animatorAspect.RunAnimation(2, 0, 1f);
 
             }
@@ -309,9 +309,9 @@ namespace BlackDawn.DOTS
             if (animation.isAttack == true)
             {
                 agentLocomotion.Speed = 0; ;
-                //Í£Ö¹ÒÆ¶¯Ö®ºó£¬½øĞĞÊÖ¶¯×ªÏò
+                //åœæ­¢ç§»åŠ¨ä¹‹åï¼Œè¿›è¡Œæ‰‹åŠ¨è½¬å‘
                 //float3 dir = math.normalize(delta);
-                //// Éú³É½öÎ§ÈÆ Y ÖáµÄĞı×ª
+                //// ç”Ÿæˆä»…å›´ç»• Y è½´çš„æ—‹è½¬
                 //float yaw = math.atan2(dir.x, dir.z);
                 //quaternion rot = quaternion.AxisAngle(math.up(), yaw);
                 //transform.Rotation = rot;
@@ -324,21 +324,21 @@ namespace BlackDawn.DOTS
         {
             var prob = ECB.Instantiate(index, Prefabs.MonsterFlightProp_FrostLightningBall);
 
-            // È¡µÚÒ»¸ö¹Ò¼şÃªµã
+            // å–ç¬¬ä¸€ä¸ªæŒ‚ä»¶é”šç‚¹
             var anchor = anchorBuffer[0];
 
             float4x4 worldM = math.mul(transform.ToMatrix(), anchor.currentTransform);
 
             ECB.SetComponent(index, prob, new LocalTransform());
 
-            // ²ğÎ»ÖÃ
+            // æ‹†ä½ç½®
             float3 pos = worldM.c3.xyz;
-            // ²ğĞı×ª£¨forward=col2, up=col1£©
+            // æ‹†æ—‹è½¬ï¼ˆforward=col2, up=col1ï¼‰
             quaternion rot = quaternion.LookRotationSafe(worldM.c2.xyz, worldM.c1.xyz);
             var scale = 1;
 
 
-            // Ğ´»Øµ½ĞÂÊµÌåµÄ LocalTransform
+            // å†™å›åˆ°æ–°å®ä½“çš„ LocalTransform
             ECB.SetComponent(index,
                 prob,
                 new LocalTransform
@@ -349,30 +349,30 @@ namespace BlackDawn.DOTS
                 });
 
 
-            float3 diro = HeroPosition - transform.Position;      // ·½ÏòÏòÁ¿
-            diro = math.normalize(diro);              // µ¥Î»»¯
+            float3 diro = HeroPosition - transform.Position;      // æ–¹å‘å‘é‡
+            diro = math.normalize(diro);              // å•ä½åŒ–
 
             ECB.AddComponent(index, prob, new EnemyFlightProp { speed = 20, survivalTime = 5, dir = diro, monsterRef = entity });
-            //Ìí¼Ó¼ÇÂ¼buffer
+            //æ·»åŠ è®°å½•buffer
             var hits = ECB.AddBuffer<HitRecord>(index, prob);
-            hits.Capacity = 5; //¸üĞÂÈİÁ¿Îª5
-            //ÔİÊ±²»¹ÜÆäËûÉËº¦¼ÆËã£¬ºóÆÚ¹ÖÎï¹¥»÷ÊôĞÔÒ²Ğí»áËõ¼õ£¬Ä¿Ç°¾ÍÓÃ»ù´¡ÉËº¦´úÌæ
+            hits.Capacity = 5; //æ›´æ–°å®¹é‡ä¸º5
+            //æš‚æ—¶ä¸ç®¡å…¶ä»–ä¼¤å®³è®¡ç®—ï¼ŒåæœŸæ€ªç‰©æ”»å‡»å±æ€§ä¹Ÿè®¸ä¼šç¼©å‡ï¼Œç›®å‰å°±ç”¨åŸºç¡€ä¼¤å®³ä»£æ›¿
             //
 
         }
 
         /// <summary>
-        ///ÉËº¦¼ÆËã,ÓĞÃ»ÓĞ±ØÒª¸ø¹ÖÉè¼Æ±©»÷µÈÊôĞÔ£¿Ö±½ÓÊ¹ÓÃ¼òµ¥ÊôĞÔ»òĞí¸üºÃ£¬ÕâÀï½øĞĞÊôĞÔ´«µİ¿ÉÒÔÃâ²éÑ¯¼ÆËã£¬Ö±½ÓÊ¹ÓÃ³Ø»¯¿ØÖÆshader²ÎÊıÇÒ´¥·¢dot£¿
-        ///´«Èë¿ØÖÆ²ÎÊı£¿
-        ///Ê¹ÓÃboss»òÕß¾«Ó¢¹Ö¹¹½¨Å¼È»ĞÔ
-        ///¿ÉÒÔ±£Áô£¬ÒòÎª¹ÖÎïÉËº¦¼ÆËã£¬ÊÇ¼ì²âµ½Åö×²Ö®ºóÔÙ¼ÆËã£¬ÄÇÃ´Ö±½ÓµÄÉËº¦¼ÆËã¾Í¿ÉÒÔÕÒµ½¹Ö±¾Éí½øĞĞ¼ÆËãÁË£¿
+        ///ä¼¤å®³è®¡ç®—,æœ‰æ²¡æœ‰å¿…è¦ç»™æ€ªè®¾è®¡æš´å‡»ç­‰å±æ€§ï¼Ÿç›´æ¥ä½¿ç”¨ç®€å•å±æ€§æˆ–è®¸æ›´å¥½ï¼Œè¿™é‡Œè¿›è¡Œå±æ€§ä¼ é€’å¯ä»¥å…æŸ¥è¯¢è®¡ç®—ï¼Œç›´æ¥ä½¿ç”¨æ± åŒ–æ§åˆ¶shaderå‚æ•°ä¸”è§¦å‘dotï¼Ÿ
+        ///ä¼ å…¥æ§åˆ¶å‚æ•°ï¼Ÿ
+        ///ä½¿ç”¨bossæˆ–è€…ç²¾è‹±æ€ªæ„å»ºå¶ç„¶æ€§
+        ///å¯ä»¥ä¿ç•™ï¼Œå› ä¸ºæ€ªç‰©ä¼¤å®³è®¡ç®—ï¼Œæ˜¯æ£€æµ‹åˆ°ç¢°æ’ä¹‹åå†è®¡ç®—ï¼Œé‚£ä¹ˆç›´æ¥çš„ä¼¤å®³è®¡ç®—å°±å¯ä»¥æ‰¾åˆ°æ€ªæœ¬èº«è¿›è¡Œè®¡ç®—äº†ï¼Ÿ
         /// </summary>
         //EnemyFlightProDamageCalPar CalDamage(MonsterAttributeCmpt monsterAttributeCmpt)
         //{
         //    var calDamage = new EnemyFlightProDamageCalPar();
 
         //    var at = monsterAttributeCmpt.attackAttribute;
-        //    //ÎïÀí »ğÑæ ±ùËª ¶¾ËØ ÉÁµç °µÓ°
+        //    //ç‰©ç† ç«ç„° å†°éœœ æ¯’ç´  é—ªç”µ æš—å½±
         //    calDamage.instantPhysicalDamage = at.attackPower;
         //    calDamage.fireDamage = at.elementalDamage.fireDamage;
         //    calDamage.frostDamage=at.elementalDamage.frostDamage;

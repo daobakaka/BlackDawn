@@ -10,46 +10,46 @@ namespace BlackDawn
 {
     public class TestScriptInstanced : MonoBehaviour
     {
-        // Ô¤ÖÆÌå£¬±ØĞë°üº¬ MeshFilter ºÍ MeshRenderer ×é¼ş
+        // é¢„åˆ¶ä½“ï¼Œå¿…é¡»åŒ…å« MeshFilter å’Œ MeshRenderer ç»„ä»¶
         public GameObject prefab;
-        // ÓÃÓÚ¼ä½Ó»æÖÆÊ±Ê¹ÓÃµÄ²ÄÖÊ£¨Shader ĞèÖ§³Ö´Ó StructuredBuffer ¶ÁÈ¡ÊµÀıÊı¾İ£©
+        // ç”¨äºé—´æ¥ç»˜åˆ¶æ—¶ä½¿ç”¨çš„æè´¨ï¼ˆShader éœ€æ”¯æŒä» StructuredBuffer è¯»å–å®ä¾‹æ•°æ®ï¼‰
         public GameObject indirectPrefab;
-        public float spacing = 2.0f;           // ¶ÔÏóÖ®¼äµÄ¼ä¾à
-        public float rotationSpeed = 10.0f;      // Ğı×ªËÙ¶È£¨¶È/Ãë£©
-        public int counter = 100;              // Éú³ÉÊµÀıÊıÁ¿
-        public int rotate = 1;                 // Ğı×ª·½Ïò£¨1 »ò -1£©
+        public float spacing = 2.0f;           // å¯¹è±¡ä¹‹é—´çš„é—´è·
+        public float rotationSpeed = 10.0f;      // æ—‹è½¬é€Ÿåº¦ï¼ˆåº¦/ç§’ï¼‰
+        public int counter = 100;              // ç”Ÿæˆå®ä¾‹æ•°é‡
+        public int rotate = 1;                 // æ—‹è½¬æ–¹å‘ï¼ˆ1 æˆ– -1ï¼‰
         public bool enableUpdate = true;
-        // ÊÇ·ñÊ¹ÓÃ¼ä½Ó»æÖÆ
+        // æ˜¯å¦ä½¿ç”¨é—´æ¥ç»˜åˆ¶
         public bool enableIndricetDraw = false;
 
-        // ÓÃÓÚ DrawMeshInstanced µ÷ÓÃµÄ¹ÜÀíĞÍ¾ØÕóÊı×é
+        // ç”¨äº DrawMeshInstanced è°ƒç”¨çš„ç®¡ç†å‹çŸ©é˜µæ•°ç»„
         private Matrix4x4[] matrices;
-        // ´æ´¢Ã¿¸öÊµÀıµÄÑÕÉ«£¨ÓÃÓÚ GPU Instancing£©
+        // å­˜å‚¨æ¯ä¸ªå®ä¾‹çš„é¢œè‰²ï¼ˆç”¨äº GPU Instancingï¼‰
         private List<Vector4> instanceColors = new List<Vector4>();
 
-        // »º´æ Mesh Óë Material
+        // ç¼“å­˜ Mesh ä¸ Material
         private Mesh instanceMesh;
         private Material instanceMaterial;
-        // ÓÃÓÚ¼ä½Ó»æÖÆÊ±Ê¹ÓÃµÄ²ÄÖÊ£¨Æä Shader ĞèÒªÖ§³Ö StructuredBuffer ¶ÁÈ¡ÊµÀı±ä»»Êı¾İ£©
+        // ç”¨äºé—´æ¥ç»˜åˆ¶æ—¶ä½¿ç”¨çš„æè´¨ï¼ˆå…¶ Shader éœ€è¦æ”¯æŒ StructuredBuffer è¯»å–å®ä¾‹å˜æ¢æ•°æ®ï¼‰
         private Material indirectInstanceMaterial;
 
-        // ÓÃÓÚ Job ¸üĞÂÌí¼ÓµÄ NativeArray£¬´æ´¢ËùÓĞÊµÀıµÄ¾ØÕó£¨Ê¹ÓÃ UnityEngine.Matrix4x4£©
+        // ç”¨äº Job æ›´æ–°æ·»åŠ çš„ NativeArrayï¼Œå­˜å‚¨æ‰€æœ‰å®ä¾‹çš„çŸ©é˜µï¼ˆä½¿ç”¨ UnityEngine.Matrix4x4ï¼‰
         private NativeArray<Matrix4x4> nativeMatrices;
 
-        // ³Ö¾Ã MaterialPropertyBlock£¬±ÜÃâÃ¿Ö¡´´½¨
+        // æŒä¹… MaterialPropertyBlockï¼Œé¿å…æ¯å¸§åˆ›å»º
         private MaterialPropertyBlock mpb;
 
-        // ÓÃÓÚ DrawMeshInstancedIndirect µÄ²ÎÊı»º³åÇø
+        // ç”¨äº DrawMeshInstancedIndirect çš„å‚æ•°ç¼“å†²åŒº
         private ComputeBuffer argumentBuffer;
-        // ÓÃÓÚ¼ä½Ó»æÖÆÊ±´æ´¢ÊµÀı±ä»»Êı¾İµÄ ComputeBuffer
+        // ç”¨äºé—´æ¥ç»˜åˆ¶æ—¶å­˜å‚¨å®ä¾‹å˜æ¢æ•°æ®çš„ ComputeBuffer
         private ComputeBuffer instanceTransformBuffer;
 
-        // ¹Ì¶¨Åú´Î»æÖÆ»º³åÇø£¨±ÜÃâÃ¿Ö¡ new Êı×é£©£¬DrawMeshInstanced Ã¿Åú×î¶à 1023 ¸öÊµÀı
+        // å›ºå®šæ‰¹æ¬¡ç»˜åˆ¶ç¼“å†²åŒºï¼ˆé¿å…æ¯å¸§ new æ•°ç»„ï¼‰ï¼ŒDrawMeshInstanced æ¯æ‰¹æœ€å¤š 1023 ä¸ªå®ä¾‹
         private Matrix4x4[] batchMatrixBuffer;
 
         void Start()
         {
-            // »ñÈ¡Ô¤ÖÆÌåµÄ Mesh ºÍ Material
+            // è·å–é¢„åˆ¶ä½“çš„ Mesh å’Œ Material
             MeshFilter mf = prefab.GetComponent<MeshFilter>();
             MeshRenderer mr = prefab.GetComponent<MeshRenderer>();
             if (mf == null || mr == null)
@@ -60,7 +60,7 @@ namespace BlackDawn
             instanceMesh = mf.sharedMesh;
             instanceMaterial = mr.sharedMaterial;
 
-            // ¶ÔÓÚ¼ä½Ó»æÖÆ£¬ÎÒÃÇ¼ÙÉè indirectPrefab µÄ MeshRenderer Ê¹ÓÃµÄ²ÄÖÊÖ§³Ö StructuredBuffer ¶ÁÈ¡ÊµÀıÊı¾İ
+            // å¯¹äºé—´æ¥ç»˜åˆ¶ï¼Œæˆ‘ä»¬å‡è®¾ indirectPrefab çš„ MeshRenderer ä½¿ç”¨çš„æè´¨æ”¯æŒ StructuredBuffer è¯»å–å®ä¾‹æ•°æ®
             MeshRenderer mri = indirectPrefab.GetComponent<MeshRenderer>();
             if (mri != null)
             {
@@ -71,10 +71,10 @@ namespace BlackDawn
                 indirectInstanceMaterial = instanceMaterial;
             }
 
-            // ³õÊ¼»¯ MPB£¬±ÜÃâÃ¿Ö¡ĞÂ½¨
+            // åˆå§‹åŒ– MPBï¼Œé¿å…æ¯å¸§æ–°å»º
             mpb = new MaterialPropertyBlock();
 
-            // ¶¯Ì¬¼ÆËã xSize, ySize, zSize ÒÔ¾¡Á¿ĞÎ³ÉÁ¢·½Ìå²¼¾Ö
+            // åŠ¨æ€è®¡ç®— xSize, ySize, zSize ä»¥å°½é‡å½¢æˆç«‹æ–¹ä½“å¸ƒå±€
             int xSize = Mathf.CeilToInt(Mathf.Pow(counter, 1f / 3f));
             int ySize = Mathf.CeilToInt(Mathf.Sqrt(counter / (float)xSize));
             int zSize = Mathf.CeilToInt((float)counter / (xSize * ySize));
@@ -87,7 +87,7 @@ namespace BlackDawn
                 {
                     for (int z = 0; z < zSize && cnt < counter; z++)
                     {
-                        // ¼ÆËãÃ¿¸öÊµÀıµÄÎ»ÖÃ£¬Ê¹ÕûÌå¾ÓÖĞ£¬ÇÒÉÏÌ§ 10 ¸öµ¥Î»
+                        // è®¡ç®—æ¯ä¸ªå®ä¾‹çš„ä½ç½®ï¼Œä½¿æ•´ä½“å±…ä¸­ï¼Œä¸”ä¸ŠæŠ¬ 10 ä¸ªå•ä½
                         Vector3 pos = new Vector3(
                             x * spacing - (xSize - 1) * spacing * 0.5f,
                             y * spacing - (ySize - 1) * spacing * 0.5f + 10,
@@ -96,7 +96,7 @@ namespace BlackDawn
                         Matrix4x4 mat = Matrix4x4.TRS(pos, Quaternion.identity, Vector3.one);
                         matrixList.Add(mat);
 
-                        // ÎªÃ¿¸öÊµÀıÉú³ÉËæ»úÑÕÉ«
+                        // ä¸ºæ¯ä¸ªå®ä¾‹ç”Ÿæˆéšæœºé¢œè‰²
                         instanceColors.Add(new Vector4(Random.value, Random.value, Random.value, 1.0f));
                         cnt++;
                     }
@@ -104,20 +104,20 @@ namespace BlackDawn
             }
             matrices = matrixList.ToArray();
 
-            // ³õÊ¼»¯ NativeArray£¬½«¹ÜÀíĞÍ¾ØÕó¸´ÖÆµ½ NativeArray£¬¹© Job ²¢ĞĞ¸üĞÂÊ¹ÓÃ
+            // åˆå§‹åŒ– NativeArrayï¼Œå°†ç®¡ç†å‹çŸ©é˜µå¤åˆ¶åˆ° NativeArrayï¼Œä¾› Job å¹¶è¡Œæ›´æ–°ä½¿ç”¨
             nativeMatrices = new NativeArray<Matrix4x4>(counter, Allocator.Persistent);
             for (int i = 0; i < counter; i++)
             {
                 nativeMatrices[i] = matrices[i];
             }
 
-            // ·ÖÅäÅú´Î»æÖÆ»º³åÇø£¨¹Ì¶¨´óĞ¡Îª1023£©
+            // åˆ†é…æ‰¹æ¬¡ç»˜åˆ¶ç¼“å†²åŒºï¼ˆå›ºå®šå¤§å°ä¸º1023ï¼‰
             batchMatrixBuffer = new Matrix4x4[1023];
 
-            // Èç¹ûÊ¹ÓÃ¼ä½Ó»æÖÆ£¬´´½¨ argumentBuffer ºÍ instanceTransformBuffer£¨½ö´´½¨Ò»´Î£©
+            // å¦‚æœä½¿ç”¨é—´æ¥ç»˜åˆ¶ï¼Œåˆ›å»º argumentBuffer å’Œ instanceTransformBufferï¼ˆä»…åˆ›å»ºä¸€æ¬¡ï¼‰
             if (enableIndricetDraw)
             {
-                // ´´½¨²ÎÊı»º³åÇø£º5 ¸ö uint£ºË÷ÒıÊı¡¢ÊµÀıÊı¡¢ÆğÊ¼Ë÷Òı¡¢»ù¶¥µã¡¢ÆğÊ¼ÊµÀıÎ»ÖÃ
+                // åˆ›å»ºå‚æ•°ç¼“å†²åŒºï¼š5 ä¸ª uintï¼šç´¢å¼•æ•°ã€å®ä¾‹æ•°ã€èµ·å§‹ç´¢å¼•ã€åŸºé¡¶ç‚¹ã€èµ·å§‹å®ä¾‹ä½ç½®
                 argumentBuffer = new ComputeBuffer(1, 5 * sizeof(uint), ComputeBufferType.IndirectArguments);
                 uint[] args = new uint[5];
                 args[0] = instanceMesh.GetIndexCount(0);
@@ -127,35 +127,35 @@ namespace BlackDawn
                 args[4] = 0;
                 argumentBuffer.SetData(args);
 
-                // ´´½¨ÊµÀı±ä»»Êı¾İ»º³åÇø£¬¼ÙÉèÃ¿¸ö Matrix4x4 Õ¼ 16 floats£¬´óĞ¡¼´ 16 * sizeof(float)
+                // åˆ›å»ºå®ä¾‹å˜æ¢æ•°æ®ç¼“å†²åŒºï¼Œå‡è®¾æ¯ä¸ª Matrix4x4 å  16 floatsï¼Œå¤§å°å³ 16 * sizeof(float)
                 instanceTransformBuffer = new ComputeBuffer(counter, 16 * sizeof(float), ComputeBufferType.Structured);
-                // ³õÊ¼»¯¸Ã»º³åÇøÊı¾İÎªµ±Ç° nativeMatrices ÖĞµÄÊı¾İ
+                // åˆå§‹åŒ–è¯¥ç¼“å†²åŒºæ•°æ®ä¸ºå½“å‰ nativeMatrices ä¸­çš„æ•°æ®
                 instanceTransformBuffer.SetData(matrices);
-                // ½«¸Ã»º³åÇø°ó¶¨µ½ indirectInstanceMaterial£¬Shader ²àĞèÉùÃ÷ StructuredBuffer<float4x4> unity_ObjectToWorldBuffer;
+                // å°†è¯¥ç¼“å†²åŒºç»‘å®šåˆ° indirectInstanceMaterialï¼ŒShader ä¾§éœ€å£°æ˜ StructuredBuffer<float4x4> unity_ObjectToWorldBuffer;
                 indirectInstanceMaterial.SetBuffer("unity_ObjectToWorldBuffer", instanceTransformBuffer);
                 indirectInstanceMaterial.SetBuffer("unity_InstanceColorBuffer", instanceTransformBuffer);
             }
         }
 
-        // Burst ±àÒëµÄ Job£¬ÓÃÓÚ²¢ĞĞ¸üĞÂÃ¿¸öÊµÀıµÄ¾ØÕó
+        // Burst ç¼–è¯‘çš„ Jobï¼Œç”¨äºå¹¶è¡Œæ›´æ–°æ¯ä¸ªå®ä¾‹çš„çŸ©é˜µ
         [BurstCompile]
         struct UpdateMatricesJob : IJobParallelFor
         {
             public NativeArray<Matrix4x4> matrices;
-            public float angle;   // Ã¿Ö¡Ğı×ª½Ç¶È£¨¶ÈÊı£©
-            public int rotate;    // Ğı×ª·½Ïò
+            public float angle;   // æ¯å¸§æ—‹è½¬è§’åº¦ï¼ˆåº¦æ•°ï¼‰
+            public int rotate;    // æ—‹è½¬æ–¹å‘
 
             public void Execute(int index)
             {
-                // ´Ó NativeArray ÖĞ»ñÈ¡µ±Ç°¾ØÕó
+                // ä» NativeArray ä¸­è·å–å½“å‰çŸ©é˜µ
                 Matrix4x4 mat = matrices[index];
-                // ·ÖÀë³öÆ½ÒÆ²¿·Ö
+                // åˆ†ç¦»å‡ºå¹³ç§»éƒ¨åˆ†
                 Vector3 pos = mat.GetColumn(3);
-                // ¼ÆËãÈÆ Y ÖáĞı×ª angle * rotate ¶È
+                // è®¡ç®—ç»• Y è½´æ—‹è½¬ angle * rotate åº¦
                 Quaternion rot = Quaternion.Euler(0, angle * rotate, 0);
-                // ¸üĞÂÆ½ÒÆÎ»ÖÃ
+                // æ›´æ–°å¹³ç§»ä½ç½®
                 pos = rot * pos;
-                // ÖØĞÂ¹¹Ôì¾ØÕó£¬±£Áô¸üĞÂºóµÄÆ½ÒÆ£»Ğı×ªÓëËõ·ÅÉèÎªÄ¬ÈÏ£¨ÕâÀï¼ò»¯Îª TRS£¬Ö»Ê¹ÓÃÆ½ÒÆ£©
+                // é‡æ–°æ„é€ çŸ©é˜µï¼Œä¿ç•™æ›´æ–°åçš„å¹³ç§»ï¼›æ—‹è½¬ä¸ç¼©æ”¾è®¾ä¸ºé»˜è®¤ï¼ˆè¿™é‡Œç®€åŒ–ä¸º TRSï¼Œåªä½¿ç”¨å¹³ç§»ï¼‰
                 matrices[index] = Matrix4x4.TRS(pos, Quaternion.identity, Vector3.one);
             }
         }
@@ -164,9 +164,9 @@ namespace BlackDawn
         {
             if (enableUpdate)
             {
-                // ¼ÆËã±¾Ö¡Ğı×ª½Ç¶È£¨Ğı×ªËÙ¶È * Time.deltaTime£©
+                // è®¡ç®—æœ¬å¸§æ—‹è½¬è§’åº¦ï¼ˆæ—‹è½¬é€Ÿåº¦ * Time.deltaTimeï¼‰
                 float angle = rotationSpeed * Time.deltaTime;
-                // µ÷¶È²¢ĞĞ Job ¸üĞÂÊµÀı¾ØÕó
+                // è°ƒåº¦å¹¶è¡Œ Job æ›´æ–°å®ä¾‹çŸ©é˜µ
                 UpdateMatricesJob job = new UpdateMatricesJob
                 {
                     matrices = nativeMatrices,
@@ -176,18 +176,18 @@ namespace BlackDawn
                 JobHandle handle = job.Schedule(nativeMatrices.Length, 64);
                 handle.Complete();
 
-                // ½« Job ¸üĞÂºóµÄÊı¾İ¸´ÖÆ»Ø¹ÜÀíĞÍ¾ØÕóÊı×é
+                // å°† Job æ›´æ–°åçš„æ•°æ®å¤åˆ¶å›ç®¡ç†å‹çŸ©é˜µæ•°ç»„
                 nativeMatrices.CopyTo(matrices);
 
-                // Èç¹ûÊ¹ÓÃ¼ä½Ó»æÖÆ£¬Ôò¸üĞÂ instanceTransformBuffer
+                // å¦‚æœä½¿ç”¨é—´æ¥ç»˜åˆ¶ï¼Œåˆ™æ›´æ–° instanceTransformBuffer
                 if (enableIndricetDraw && instanceTransformBuffer != null)
                 {
-                    // ½«¸üĞÂºóµÄ¾ØÕóÊı¾İÉÏ´«µ½ GPU »º³åÇø
+                    // å°†æ›´æ–°åçš„çŸ©é˜µæ•°æ®ä¸Šä¼ åˆ° GPU ç¼“å†²åŒº
                     instanceTransformBuffer.SetData(matrices);
-                    // Ò²¿ÉÔÚÕâÀï¸üĞÂ argumentBuffer µÄ instance ÊıÁ¿£¬Èç¹ûÓĞ±ä»¯
+                    // ä¹Ÿå¯åœ¨è¿™é‡Œæ›´æ–° argumentBuffer çš„ instance æ•°é‡ï¼Œå¦‚æœæœ‰å˜åŒ–
                     uint[] args = new uint[5];
                     args[0] = instanceMesh.GetIndexCount(0);
-                    args[1] = (uint)counter;  // ´Ë´¦¼ÙÉè×ÜÊµÀıÊı²»±ä
+                    args[1] = (uint)counter;  // æ­¤å¤„å‡è®¾æ€»å®ä¾‹æ•°ä¸å˜
                     args[2] = instanceMesh.GetIndexStart(0);
                     args[3] = instanceMesh.GetBaseVertex(0);
                     args[4] = 0;
@@ -195,12 +195,12 @@ namespace BlackDawn
                 }
             }
 
-            // ¸üĞÂ MaterialPropertyBlock ÖĞµÄÊµÀı»¯ÑÕÉ«£¨Ã¿Ö¡ÉèÖÃ£©
+            // æ›´æ–° MaterialPropertyBlock ä¸­çš„å®ä¾‹åŒ–é¢œè‰²ï¼ˆæ¯å¸§è®¾ç½®ï¼‰
             mpb.SetVectorArray("_BaseColorInstance", instanceColors);
 
             if (!enableIndricetDraw)
             {
-                // Ê¹ÓÃ DrawMeshInstanced ·ÖÅú»æÖÆ£¬Ã¿Åú×î¶à 1023 ¸öÊµÀı
+                // ä½¿ç”¨ DrawMeshInstanced åˆ†æ‰¹ç»˜åˆ¶ï¼Œæ¯æ‰¹æœ€å¤š 1023 ä¸ªå®ä¾‹
                 int instanceCount = matrices.Length;
                 int batchSize = 1023;
                 for (int i = 0; i < instanceCount; i += batchSize)
@@ -212,8 +212,8 @@ namespace BlackDawn
             }
             else
             {
-                // Ê¹ÓÃ DrawMeshInstancedIndirect »æÖÆÊµÀı
-                // ×¢Òâ£ºShader ĞèÖ§³Ö´Ó°ó¶¨µÄ StructuredBuffer£¨¡°unity_ObjectToWorldBuffer¡±£©¶ÁÈ¡ÊµÀı¾ØÕóÊı¾İ
+                // ä½¿ç”¨ DrawMeshInstancedIndirect ç»˜åˆ¶å®ä¾‹
+                // æ³¨æ„ï¼šShader éœ€æ”¯æŒä»ç»‘å®šçš„ StructuredBufferï¼ˆâ€œunity_ObjectToWorldBufferâ€ï¼‰è¯»å–å®ä¾‹çŸ©é˜µæ•°æ®
                 Bounds bounds = new Bounds(Vector3.zero, new Vector3(10000, 10000, 10000));
                 Graphics.DrawMeshInstancedIndirect(instanceMesh, 0, indirectInstanceMaterial, bounds, argumentBuffer, 0, mpb);
             }

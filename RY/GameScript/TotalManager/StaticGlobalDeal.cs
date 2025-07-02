@@ -11,7 +11,7 @@ namespace BlackDawn
 
     public static class DamageTextUVLookup
     {
-        // ÏÔÊ½¶¨ÒåÓ³Éä±í£¬Ë³Ğò¹Ì¶¨£¬index¼´Ó³ÉäË÷Òı
+        // æ˜¾å¼å®šä¹‰æ˜ å°„è¡¨ï¼Œé¡ºåºå›ºå®šï¼Œindexå³æ˜ å°„ç´¢å¼•
         public static readonly char[] CharTable = new char[]
         {
             '_', '0','1','2','3','4','5','6','7','8','9',
@@ -22,10 +22,10 @@ namespace BlackDawn
 
         public static bool IsInitialized = false;
 
-        // ¾ÉµÄ±¸ÓÃ×Öµä£¨¿É±£ÁôÒ²¿É²»±£Áô£©
+        // æ—§çš„å¤‡ç”¨å­—å…¸ï¼ˆå¯ä¿ç•™ä¹Ÿå¯ä¸ä¿ç•™ï¼‰
         public static readonly Dictionary<char, Vector2Int> CharToGrid = new();
 
-        // Atlas ÅäÖÃ
+        // Atlas é…ç½®
         private static readonly string[] atlasRowsChars = new string[]
         {
             "_!\"#$%&'()*+,-./",
@@ -50,7 +50,7 @@ namespace BlackDawn
         private static int atlasRows = 16;
         private static Vector2 uvScale;
 
-        // ³õÊ¼»¯·½·¨
+        // åˆå§‹åŒ–æ–¹æ³•
         public static void InitializeAtlas()
         {
             if (IsInitialized) return;
@@ -72,12 +72,12 @@ namespace BlackDawn
                 }
             }
 
-            // ÊÖ¶¯Ìí¼ÓÕ¼Î»·û
+            // æ‰‹åŠ¨æ·»åŠ å ä½ç¬¦
             CharToGrid['_'] = new Vector2Int(0, 0);
 
             uvScale = new Vector2(1f / atlasCols, 1f / atlasRows);
 
-            // Ìî³ä UVTable£¨Ë³Ğò¶ÔÆë CharTable£©
+            // å¡«å…… UVTableï¼ˆé¡ºåºå¯¹é½ CharTableï¼‰
             for (int i = 0; i < CharTable.Length; i++)
             {
                 UVTable[i] = GetUVRect(CharTable[i]);
@@ -102,12 +102,12 @@ namespace BlackDawn
             }
             else
             {
-                // Ã»ÕÒµ½¾Í·µ»Ø Blank£¨¼´ index 0£©
+                // æ²¡æ‰¾åˆ°å°±è¿”å› Blankï¼ˆå³ index 0ï¼‰
                 return UVTable[0];
             }
         }
 
-        // ¸ßĞÔÄÜ½Ó¿Ú£º²é index
+        // é«˜æ€§èƒ½æ¥å£ï¼šæŸ¥ index
         public static int GetCharIndex(char c)
         {
             for (int i = 0; i < CharTable.Length; i++)
@@ -118,7 +118,7 @@ namespace BlackDawn
             return 0; // fallback '_'
         }
 
-        // ¸ßĞÔÄÜ½Ó¿Ú£ºÖ±½Ó²é UV
+        // é«˜æ€§èƒ½æ¥å£ï¼šç›´æ¥æŸ¥ UV
         public static Vector4 GetUVByIndex(int index)
         {
             if (index >= 0 && index < UVTable.Length)

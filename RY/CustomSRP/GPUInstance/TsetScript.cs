@@ -8,18 +8,18 @@ namespace BlackDawn
     public class TestScript : MonoBehaviour
     {
         public GameObject gameObject0;
-        public float spacing = 2.0f; // ¶ÔÏóÖ®¼äµÄ¼ä¾à
-        public float rotationSpeed = 10.0f; // Ğı×ªËÙ¶È
-        public int counter = 100; // Éú³ÉÊıÁ¿
+        public float spacing = 2.0f; // å¯¹è±¡ä¹‹é—´çš„é—´è·
+        public float rotationSpeed = 10.0f; // æ—‹è½¬é€Ÿåº¦
+        public int counter = 100; // ç”Ÿæˆæ•°é‡
         private List<GameObject> clones = new List<GameObject>();
         public int rotate = 1;
 
         void Start()
         {
-            // ¶¯Ì¬¼ÆËã xSize, ySize, zSize£¬¾¡Á¿½Ó½üÁ¢·½Ìå²¼¾Ö
-            int xSize = Mathf.CeilToInt(Mathf.Pow(counter, 1f / 3f)); // Á¢·½¸ù£¬ÏòÉÏÈ¡Õû
-            int ySize = Mathf.CeilToInt(Mathf.Sqrt(counter / (float)xSize)); // Ê£Óà²¿·Ö°´Ãæ»ı·ÖÅä
-            int zSize = Mathf.CeilToInt((float)counter / (xSize * ySize)); // È·±£×ÜÊı >= counter
+            // åŠ¨æ€è®¡ç®— xSize, ySize, zSizeï¼Œå°½é‡æ¥è¿‘ç«‹æ–¹ä½“å¸ƒå±€
+            int xSize = Mathf.CeilToInt(Mathf.Pow(counter, 1f / 3f)); // ç«‹æ–¹æ ¹ï¼Œå‘ä¸Šå–æ•´
+            int ySize = Mathf.CeilToInt(Mathf.Sqrt(counter / (float)xSize)); // å‰©ä½™éƒ¨åˆ†æŒ‰é¢ç§¯åˆ†é…
+            int zSize = Mathf.CeilToInt((float)counter / (xSize * ySize)); // ç¡®ä¿æ€»æ•° >= counter
 
             int count = 0;
 
@@ -31,25 +31,25 @@ namespace BlackDawn
                     {
                         Vector3 position = new Vector3(
                             x * spacing - (xSize - 1) * spacing * 0.5f,
-                            y * spacing - (ySize - 1) * spacing * 0.5f + 10, // ÕûÌåÉÏÌ§
+                            y * spacing - (ySize - 1) * spacing * 0.5f + 10, // æ•´ä½“ä¸ŠæŠ¬
                             z * spacing - (zSize - 1) * spacing * 0.5f
                         );
 
-                        // ÊµÀı»¯¶ÔÏó
+                        // å®ä¾‹åŒ–å¯¹è±¡
                         GameObject clone = Instantiate(gameObject0, position, Quaternion.identity);
                         clones.Add(clone);
                         count++;
 
-                        // ÉèÖÃÊµÀı»¯ÑÕÉ«ÊôĞÔ _BaseColorInstance
+                        // è®¾ç½®å®ä¾‹åŒ–é¢œè‰²å±æ€§ _BaseColorInstance
                         // Renderer renderer = clone.GetComponent<Renderer>();
                         var renderer = clone.GetComponent<MeshRenderer>();
                         if (renderer != null)
                         {
-                            // ´´½¨ĞÂµÄ MaterialPropertyBlock
+                            // åˆ›å»ºæ–°çš„ MaterialPropertyBlock
                             MaterialPropertyBlock mpb = new MaterialPropertyBlock();
-                            // Éú³ÉËæ»úÑÕÉ«£¬»ò¸ù¾İĞèÇó×Ô¶¨Òå
+                            // ç”Ÿæˆéšæœºé¢œè‰²ï¼Œæˆ–æ ¹æ®éœ€æ±‚è‡ªå®šä¹‰
                             Color instColor = new Color(Random.value, Random.value, Random.value, 1.0f);
-                            // ÕâÀïµÄÊôĞÔÃû±ØĞëÓë Shader ÖĞ¶¨ÒåµÄÊµÀı»¯ÊôĞÔÃû³ÆÒ»ÖÂ£¬ÀıÈç "_BaseColorInstance"
+                            // è¿™é‡Œçš„å±æ€§åå¿…é¡»ä¸ Shader ä¸­å®šä¹‰çš„å®ä¾‹åŒ–å±æ€§åç§°ä¸€è‡´ï¼Œä¾‹å¦‚ "_BaseColorInstance"
                             mpb.SetColor("_BaseColorInstance", instColor);
                             renderer.SetPropertyBlock(mpb);
                         }
@@ -60,7 +60,7 @@ namespace BlackDawn
 
         void Update()
         {
-            // Î§ÈÆ Y ÖáĞı×ªËùÓĞ¿ËÂ¡¶ÔÏó
+            // å›´ç»• Y è½´æ—‹è½¬æ‰€æœ‰å…‹éš†å¯¹è±¡
             foreach (GameObject clone in clones)
             {
                 clone.transform.RotateAround(Vector3.zero, Vector3.up, rotationSpeed * Time.deltaTime * rotate);

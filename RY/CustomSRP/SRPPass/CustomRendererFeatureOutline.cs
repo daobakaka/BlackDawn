@@ -7,11 +7,11 @@ public enum CustomRenderQueueOption
     Transparent
 }
 /// <summary>
-/// Ãè±ß
+/// æè¾¹
 /// </summary>
 public class CustomRendererFeatureOutline : ScriptableRendererFeature
 {
-    // ¶¨ÒåÒ»¸ö×Ô¶¨ÒåÃ¶¾Ù,Ñ¡ÔñÍ¸Ã÷»ò²»Í¸Ã÷µÄäÖÈ¾¶ÓÁĞ   
+    // å®šä¹‰ä¸€ä¸ªè‡ªå®šä¹‰æšä¸¾,é€‰æ‹©é€æ˜æˆ–ä¸é€æ˜çš„æ¸²æŸ“é˜Ÿåˆ—   
         public RenderPassEvent renderPassEvent = RenderPassEvent.AfterRenderingTransparents;
         public CustomRenderQueueOption renderQueueOption = CustomRenderQueueOption.Transparent;
         public string passName;
@@ -20,7 +20,7 @@ public class CustomRendererFeatureOutline : ScriptableRendererFeature
 
     public override void Create()
     {
-        // ¸ù¾İÃ¶¾ÙÑ¡Ôñ×ª»»Îª RenderQueueRange
+        // æ ¹æ®æšä¸¾é€‰æ‹©è½¬æ¢ä¸º RenderQueueRange
         RenderQueueRange range = (renderQueueOption == CustomRenderQueueOption.Opaque) ?
                                     RenderQueueRange.opaque : RenderQueueRange.transparent;
         _customPass = new CustomRendererPassOutline(passName, renderPassEvent, range);

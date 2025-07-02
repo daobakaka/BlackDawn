@@ -10,7 +10,7 @@ using UnityEngine;
 namespace BlackDawn.DOTS
 {
     /// <summary>
-    /// Ó¢ĞÛ×é¼ş
+    /// è‹±é›„ç»„ä»¶
     /// </summary>
     public struct HeroParameters : IComponentData
     {
@@ -19,7 +19,7 @@ namespace BlackDawn.DOTS
 
     }
     /// <summary>
-    /// ²âÊÔÒıÓÃÀà
+    /// æµ‹è¯•å¼•ç”¨ç±»
     /// </summary>
     public class MaterialPropertyBlockComponent : IComponentData
     {
@@ -28,7 +28,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ÉËº¦Êı×ÖäÖÈ¾×é¼ş
+    /// ä¼¤å®³æ•°å­—æ¸²æŸ“ç»„ä»¶
     /// </summary>
 
     [Serializable]
@@ -39,9 +39,9 @@ namespace BlackDawn.DOTS
         public float TotalDuration;
 
         public float ScaleMultiplier;
-        //YÖáÆ«ÒÆËÙ¶È
+        //Yè½´åç§»é€Ÿåº¦
         public float OffsetSpeed;
-        //XÖá¶¶¶¯Õñ·ù
+        //Xè½´æŠ–åŠ¨æŒ¯å¹…
         public float ShakeAmountX;
 
         public float4 TextColor;
@@ -56,7 +56,7 @@ namespace BlackDawn.DOTS
 
 
     /// <summary>
-    /// ¹¥»÷±äÉ«
+    /// æ”»å‡»å˜è‰²
     /// </summary>
     [MaterialProperty("_UnderAttackColor")]
     public struct UnderAttackColor : IComponentData
@@ -64,7 +64,7 @@ namespace BlackDawn.DOTS
         public float4 Value;
     }
     /// <summary>
-    /// ·ÆÄù¶ûÑÕÉ«
+    /// è²æ¶…å°”é¢œè‰²
     /// </summary>
     [MaterialProperty("_FresnelColor")]
     public struct FresnelColor : IComponentData
@@ -73,7 +73,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ×Ô·¢¹âÑÕÉ«
+    /// è‡ªå‘å…‰é¢œè‰²
     /// </summary>
     [MaterialProperty("_EmissionColor")]
     public struct EmissionColor : IComponentData
@@ -81,7 +81,7 @@ namespace BlackDawn.DOTS
         public float4 Value;
     }
     /// <summary>
-    /// »ğÑæÇ¿¶È
+    /// ç«ç„°å¼ºåº¦
     /// </summary>
 
     [MaterialProperty("_FireIntensity")]
@@ -90,7 +90,7 @@ namespace BlackDawn.DOTS
         public float Value;
     }
     /// <summary>
-    /// ÈÜ½âĞ§¹û
+    /// æº¶è§£æ•ˆæœ
     /// </summary>
     [MaterialProperty("_DissolveEffect")]
     public struct DissolveEffect : IComponentData
@@ -98,7 +98,7 @@ namespace BlackDawn.DOTS
         public float Value;
     }
     /// <summary>
-    /// ±ù¶³²ÎÊı
+    /// å†°å†»å‚æ•°
     /// </summary>
 
     [MaterialProperty("_FrostIntensity")]
@@ -107,7 +107,7 @@ namespace BlackDawn.DOTS
         public float Value;
     }
     /// <summary>
-    /// ×¶ÌåÇ¿¶È
+    /// é”¥ä½“å¼ºåº¦
     /// </summary>
     [MaterialProperty("_ConeStrength")]
     public struct ConeStrength : IComponentData
@@ -115,7 +115,7 @@ namespace BlackDawn.DOTS
         public float Value;
     }
     /// <summary>
-    /// ÉÁµçÇ¿¶È
+    /// é—ªç”µå¼ºåº¦
     /// </summary>
 
     [MaterialProperty("_LightningIntensity")]
@@ -124,7 +124,7 @@ namespace BlackDawn.DOTS
         public float Value;
     }
     /// <summary>
-    ///ÖĞ¶¾Ç¿¶È
+    ///ä¸­æ¯’å¼ºåº¦
     /// </summary>
     [MaterialProperty("_PoisoningIntensity")]
     public struct PoisoningIntensity : IComponentData
@@ -132,7 +132,7 @@ namespace BlackDawn.DOTS
         public float Value;
     }
     /// <summary>
-    /// °µÓ°Ç¿¶È
+    /// æš—å½±å¼ºåº¦
     /// </summary>
     [MaterialProperty("_DarkShadowIntensity")]
     public struct DarkShadowIntensity : IComponentData
@@ -141,7 +141,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// Í¸Ã÷¶È
+    /// é€æ˜åº¦
     /// </summary>
     [MaterialProperty("_AlphaIntensity")]
     public struct AlphaIntensity : IComponentData
@@ -157,9 +157,9 @@ namespace BlackDawn.DOTS
 
 
 
-    #region  ÉËº¦Æ®×Ö´¦ÀíÄ£¿é
+    #region  ä¼¤å®³é£˜å­—å¤„ç†æ¨¡å—
     /// <summary>
-    /// ÎÄ±¾ÑÕÉ«
+    /// æ–‡æœ¬é¢œè‰²
     /// </summary>
     [MaterialProperty("_TextColor")]
     public struct TextColor : IComponentData
@@ -169,7 +169,7 @@ namespace BlackDawn.DOTS
 
 
     /// <summary>
-    /// ×Ö·û1 UV Rect
+    /// å­—ç¬¦1 UV Rect
     /// </summary>
     [MaterialProperty("_Char1UVRect")]
     public struct Char1UVRect : IComponentData
@@ -178,7 +178,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ×Ö·û2 UV Rect
+    /// å­—ç¬¦2 UV Rect
     /// </summary>
     [MaterialProperty("_Char2UVRect")]
     public struct Char2UVRect : IComponentData
@@ -187,7 +187,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ×Ö·û3 UV Rect
+    /// å­—ç¬¦3 UV Rect
     /// </summary>
     [MaterialProperty("_Char3UVRect")]
     public struct Char3UVRect : IComponentData
@@ -196,7 +196,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ×Ö·û4 UV Rect
+    /// å­—ç¬¦4 UV Rect
     /// </summary>
     [MaterialProperty("_Char4UVRect")]
     public struct Char4UVRect : IComponentData
@@ -205,7 +205,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ×Ö·û5 UV Rect
+    /// å­—ç¬¦5 UV Rect
     /// </summary>
     [MaterialProperty("_Char5UVRect")]
     public struct Char5UVRect : IComponentData
@@ -214,7 +214,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ×Ö·û6 UV Rect
+    /// å­—ç¬¦6 UV Rect
     /// </summary>
     [MaterialProperty("_Char6UVRect")]
     public struct Char6UVRect : IComponentData
@@ -223,7 +223,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// UV Æ«ÒÆ
+    /// UV åç§»
     /// </summary>
     [MaterialProperty("_Offset")]
     public struct TextOffset : IComponentData
@@ -232,7 +232,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// Ëõ·Å
+    /// ç¼©æ”¾
     /// </summary>
     [MaterialProperty("_Scale")]
     public struct TextScale : IComponentData
@@ -241,7 +241,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ÓëshaderGrapha ÖĞÀÛ¼ÓµÄ³ÌĞòÊ±¼äBuffer±äÁ¿£¬ÊµÏÖĞ§GPU×Ô¶¯¼ÆËã
+    /// ä¸shaderGrapha ä¸­ç´¯åŠ çš„ç¨‹åºæ—¶é—´Bufferå˜é‡ï¼Œå®ç°æ•ˆGPUè‡ªåŠ¨è®¡ç®—
     /// </summary>
     [MaterialProperty("_StartTime")]
     public struct TextStartTime : IComponentData
@@ -250,7 +250,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// Í³Ò»Ëæ»úÆ«ÒÆ±äÁ¿
+    /// ç»Ÿä¸€éšæœºåç§»å˜é‡
     /// </summary>
     [MaterialProperty("_RandomOffset")]
     public struct RandomOffset : IComponentData
@@ -261,7 +261,7 @@ namespace BlackDawn.DOTS
 
 
     /// <summary>
-    /// »ğÑæÆ«ÒÆ±ã±äÁ¿£¬¶ÔÓ¦»ğÑæ×é¼ş£¬Ã²ËÆÎÒµÄ¹ã¸æÅÆ×ÅÉ«Æ÷²»Ö§³Ö£¿
+    /// ç«ç„°åç§»ä¾¿å˜é‡ï¼Œå¯¹åº”ç«ç„°ç»„ä»¶ï¼Œè²Œä¼¼æˆ‘çš„å¹¿å‘Šç‰Œç€è‰²å™¨ä¸æ”¯æŒï¼Ÿ
     /// </summary>
     [MaterialProperty("_RandomOffset")]
     public struct FireRandomOffset : IComponentData
@@ -274,7 +274,7 @@ namespace BlackDawn.DOTS
 
 
     /// <summary>
-    /// ±ùËªÆ«ÒÆ±ã±äÁ¿
+    /// å†°éœœåç§»ä¾¿å˜é‡
     /// </summary>
     [MaterialProperty("_RandomOffset")]
     public struct FrostRandomOffset : IComponentData
@@ -284,7 +284,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ÉÁµçÆ«ÒÆ±ã±äÁ¿£¬¶ÔÓ¦ÉÁµç×é¼ş
+    /// é—ªç”µåç§»ä¾¿å˜é‡ï¼Œå¯¹åº”é—ªç”µç»„ä»¶
     /// </summary>
     [MaterialProperty("_RandomOffset")]
     public struct LightningRandomOffset : IComponentData
@@ -294,7 +294,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ÖĞ¶¾Æ«ÒÆ±ã±äÁ¿
+    /// ä¸­æ¯’åç§»ä¾¿å˜é‡
     /// </summary>
     [MaterialProperty("_RandomOffset")]
     public struct PoisoningRandomOffset : IComponentData
@@ -304,7 +304,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// °µÓ°Æ«ÒÆ±äÁ¿
+    /// æš—å½±åç§»å˜é‡
     /// </summary>
     [MaterialProperty("_RandomOffset")]
     public struct DarkShadowRandomOffset : IComponentData
@@ -314,7 +314,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// Á÷ÑªÆ«ÒÆ±ã±äÁ¿
+    /// æµè¡€åç§»ä¾¿å˜é‡
     /// </summary>
     [MaterialProperty("_RandomOffset")]
     public struct BleedRandomOffset : IComponentData
@@ -324,17 +324,17 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    ///äÖÈ¾ÏµÍ³×¨ÓÃµÄrngÊı¾İ
+    ///æ¸²æŸ“ç³»ç»Ÿä¸“ç”¨çš„rngæ•°æ®
     /// </summary>
     public struct RenderRngState : IComponentData
     {
-        /// <summary>RNGState,µ¥¶À×é¼ş×¨ÃÅÎªäÖÈ¾¶¨ÖÆ</summary>
+        /// <summary>RNGState,å•ç‹¬ç»„ä»¶ä¸“é—¨ä¸ºæ¸²æŸ“å®šåˆ¶</summary>
         public uint rngState;
     }
 
 
     /// <summary>
-    /// ÓÃÓÚÅĞ¶ÏÊÇ·ñ¿ªÆôÎÄ×ÖäÖÈ¾
+    /// ç”¨äºåˆ¤æ–­æ˜¯å¦å¼€å¯æ–‡å­—æ¸²æŸ“
     /// </summary>
     public struct EnableTextRender : IComponentData, IEnableableComponent
     { }

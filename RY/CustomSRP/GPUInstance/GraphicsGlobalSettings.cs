@@ -12,13 +12,13 @@ public class Griphic : MonoBehaviour
 
     private void OnEnable()
     {
-        Debug.Log(" OnEnable ¿ªÆô  SRP: " + enableSRP);
+        Debug.Log(" OnEnable å¼€å¯  SRP: " + enableSRP);
     }
 
     private void Awake()
     {
         GraphicsSettings.useScriptableRenderPipelineBatching = enableSRP;
-        Debug.Log("¿ªÆôSRP: " + GraphicsSettings.useScriptableRenderPipelineBatching);
+        Debug.Log("å¼€å¯SRP: " + GraphicsSettings.useScriptableRenderPipelineBatching);
     }
     void Start()
     {

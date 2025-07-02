@@ -13,7 +13,7 @@ namespace BlackDawn
 
         private void Awake()
         { 
-            //»ñÈ¡ÊÂ¼ş×ÜÏß¹ÜÀíÆ÷
+            //è·å–äº‹ä»¶æ€»çº¿ç®¡ç†å™¨
             _eventBus = EventBusManager.GetInstance().eventBus;
         }
         void Start()

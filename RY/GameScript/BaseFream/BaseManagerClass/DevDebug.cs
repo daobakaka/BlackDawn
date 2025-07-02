@@ -1,11 +1,11 @@
-// ·½·¨Ò»£º¸ø UnityEngine.Debug Æğ¸ö±ğÃû£¬°Ñ System.Diagnostics.Debug Òş²Øµô
+// æ–¹æ³•ä¸€ï¼šç»™ UnityEngine.Debug èµ·ä¸ªåˆ«åï¼ŒæŠŠ System.Diagnostics.Debug éšè—æ‰
 using UnityEngine;
 using System.Diagnostics;
 using UDebug = UnityEngine.Debug;
 
 public static class DevDebug
 {
-    // Ö»ÓĞÔÚ Editor Ä£Ê½»ò Development Build Ê±£¬Õâ¸ö·½·¨µÄµ÷ÓÃ²Å»á±»±£Áô
+    // åªæœ‰åœ¨ Editor æ¨¡å¼æˆ– Development Build æ—¶ï¼Œè¿™ä¸ªæ–¹æ³•çš„è°ƒç”¨æ‰ä¼šè¢«ä¿ç•™
     [Conditional("UNITY_EDITOR")]
     [Conditional("DEVELOPMENT_BUILD")]
     public static void Log(object message)

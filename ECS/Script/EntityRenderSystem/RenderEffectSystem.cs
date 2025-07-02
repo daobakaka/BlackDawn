@@ -1,4 +1,4 @@
-﻿using BlackDawn;
+using BlackDawn;
 using BlackDawn.DOTS;
 using System.Diagnostics;
 using Unity.Burst;

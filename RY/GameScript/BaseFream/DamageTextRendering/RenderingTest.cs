@@ -6,11 +6,11 @@ using UnityEngine.VFX;
 public class RenderingTest : MonoBehaviour
 {
 
-    [Header("Ä¿±êÊıÁ¿ & ·¶Î§")]
+    [Header("ç›®æ ‡æ•°é‡ & èŒƒå›´")]
     public int targetCount = 1000;
     public Vector3 bounds = new Vector3(10, 10, 10);
 
-    [Header("¸üĞÂÆµÂÊ£¨Ãë£©")]
+    [Header("æ›´æ–°é¢‘ç‡ï¼ˆç§’ï¼‰")]
     public float updateInterval = 1.0f;
 
     private VisualEffect vfx;
@@ -27,12 +27,12 @@ public class RenderingTest : MonoBehaviour
     void Start()
     {
 
-        DevDebug.LogError("!!!!ÅúÁ¿GPUBufferäÖÈ¾Âß¼­");
+        DevDebug.LogError("!!!!æ‰¹é‡GPUBufferæ¸²æŸ“é€»è¾‘");
         vfx = GetComponent<VisualEffect>();
 
         
 
-        DevDebug.LogError("Ãû³Æ"+vfx.initialEventName);
+        DevDebug.LogError("åç§°"+vfx.initialEventName);
 
 
         GenerateRandomTargets();
@@ -49,7 +49,7 @@ public class RenderingTest : MonoBehaviour
         {
 
 
-            DevDebug.LogError("¿ªÊ¼¸üĞÂÅúÁ¿GPUBufferäÖÈ¾Âß¼­");
+            DevDebug.LogError("å¼€å§‹æ›´æ–°æ‰¹é‡GPUBufferæ¸²æŸ“é€»è¾‘");
             GenerateRandomTargets();
             UploadToVFX();
             timer = 0f;
@@ -62,7 +62,7 @@ public class RenderingTest : MonoBehaviour
     void GenerateRandomTargets()
     {
 
-        // ³õÊ¼»¯ buffer ºÍÊı¾İ
+        // åˆå§‹åŒ– buffer å’Œæ•°æ®
         targetPositions = new Vector3[targetCount];
 
 

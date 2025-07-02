@@ -10,7 +10,7 @@ namespace BlackDawn
     }
 
     /// <summary>
-    /// 通用链接特效 虹吸
+    /// 閫氱敤閾炬帴鐗规晥 铏瑰惛
     /// </summary>
     [Serializable]
     public struct LinkTargetData

@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 /// <summary>
-/// Í¸ÊÓÒõÓ°
+/// é€è§†é˜´å½±
 /// </summary>
 public class CustomRendererFeatureTransparentShadow : ScriptableRendererFeature
 {
@@ -16,7 +16,7 @@ public class CustomRendererFeatureTransparentShadow : ScriptableRendererFeature
 
     public override void Create()
     {
-        // ¸ù¾İÃ¶¾ÙÑ¡Ôñ×ª»»Îª RenderQueueRange
+        // æ ¹æ®æšä¸¾é€‰æ‹©è½¬æ¢ä¸º RenderQueueRange
         RenderQueueRange range = (renderQueueOption == CustomRenderQueueOption.Opaque) ?
                                     RenderQueueRange.opaque : RenderQueueRange.transparent;
         _customPass = new CustomRendererPassTransparentShadow(passName, renderPassEvent, range);

@@ -7,13 +7,13 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using Unity.Physics;
 using UnityEngine;
-//ÓÃÓÚ¹ÜÀí¼¼ÄÜµÄÉúÃüÖÜÆÚ¼°×´Ì¬
+//ç”¨äºç®¡ç†æŠ€èƒ½çš„ç”Ÿå‘½å‘¨æœŸåŠçŠ¶æ€
 namespace BlackDawn.DOTS
 {
     /// <summary>
-    /// ¼¼ÄÜ¹ÜÀíÀà,ÔÚÌØÊâ¼¼ÄÜÀàÖ®ºó½øĞĞ¸üĞÂ
+    /// æŠ€èƒ½ç®¡ç†ç±»,åœ¨ç‰¹æ®ŠæŠ€èƒ½ç±»ä¹‹åè¿›è¡Œæ›´æ–°
     /// </summary>
-    //ÏÈÉËº¦¼ÆËã£¬ÔÙ¸üĞÂ×´Ì¬
+    //å…ˆä¼¤å®³è®¡ç®—ï¼Œå†æ›´æ–°çŠ¶æ€
     [BurstCompile]
     [RequireMatchingQueriesForUpdate]
     [UpdateInGroup(typeof(MainThreadSystemGroup))]
@@ -22,7 +22,7 @@ namespace BlackDawn.DOTS
         ComponentLookup<LocalTransform> _transform;
         ComponentLookup<MonsterLossPoolAttribute> _monsterLossPoolAttrLookup;
         ComponentLookup<HeroAttributeCmpt> _heroAttribute;
-        //»ñÈ¡¼¼ÄÜµÀ¾ßÉÏµÄbuffer£¬ÓÃÓÚÊµÏÖ°µÓ°ÔöÍÌÊÉĞ§¹û
+        //è·å–æŠ€èƒ½é“å…·ä¸Šçš„bufferï¼Œç”¨äºå®ç°æš—å½±å¢åå™¬æ•ˆæœ
         BufferLookup<HitRecord> _hitBuffer;
         float3 _heroPosition;
         Entity _heroEntity;
@@ -33,7 +33,7 @@ namespace BlackDawn.DOTS
         {
 
            // state.Enabled = false;
-            //ÓÉÍâ²¿¿ØÖÆ
+            //ç”±å¤–éƒ¨æ§åˆ¶
            state.RequireForUpdate<EnableHeroSkillsMonoSystemTag>();
            state.Enabled = false;
 
@@ -50,7 +50,7 @@ namespace BlackDawn.DOTS
             _heroEntity = SystemAPI.GetSingletonEntity<HeroEntityMasterTag>();
             _heroAttributeCmptOriginal = Hero.instance.attributeCmpt;
 
-            DevDebug.Log("ÖØÆôSkillMonoÏµÍ³");
+            DevDebug.Log("é‡å¯SkillMonoç³»ç»Ÿ");
         }
 
 
@@ -59,7 +59,7 @@ namespace BlackDawn.DOTS
       public  void OnUpdate(ref SystemState state) 
         
         {
-            //¸üĞÂÎ»ÖÃ
+            //æ›´æ–°ä½ç½®
             _transform.Update(ref state);
             _monsterLossPoolAttrLookup.Update(ref state);
             _heroAttribute.Update(ref state);
@@ -67,7 +67,7 @@ namespace BlackDawn.DOTS
      
 
 
-         //Ö÷Ïß³ÉÂß¼­²ÉÓÃ¿ªÍ·Ğ´
+         //ä¸»çº¿æˆé€»è¾‘é‡‡ç”¨å¼€å¤´å†™
             var ecb = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             
         
@@ -76,35 +76,35 @@ namespace BlackDawn.DOTS
 
 
             var timer = SystemAPI.Time.DeltaTime;
-            //ºóĞøĞèÒª¸ü¸Ä,²éÑ¯Ó¢ĞÛµÄÎ»ÖÃ
+            //åç»­éœ€è¦æ›´æ”¹,æŸ¥è¯¢è‹±é›„çš„ä½ç½®
            // var heroEntity = SystemAPI.GetSingletonEntity<HeroEntityMasterTag>();
             quaternion rot = _transform[_heroEntity].Rotation;
             _heroPosition = _transform[_heroEntity].Position;
-            //»ñÈ¡Ó¢ĞÛÊôĞÔ
+            //è·å–è‹±é›„å±æ€§
             var heroPar = _heroAttribute[_heroEntity];
-            //»ñÈ¡Ó¢ĞÛ×°ÔØµÄ¼¼ÄÜµÈ¼¶
+            //è·å–è‹±é›„è£…è½½çš„æŠ€èƒ½ç­‰çº§
             var level = _heroAttribute[_heroEntity].skillDamageAttribute.skillLevel;
             var prefab =SystemAPI.GetSingleton<ScenePrefabsSingleton>();
 
 
-            //Âö³å¼¼ÄÜ´¦Àí
+            //è„‰å†²æŠ€èƒ½å¤„ç†
             foreach (var (skillTag ,skillCal,transform,collider,entity)
                   in SystemAPI.Query<RefRW<SkillPulseTag> ,RefRW<SkillsDamageCalPar>,RefRW<LocalTransform>,RefRW<PhysicsCollider>>().WithEntityAccess())
             {
-                //¸üĞÂ±êÇ©µÄ¼¼ÄÜÉËº¦²ÎÊı£¬ÕâÀïÓĞ¶¯Ì¬µÄ±ä»¯ÔÙ¸üĞÂ
+                //æ›´æ–°æ ‡ç­¾çš„æŠ€èƒ½ä¼¤å®³å‚æ•°ï¼Œè¿™é‡Œæœ‰åŠ¨æ€çš„å˜åŒ–å†æ›´æ–°
               //  skillCal.ValueRW.damageChangePar = skillTag.ValueRW.skillDamageChangeParTag;
-                // 2) ¼ÆËã¡°Ç°Ïò¡±ÊÀ½çÏòÁ¿
+                // 2) è®¡ç®—â€œå‰å‘â€ä¸–ç•Œå‘é‡
                 float3 forward = math.mul(transform.ValueRO.Rotation, new float3(0f, 0f, 1f));
-                // 3) ÑØ×ÅÇ°ÏòÒÆ¶¯
+                // 3) æ²¿ç€å‰å‘ç§»åŠ¨
                 transform.ValueRW.Position += forward *skillTag.ValueRW.speed * timer;
 
                 skillTag.ValueRW.tagSurvivalTime -= timer; 
 
-                //Âú×ãÊ±¼ä´óÓÚ3Ãë£¬oncheck¹Ø±Õ£¬ÇÒÔÊĞí¿ªÆôµÚ¶ş½×¶Î £¬ÔòÌí¼ÓµÚ¶ş½×¶Î±¬Õ¨ĞèÇó±êÇ©,È¡ÏûÏú»Ù£¬ÁôÔÚ±¬Õ¨äÖÈ¾Âß¼­Ïú»Ù
+                //æ»¡è¶³æ—¶é—´å¤§äº3ç§’ï¼Œoncheckå…³é—­ï¼Œä¸”å…è®¸å¼€å¯ç¬¬äºŒé˜¶æ®µ ï¼Œåˆ™æ·»åŠ ç¬¬äºŒé˜¶æ®µçˆ†ç‚¸éœ€æ±‚æ ‡ç­¾,å–æ¶ˆé”€æ¯ï¼Œç•™åœ¨çˆ†ç‚¸æ¸²æŸ“é€»è¾‘é”€æ¯
                 if (skillTag.ValueRW.tagSurvivalTime <=0)
                 {
                     if (skillTag.ValueRW.enableSecond)
-                        //Ö±½Ó¿ª¹Ø±êÇ©£¬±ÜÃâ½á¹¹ĞÔ¸Ä±ä
+                        //ç›´æ¥å¼€å…³æ ‡ç­¾ï¼Œé¿å…ç»“æ„æ€§æ”¹å˜
                     ecb.SetComponentEnabled<SkillPulseSecondExplosionRequestTag>(entity, true);
                     else
                     {
@@ -117,53 +117,53 @@ namespace BlackDawn.DOTS
                 }
 
             }
-            //°µÄÜ¼¼ÄÜ´¦Àí,DymicalBuffer<...>ÕâÑùÖ»ÄÜÄÃµ½Ö»¶ÁµÄ£¬×ö¸ü¸ÄĞèÒªÔÚ·½·¨ÄÚ²¿Ê¹ÓÃÏÔÊ¾µÄSystemAPI À´Ö´ĞĞ
-            //²ğ·Ö×é¼şÒÔ»ñµÃĞÔÄÜÓÅÊÆ
+            //æš—èƒ½æŠ€èƒ½å¤„ç†,DymicalBuffer<...>è¿™æ ·åªèƒ½æ‹¿åˆ°åªè¯»çš„ï¼Œåšæ›´æ”¹éœ€è¦åœ¨æ–¹æ³•å†…éƒ¨ä½¿ç”¨æ˜¾ç¤ºçš„SystemAPI æ¥æ‰§è¡Œ
+            //æ‹†åˆ†ç»„ä»¶ä»¥è·å¾—æ€§èƒ½ä¼˜åŠ¿
             foreach (var (skillTag,skillCal, transform, collider,entity)
                  in SystemAPI.Query<RefRW<SkillDarkEnergyTag>,RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
             {
      
-                // 2) ¼ÆËã¡°Ç°Ïò¡±ÊÀ½çÏòÁ¿
+                // 2) è®¡ç®—â€œå‰å‘â€ä¸–ç•Œå‘é‡
                 float3 forward = math.mul(transform.ValueRO.Rotation, new float3(0f, 0f, 1f));
-                // 3) ÑØ×ÅÇ°ÏòÒÆ¶¯
+                // 3) æ²¿ç€å‰å‘ç§»åŠ¨
                 transform.ValueRW.Position += forward * skillTag.ValueRW.speed * timer;
 
                 skillTag.ValueRW.tagSurvivalTime -= timer;
 
 
-                // 5) Èç¹ûĞèÒª´¥·¢ÌØÊâĞ§¹û£¬¾Í±éÀú hitBuffer£¬¸øÃ¿¸öÔªËØµÄ universalJudgment ¸³Öµ
+                // 5) å¦‚æœéœ€è¦è§¦å‘ç‰¹æ®Šæ•ˆæœï¼Œå°±éå† hitBufferï¼Œç»™æ¯ä¸ªå…ƒç´ çš„ universalJudgment èµ‹å€¼
                 if (skillTag.ValueRO.enableSpecialEffect)
                 {
-                    // 1) Ã¿´ÎÑ­»·ÏÈÏÔÊ½µØÓÃ entity ÄÃ»º³å
+                    // 1) æ¯æ¬¡å¾ªç¯å…ˆæ˜¾å¼åœ°ç”¨ entity æ‹¿ç¼“å†²
                     var buffer = SystemAPI.GetBuffer<HitRecord>(entity);
-                    // 2) ĞèÒªÓÃÒ»¸öÁÙÊ±±äÁ¿½øĞĞ¸ü¸ÄÖ®ºóÔÙĞ´»Ø
+                    // 2) éœ€è¦ç”¨ä¸€ä¸ªä¸´æ—¶å˜é‡è¿›è¡Œæ›´æ”¹ä¹‹åå†å†™å›
                     if (skillTag.ValueRO.enableSpecialEffect)
                     {
                         for (int i = 0; i < buffer.Length; i++)
                         {          
                             if (!buffer[i].universalJudgment)
                             {
-                                //ÕâÀïÖ»ÓĞÃ»ÓĞÅĞ¶Ï¹ı£¬¾ÍÔÚÏÂÒ»´Î²ÅÄÜÅĞ¶Ï£¬½ÚÊ¡²»±ØÒªµÄ¿ªÏú£¬Ò²¿ÉÒÔÀÛ¼Ó°µÓ°³Ø
+                                //è¿™é‡Œåªæœ‰æ²¡æœ‰åˆ¤æ–­è¿‡ï¼Œå°±åœ¨ä¸‹ä¸€æ¬¡æ‰èƒ½åˆ¤æ–­ï¼ŒèŠ‚çœä¸å¿…è¦çš„å¼€é”€ï¼Œä¹Ÿå¯ä»¥ç´¯åŠ æš—å½±æ± 
                                 var monsterAttr =  _monsterLossPoolAttrLookup[buffer[i].other];
                                 HitRecord temp = buffer[i];
                                 temp.universalJudgment = true;
-                                //°µÓ°Öµ>50Ê±ÍÌÈ¡
+                                //æš—å½±å€¼>50æ—¶åå–
                                 if (monsterAttr.shadowPool > 50)
                                 {                                 
-                                    //Ôö¼ÓÒ»´ÎÉËº¦²ÎÊı
+                                    //å¢åŠ ä¸€æ¬¡ä¼¤å®³å‚æ•°
                                     skillCal.ValueRW.damageChangePar *= (1 + (monsterAttr.shadowPool * level / 10000));
-                                    //ÉèÖÃ¹ÖÎï¶ÔÓ¦µÄ°µÓ°³ØµÄÖµÎª0
+                                    //è®¾ç½®æ€ªç‰©å¯¹åº”çš„æš—å½±æ± çš„å€¼ä¸º0
                                     monsterAttr.shadowPool = 0;
-                                    //ÕâÀïĞ´»Ø ½öĞŞ¸ÄÒ»Ìõ£¬ ºóÆÚ¿¼ÂÇ×é¼ş²ğ·Ö
+                                    //è¿™é‡Œå†™å› ä»…ä¿®æ”¹ä¸€æ¡ï¼Œ åæœŸè€ƒè™‘ç»„ä»¶æ‹†åˆ†
                                     ecb.SetComponent(buffer[i].other, monsterAttr);
-                                    //ÕâÀï²¥·Å°µÓ°ÍÌÊÉÌØĞ§£¿                     
+                                    //è¿™é‡Œæ’­æ”¾æš—å½±åå™¬ç‰¹æ•ˆï¼Ÿ                     
                                 }
                                 buffer[i] = temp;
                             }
                         }
                     }
                 }
-                //Âú×ãÊ±¼ä´óÓÚ3Ãë£¬oncheck¹Ø±Õ£¬ÇÒÔÊĞí¿ªÆôµÚ¶ş½×¶Î £¬ÔòÌí¼ÓµÚ¶ş½×¶Î±¬Õ¨ĞèÇó±êÇ©,È¡ÏûÏú»Ù£¬ÁôÔÚ±¬Õ¨äÖÈ¾Âß¼­Ïú»Ù
+                //æ»¡è¶³æ—¶é—´å¤§äº3ç§’ï¼Œoncheckå…³é—­ï¼Œä¸”å…è®¸å¼€å¯ç¬¬äºŒé˜¶æ®µ ï¼Œåˆ™æ·»åŠ ç¬¬äºŒé˜¶æ®µçˆ†ç‚¸éœ€æ±‚æ ‡ç­¾,å–æ¶ˆé”€æ¯ï¼Œç•™åœ¨çˆ†ç‚¸æ¸²æŸ“é€»è¾‘é”€æ¯
                 if (skillTag.ValueRW.tagSurvivalTime <= 0)
                 {
                   
@@ -176,17 +176,17 @@ namespace BlackDawn.DOTS
 
             }
 
-            //±ù»ğ¼¼ÄÜ´¦ÀíĞı×ª
+            //å†°ç«æŠ€èƒ½å¤„ç†æ—‹è½¬
 
                  foreach (var (skillTag,skillCal, transform, collider,entity)
                  in SystemAPI.Query<RefRW<SkillIceFireTag>,RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
             {
-                //¸üĞÂ±êÇ©µÄ¼¼ÄÜÉËº¦²ÎÊıÕâÀïÓĞ¶¯Ì¬µÄ±ä»¯ÔÙ¸üĞÂ
+                //æ›´æ–°æ ‡ç­¾çš„æŠ€èƒ½ä¼¤å®³å‚æ•°è¿™é‡Œæœ‰åŠ¨æ€çš„å˜åŒ–å†æ›´æ–°
                // skillCal.ValueRW.damageChangePar =skillTag.ValueRW.skillDamageChangeParTag;              
                 float radius = skillTag.ValueRO.radius;
                ref float angle = ref skillTag.ValueRW.currentAngle;
 
-                //Èç¹û¿ªÆôµÚ¶ş½×¶Î±êÊ¶£¬ÇÒ¿ªÆôÌØÊâĞ§¹û,4ÃëÖ´ĞĞÒ»´Î±¬Õ¨ÅĞ¶Ï
+                //å¦‚æœå¼€å¯ç¬¬äºŒé˜¶æ®µæ ‡è¯†ï¼Œä¸”å¼€å¯ç‰¹æ®Šæ•ˆæœ,4ç§’æ‰§è¡Œä¸€æ¬¡çˆ†ç‚¸åˆ¤æ–­
                 if (skillTag.ValueRO.enableSecond&&skillTag.ValueRO.secondSurvivalTime<0)
                 {
                                    
@@ -195,39 +195,39 @@ namespace BlackDawn.DOTS
                     {
                         if (!buffer[i].universalJudgment)
                         {
-                            //È¡ÏûÅĞ¶ÏĞ§¹û
+                            //å–æ¶ˆåˆ¤æ–­æ•ˆæœ
                             HitRecord temp = buffer[i];
                             temp.universalJudgment = true;
                             buffer[i] = temp;
-                            //ÉèÖÃ±¬Õ¨Ğ§¹û
+                            //è®¾ç½®çˆ†ç‚¸æ•ˆæœ
                             ecb.SetComponentEnabled<SkillIceFireSecondExplosionRequestTag>(entity,true);        
-                            //Ìø³öforÑ­»·
+                            //è·³å‡ºforå¾ªç¯
                             break;
                         }
                     }
 
                 }
             
-                // 2) ¼ÆËã½Ç¶ÈÔöÁ¿£¨speed Îª»¡¶È/Ãë£©
+                // 2) è®¡ç®—è§’åº¦å¢é‡ï¼ˆspeed ä¸ºå¼§åº¦/ç§’ï¼‰
                 float deltaAngle = skillTag.ValueRW.speed * timer;
                 angle += deltaAngle;
                 if (angle > math.PI * 2f) angle -= math.PI * 2f;
 
-                // 3) Ö»ÔÚ XZ Æ½Ãæ¼ÆËãĞÂÆ«ÒÆ
+                // 3) åªåœ¨ XZ å¹³é¢è®¡ç®—æ–°åç§»
                 float x = math.cos(angle) * radius;
                 float z = math.sin(angle) * radius;
 
-                // 4) Ô­À´µÄ Y ²»±ä
+                // 4) åŸæ¥çš„ Y ä¸å˜
                 float y = transform.ValueRO.Position.y;
 
-                // 5) °ÑÊµÌåÎ»ÖÃÉèÎª£ºÓ¢ĞÛÎ»ÖÃ + (x, 0, z)£¬ÔÙ¼ÓÉÏ×ÔÉí Y
+                // 5) æŠŠå®ä½“ä½ç½®è®¾ä¸ºï¼šè‹±é›„ä½ç½® + (x, 0, z)ï¼Œå†åŠ ä¸Šè‡ªèº« Y
                 transform.ValueRW.Position = new float3(
                     _heroPosition.x + x,
                     y,
                     _heroPosition.z + z
                 );
 
-                // 6) ³ÖĞø¼õÉÙ´æ»îÊ±¼ä²¢´¦ÀíÏú»Ù»òµÚ¶ş½×¶ÎÂß¼­
+                // 6) æŒç»­å‡å°‘å­˜æ´»æ—¶é—´å¹¶å¤„ç†é”€æ¯æˆ–ç¬¬äºŒé˜¶æ®µé€»è¾‘
                 skillTag.ValueRW.tagSurvivalTime -= timer;
                 if (skillTag.ValueRW.tagSurvivalTime <= 0f)
                 {
@@ -239,8 +239,8 @@ namespace BlackDawn.DOTS
                 }
             }
 
-            //ÂäÀ×¼¼ÄÜ´¦Àí
-            //ÕâÀïµ½Ê±¼ä¾ÍÏûÊ§
+            //è½é›·æŠ€èƒ½å¤„ç†
+            //è¿™é‡Œåˆ°æ—¶é—´å°±æ¶ˆå¤±
             foreach (var (skillTag, skillCal, transform, collider, entity)
                  in SystemAPI.Query<RefRW<SkillThunderStrikeTag>, RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
             {
@@ -257,16 +257,16 @@ namespace BlackDawn.DOTS
 
             }
 
-            //·¨Õó¼¼ÄÜ£¬¿ÉÒÔÊÖ¶¯¹Ø±Õ
-            //¶ş½×¶Î±éÀúbuffer,¹¹½¨ºçÎüÁ´½Ó£¬Á´½Ó¸ù¾İ¶¯Ì¬Ğ§¹û¸Ä±ä³¤¶Ì£¿³ÖĞø6Ãë×Ô¶¯ÏûÊ§£¬ÖØĞÂÉú³É£¬»¹ÊÇ°´ÕÕbuffer×´Ì¬¶¨ÒåÏûÊ§»òÕßÉú³É,Õâ¶ÎÂß¼­ÔÚÌØÊâ¼¼ÄÜÀàÀïÃæ´¦Àí
+            //æ³•é˜µæŠ€èƒ½ï¼Œå¯ä»¥æ‰‹åŠ¨å…³é—­
+            //äºŒé˜¶æ®µéå†buffer,æ„å»ºè™¹å¸é“¾æ¥ï¼Œé“¾æ¥æ ¹æ®åŠ¨æ€æ•ˆæœæ”¹å˜é•¿çŸ­ï¼ŸæŒç»­6ç§’è‡ªåŠ¨æ¶ˆå¤±ï¼Œé‡æ–°ç”Ÿæˆï¼Œè¿˜æ˜¯æŒ‰ç…§bufferçŠ¶æ€å®šä¹‰æ¶ˆå¤±æˆ–è€…ç”Ÿæˆ,è¿™æ®µé€»è¾‘åœ¨ç‰¹æ®ŠæŠ€èƒ½ç±»é‡Œé¢å¤„ç†
             foreach (var (skillTag, skillCal, transform, collider, entity)
        in SystemAPI.Query<RefRW<SkillArcaneCircleTag>, RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
             {         
-                //ÈıÃëÖ®ºó¿ªÊ¼µôÄÜÁ¿
+                //ä¸‰ç§’ä¹‹åå¼€å§‹æ‰èƒ½é‡
                 skillTag.ValueRW.tagSurvivalTime -= timer;
                 if (skillTag.ValueRW.tagSurvivalTime <= 0)
                 {
-                    //Ç¯ÖÆµ½0
+                    //é’³åˆ¶åˆ°0
                     heroPar.defenseAttribute.energy = math.max(0, heroPar.defenseAttribute.energy - 3 * timer);
 
                     if (heroPar.defenseAttribute.energy <= 0)
@@ -276,20 +276,20 @@ namespace BlackDawn.DOTS
                     }
                     ecb.SetComponent(_heroEntity, heroPar);
                 }
-                //´æÔÚµÚ¶ş´ÎÊÍ·ÅÊÖ¶¯¹Ø±Õ
+                //å­˜åœ¨ç¬¬äºŒæ¬¡é‡Šæ”¾æ‰‹åŠ¨å…³é—­
                 if(skillTag.ValueRO.closed)
                     skillCal.ValueRW.destory = true;
                // ecb.DestroyEntity(entity);
 
             }
          
-            //º®±ùµÄMonoĞ§¹û
+            //å¯’å†°çš„Monoæ•ˆæœ
             SkillMonoFrost(ref state,ecb);
-            //ÔªËØ¹²ÃùMonoĞ§¹û
+            //å…ƒç´ å…±é¸£Monoæ•ˆæœ
             SkillMonoElementResonance(ref state,ecb);
-            //¼¼ÄÜ¾²µçÀÎÁı
+            //æŠ€èƒ½é™ç”µç‰¢ç¬¼
             SkillMonoElectroCage(ref state,ecb,prefab);
-            //°µÓ°ºéÁ÷B½×¶Î£¬Ë²Ê±ÉËº¦ÌØĞ§¿ØÖÆ
+            //æš—å½±æ´ªæµBé˜¶æ®µï¼Œç¬æ—¶ä¼¤å®³ç‰¹æ•ˆæ§åˆ¶
             SkillMineBlastMono( ref state);
 
 
@@ -308,7 +308,7 @@ namespace BlackDawn.DOTS
         }
 
         /// <summary>
-        /// º®±ù
+        /// å¯’å†°
         /// </summary>
         /// <param name="state"></param>
         /// <param name="ecb"></param>
@@ -316,52 +316,52 @@ namespace BlackDawn.DOTS
         {
 
 
-            //Ò»½×ĞÔ×´¿ØÖÆ
+            //ä¸€é˜¶æ€§çŠ¶æ§åˆ¶
             foreach (var (skillTag, skillCal, transform, collider, entity)
               in SystemAPI.Query<RefRW<SkillFrostTag>, RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
              {
-                // 1. »º´æ·¢ÉäÊ±µÄÔ­µãºÍ¿ªÊ¼Ê±¼ä£¨Ö»ÔÚµÚÒ»´ÎÖ´ĞĞÊ±Ğ´Èë£©
+                // 1. ç¼“å­˜å‘å°„æ—¶çš„åŸç‚¹å’Œå¼€å§‹æ—¶é—´ï¼ˆåªåœ¨ç¬¬ä¸€æ¬¡æ‰§è¡Œæ—¶å†™å…¥ï¼‰
                 if (skillTag.ValueRO.tagSurvivalTime==10)
                 {
                     skillTag.ValueRW.originalPosition = transform.ValueRO.Position;
                 }
-                // 2. Ôö¼Ó´æ»îÊ±¼ä
+                // 2. å¢åŠ å­˜æ´»æ—¶é—´
                 skillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
-                // 3. ¶ÁÈ¡ origin¡¢t
+                // 3. è¯»å– originã€t
                 float3 origin = skillTag.ValueRO.originalPosition;
                 float t = 10-skillTag.ValueRO.tagSurvivalTime;
 
-                // 5. ÓÃ speed Ö±½Ó×÷ÎªÏßËÙ¶È£¬°ë¾¶ r = speed * t
+                // 5. ç”¨ speed ç›´æ¥ä½œä¸ºçº¿é€Ÿåº¦ï¼ŒåŠå¾„ r = speed * t
                 float r = skillTag.ValueRO.speed * t;
-                // 6. ½ÇËÙ¶È±£³Ö²»±ä£¨°´ĞèĞŞ¸Ä£©
-                float angularSpeed = math.radians(90f); // 90¡ã/s
+                // 6. è§’é€Ÿåº¦ä¿æŒä¸å˜ï¼ˆæŒ‰éœ€ä¿®æ”¹ï¼‰
+                float angularSpeed = math.radians(90f); // 90Â°/s
                 float theta = angularSpeed * t;
 
-                // 7. ÔÚ XZ Æ½Ãæ¼ÆËãÂİĞıÆ«ÒÆ£¨Y ²»±ä£©
+                // 7. åœ¨ XZ å¹³é¢è®¡ç®—èºæ—‹åç§»ï¼ˆY ä¸å˜ï¼‰
                 float3 offset = new float3(
                     r * math.cos(theta),
                     0f,
                     r * math.sin(theta)
                 );
-                // 7. ¸üĞÂÎ»ÖÃ
+                // 7. æ›´æ–°ä½ç½®
                 transform.ValueRW.Position = origin + offset;
 
-                // 8. ³¬Ê±Ïú»Ù
+                // 8. è¶…æ—¶é”€æ¯
                 if (t >= 10f)
                 {
                     ecb.DestroyEntity(entity);
                 }
 
-                //¿ªÆôµÚ¶ş½×¶Î£¬º®±ùËéÆ¬ÄÜÁ¦
+                //å¼€å¯ç¬¬äºŒé˜¶æ®µï¼Œå¯’å†°ç¢ç‰‡èƒ½åŠ›
                 if (skillTag.ValueRO.enableSecond)
                 {                 
-                //Éú³É ²»Í¬ÊıÁ¿º®±ùËéÆ¬
+                //ç”Ÿæˆ ä¸åŒæ•°é‡å¯’å†°ç¢ç‰‡
                 if(skillCal.ValueRW.hit ==true&& skillTag.ValueRW.hitCount>0)
                     {                        
                         skillCal.ValueRW.hit = false;
                         var prefab = SystemAPI.GetSingleton<ScenePrefabsSingleton>();
 
-                        //¼¤·¢Ò»´Îº®±ùËéÆ¬µÄ¼ÆËã
+                        //æ¿€å‘ä¸€æ¬¡å¯’å†°ç¢ç‰‡çš„è®¡ç®—
 
                         skillTag.ValueRW.hitCount--;
 
@@ -375,18 +375,18 @@ namespace BlackDawn.DOTS
                             float angleDeg = 360f / skillTag.ValueRO.shrapnelCount * i;
                             float angleRad = math.radians(angleDeg);
 
-                            // 3. Éú³ÉÈÆ Y ÖáµÄËÄÔªÊı£¬²¢¸³¸ø trs.Rotation
+                            // 3. ç”Ÿæˆç»• Y è½´çš„å››å…ƒæ•°ï¼Œå¹¶èµ‹ç»™ trs.Rotation
                             trs.Rotation = quaternion.EulerXYZ(0f, angleRad, 0f);
                             ecb.AddComponent(fragIce, trs);                           
-                            //Ìí¼Óº®±ùËéÆ¬µÄ±êÇ©,¸³ÓèÉËº¦±êÇ©µÄÉËº¦Öµ
+                            //æ·»åŠ å¯’å†°ç¢ç‰‡çš„æ ‡ç­¾,èµ‹äºˆä¼¤å®³æ ‡ç­¾çš„ä¼¤å®³å€¼
                             ecb.AddComponent(fragIce , new SkillFrostShrapneTag() { speed =20,tagSurvivalTime =1});
                             var newCal = skillCal.ValueRW;
-                            // 2. ĞŞ¸Ä×Ö¶Î£¬º®±ùËéÆ¬¼Ì³Ğ20%¶³½áÖµ
+                            // 2. ä¿®æ”¹å­—æ®µï¼Œå¯’å†°ç¢ç‰‡ç»§æ‰¿20%å†»ç»“å€¼
                             newCal.damageChangePar = skillTag.ValueRO.skillDamageChangeParTag;
                             if(skillTag.ValueRO.enableSpecialEffect)
                             newCal.tempFreeze = 20;
 
-                            // 3. °Ñ¸ÄºÃµÄ×é¼şÕû°ü¸øÊµÌå  
+                            // 3. æŠŠæ”¹å¥½çš„ç»„ä»¶æ•´åŒ…ç»™å®ä½“  
                             ecb.AddComponent(fragIce, newCal);
 
                             var hits = ecb.AddBuffer<HitRecord>(fragIce);
@@ -402,14 +402,14 @@ namespace BlackDawn.DOTS
             }
 
 
-            //¶ş½×ĞÔ×´¿ØÖÆ
+            //äºŒé˜¶æ€§çŠ¶æ§åˆ¶
             foreach (var (skillTag, skillCal, transform, collider, entity)
            in SystemAPI.Query<RefRW<SkillFrostShrapneTag>, RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
             {
 
-                // 2) ¼ÆËã¡°Ç°Ïò¡±ÊÀ½çÏòÁ¿
+                // 2) è®¡ç®—â€œå‰å‘â€ä¸–ç•Œå‘é‡
                 float3 forward = math.mul(transform.ValueRO.Rotation, new float3(0f, 0f, 1f));
-                // 3) ÑØ×ÅÇ°ÏòÒÆ¶¯
+                // 3) æ²¿ç€å‰å‘ç§»åŠ¨
                 transform.ValueRW.Position += forward * skillTag.ValueRW.speed * SystemAPI.Time.DeltaTime;
 
                 skillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
@@ -431,7 +431,7 @@ namespace BlackDawn.DOTS
 
 
         /// <summary>
-        /// ÔªËØ¹²Ãù
+        /// å…ƒç´ å…±é¸£
         /// </summary>
         /// <param name="state"></param>
         /// <param name="ecb"></param>
@@ -454,7 +454,7 @@ namespace BlackDawn.DOTS
         }
 
         /// <summary>
-        /// ¾²µçÀÎÁı£¬³ÖĞø4Ãë£¿
+        /// é™ç”µç‰¢ç¬¼ï¼ŒæŒç»­4ç§’ï¼Ÿ
         /// </summary>
         /// <param name="state"></param>
         /// <param name="ecb"></param>
@@ -475,7 +475,7 @@ namespace BlackDawn.DOTS
                     damagePar.ValueRW.destory = true;
                     continue;
                 }
-                //µÚ¶ş½×¶ÎÀ×±©ÀÎÁı
+                //ç¬¬äºŒé˜¶æ®µé›·æš´ç‰¢ç¬¼
                 if (skillTag.ValueRO.enableSecondA)
                 {
                     skillTag.ValueRW.timerA += SystemAPI.Time.DeltaTime;
@@ -484,10 +484,10 @@ namespace BlackDawn.DOTS
                     {
                         skillTag.ValueRW.timerA = 0;
 
-                      //  1.ÊµÀı»¯ĞÂÀÎÁıµç»¡
+                      //  1.å®ä¾‹åŒ–æ–°ç‰¢ç¬¼ç”µå¼§
                         var arcEntity = ecb.Instantiate(prefabs.HeroSkillAssistive_ElectroCage_Lightning);
 
-                        // 2. LocalTransform Ëæ»úÆ«ÒÆ XZ ¡À10
+                        // 2. LocalTransform éšæœºåç§» XZ Â±10
                         var newTransform = transform.ValueRO;
                         float xOffset = rng.NextFloat(-7f, 7f);
                         float zOffset = rng.NextFloat(-7f, 7f);
@@ -495,16 +495,16 @@ namespace BlackDawn.DOTS
                         newTransform.Position.z += zOffset;
                         ecb.SetComponent(arcEntity, newTransform);
 
-                        // 3. ¹¹ÔìÉËº¦²ÎÊı£¨¸´ÖÆ+¶¨ÖÆ£©
+                        // 3. æ„é€ ä¼¤å®³å‚æ•°ï¼ˆå¤åˆ¶+å®šåˆ¶ï¼‰
                         var newSkillPar = damagePar.ValueRO;
-                        //µÚ¶ş½×¶Î½øĞĞÀ×±©ÔöÉË
+                        //ç¬¬äºŒé˜¶æ®µè¿›è¡Œé›·æš´å¢ä¼¤
                         newSkillPar.damageChangePar = skillTag.ValueRW.skillDamageChangeParTag;
 
                         ecb.AddComponent(arcEntity, newSkillPar);
-                        //Ìí¼ÓÀ×±©´æ»îÓ¡¼Ç
+                        //æ·»åŠ é›·æš´å­˜æ´»å°è®°
                         ecb.AddComponent(arcEntity, new SkillElectroCageScoendTag() { tagSurvivalTime = 1 });
 
-                        // 4. Ìí¼ÓÅö×²¼ÇÂ¼»º³åÇø
+                        // 4. æ·»åŠ ç¢°æ’è®°å½•ç¼“å†²åŒº
                         ecb.AddBuffer<HitRecord>(arcEntity);
                         ecb.AddBuffer<HitElementResonanceRecord>(arcEntity);
 
@@ -513,7 +513,7 @@ namespace BlackDawn.DOTS
 
 
                 }
-                //µÚÈı½×¶Îµ¼µçÀÎÁı,Á½ÃëÒ»´ÎµÄ¸ÅÂÊÅĞ¶Ï
+                //ç¬¬ä¸‰é˜¶æ®µå¯¼ç”µç‰¢ç¬¼,ä¸¤ç§’ä¸€æ¬¡çš„æ¦‚ç‡åˆ¤æ–­
                 if (skillTag.ValueRO.enableSecondB)
                 {
                     skillTag.ValueRW.timerB += SystemAPI.Time.DeltaTime;
@@ -524,11 +524,11 @@ namespace BlackDawn.DOTS
                         skillTag.ValueRW.timerB = 0;
 
                         var random = rng.NextFloat(0, 1);
-                        //¸ÅÂÊÃ¿´Î½µµÍ20%
+                        //æ¦‚ç‡æ¯æ¬¡é™ä½20%
                         if (random <=( 0.5-skillTag.ValueRO.StackCount*0.05f))
                         {
                             float3 Offset = rng.NextFloat3(-15f, 15f);
-                            //Ôö¼ÓÒ»´Î´«µ¼´ÎÊı
+                            //å¢åŠ ä¸€æ¬¡ä¼ å¯¼æ¬¡æ•°
                             skillTag.ValueRW.StackCount += 1;
                             float3 newPosition = transform.ValueRO.Position + new float3(Offset.x, 0, Offset.z);
 
@@ -558,7 +558,7 @@ namespace BlackDawn.DOTS
 
 
 
-            //À×±©Ïû³ıÂß¼­
+            //é›·æš´æ¶ˆé™¤é€»è¾‘
             foreach (var (skillTag,skillCal,entity)
           in SystemAPI.Query<RefRW<SkillElectroCageScoendTag>,RefRW<SkillsDamageCalPar>>().WithEntityAccess())
             {
@@ -578,7 +578,7 @@ namespace BlackDawn.DOTS
         }
 
         /// <summary>
-        ///¶¾±¬µØÀ×µÄMono ¿ØÖÆ£¿»òĞíÖ±½ÓĞ´ÔÚ»Øµ÷ÀàÀïÃæ£¿±¬Õ¨Ö®ºóÖØĞÂ¸üĞÂÊ±¼ä£¿
+        ///æ¯’çˆ†åœ°é›·çš„Mono æ§åˆ¶ï¼Ÿæˆ–è®¸ç›´æ¥å†™åœ¨å›è°ƒç±»é‡Œé¢ï¼Ÿçˆ†ç‚¸ä¹‹åé‡æ–°æ›´æ–°æ—¶é—´ï¼Ÿ
         /// </summary>
         /// <param name="state"></param>
         /// <param name="ecb"></param>
@@ -601,7 +601,7 @@ namespace BlackDawn.DOTS
         }
 
         /// <summary>
-        /// °µÓ°ºéÁ÷µÚ¶ş½×¶Î
+        /// æš—å½±æ´ªæµç¬¬äºŒé˜¶æ®µ
         /// </summary>
         /// <param name="state"></param>
         /// <param name="ecb"></param>
@@ -615,7 +615,7 @@ namespace BlackDawn.DOTS
 
 
         /// <summary>
-        /// Ó¢ĞÛ¼¼ÄÜECS ÊÍ·ÅÏµÍ³(¾²µçÀÎÁıB±äÖÖ)
+        /// è‹±é›„æŠ€èƒ½ECS é‡Šæ”¾ç³»ç»Ÿ(é™ç”µç‰¢ç¬¼Bå˜ç§)
         /// </summary>
         /// <param name="ecb"></param>
         /// <param name="prefab"></param>
@@ -634,41 +634,41 @@ namespace BlackDawn.DOTS
          SkillsDamageCalPar skillsDamageCal,
          float3 position,
          quaternion rotation,
-         float damageChangePar = 1,//Ä¬ÈÏÉËº¦²ÎÊıÎª1
+         float damageChangePar = 1,//é»˜è®¤ä¼¤å®³å‚æ•°ä¸º1
          float3 positionOffset = default,
          float3 rotationOffsetEuler = default,
          float scaleFactor = 1f,
          bool enablePull = false,
          bool enableExplosion = false)
         {
-            // 1) ÑÓ³ÙÊµÀı»¯
+            // 1) å»¶è¿Ÿå®ä¾‹åŒ–
             var entity = ecb.Instantiate(prefab);
 
-            // 2) ¶ÁÈ¡Ô¤ÖÆÌåÉÏÒÑÓĞµÄ LocalTransform£¬½ö¶ÁÈ¡²Ù×÷¿ÉÒÔÖ±½ÓÓÃ EntityManager
+            // 2) è¯»å–é¢„åˆ¶ä½“ä¸Šå·²æœ‰çš„ LocalTransformï¼Œä»…è¯»å–æ“ä½œå¯ä»¥ç›´æ¥ç”¨ EntityManager
             var prefabTransform = _entityManager.GetComponentData<LocalTransform>(prefab);
             float baseScale = prefabTransform.Scale;
 
-            // 3) ¼ÆËãĞÂµÄ±ä»»
+            // 3) è®¡ç®—æ–°çš„å˜æ¢
             quaternion offsetQuat = quaternion.EulerXYZ(math.radians(rotationOffsetEuler));
             LocalTransform newTransform = new LocalTransform
             {
                 Position = position + math.mul(rotation, positionOffset),
                 Rotation = math.mul(rotation, offsetQuat),
-                //ÕâÀïÓÉ¼¼ÄÜ·¶Î§¾ö¶¨¼¼ÄÜµÄÓ°ÏìÒò×Ó
+                //è¿™é‡Œç”±æŠ€èƒ½èŒƒå›´å†³å®šæŠ€èƒ½çš„å½±å“å› å­
                 Scale = baseScale * scaleFactor * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange)
             };
 
-            // 4) Ğ´ÈëĞÂÊµÌå
+            // 4) å†™å…¥æ–°å®ä½“
             ecb.SetComponent(entity, newTransform);
 
-            // 5) Ìí¼Ó²¢³õÊ¼»¯ÉËº¦²ÎÊı×é¼ş£¬ÑØÓÃ¿ìÕÕ»úÖÆ
+            // 5) æ·»åŠ å¹¶åˆå§‹åŒ–ä¼¤å®³å‚æ•°ç»„ä»¶ï¼Œæ²¿ç”¨å¿«ç…§æœºåˆ¶
             ecb.AddComponent(entity, skillsDamageCal);
 
-            // 6) Ìí¼ÓÅö×²¼ÇÂ¼»º³åÇø
+            // 6) æ·»åŠ ç¢°æ’è®°å½•ç¼“å†²åŒº
             var hits = ecb.AddBuffer<HitRecord>(entity);
             ecb.AddBuffer<HitElementResonanceRecord>(entity);
 
-            //Ğ´»Ø
+            //å†™å›
             return entity;
         }
 

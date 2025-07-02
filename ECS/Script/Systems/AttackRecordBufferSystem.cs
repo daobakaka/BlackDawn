@@ -1,12 +1,12 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
-///×¨ÃÅÓÃÓÚ´¦Àí Åö×²ÌåµÄÉËº¦Ëø¶¨
+///ä¸“é—¨ç”¨äºå¤„ç† ç¢°æ’ä½“çš„ä¼¤å®³é”å®š
 namespace BlackDawn.DOTS
 {
     [BurstCompile]
     [RequireMatchingQueriesForUpdate]
-    //ÕâÀïÂäµ½¿ØÖÆ±íÏÖÏµÍ³Ö®ºó½øĞĞ´¦Àí
+    //è¿™é‡Œè½åˆ°æ§åˆ¶è¡¨ç°ç³»ç»Ÿä¹‹åè¿›è¡Œå¤„ç†
     [UpdateAfter(typeof(BehaviorControlSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     partial struct AttackRecordBufferSystem : ISystem
@@ -14,7 +14,7 @@ namespace BlackDawn.DOTS
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            //Íâ²¿¿ØÖÆ
+            //å¤–éƒ¨æ§åˆ¶
             state.RequireForUpdate<EnableAttackRecordBufferSystemTag>();
 
 
@@ -35,7 +35,7 @@ namespace BlackDawn.DOTS
 
           //  state.Dependency.Complete();
 
-            //ÓÃÓÚ¼ÇÂ¼¹ÖÎïÓëÓ¢ĞÛµÄ»ù´¡¹¥»÷µÄ¼ÇÂ¼Æ÷
+            //ç”¨äºè®°å½•æ€ªç‰©ä¸è‹±é›„çš„åŸºç¡€æ”»å‡»çš„è®°å½•å™¨
             state.Dependency = new HeroHitRecordBufferDealJob
             {
 
@@ -44,7 +44,7 @@ namespace BlackDawn.DOTS
             }.ScheduleParallel(state.Dependency);
 
             //state.Dependency.Complete();
-            //¼ÆËãÔªËØ¹²ÃùµÄ buffer
+            //è®¡ç®—å…ƒç´ å…±é¸£çš„ buffer
             state.Dependency = new HitElementResonanceRecordBufferDealJob
             {
 
@@ -52,7 +52,7 @@ namespace BlackDawn.DOTS
             }.ScheduleParallel(state.Dependency);
 
 
-            //ÓÃÓÚ¼ÇÂ¼·¨Õó¼¼ÄÜµÄÏà¹Øbuffer
+            //ç”¨äºè®°å½•æ³•é˜µæŠ€èƒ½çš„ç›¸å…³buffer
             state.Dependency = new SpecialSkillArcaneCircleSecondBufferDealJob
             {
 
@@ -60,7 +60,7 @@ namespace BlackDawn.DOTS
 
             }.ScheduleParallel(state.Dependency);
 
-            //×îºó×èÈû
+            //æœ€åé˜»å¡
            // state.Dependency.Complete();
 
         }
@@ -73,7 +73,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ÓÃÓÚ¼ÆËãÖ¡ÉËº¦Ëø¶¨Äâ¶¨1Ãë£¬1ÃëÄÚ¶à´ÎÅö×²Ö»ÄÜ¼ÆËã1´ÎÉËº¦
+    /// ç”¨äºè®¡ç®—å¸§ä¼¤å®³é”å®šæ‹Ÿå®š1ç§’ï¼Œ1ç§’å†…å¤šæ¬¡ç¢°æ’åªèƒ½è®¡ç®—1æ¬¡ä¼¤å®³
     /// </summary>
 
     [BurstCompile]
@@ -92,7 +92,7 @@ namespace BlackDawn.DOTS
                 if (record.timer > 1f)
                 {
                     hitRecord.RemoveAtSwapBack(i);
-                    // ÓÉÓÚ SwapBack£¬°Ñ×îºóÒ»¸öÔªËØ·Åµ½ÁËµ±Ç°Ë÷Òı£¬ÎªÁË²»Â©µôÒªÔÙ¼ì²éĞÂÔªËØ
+                    // ç”±äº SwapBackï¼ŒæŠŠæœ€åä¸€ä¸ªå…ƒç´ æ”¾åˆ°äº†å½“å‰ç´¢å¼•ï¼Œä¸ºäº†ä¸æ¼æ‰è¦å†æ£€æŸ¥æ–°å…ƒç´ 
                     i--;
                 }
                 else
@@ -106,7 +106,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ÓÃÓÚ¼ÆËãÖ¡ÉËº¦Ëø¶¨Äâ¶¨0.5Ãë£¬0.5ÃëÄÚ¶à´ÎÅö×²Ö»ÄÜ¼ÆËã1´ÎÉËº¦
+    /// ç”¨äºè®¡ç®—å¸§ä¼¤å®³é”å®šæ‹Ÿå®š0.5ç§’ï¼Œ0.5ç§’å†…å¤šæ¬¡ç¢°æ’åªèƒ½è®¡ç®—1æ¬¡ä¼¤å®³
     /// </summary>
 
     [BurstCompile]
@@ -124,7 +124,7 @@ namespace BlackDawn.DOTS
                 if (record.timer > 0.5f)
                 {
                     heroHitRecord.RemoveAtSwapBack(i);
-                    // ÓÉÓÚ SwapBack£¬°Ñ×îºóÒ»¸öÔªËØ·Åµ½ÁËµ±Ç°Ë÷Òı£¬ÎªÁË²»Â©µôÒªÔÙ¼ì²éĞÂÔªËØ
+                    // ç”±äº SwapBackï¼ŒæŠŠæœ€åä¸€ä¸ªå…ƒç´ æ”¾åˆ°äº†å½“å‰ç´¢å¼•ï¼Œä¸ºäº†ä¸æ¼æ‰è¦å†æ£€æŸ¥æ–°å…ƒç´ 
                     i--;
                 }
                 else
@@ -139,7 +139,7 @@ namespace BlackDawn.DOTS
 
 
     /// <summary>
-    /// ÓÃÓÚ¼ÆËãÔªËØ¹²ÃùµÄÉËº¦Ğ§¹û£¬ÉËº¦Æµ´Î0.5f
+    /// ç”¨äºè®¡ç®—å…ƒç´ å…±é¸£çš„ä¼¤å®³æ•ˆæœï¼Œä¼¤å®³é¢‘æ¬¡0.5f
     /// </summary>
 
     [BurstCompile]
@@ -157,7 +157,7 @@ namespace BlackDawn.DOTS
                 if (record.timer > 0.5f)
                 {
                     heroHitRecord.RemoveAtSwapBack(i);
-                    // ÓÉÓÚ SwapBack£¬°Ñ×îºóÒ»¸öÔªËØ·Åµ½ÁËµ±Ç°Ë÷Òı£¬ÎªÁË²»Â©µôÒªÔÙ¼ì²éĞÂÔªËØ
+                    // ç”±äº SwapBackï¼ŒæŠŠæœ€åä¸€ä¸ªå…ƒç´ æ”¾åˆ°äº†å½“å‰ç´¢å¼•ï¼Œä¸ºäº†ä¸æ¼æ‰è¦å†æ£€æŸ¥æ–°å…ƒç´ 
                     i--;
                 }
                 else
@@ -170,7 +170,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ÌØÊâ¼¼ÄÜ£¬·¨ÕóµÚ¶ş½×¶Î ÉúÃüºçÎü¿ªÆôµÄ±êÇ©,ÕâÀïÖ±½ÓÒÆ³ı£¬±ãÓÚÔÚÅö×²jobÖĞÖØĞÂÌí¼Ó
+    /// ç‰¹æ®ŠæŠ€èƒ½ï¼Œæ³•é˜µç¬¬äºŒé˜¶æ®µ ç”Ÿå‘½è™¹å¸å¼€å¯çš„æ ‡ç­¾,è¿™é‡Œç›´æ¥ç§»é™¤ï¼Œä¾¿äºåœ¨ç¢°æ’jobä¸­é‡æ–°æ·»åŠ 
     /// </summary>
     [BurstCompile]
     partial struct SpecialSkillArcaneCircleSecondBufferDealJob : IJobEntity
@@ -187,7 +187,7 @@ namespace BlackDawn.DOTS
                 if (record.tagSurvivalTime <= 0.0f)
                 {
                     bufferRecord.RemoveAtSwapBack(i);
-                    // ÓÉÓÚ SwapBack£¬°Ñ×îºóÒ»¸öÔªËØ·Åµ½ÁËµ±Ç°Ë÷Òı£¬ÎªÁË²»Â©µôÒªÔÙ¼ì²éĞÂÔªËØ
+                    // ç”±äº SwapBackï¼ŒæŠŠæœ€åä¸€ä¸ªå…ƒç´ æ”¾åˆ°äº†å½“å‰ç´¢å¼•ï¼Œä¸ºäº†ä¸æ¼æ‰è¦å†æ£€æŸ¥æ–°å…ƒç´ 
                     i--;
                 }
                 else

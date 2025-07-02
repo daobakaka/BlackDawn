@@ -6,11 +6,11 @@ using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using Unity.Mathematics;
-//×¨ÓÃÓÚ´¦ÀíDOT ÉËº¦µÄÏµÍ³
+//ä¸“ç”¨äºå¤„ç†DOT ä¼¤å®³çš„ç³»ç»Ÿ
 namespace BlackDawn.DOTS
 {
     [RequireMatchingQueriesForUpdate]
-    //ÔÚäÖÈ¾ÏµÍ³Ö®Ç°½øĞĞDOTÉËº¦¼ÆËã
+    //åœ¨æ¸²æŸ“ç³»ç»Ÿä¹‹å‰è¿›è¡ŒDOTä¼¤å®³è®¡ç®—
     [UpdateAfter(typeof(EnemyFlightPropDamageSystem))]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     [BurstCompile]
@@ -36,7 +36,7 @@ namespace BlackDawn.DOTS
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
 
-            //DevDebug.LogError("¸üĞÂDOT ÉËº¦¼ÆËã");
+            //DevDebug.LogError("æ›´æ–°DOT ä¼¤å®³è®¡ç®—");
 
             state.Dependency = new DealDotDamageJob
             {
@@ -66,7 +66,7 @@ namespace BlackDawn.DOTS
     [BurstCompile]
     partial struct DealDotDamageJob : IJobEntity
     {
-        //²ÉÓÃÕâÖÖ·½Ê½£¬¸üÇáÁ¿»¯£¬¼õÉÙÒÀÀµ£¬µ«ÊÇÒª×¢ÒâjobÒÀÀµ,È¡ÏûÖ»¶Á ±£³Ö¿ÉĞ´×´Ì¬,µ«ÊÇÕâÀïĞèÒªÊ¹ÓÃECB ±£³ÖDOT ×´Ì¬£¬ ËùÓĞ²ÉÓÃECBĞ´»Ø
+        //é‡‡ç”¨è¿™ç§æ–¹å¼ï¼Œæ›´è½»é‡åŒ–ï¼Œå‡å°‘ä¾èµ–ï¼Œä½†æ˜¯è¦æ³¨æ„jobä¾èµ–,å–æ¶ˆåªè¯» ä¿æŒå¯å†™çŠ¶æ€,ä½†æ˜¯è¿™é‡Œéœ€è¦ä½¿ç”¨ECB ä¿æŒDOT çŠ¶æ€ï¼Œ æ‰€æœ‰é‡‡ç”¨ECBå†™å›
       // [NativeDisableParallelForRestriction]
         [ReadOnly] public ComponentLookup<MonsterTempDotDamageText> DamageDotTextLookup;
         public EntityCommandBuffer.ParallelWriter ECB;
@@ -76,47 +76,47 @@ namespace BlackDawn.DOTS
 
           , DynamicBuffer<MonsterDotDamageBuffer> monsterDotDamageBuffers, DynamicBuffer<LinkedEntityGroup> linkedEntityGroups)
         {
-           // DevDebug.LogError("½øÈëDOT ÉËº¦¼ÆËã");
-            //ÏÔÊ¾ÑÚÂëĞ´·¨,Ìæ´úifµÄÌõ¼şÅĞ¶Ï£¬È¡ÏûjumpµÄ»ã±àÌø×ªÖ¸Áî
+           // DevDebug.LogError("è¿›å…¥DOT ä¼¤å®³è®¡ç®—");
+            //æ˜¾ç¤ºæ©ç å†™æ³•,æ›¿ä»£ifçš„æ¡ä»¶åˆ¤æ–­ï¼Œå–æ¶ˆjumpçš„æ±‡ç¼–è·³è½¬æŒ‡ä»¤
             float hasHit = math.select(0f, 1f, monsterDotDamageBuffers.Length > 0);
-            //¹ÖÎï»î×Å
+            //æ€ªç‰©æ´»ç€
             float live = math.select(0f, 1f, monsterDefense.hp > 0);
-            //ÒşÊ½ÈıÄ¿ÔËËãĞ´·¨
+            //éšå¼ä¸‰ç›®è¿ç®—å†™æ³•
            // float hasHit = hits.Length > 0 ? 1f : 0f;
-            // 1) Ã¿Ãë´¥·¢Ò»´Î¼ÆÊ±Æ÷
+            // 1) æ¯ç§’è§¦å‘ä¸€æ¬¡è®¡æ—¶å™¨
             monsterDebuff.dotTimer += DeltaTime;
             float triggerMask = math.step(1f, monsterDebuff.dotTimer)*hasHit* live; // =1 when dotTimer>=1
-            monsterDebuff.dotTimer -= triggerMask * 1f;                // ¼õÈ¥1Ãë»ò0
+            monsterDebuff.dotTimer -= triggerMask * 1f;                // å‡å»1ç§’æˆ–0
 
-            // 2) »ã×ÜËùÓĞ dotDamage ²¢ÒÆ³ıÒÑ¹ıÆÚÌõÄ¿£¨SwapBack ·ç¸ñ£©
+            // 2) æ±‡æ€»æ‰€æœ‰ dotDamage å¹¶ç§»é™¤å·²è¿‡æœŸæ¡ç›®ï¼ˆSwapBack é£æ ¼ï¼‰
             float totalDamage = 0f;
-            //SIMDÓÑºÃ,length¿É²â
+            //SIMDå‹å¥½,lengthå¯æµ‹
             for (int i = 0; i < monsterDotDamageBuffers.Length; i++)
             {
                 var d = monsterDotDamageBuffers[i];
                 totalDamage += d.dotDamage;
                 d.survivalTime -= DeltaTime;
 
-                //ÕâÖÖ´ó¸ÅÂÊÅĞ¶ÏÊôÓÚ·ÖÖ§Ô¤²âÓÑºÃĞÍ£¬²»ĞèÒª½øĞĞSIMDÓÅ»¯
+                //è¿™ç§å¤§æ¦‚ç‡åˆ¤æ–­å±äºåˆ†æ”¯é¢„æµ‹å‹å¥½å‹ï¼Œä¸éœ€è¦è¿›è¡ŒSIMDä¼˜åŒ–
                 if (d.survivalTime >0)
                 {
-                    // Î´¹ıÆÚ£¬Ğ´»Ø¸üĞÂºóµÄ¼ÇÂ¼
+                    // æœªè¿‡æœŸï¼Œå†™å›æ›´æ–°åçš„è®°å½•
                     monsterDotDamageBuffers[i] = d;
                 }
                 else
                 {
-                    // ÒÑ¹ıÆÚ£¬ÒÆ³ı²¢ SwapBack
+                    // å·²è¿‡æœŸï¼Œç§»é™¤å¹¶ SwapBack
                     monsterDotDamageBuffers.RemoveAtSwapBack(i);
-                    i--; // ÍË»ØÒ»¸ñ£¬¼ì²é´ÓÄ©Î²»»½øÀ´µÄĞÂÔªËØ
+                    i--; // é€€å›ä¸€æ ¼ï¼Œæ£€æŸ¥ä»æœ«å°¾æ¢è¿›æ¥çš„æ–°å…ƒç´ 
                 }
             }
 
-            // 3) ¸üĞÂÁÙÊ±ÎÄ×Ö×é¼ş
+            // 3) æ›´æ–°ä¸´æ—¶æ–‡å­—ç»„ä»¶
             Entity dotTextEntity = linkedEntityGroups[3].Value;
             var damageDotText = DamageDotTextLookup[dotTextEntity];
             damageDotText.damageTriggerType = DamageTriggerType.DotDamage;
             damageDotText.hurtVlue = (totalDamage / 5f) * triggerMask;
-            // 4) ¿ÛÑª£ºÖ»ÔÚ triggerMask==1 Ê±²ÅÕæÕı¼õÑª
+            // 4) æ‰£è¡€ï¼šåªåœ¨ triggerMask==1 æ—¶æ‰çœŸæ­£å‡è¡€
             monsterDefense.hp -= damageDotText.hurtVlue * triggerMask;
 
             ECB.SetComponent(index, dotTextEntity, damageDotText);
@@ -126,9 +126,9 @@ namespace BlackDawn.DOTS
                 triggerMask > 0f
             );
 
-            //// 4) Ğ´»Ø monsterDebuff£¨dotTimer ±£³Ö×îĞÂ£©
+            //// 4) å†™å› monsterDebuffï¼ˆdotTimer ä¿æŒæœ€æ–°ï¼‰
             //ECB.SetComponent(index, entity, monsterDebuff);
-            ////5£© Ğ´»Ø ÉúÃü±ä»¯
+            ////5ï¼‰ å†™å› ç”Ÿå‘½å˜åŒ–
             //ECB.SetComponent(index, entity, monsterDefense);
 
         }

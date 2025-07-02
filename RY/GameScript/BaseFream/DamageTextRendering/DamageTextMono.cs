@@ -8,14 +8,14 @@ namespace BlackDawn
 {
     public class DamageTextMono : MonoBehaviour
     {
-        [Header("²ÄÖÊÉèÖÃ")]
+        [Header("æè´¨è®¾ç½®")]
         public Material atlasMaterial;
 
-        [Header("×Ö·ûäÖÈ¾²ÎÊı")]
-        public int charCount = 6; // ¹Ì¶¨6Î»
+        [Header("å­—ç¬¦æ¸²æŸ“å‚æ•°")]
+        public int charCount = 6; // å›ºå®š6ä½
         public string text6 = "000000";
 
-        // ¶¯»­×´Ì¬ struct
+        // åŠ¨ç”»çŠ¶æ€ struct
         private struct AttackAnimState
         {
             public bool isActive;
@@ -74,7 +74,7 @@ namespace BlackDawn
 
         private void Update()
         {
-            // ²âÊÔ°´¼ü
+            // æµ‹è¯•æŒ‰é”®
             if (Input.GetKeyDown(KeyCode.Q)) SetAttackMode(0, "1", Color.white, 0.1f, 1f, 0, 0.2f, 0.6f);
             if (Input.GetKeyDown(KeyCode.W)) SetAttackMode(1, "12", new Color(0, 0.7f, 1), 0.25f, 1f, 0, 0.2f, 0.6f);
             if (Input.GetKeyDown(KeyCode.E)) SetAttackMode(2, "123", Color.white, 0.8f, 0.5f, 0f, 0.2f, 0.6f);

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// ³¡¾°Æô¶¯½Ó¿Ú
+/// åœºæ™¯å¯åŠ¨æ¥å£
 /// </summary>
 public interface IECSSyncedMono
 {
@@ -12,14 +12,14 @@ public interface IECSSyncedMono
     bool Enable { get; set; }
 }
 /// <summary>
-/// µ¥´ÎÔËĞĞ½Ó¿Ú
+/// å•æ¬¡è¿è¡Œæ¥å£
 /// </summary>
 public interface IOneStepFun
 { 
   bool Done { get; set; }
 }
 /// <summary>
-/// entity Ô¤ÖÆÌå¶Ô½Ó¿Ú£¬ÓÃÓÚ·ºĞÍ
+/// entity é¢„åˆ¶ä½“å¯¹æ¥å£ï¼Œç”¨äºæ³›å‹
 /// </summary>
 /// <typeparam name="TEnum"></typeparam>
 public interface IPrefabPair<TEnum> where TEnum : struct, Enum

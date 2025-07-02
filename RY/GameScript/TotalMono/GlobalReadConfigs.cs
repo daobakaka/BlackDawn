@@ -4,20 +4,20 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-//¶ÁÈ¡¡¢¼ÓÔØ¡¢´¢´æÅäÖÃÁ÷ÎÄ¼şÒÔ¼°Íæ¼Ò´æµµÎÄ¼şµÈ£¬StreamingAssets È«¾Ö¼ÓÔØ»ù±¾ÅäÖÃ£¬´æµµÂ·¾¶£¬È«¾Ö¼ÓÔØ´æµµÅäÖÃ
+//è¯»å–ã€åŠ è½½ã€å‚¨å­˜é…ç½®æµæ–‡ä»¶ä»¥åŠç©å®¶å­˜æ¡£æ–‡ä»¶ç­‰ï¼ŒStreamingAssets å…¨å±€åŠ è½½åŸºæœ¬é…ç½®ï¼Œå­˜æ¡£è·¯å¾„ï¼Œå…¨å±€åŠ è½½å­˜æ¡£é…ç½®
 namespace BlackDawn
 {
 
     /// <summary>
-    /// ¶ÁÈ¡¹ÖÎïjsonÎÄ¼ş²ÎÊı
+    /// è¯»å–æ€ªç‰©jsonæ–‡ä»¶å‚æ•°
     /// </summary>
     public class GlobalReadConfigs : MonoBehaviour
     {
         // Start is called before the first frame update
 
-        //Ó¢ĞÛ²ÎÊıÄ£¿é
-        [HideInInspector]public HeroAttributeCmpt attributeCmpt; //Ó¢ĞÛÊôĞÔ¼Ì³ĞIcomponent½Ó¿Ú
-        //²ÎÊı¶ÁÈ¡µ¥Àı
+        //è‹±é›„å‚æ•°æ¨¡å—
+        [HideInInspector]public HeroAttributeCmpt attributeCmpt; //è‹±é›„å±æ€§ç»§æ‰¿Icomponentæ¥å£
+        //å‚æ•°è¯»å–å•ä¾‹
         public static GlobalReadConfigs instance { get { return _configsInstance; } }
         private static GlobalReadConfigs _configsInstance;
 
@@ -26,9 +26,9 @@ namespace BlackDawn
 
             _configsInstance = this;
 
-            //¼ÓÔØjsonÎÄ¼ş
+            //åŠ è½½jsonæ–‡ä»¶
           LoadParametersFromJson();
-            //²âÊÔ´¢´æ
+            //æµ‹è¯•å‚¨å­˜
             HeroAttributes.GetInstance().SaveHeroData();
            // WeaponAttributes.GetInstance().SaveWeaponData();
 
@@ -40,22 +40,22 @@ namespace BlackDawn
         void Start()
         {
 
-            //¶ÁÈ¡¼ÓÔØµÄ»ù±¾²ÎÊı
+            //è¯»å–åŠ è½½çš„åŸºæœ¬å‚æ•°
             ReadBaseParameters();
            
-            //²âÊÔ½×¶ÎÏÈÇå¿Õ´æµµ
+            //æµ‹è¯•é˜¶æ®µå…ˆæ¸…ç©ºå­˜æ¡£
             ResetArchive();
-            //¼ÓÔØµÀ¾ß¡¢ÎäÆ÷¡¢ÍşÄÜ
+            //åŠ è½½é“å…·ã€æ­¦å™¨ã€å¨èƒ½
             AddItemAndWeaponAndWeiNeng();
-            //¼ÆËãµÀ¾ßÔöÒæ
+            //è®¡ç®—é“å…·å¢ç›Š
             ApplyItemAttributesToHero();
-            //¼ÆËã»ùÓÚÒâÁ¦³õÊ¼ÊôĞÔÊÕÒæ
+            //è®¡ç®—åŸºäºæ„åŠ›åˆå§‹å±æ€§æ”¶ç›Š
             ApplyBaseAttributeScaling();
-            //¼ÓÔØÎäÆ÷
+            //åŠ è½½æ­¦å™¨
             ApplyWeapon("GalePistol");
-            //¼ÆËãµÀ¾ßÔöÒæ
+            //è®¡ç®—é“å…·å¢ç›Š
 
-            //¼ÓÔØ¼¼ÄÜ£¬Ó¦ÓÃ¼¼ÄÜÉËº¦
+            //åŠ è½½æŠ€èƒ½ï¼Œåº”ç”¨æŠ€èƒ½ä¼¤å®³
             ApplySkill();
 
         }
@@ -65,30 +65,30 @@ namespace BlackDawn
 
         void LoadParametersFromJson()
         {
-            // »ñÈ¡¹ÖÎïÊôĞÔµ¥Àı
+            // è·å–æ€ªç‰©å±æ€§å•ä¾‹
             MonsterAttributes monsterAttributes = MonsterAttributes.GetInstance();
 
-            // ¼ÓÔØ JSON ÎÄ¼ş²¢½«Êı¾İÌí¼Óµ½×Öµä
+            // åŠ è½½ JSON æ–‡ä»¶å¹¶å°†æ•°æ®æ·»åŠ åˆ°å­—å…¸
 
-            string jsonFilePath = Path.Combine(Application.streamingAssetsPath, "Configs/MonsterConfigs.json"); // ÕâÀïµÄÂ·¾¶¿ÉÒÔ¸ù¾İĞèÒªĞŞ¸Ä
+            string jsonFilePath = Path.Combine(Application.streamingAssetsPath, "Configs/MonsterConfigs.json"); // è¿™é‡Œçš„è·¯å¾„å¯ä»¥æ ¹æ®éœ€è¦ä¿®æ”¹
             monsterAttributes.LoadMonsterDataFromJson(jsonFilePath);
 
-            // ´òÓ¡³ö×ÖµäÖĞµÄ¹ÖÎïĞÅÏ¢
+            // æ‰“å°å‡ºå­—å…¸ä¸­çš„æ€ªç‰©ä¿¡æ¯
             foreach (var monster in monsterAttributes.monserDic)
             {
                 DevDebug.Log($"Monster Name: {monster.Key}, Strength: {monster.Value.attackAttribute.attackPower}, HP: {monster.Value.defenseAttribute.hp}");
             }
 
 
-            // »ñÈ¡Ó¢ĞÛÊôĞÔµ¥Àı
+            // è·å–è‹±é›„å±æ€§å•ä¾‹
             HeroAttributes heroAttributes = HeroAttributes.GetInstance();
 
-            // ¼ÓÔØ JSON ÎÄ¼ş²¢½«Êı¾İÌí¼Óµ½×Öµä
-            string json1FilePath = Path.Combine(Application.streamingAssetsPath, "Configs/HeroConfigs.json"); // ÕâÀïµÄÂ·¾¶¿ÉÒÔ¸ù¾İĞèÒªĞŞ¸Ä
+            // åŠ è½½ JSON æ–‡ä»¶å¹¶å°†æ•°æ®æ·»åŠ åˆ°å­—å…¸
+            string json1FilePath = Path.Combine(Application.streamingAssetsPath, "Configs/HeroConfigs.json"); // è¿™é‡Œçš„è·¯å¾„å¯ä»¥æ ¹æ®éœ€è¦ä¿®æ”¹
 
             heroAttributes.LoadHeroDataFromJson(json1FilePath);
 
-            // ´òÓ¡³ö×ÖµäÖĞµÄ¹ÖÎïĞÅÏ¢
+            // æ‰“å°å‡ºå­—å…¸ä¸­çš„æ€ªç‰©ä¿¡æ¯
             foreach (var hero in heroAttributes.heroDic)
             {
                 DevDebug.Log($"Monster Name: {hero.Key}, Strength: {hero.Value.attackAttribute.attackPower}, HP: {hero.Value.defenseAttribute.hp}");
@@ -96,30 +96,30 @@ namespace BlackDawn
 
 
 
-            // »ñÈ¡ÎäÆ÷ÊôĞÔµ¥Àı
+            // è·å–æ­¦å™¨å±æ€§å•ä¾‹
             var weaponAttributes = WeaponAttributes.GetInstance();
 
-            // ¼ÓÔØ JSON ÎÄ¼ş²¢½«Êı¾İÌí¼Óµ½×Öµä
-            string json2FilePath = Path.Combine(Application.streamingAssetsPath, "Configs/WeaponConfigs.json"); // ÕâÀïµÄÂ·¾¶¿ÉÒÔ¸ù¾İĞèÒªĞŞ¸Ä
+            // åŠ è½½ JSON æ–‡ä»¶å¹¶å°†æ•°æ®æ·»åŠ åˆ°å­—å…¸
+            string json2FilePath = Path.Combine(Application.streamingAssetsPath, "Configs/WeaponConfigs.json"); // è¿™é‡Œçš„è·¯å¾„å¯ä»¥æ ¹æ®éœ€è¦ä¿®æ”¹
 
             weaponAttributes.LoadWeaponDataFromJson(json2FilePath);
 
-            // ´òÓ¡³ö×ÖµäÖĞµÄÎäÆ÷ĞÅÏ¢
+            // æ‰“å°å‡ºå­—å…¸ä¸­çš„æ­¦å™¨ä¿¡æ¯
             foreach (var weapon in weaponAttributes.weaponDic)
             {
                 DevDebug.Log($"Weapon Name: {weapon.Key} string{weapon.Value.name} ");
             }
 
 
-            //»ñÈ¡µÀ¾ßÊôĞÔµ¥Àı
+            //è·å–é“å…·å±æ€§å•ä¾‹
             var itemAttributes = ItemAttributes.GetInstance();
 
-            // ¼ÓÔØ JSON ÎÄ¼ş²¢½«Êı¾İÌí¼Óµ½×Öµä
-            string json3FilePath = Path.Combine(Application.streamingAssetsPath, "Configs/ItemConfigs.json"); // ÕâÀïµÄÂ·¾¶¿ÉÒÔ¸ù¾İĞèÒªĞŞ¸Ä
+            // åŠ è½½ JSON æ–‡ä»¶å¹¶å°†æ•°æ®æ·»åŠ åˆ°å­—å…¸
+            string json3FilePath = Path.Combine(Application.streamingAssetsPath, "Configs/ItemConfigs.json"); // è¿™é‡Œçš„è·¯å¾„å¯ä»¥æ ¹æ®éœ€è¦ä¿®æ”¹
 
             itemAttributes.LoadItemDataFromJson(json3FilePath);
 
-            // ´òÓ¡³ö×ÖµäÖĞµÄµÀ¾ßĞÅÏ¢
+            // æ‰“å°å‡ºå­—å…¸ä¸­çš„é“å…·ä¿¡æ¯
             foreach (var item in itemAttributes.itemsByType)
             {
                 DevDebug.Log($"Item Name: {item.Key}");
@@ -131,7 +131,7 @@ namespace BlackDawn
 
 
         /// <summary>
-        ///¶ÁÈ¡»ù±¾²ÎÊı×ªÈëentity
+        ///è¯»å–åŸºæœ¬å‚æ•°è½¬å…¥entity
         /// </summary>
         void ReadBaseParameters()
         {
@@ -153,15 +153,15 @@ namespace BlackDawn
 
         }
         /// <summary>
-        /// £¡£¡£¡£¡£¡£¡²âÊÔµÄ¼ÓÔØ¼¼ÄÜÉËº¦£¬²âÊÔÀà ºóÆÚ¸ü¸Ä
+        /// ï¼ï¼ï¼ï¼ï¼ï¼æµ‹è¯•çš„åŠ è½½æŠ€èƒ½ä¼¤å®³ï¼Œæµ‹è¯•ç±» åæœŸæ›´æ”¹
         /// </summary>
 
         void ApplySkill()
         {
-            // 1. ÏÈ°ÑÕû¸ö SkillDamageAttribute ½á¹¹Ìå¶Á³öÀ´
+            // 1. å…ˆæŠŠæ•´ä¸ª SkillDamageAttribute ç»“æ„ä½“è¯»å‡ºæ¥
             var skillAttr = attributeCmpt.skillDamageAttribute;
 
-            // 2. ÔÚÕâ¸ö¾Ö²¿¸±±¾ÉÏĞŞ¸Ä
+            // 2. åœ¨è¿™ä¸ªå±€éƒ¨å‰¯æœ¬ä¸Šä¿®æ”¹
             skillAttr.baseDamage = 100f * skillAttr.skillLevel
                 * (1
                    + attributeCmpt.weaponAttribute.level * 0.05f
@@ -170,27 +170,27 @@ namespace BlackDawn
                    + attributeCmpt.baseAttribute.intelligence * 0.0025f
                   );
               
-            // 3. ÔÙ°ÑĞŞ¸ÄºóµÄ¸±±¾Ğ´»ØÈ¥
+            // 3. å†æŠŠä¿®æ”¹åçš„å‰¯æœ¬å†™å›å»
             attributeCmpt.skillDamageAttribute = skillAttr;
 
         }
 
         /// <summary>
-        /// ¼ÓÔØ²¢Ó¦ÓÃÖ¸¶¨ÎäÆ÷µÄµÈ¼¶¼Ó³Éµ½ attributeCmpt  
-        /// ¨C weaponAttribute ÖĞµÄ×Ö¶ÎÒÀ¾É°´Ö®Ç°Âß¼­µş¼Ó  
-        /// ¨C attackAttribute ÖĞµÄËùÓĞ×Ö¶Î¶¼ÊÓÎª¡°Ã¿¼¶Ôö¼ÓÖµ¡±£¬°´ (level-1) ¡Á perLevel ¼Óµ½Ó¢ĞÛµÄÔ­Ê¼ÊôĞÔÉÏ
+        /// åŠ è½½å¹¶åº”ç”¨æŒ‡å®šæ­¦å™¨çš„ç­‰çº§åŠ æˆåˆ° attributeCmpt  
+        /// â€“ weaponAttribute ä¸­çš„å­—æ®µä¾æ—§æŒ‰ä¹‹å‰é€»è¾‘å åŠ   
+        /// â€“ attackAttribute ä¸­çš„æ‰€æœ‰å­—æ®µéƒ½è§†ä¸ºâ€œæ¯çº§å¢åŠ å€¼â€ï¼ŒæŒ‰ (level-1) Ã— perLevel åŠ åˆ°è‹±é›„çš„åŸå§‹å±æ€§ä¸Š
         /// </summary>
         public void ApplyWeapon(string weaponName)
         {
-            // 1. È¡ÅäÖÃ
+            // 1. å–é…ç½®
             var w = WeaponAttributes.GetInstance().weaponDic[weaponName];
-            var wa = w.weaponAttribute;   // °üº¬ level ºÍÎäÆ÷²ÎÊı
-            var perLevel = w.attackAttribute;   // Ã¿¼¶Ôö¼ÓµÄ¹¥»÷ÊôĞÔ
-            //»ñÈ¡ÎäÆ÷µÈ¼¶ÅäÖÃ
+            var wa = w.weaponAttribute;   // åŒ…å« level å’Œæ­¦å™¨å‚æ•°
+            var perLevel = w.attackAttribute;   // æ¯çº§å¢åŠ çš„æ”»å‡»å±æ€§
+            //è·å–æ­¦å™¨ç­‰çº§é…ç½®
             int lvl = (int)MathF.Max(1, WeaponAttributes.GetInstance().ownedWeapons[weaponName]);
 
 
-            // 2. µş¼Ó WeaponAttribute ÀïµÄÔöÁ¿
+            // 2. å åŠ  WeaponAttribute é‡Œçš„å¢é‡
            // int lvl = Mathf.Max(1, wa.level);
             wa.itemCapacity += wa.magazineCapacityDelta * (lvl );
             wa.baseAttackSpeed += wa.baseAttackSpeedDelta * (lvl );
@@ -198,20 +198,20 @@ namespace BlackDawn
             wa.specialAttribute += wa.specialDelta * (lvl );
             attributeCmpt.weaponAttribute = wa;
 
-            // 3. ½« perLevel ÊôĞÔÀÛ¼Óµ½Ó¢ĞÛ×é¼şµÄ attackAttribute
+            // 3. å°† perLevel å±æ€§ç´¯åŠ åˆ°è‹±é›„ç»„ä»¶çš„ attackAttribute
             ref var aa = ref attributeCmpt.attackAttribute;
             int times = lvl;
 
             aa.attackPower += perLevel.attackPower * times;
-            //----¹¥ËÙ²ÎÊıÄ£¿é ---///        
+            //----æ”»é€Ÿå‚æ•°æ¨¡å— ---///        
         
-            //ÕâÀï¿ÉÒÔ±£Áô£¬ÔÊĞíÎäÆ÷Ã¿¼¶ÌáÉı¹¥»÷ËÙ¶ÈµÄÊôĞÔ
+            //è¿™é‡Œå¯ä»¥ä¿ç•™ï¼Œå…è®¸æ­¦å™¨æ¯çº§æå‡æ”»å‡»é€Ÿåº¦çš„å±æ€§
             aa.attackSpeed += perLevel.attackSpeed * times;
-            //ÎäÆ÷¹¥ËÙµÈÓÚ¼Ó³ÉºóµÄ»ù´¡ÎäÆ÷¹¥ËÙ* ¹¥»÷ËÙ¶ÈÖµ£¡£¡£¡£¬»ù´¡ÉËº¦ÒÔÎäÆ÷¹¥ËÙ½øĞĞ¼ÆËã
-            //ÎäÆ÷¹¥ËÙµÄÔö¼Ó »ùÓÚÎäÆ÷ÀàµÄ»ù´¡¹¥ËÙ³ËÒÔ ¹¥»÷ÀàµÄ ¹¥»÷ËÙ¶È£¬ ÕâÑù¿ÉÒÔÓĞĞ§µÄ¶¯Ì¬·ÖÀë
+            //æ­¦å™¨æ”»é€Ÿç­‰äºåŠ æˆåçš„åŸºç¡€æ­¦å™¨æ”»é€Ÿ* æ”»å‡»é€Ÿåº¦å€¼ï¼ï¼ï¼ï¼ŒåŸºç¡€ä¼¤å®³ä»¥æ­¦å™¨æ”»é€Ÿè¿›è¡Œè®¡ç®—
+            //æ­¦å™¨æ”»é€Ÿçš„å¢åŠ  åŸºäºæ­¦å™¨ç±»çš„åŸºç¡€æ”»é€Ÿä¹˜ä»¥ æ”»å‡»ç±»çš„ æ”»å‡»é€Ÿåº¦ï¼Œ è¿™æ ·å¯ä»¥æœ‰æ•ˆçš„åŠ¨æ€åˆ†ç¦»
             aa.weaponAttackSpeed = wa.baseAttackSpeed * (aa.attackSpeed);
 
-            //----¹¥ËÙ²ÎÊıÄ£¿é ---///
+            //----æ”»é€Ÿå‚æ•°æ¨¡å— ---///
             aa.armorPenetration += perLevel.armorPenetration * times;
             aa.elementalPenetration += perLevel.elementalPenetration * times;
             aa.projectilePenetration += perLevel.projectilePenetration * times;
@@ -223,13 +223,13 @@ namespace BlackDawn
             aa.suppressionDamage += perLevel.suppressionDamage * times;
             aa.suppressionChance += perLevel.suppressionChance * times;
 
-            // ÔªËØÉËº¦
+            // å…ƒç´ ä¼¤å®³
             aa.elementalDamage.frostDamage += perLevel.elementalDamage.frostDamage * times;
             aa.elementalDamage.fireDamage += perLevel.elementalDamage.fireDamage * times;
             aa.elementalDamage.poisonDamage += perLevel.elementalDamage.poisonDamage * times;
             aa.elementalDamage.lightningDamage += perLevel.elementalDamage.lightningDamage * times;
             aa.elementalDamage.shadowDamage += perLevel.elementalDamage.shadowDamage * times;
-            // DOT´¥·¢¼¸ÂÊÀÛ¼Ó£¨ÓëÔªËØÉËº¦ÍêÈ«Ò»ÖÂµÄ¸ñÊ½ºÍÃüÃû£©
+            // DOTè§¦å‘å‡ ç‡ç´¯åŠ ï¼ˆä¸å…ƒç´ ä¼¤å®³å®Œå…¨ä¸€è‡´çš„æ ¼å¼å’Œå‘½åï¼‰
             aa.dotProcChance.bleedChance += perLevel.dotProcChance.bleedChance * times;
             aa.dotProcChance.frostChance += perLevel.dotProcChance.frostChance * times;
             aa.dotProcChance.lightningChance += perLevel.dotProcChance.lightningChance * times;
@@ -246,37 +246,37 @@ namespace BlackDawn
             aa.dotCritDamage += perLevel.dotCritDamage * times;
             aa.extraDamage += perLevel.extraDamage * times;
 
-            // 4. Ğ´»Ø×é¼ş£¨Èç¹û using ref ²»ĞèÒª¶îÍâ¸³Öµ£©
+            // 4. å†™å›ç»„ä»¶ï¼ˆå¦‚æœ using ref ä¸éœ€è¦é¢å¤–èµ‹å€¼ï¼‰
             attributeCmpt.attackAttribute = aa;
 
-            DevDebug.Log("±ùËªdotÔ­Ê¼´¥·¢¼¸ÂÊ£º" + perLevel.dotProcChance.frostChance + "±ùËªÔªËØÔ­Ê¼ÉËº¦£º" + perLevel.elementalDamage.frostDamage);
-            DevDebug.Log("±ùËªdot´¥·¢¼¸ÂÊ£º" + attributeCmpt.attackAttribute.dotProcChance.frostChance + "±ùËªÔªËØÉËº¦£º" + attributeCmpt.attackAttribute.elementalDamage.frostDamage);
+            DevDebug.Log("å†°éœœdotåŸå§‹è§¦å‘å‡ ç‡ï¼š" + perLevel.dotProcChance.frostChance + "å†°éœœå…ƒç´ åŸå§‹ä¼¤å®³ï¼š" + perLevel.elementalDamage.frostDamage);
+            DevDebug.Log("å†°éœœdotè§¦å‘å‡ ç‡ï¼š" + attributeCmpt.attackAttribute.dotProcChance.frostChance + "å†°éœœå…ƒç´ ä¼¤å®³ï¼š" + attributeCmpt.attackAttribute.elementalDamage.frostDamage);
         }
 
 
         /// <summary>
-        /// ¸ù¾İ±í¸ñ¹æÔò£¬¾ÍµØ¸üĞÂ _attributeCmpt:
-        /// 1. ÒâÁ¦ÌáÉı»ù´¡ÊôĞÔ  
-        /// 2. ¸÷»ù´¡ÊôĞÔ¶Ô¹¥·ÀµÄ×¨Êô¼Ó³É  
-        /// 3. ÒâÁ¦¶ÔËùÓĞÕ½¶·ÊôĞÔµÄÔöÒæ£¨°üº¬¸÷ÖÖ´¥·¢¼¸ÂÊ¡¢¹¥ËÙ¡¢ÉÁ±ÜµÈ£©  
+        /// æ ¹æ®è¡¨æ ¼è§„åˆ™ï¼Œå°±åœ°æ›´æ–° _attributeCmpt:
+        /// 1. æ„åŠ›æå‡åŸºç¡€å±æ€§  
+        /// 2. å„åŸºç¡€å±æ€§å¯¹æ”»é˜²çš„ä¸“å±åŠ æˆ  
+        /// 3. æ„åŠ›å¯¹æ‰€æœ‰æˆ˜æ–—å±æ€§çš„å¢ç›Šï¼ˆåŒ…å«å„ç§è§¦å‘å‡ ç‡ã€æ”»é€Ÿã€é—ªé¿ç­‰ï¼‰  
         /// </summary>
         public void ApplyBaseAttributeScaling()
         {
-            // È¡³öµ±Ç°»ù´¡ÓëÕ½¶·ÊôĞÔ
+            // å–å‡ºå½“å‰åŸºç¡€ä¸æˆ˜æ–—å±æ€§
             var b = attributeCmpt.baseAttribute;
             var a = attributeCmpt.attackAttribute;
             var d = attributeCmpt.defenseAttribute;
 
-            // ¡ª¡ª 1. ÒâÁ¦¶Ô»ù´¡ÊôĞÔµÄÔöÒæ ¡ª¡ª 
+            // â€”â€” 1. æ„åŠ›å¯¹åŸºç¡€å±æ€§çš„å¢ç›Š â€”â€” 
             float baseAttrMul = 1f + b.willpower * 0.01f;
             b.intelligence *= baseAttrMul;
             b.strength *= baseAttrMul;
             b.agility *= baseAttrMul;
             attributeCmpt.baseAttribute = b;
 
-            // ¡ª¡ª 2. ¸÷»ù´¡ÊôĞÔ×¨Êô¼Ó³É ¡ª¡ª 
+            // â€”â€” 2. å„åŸºç¡€å±æ€§ä¸“å±åŠ æˆ â€”â€” 
 
-            // ÖÇÁ¦£º+1 Energy£»+0.1 ÔªËØ±©»÷ÂÊ£»+0.03 ÔªËØ±©»÷ÉËº¦£»+0.1 ¸÷ÔªËØ¿¹ĞÔ
+            // æ™ºåŠ›ï¼š+1 Energyï¼›+0.1 å…ƒç´ æš´å‡»ç‡ï¼›+0.03 å…ƒç´ æš´å‡»ä¼¤å®³ï¼›+0.1 å„å…ƒç´ æŠ—æ€§
             d.energy += b.intelligence;
             a.elementalCritChance += b.intelligence * 0.1f;
             a.elementalCritDamage += b.intelligence * 0.03f;
@@ -286,23 +286,23 @@ namespace BlackDawn
             d.resistances.shadow += b.intelligence * 0.1f;
             d.resistances.fire += b.intelligence * 0.1f;
 
-            // Á¦Á¿£º+1 AttackPower£»+1 Armor
+            // åŠ›é‡ï¼š+1 AttackPowerï¼›+1 Armor
             a.attackPower += b.strength;
             d.armor += b.strength;
 
-            // Ãô½İ£º+0.3 ÎïÀí±©»÷ÂÊ£»+0.1 ÉÁ±ÜÂÊ£»+1 ¹¥»÷ËÙ¶È£»+0.1 ±©»÷ÉËº¦
+            // æ•æ·ï¼š+0.3 ç‰©ç†æš´å‡»ç‡ï¼›+0.1 é—ªé¿ç‡ï¼›+1 æ”»å‡»é€Ÿåº¦ï¼›+0.1 æš´å‡»ä¼¤å®³
             a.physicalCritChance += b.agility * 0.3f;
             d.dodge += b.agility * 0.001f;
-            //×¢Òâ¹¥»÷ËÙ¶ÈÊÇ³Ë0.01
+            //æ³¨æ„æ”»å‡»é€Ÿåº¦æ˜¯ä¹˜0.01
             a.attackSpeed += b.agility * 0.01f;
             a.critDamage += b.agility * 0.1f;
 
-            // ¡ª¡ª 3. ÒâÁ¦¶ÔÕ½¶·ÊôĞÔµÄÕûÌåÔöÒæ ¡ª¡ª 
-            // ÒâÁ¦Ã¿µã +1% ËùÓĞÕ½¶·ÊôĞÔ
-            //ÕâÀï²»ÓÃÖØĞ´³Ë£¬ ÕâÀïÒÑ¾­¼ÆËãÁË³ËµÄÊôĞÔ
+            // â€”â€” 3. æ„åŠ›å¯¹æˆ˜æ–—å±æ€§çš„æ•´ä½“å¢ç›Š â€”â€” 
+            // æ„åŠ›æ¯ç‚¹ +1% æ‰€æœ‰æˆ˜æ–—å±æ€§
+            //è¿™é‡Œä¸ç”¨é‡å†™ä¹˜ï¼Œ è¿™é‡Œå·²ç»è®¡ç®—äº†ä¹˜çš„å±æ€§
             float gainMul = 1f + b.willpower * 0.01f;
 
-            // ÉËº¦Ïà¹Ø,Ã»ÓĞÔªËØÉËº¦¼Ó³É
+            // ä¼¤å®³ç›¸å…³,æ²¡æœ‰å…ƒç´ ä¼¤å®³åŠ æˆ
             a.attackPower *= gainMul;
             a.damage *= gainMul;
             a.extraDamage *= gainMul;
@@ -310,7 +310,7 @@ namespace BlackDawn
             a.critDamage *= gainMul;
 
 
-            // ¸÷ÖÖ¼¸ÂÊ
+            // å„ç§å‡ ç‡
             a.physicalCritChance *= gainMul;
             a.vulnerabilityChance *= gainMul;
             a.suppressionChance *= gainMul;
@@ -318,12 +318,12 @@ namespace BlackDawn
             a.dotCritChance *= gainMul;
             a.luckyStrikeChance *= gainMul;
 
-            // ¹¥»÷ËÙ¶È¡¢ÉÁ±Ü¡¢¸ñµ²
+            // æ”»å‡»é€Ÿåº¦ã€é—ªé¿ã€æ ¼æŒ¡
             a.attackSpeed *= gainMul;
             d.dodge *= gainMul;
             d.block *= gainMul;
 
-            // ÉúÃü¡¢»¤¼×¡¢¼õÉË¡¢¿¹ĞÔ
+            // ç”Ÿå‘½ã€æŠ¤ç”²ã€å‡ä¼¤ã€æŠ—æ€§
             d.hp *= gainMul;
             d.energy *= gainMul;
             d.armor *= gainMul;
@@ -336,34 +336,34 @@ namespace BlackDawn
 
 
             
-            // ÒÆËÙ
+            // ç§»é€Ÿ
             d.moveSpeed *= gainMul;
 
-            // ÒâÁ¦¶îÍâ¼Ó³É£ºÑ¹ÖÆÉËº¦ = 5 + 0.05*MaxHP + 0.2*ÒâÁ¦ + 0.02*»¤¼×
+            // æ„åŠ›é¢å¤–åŠ æˆï¼šå‹åˆ¶ä¼¤å®³ = 5 + 0.05*MaxHP + 0.2*æ„åŠ› + 0.02*æŠ¤ç”²
             a.suppressionDamage =
                 5f
               + d.hp * 0.05f
               + b.willpower * 0.2f
               + d.armor * 0.02f;
 
-            //ÖØĞÂ¸³ÓèÎäÆ÷¹¥ËÙ£¡£¡
+            //é‡æ–°èµ‹äºˆæ­¦å™¨æ”»é€Ÿï¼ï¼
             a.weaponAttackSpeed = a.attackSpeed;
 
-            // Ğ´»ØĞŞ¸ÄºóµÄ×é¼ş
+            // å†™å›ä¿®æ”¹åçš„ç»„ä»¶
             attributeCmpt.attackAttribute = a;
             attributeCmpt.defenseAttribute = d;
 
-            DevDebug.Log($" Strength: {attributeCmpt.attackAttribute.attackPower} ÉÁ±Ü£º{attributeCmpt.defenseAttribute.dodge} Ãô½İ£º{attributeCmpt.baseAttribute.agility}");
+            DevDebug.Log($" Strength: {attributeCmpt.attackAttribute.attackPower} é—ªé¿ï¼š{attributeCmpt.defenseAttribute.dodge} æ•æ·ï¼š{attributeCmpt.baseAttribute.agility}");
 
         }
 
-        /// <summary>¼ÓÔØµÀ¾ß,ÎäÆ÷£¬ÍşÄÜ£¬¼¼ÄÜ</summary>
+        /// <summary>åŠ è½½é“å…·,æ­¦å™¨ï¼Œå¨èƒ½ï¼ŒæŠ€èƒ½</summary>
         public void AddItemAndWeaponAndWeiNeng()
         {
 
             var itemInstance = ItemAttributes.GetInstance();
 
-            //¶ÁÈ¡µÀ¾ß
+            //è¯»å–é“å…·
             itemInstance.LoadOwnerItems();
             itemInstance.AddItem("FlameCompensator", 1);
            // itemInstance.AddItem("FlameCompensator", 1);
@@ -379,7 +379,7 @@ namespace BlackDawn
 
 
         /// <summary>
-        ///ÖØÖÃ´æµµ
+        ///é‡ç½®å­˜æ¡£
         /// </summary>
         public void ResetArchive()
         {
@@ -389,7 +389,7 @@ namespace BlackDawn
         }
 
 
-        /// <summary>½«ËùÓĞµÀ¾ßÔöÁ¿Ó¦ÓÃµ½Ó¢ĞÛÊôĞÔ×é¼ş</summary>
+        /// <summary>å°†æ‰€æœ‰é“å…·å¢é‡åº”ç”¨åˆ°è‹±é›„å±æ€§ç»„ä»¶</summary>
         public void ApplyItemAttributesToHero()
         {
             var deltas = ItemAttributes.GetInstance().ComputeTotalDeltas();
@@ -397,7 +397,7 @@ namespace BlackDawn
             {
                 switch (kv.Key)
                 {
-                    // ¡ª¡ª »ù´¡ÊôĞÔ ¡ª¡ª  
+                    // â€”â€” åŸºç¡€å±æ€§ â€”â€”  
                     case HeroItemAttributes.Intelligence:
                         attributeCmpt.baseAttribute.intelligence += kv.Value;
                         break;
@@ -411,10 +411,10 @@ namespace BlackDawn
                         attributeCmpt.baseAttribute.willpower += kv.Value;
                         break;
                     case HeroItemAttributes.Title:
-                        // ÎŞÊıÖµÓ³Éä£¬¿ÉÔÚ´Ë´¦´¦Àí³ÆºÅÂß¼­
+                        // æ— æ•°å€¼æ˜ å°„ï¼Œå¯åœ¨æ­¤å¤„å¤„ç†ç§°å·é€»è¾‘
                         break;
 
-                    // ¡ª¡ª ·ÀÓùÊôĞÔ ¡ª¡ª  
+                    // â€”â€” é˜²å¾¡å±æ€§ â€”â€”  
                     case HeroItemAttributes.OriginalHp:
                         attributeCmpt.defenseAttribute.originalHp += kv.Value;
                         break;
@@ -455,10 +455,10 @@ namespace BlackDawn
                         attributeCmpt.defenseAttribute.block += kv.Value;
                         break;
                     case HeroItemAttributes.RNGState:
-                        // RNGState ·ÇÔöÁ¿Öµ£¬Ò»°ã²»ÔÚµÀ¾ßÖĞĞŞ¸Ä
+                        // RNGState éå¢é‡å€¼ï¼Œä¸€èˆ¬ä¸åœ¨é“å…·ä¸­ä¿®æ”¹
                         break;
 
-                    // ¡ª¡ª ÔªËØÉËº¦ ¡ª¡ª  
+                    // â€”â€” å…ƒç´ ä¼¤å®³ â€”â€”  
                     case HeroItemAttributes.FrostDamage:
                         attributeCmpt.attackAttribute.elementalDamage.frostDamage += kv.Value;
                         break;
@@ -475,7 +475,7 @@ namespace BlackDawn
                         attributeCmpt.attackAttribute.elementalDamage.fireDamage += kv.Value;
                         break;
 
-                    // ¡ª¡ª ³ÖĞøĞÔÉËº¦´¥·¢¼¸ÂÊ ¡ª¡ª  
+                    // â€”â€” æŒç»­æ€§ä¼¤å®³è§¦å‘å‡ ç‡ â€”â€”  
                     case HeroItemAttributes.BleedChance:
                         attributeCmpt.attackAttribute.dotProcChance.bleedChance += kv.Value;
                         break;
@@ -495,7 +495,7 @@ namespace BlackDawn
                         attributeCmpt.attackAttribute.dotProcChance.fireChance += kv.Value;
                         break;
 
-                    // ¡ª¡ª ¹¥»÷ÊôĞÔ ¡ª¡ª  
+                    // â€”â€” æ”»å‡»å±æ€§ â€”â€”  
                     case HeroItemAttributes.AttackPower:
                         attributeCmpt.attackAttribute.attackPower += kv.Value;
                         break;
@@ -563,7 +563,7 @@ namespace BlackDawn
                         attributeCmpt.attackAttribute.extraDamage += kv.Value;
                         break;
 
-                    // ¡ª¡ª ÔöÒæÊôĞÔ ¡ª¡ª  
+                    // â€”â€” å¢ç›Šå±æ€§ â€”â€”  
                     case HeroItemAttributes.AtkRange:
                         attributeCmpt.gainAttribute.atkRange += kv.Value;
                         break;
@@ -583,7 +583,7 @@ namespace BlackDawn
                         attributeCmpt.gainAttribute.energyRegen += kv.Value;
                         break;
 
-                    // ¡ª¡ª ¿ØÖÆÄÜÁ¦ ¡ª¡ª  
+                    // â€”â€” æ§åˆ¶èƒ½åŠ› â€”â€”  
                     case HeroItemAttributes.Stun:
                         attributeCmpt.controlAbilityAttribute.stun += kv.Value;
                         break;
@@ -603,7 +603,7 @@ namespace BlackDawn
                         attributeCmpt.controlAbilityAttribute.knockback += kv.Value;
                         break;
 
-                    // ¡ª¡ª ÎäÆ÷ÊôĞÔ ¡ª¡ª  
+                    // â€”â€” æ­¦å™¨å±æ€§ â€”â€”  
                     case HeroItemAttributes.PropSpeed:
                         attributeCmpt.weaponAttribute.propSpeed += kv.Value;
                         break;

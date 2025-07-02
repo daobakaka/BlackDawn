@@ -7,7 +7,7 @@ using Unity.Physics;
 namespace BlackDawn.DOTS
 {
     /// <summary>
-    /// ĞÎ×´
+    /// å½¢çŠ¶
     /// </summary>
   
     public enum OverLapShape
@@ -17,12 +17,12 @@ namespace BlackDawn.DOTS
 
     }
 
-    /// ¹ÖÎï×´Ì¬
+    /// æ€ªç‰©çŠ¶æ€
     /// </summary>
     public struct LiveMonster : IComponentData, IEnableableComponent { }
 
     /// <summary>
-    /// ĞĞÎª±êÇ©
+    /// è¡Œä¸ºæ ‡ç­¾
     /// </summary>
     public enum EActionType
     {
@@ -34,7 +34,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// ÓÃÓÚ´æ´¢´¥·¢Æ÷ÊÂ¼şÊı¾İ
+    /// ç”¨äºå­˜å‚¨è§¦å‘å™¨äº‹ä»¶æ•°æ®
     /// </summary>
     [Serializable]
     public struct TriggerPairData
@@ -45,7 +45,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// Ö÷¶¯·¶Î§²éÑ¯½á¹¹/ÇòĞÎ/ºĞĞÎ£¬Ä¬ÈÏ³ÖĞøĞÔ¼¼ÄÜ
+    /// ä¸»åŠ¨èŒƒå›´æŸ¥è¯¢ç»“æ„/çƒå½¢/ç›’å½¢ï¼Œé»˜è®¤æŒç»­æ€§æŠ€èƒ½
     /// </summary>
     public struct OverlapOverTimeQueryCenter : IComponentData
     {
@@ -55,11 +55,11 @@ namespace BlackDawn.DOTS
         public float radius;
         public float3 offset;
         public float4 rotaion;
-        public CollisionFilter filter; // Ã¿¸öOverlap¿É×Ô¶¨Òå¹ıÂË¹æÔò
+        public CollisionFilter filter; // æ¯ä¸ªOverlapå¯è‡ªå®šä¹‰è¿‡æ»¤è§„åˆ™
     }
 
     /// <summary>
-    /// Ö÷¶¯±¬·¢ĞÔ¼¼ÄÜ ²éÑ¯
+    /// ä¸»åŠ¨çˆ†å‘æ€§æŠ€èƒ½ æŸ¥è¯¢
     /// </summary>
     public struct OverlapBurstQueryCenter : IComponentData
     {
@@ -69,11 +69,11 @@ namespace BlackDawn.DOTS
         public float radius;
         public float3 offset;
         public float4 rotaion;
-        public CollisionFilter filter; // Ã¿¸öOverlap¿É×Ô¶¨Òå¹ıÂË¹æÔò
+        public CollisionFilter filter; // æ¯ä¸ªOverlapå¯è‡ªå®šä¹‰è¿‡æ»¤è§„åˆ™
     }
 
     /// <summary>
-    /// Ö÷¶¯·¶Î§²éÑ¯Buffer
+    /// ä¸»åŠ¨èŒƒå›´æŸ¥è¯¢Buffer
     /// </summary>
     [InternalBufferCapacity(100)]
     public struct OverlapDetectionResult : IBufferElementData
@@ -81,45 +81,45 @@ namespace BlackDawn.DOTS
         public Entity target;
     }
 
-    #region ¹ÖÎï±êÇ©
+    #region æ€ªç‰©æ ‡ç­¾
     /// <summary>
-    /// ±êÇ©ÓÃÓÚÌØÊâÇé¿ö¿ØÖÆÒÔ¼°²¥·Å¶¯»­µÈ
-    /// É¥Ê¬
+    /// æ ‡ç­¾ç”¨äºç‰¹æ®Šæƒ…å†µæ§åˆ¶ä»¥åŠæ’­æ”¾åŠ¨ç”»ç­‰
+    /// ä¸§å°¸
     /// </summary>
     public struct MoZombieCmp : IComponentData, IEnableableComponent { }
 
     /// <summary>
-    ///¶ñÈ®
+    ///æ¶çŠ¬
     /// </summary>
     public struct MoAlbonoCmp : IComponentData, IEnableableComponent { }
 
 
     /// <summary>
-    /// ¶ñÈ®Ô­Ê¼ÌØĞ§³ß¶È²ÎÊı
+    /// æ¶çŠ¬åŸå§‹ç‰¹æ•ˆå°ºåº¦å‚æ•°
     /// </summary>
     public struct MoAlbonoEffectsCmp : IComponentData
     {
-        //»ğÑæÔ­Ê¼³ß´ç
+        //ç«ç„°åŸå§‹å°ºå¯¸
        public float3 fireOringinalScale;
     
     
     }
 
     /// <summary>
-    /// °´Öµ·Ö×é×é¼şÔÚ²»Í¬µÄchunkÖĞ£¬ ±£Ö¤±éÀúµÄÊ±ºò£¬Ìá¸ßËÙ¶È
+    /// æŒ‰å€¼åˆ†ç»„ç»„ä»¶åœ¨ä¸åŒçš„chunkä¸­ï¼Œ ä¿è¯éå†çš„æ—¶å€™ï¼Œæé«˜é€Ÿåº¦
     /// </summary>
     public struct TTTTTTTTSSSSSSSS : ISharedComponentData { public int value; }
     /// <summary>
-    ///¶ñÁúÉı¿ÕÕß
+    ///æ¶é¾™å‡ç©ºè€…
     /// </summary>
     public struct MoAlbonoUpperCmp : IComponentData, IEnableableComponent { }
 
     /// <summary>
-    /// ¶ñÁúÉı¿ÕÕâÔ­Ê¼ÌØĞ§³ß¶È²ÎÊı
+    /// æ¶é¾™å‡ç©ºè¿™åŸå§‹ç‰¹æ•ˆå°ºåº¦å‚æ•°
     /// </summary>
     public struct MoAlbononUpperEffectsCmp : IComponentData
     {
-        //»ğÑæÔ­Ê¼³ß´ç
+        //ç«ç„°åŸå§‹å°ºå¯¸
        public float3 fireOringinalScale;
 
     }
@@ -129,54 +129,54 @@ namespace BlackDawn.DOTS
 
 
     /// <summary>
-    /// ×Ó¼ì²âÆ÷±êÇ©
+    /// å­æ£€æµ‹å™¨æ ‡ç­¾
     /// </summary>
     public struct DetectorTag : IComponentData { };
 
     /// <summary>
-    /// Õì²âÏµÍ³
+    /// ä¾¦æµ‹ç³»ç»Ÿ
     /// </summary>
     public struct Detection_DefaultCmpt : IComponentData
     {
-        public Entity bufferOwner; // ÓÃÓÚĞ´Èë NearbyHit µÄÊµÌå
+        public Entity bufferOwner; // ç”¨äºå†™å…¥ NearbyHit çš„å®ä½“
 
-        public float originalRadius;//Ô­Ê¼°ë¾¶
+        public float originalRadius;//åŸå§‹åŠå¾„
     }
 
     public struct HeroAttackTarget : IComponentData
     {
-        public Entity attackTarget;//¹¥»÷Ä¿±ê
+        public Entity attackTarget;//æ”»å‡»ç›®æ ‡
     }
 
     /// <summary>
-    /// Ó¢ĞÛÖ÷Ìå±êÊ¶ È«¾ÖÎ¨Ò»
+    /// è‹±é›„ä¸»ä½“æ ‡è¯† å…¨å±€å”¯ä¸€
     /// </summary>
     public struct HeroEntityMasterTag :IComponentData { }
 
     /// <summary>
-    /// Ó¢ĞÛ·ÖÖ§±êÊ¶ Ö÷ÒªÓÃÓÚÓ¢ĞÛ·ÖÉí
+    /// è‹±é›„åˆ†æ”¯æ ‡è¯† ä¸»è¦ç”¨äºè‹±é›„åˆ†èº«
     /// </summary>
     public struct HeroEntityBrachTag : IComponentData { }
     /// <summary>
-    /// ¶¯»­¿ØÖÆĞÅÏ¢
+    /// åŠ¨ç”»æ§åˆ¶ä¿¡æ¯
     /// </summary>
     public struct AnimationControllerData : IComponentData
     {
         public bool isAttack;
         public bool isFire;    
     }
-    #region ¹¥»÷ÀàĞÍ±êÇ©
+    #region æ”»å‡»ç±»å‹æ ‡ç­¾
     /// <summary>
-    /// ½üÕ½¹¥»÷
+    /// è¿‘æˆ˜æ”»å‡»
     /// </summary>
     public struct AtMelee : IComponentData { };
 
     /// <summary>
-    /// Ô¶³Ì¹¥»÷
+    /// è¿œç¨‹æ”»å‡»
     /// </summary>
     public struct AtRanged : IComponentData { };
     /// <summary>
-    /// »ìºÏ¹¥»÷
+    /// æ··åˆæ”»å‡»
     /// </summary>
     public struct AtHybrid : IComponentData { };
     #endregion
@@ -188,64 +188,64 @@ namespace BlackDawn.DOTS
 
 
 
-    #region Ó¢ĞÛÔöÒæBUFF ±êÇ©
+    #region è‹±é›„å¢ç›ŠBUFF æ ‡ç­¾
     /// <summary>
-    /// ÏÈÊ¹ÓÃ×ÛºÏĞÔµÄ±êÇ©£¬ ÕâÑù¸ü·ûºÏSIMD Ö¸Áî¼¯µÄ½á¹¹
+    /// å…ˆä½¿ç”¨ç»¼åˆæ€§çš„æ ‡ç­¾ï¼Œ è¿™æ ·æ›´ç¬¦åˆSIMD æŒ‡ä»¤é›†çš„ç»“æ„
     /// </summary>
     [Serializable]
     public struct HeroIntgratedNoImmunityState : IComponentData
     {
-        //¿ØÖÆ·ÇÃâÒß
+        //æ§åˆ¶éå…ç–«
         public float controlNoImmunity;
-        //ÄÚÁªÉËº¦·ÇÃâÒß£¨Èç ·¨Õó¼¼ÄÜ£©
+        //å†…è”ä¼¤å®³éå…ç–«ï¼ˆå¦‚ æ³•é˜µæŠ€èƒ½ï¼‰
         public float inlineDamageNoImmunity;
-        //dotÉËº¦·ÇÃâÒß
+        //dotä¼¤å®³éå…ç–«
         public float dotNoImmunity;
-        // ÎïÀíÉËº¦·ÇÃâÒß
+        // ç‰©ç†ä¼¤å®³éå…ç–«
         public float physicalDamageNoImmunity;
-        //ÔªËØÉËº¦·ÇÃâÒß
+        //å…ƒç´ ä¼¤å®³éå…ç–«
         public float elementDamageNoImmunity;
 
         /// <summary>
-        /// ÎŞÓÃ£¬ ²»Ìá¹©ÎŞ²Î¹¹Ôìº¯Êı
+        /// æ— ç”¨ï¼Œ ä¸æä¾›æ— å‚æ„é€ å‡½æ•°
     }
     /// <summary>
-    /// link Ğ§¹û»òÕßÆäËûĞ§¹û¿ªÆô±êÊ¶
+    /// link æ•ˆæœæˆ–è€…å…¶ä»–æ•ˆæœå¼€å¯æ ‡è¯†
     /// </summary>
     public struct HeroEffectsLinked : IComponentData, IEnableableComponent { }
     
     
     
     /// <summary>
-    /// ×´Ì¬±êÊ¶×ÔÓÉÒâÖ¾
+    /// çŠ¶æ€æ ‡è¯†è‡ªç”±æ„å¿—
     /// </summary>
     public struct HeroStateWillUnchained : IComponentData, IEnableableComponent { };
 
 
     /// <summary>
-    /// Ê¥Ä¸½µÁÙ£¬ ÃâÒßËùÓĞÉËº¦
+    /// åœ£æ¯é™ä¸´ï¼Œ å…ç–«æ‰€æœ‰ä¼¤å®³
     /// </summary>
     public struct HeroStateDivineDescent : IComponentData, IEnableableComponent { };
 
 
     /// <summary>
-    /// ¾²Ä¬ÁìÓò ÃâÒßËùÓĞDOTÀàÉËº¦
+    /// é™é»˜é¢†åŸŸ å…ç–«æ‰€æœ‰DOTç±»ä¼¤å®³
     /// </summary>
 
     public struct HeroStateSilentDomain : IComponentData, IEnableableComponent { };
 
     /// <summary>
-    /// ÁéÄÜ·ç±©  ¼¼ÄÜÊÍ·Å²»ÏûºÄÁéÁ¦£¬³ÖĞøĞÔ¼¼ÄÜ²»³ÖĞøÏûºÄ¾«Á¦
+    /// çµèƒ½é£æš´  æŠ€èƒ½é‡Šæ”¾ä¸æ¶ˆè€—çµåŠ›ï¼ŒæŒç»­æ€§æŠ€èƒ½ä¸æŒç»­æ¶ˆè€—ç²¾åŠ›
     /// </summary>
     public struct HeroStatePsionicSurge : IComponentData, IEnableableComponent { };
 
     /// <summary>
-    /// îÑÃú¿ÇÌå  ÃâÒßËùÓĞÖ±½ÓÎïÀíÉËº¦
+    /// é’›é“­å£³ä½“  å…ç–«æ‰€æœ‰ç›´æ¥ç‰©ç†ä¼¤å®³
     /// </summary>
 
     public struct HeroStateTitaniumShell : IComponentData, IEnableableComponent { };
     /// <summary>
-    /// ½û¶Ï¹²Ãù  ÃâÒßËùÓĞÖ±½Ó·¨ÊõÉËº¦
+    /// ç¦æ–­å…±é¸£  å…ç–«æ‰€æœ‰ç›´æ¥æ³•æœ¯ä¼¤å®³
     /// </summary>
 
     public struct HeroStateForbiddenResonance : IComponentData, IEnableableComponent { };

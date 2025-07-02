@@ -8,16 +8,16 @@ using UnityEngine;
 namespace GameFrame.BaseClass
 {
     /// <summary>
-    /// Í¨ÓÃµ¥Àı»ùÀà£¬Ê¹ÓÃ GetInstance ·½·¨»ñÈ¡ÊµÀı£»
-    /// ÒªÇó T ÉùÃ÷Ò»¸ö·Ç public µÄÎŞ²Î¹¹Ôìº¯Êı£¨protected »ò private£©¡£
+    /// é€šç”¨å•ä¾‹åŸºç±»ï¼Œä½¿ç”¨ GetInstance æ–¹æ³•è·å–å®ä¾‹ï¼›
+    /// è¦æ±‚ T å£°æ˜ä¸€ä¸ªé public çš„æ— å‚æ„é€ å‡½æ•°ï¼ˆprotected æˆ– privateï¼‰ã€‚
     /// </summary>
     public abstract class Singleton<T> where T : class
     {
-        // ÑÓ³Ù¡¢Ïß³Ì°²È«³õÊ¼»¯
+        // å»¶è¿Ÿã€çº¿ç¨‹å®‰å…¨åˆå§‹åŒ–
         private static readonly Lazy<T> _instance = new Lazy<T>(CreateInstance);
 
         /// <summary>
-        /// »ñÈ¡µ¥ÀıÊµÀı
+        /// è·å–å•ä¾‹å®ä¾‹
         /// </summary>
         public static T GetInstance()
         {
@@ -27,7 +27,7 @@ namespace GameFrame.BaseClass
         
         private static T CreateInstance()
         {
-            // ÊÖ¶¯²éÕÒËùÓĞ·Ç public µÄ¹¹Ôìº¯Êı
+            // æ‰‹åŠ¨æŸ¥æ‰¾æ‰€æœ‰é public çš„æ„é€ å‡½æ•°
             ConstructorInfo[] ctors = typeof(T)
                 .GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
             ConstructorInfo parameterlessCtor = null;
@@ -45,11 +45,11 @@ namespace GameFrame.BaseClass
                 throw new InvalidOperationException(
                     $"Type {typeof(T)} must have a non-public parameterless constructor");
 
-            // µ÷ÓÃ·Ç public ¹¹Ôìº¯Êı´´½¨ÊµÀı
+            // è°ƒç”¨é public æ„é€ å‡½æ•°åˆ›å»ºå®ä¾‹
             return (T)parameterlessCtor.Invoke(null);
         }
 
-        // ·ÀÖ¹×ÓÀà»òÍâ²¿Í¨¹ıÆäËû·½Ê½ÊµÀı»¯
+        // é˜²æ­¢å­ç±»æˆ–å¤–éƒ¨é€šè¿‡å…¶ä»–æ–¹å¼å®ä¾‹åŒ–
         protected Singleton() { }
     }
 }

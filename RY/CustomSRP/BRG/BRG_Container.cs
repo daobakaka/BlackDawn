@@ -8,42 +8,42 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 /*
-    Õâ¸öÀàÓÃÓÚÊ¹ÓÃ BRG äÖÈ¾µØÃæµ¥ÔªºÍËéÆ¬¡£
-    µØÃæµ¥ÔªÓëËéÆ¬¶¼²ÉÓÃÏàÍ¬µÄ GPU Êı¾İ²¼¾Ö£º
-        - obj2world ¾ØÕó£¨3 ¸ö float4£©
-        - world2obj ¾ØÕó£¨3 ¸ö float4£©
-        - ÑÕÉ«£¨1 ¸ö float4£©
+    è¿™ä¸ªç±»ç”¨äºä½¿ç”¨ BRG æ¸²æŸ“åœ°é¢å•å…ƒå’Œç¢ç‰‡ã€‚
+    åœ°é¢å•å…ƒä¸ç¢ç‰‡éƒ½é‡‡ç”¨ç›¸åŒçš„ GPU æ•°æ®å¸ƒå±€ï¼š
+        - obj2world çŸ©é˜µï¼ˆ3 ä¸ª float4ï¼‰
+        - world2obj çŸ©é˜µï¼ˆ3 ä¸ª float4ï¼‰
+        - é¢œè‰²ï¼ˆ1 ä¸ª float4ï¼‰
 
-    Òò´ËÃ¿¸ö mesh ×Ü¹² 7 ¸ö float4¡£
+    å› æ­¤æ¯ä¸ª mesh æ€»å…± 7 ä¸ª float4ã€‚
 
-    ×¢ÒâÊı¾İÒÔ½á¹¹»¯Êı×é£¨SoA£©µÄĞÎÊ½´æ´¢¡£
+    æ³¨æ„æ•°æ®ä»¥ç»“æ„åŒ–æ•°ç»„ï¼ˆSoAï¼‰çš„å½¢å¼å­˜å‚¨ã€‚
 */
 [BurstCompile]
 public unsafe class BRG_Container
 {
-    // ÔÚ GLES Ä£Ê½ÏÂ£¬BRG Ô­Ê¼»º³åÇøÎª³£Á¿»º³åÇø (UBO)
+    // åœ¨ GLES æ¨¡å¼ä¸‹ï¼ŒBRG åŸå§‹ç¼“å†²åŒºä¸ºå¸¸é‡ç¼“å†²åŒº (UBO)
     private bool UseConstantBuffer => BatchRendererGroup.BufferTarget == BatchBufferTarget.ConstantBuffer;
     private bool m_castShadows;
 
-    private int m_maxInstances; // ÈİÆ÷ÖĞ×î´óÊµÀıÊı
-    private int m_instanceCount; // µ±Ç°ÊµÀıÊı
-    private int m_alignedGPUWindowSize; // BRG Ô­Ê¼´°¿Ú´óĞ¡
-    private int m_maxInstancePerWindow; // Ã¿¸ö´°¿Ú×î¶àÊµÀıÊı
-    private int m_windowCount; // ´°¿ÚÊıÁ¿£¨SSBO Ä£Ê½ÏÂÎª 1£¬UBO Ä£Ê½ÏÂ¿ÉÄÜÎª n£©
-    private int m_totalGpuBufferSize; // Ô­Ê¼»º³åÇø×Ü´óĞ¡
-    private NativeArray<float4> m_sysmemBuffer; // Ô­Ê¼ GPU »º³åÇøÔÚÏµÍ³ÄÚ´æÖĞµÄ¿½±´
+    private int m_maxInstances; // å®¹å™¨ä¸­æœ€å¤§å®ä¾‹æ•°
+    private int m_instanceCount; // å½“å‰å®ä¾‹æ•°
+    private int m_alignedGPUWindowSize; // BRG åŸå§‹çª—å£å¤§å°
+    private int m_maxInstancePerWindow; // æ¯ä¸ªçª—å£æœ€å¤šå®ä¾‹æ•°
+    private int m_windowCount; // çª—å£æ•°é‡ï¼ˆSSBO æ¨¡å¼ä¸‹ä¸º 1ï¼ŒUBO æ¨¡å¼ä¸‹å¯èƒ½ä¸º nï¼‰
+    private int m_totalGpuBufferSize; // åŸå§‹ç¼“å†²åŒºæ€»å¤§å°
+    private NativeArray<float4> m_sysmemBuffer; // åŸå§‹ GPU ç¼“å†²åŒºåœ¨ç³»ç»Ÿå†…å­˜ä¸­çš„æ‹·è´
     private bool m_initialized;
-    private int m_instanceSize; // Ã¿¸öÊµÀıµÄ´óĞ¡£¨×Ö½ÚÊı£©
-    private BatchID[] m_batchIDs; // Ã¿¸ö´°¿Ú¶ÔÓ¦Ò»¸ö batchID
+    private int m_instanceSize; // æ¯ä¸ªå®ä¾‹çš„å¤§å°ï¼ˆå­—èŠ‚æ•°ï¼‰
+    private BatchID[] m_batchIDs; // æ¯ä¸ªçª—å£å¯¹åº”ä¸€ä¸ª batchID
     private BatchMaterialID m_materialID;
     private BatchMeshID m_meshID;
-    private BatchRendererGroup m_BatchRendererGroup; // BRG ¶ÔÏó
-    private GraphicsBuffer m_GPUPersistentInstanceData; // GPU ³Ö¾ÃÊµÀıÊı¾İ»º³åÇø£¨¿ÉÄÜÊÇ SSBO »ò UBO£©
+    private BatchRendererGroup m_BatchRendererGroup; // BRG å¯¹è±¡
+    private GraphicsBuffer m_GPUPersistentInstanceData; // GPU æŒä¹…å®ä¾‹æ•°æ®ç¼“å†²åŒºï¼ˆå¯èƒ½æ˜¯ SSBO æˆ– UBOï¼‰
 
-    // ´´½¨ BRG ¶ÔÏó²¢·ÖÅä»º³åÇø
+    // åˆ›å»º BRG å¯¹è±¡å¹¶åˆ†é…ç¼“å†²åŒº
     public bool Init(Mesh mesh, Material mat, int maxInstances, int instanceSize, bool castShadows)
     {
-        // ´´½¨ BRG ¶ÔÏó£¬²¢Ö¸¶¨ BRG »Øµ÷º¯Êı
+        // åˆ›å»º BRG å¯¹è±¡ï¼Œå¹¶æŒ‡å®š BRG å›è°ƒå‡½æ•°
         m_BatchRendererGroup = new BatchRendererGroup(this.OnPerformCulling, IntPtr.Zero);
 
         m_instanceSize = instanceSize;
@@ -51,8 +51,8 @@ public unsafe class BRG_Container
         m_maxInstances = maxInstances;
         m_castShadows = castShadows;
 
-        // BRG Ê¹ÓÃÒ»¸ö´óĞÍ GPU »º³åÇø¡£ÔÚ´ó¶àÊıÆ½Ì¨ÉÏÎª RAW »º³åÇø£¬ÔÚ GLES ÉÏÎª³£Á¿»º³åÇø
-        // Èç¹ûÊÇ³£Á¿»º³åÇø£¬ÎÒÃÇ½«Æä²ğ·ÖÎª¶à¸ö´°¿Ú£¬Ã¿¸ö´°¿Ú´óĞ¡Îª BatchRendererGroup.GetConstantBufferMaxWindowSize() ×Ö½Ú
+        // BRG ä½¿ç”¨ä¸€ä¸ªå¤§å‹ GPU ç¼“å†²åŒºã€‚åœ¨å¤§å¤šæ•°å¹³å°ä¸Šä¸º RAW ç¼“å†²åŒºï¼Œåœ¨ GLES ä¸Šä¸ºå¸¸é‡ç¼“å†²åŒº
+        // å¦‚æœæ˜¯å¸¸é‡ç¼“å†²åŒºï¼Œæˆ‘ä»¬å°†å…¶æ‹†åˆ†ä¸ºå¤šä¸ªçª—å£ï¼Œæ¯ä¸ªçª—å£å¤§å°ä¸º BatchRendererGroup.GetConstantBufferMaxWindowSize() å­—èŠ‚
         if (UseConstantBuffer)
         {
             m_alignedGPUWindowSize = BatchRendererGroup.GetConstantBufferMaxWindowSize();
@@ -70,36 +70,36 @@ public unsafe class BRG_Container
             m_GPUPersistentInstanceData = new GraphicsBuffer(GraphicsBuffer.Target.Raw, m_totalGpuBufferSize / 4, 4);
         }
 
-        // Ê¾ÀıÖĞ£¬¹ÜÀí 3 ¸öÊµÀı»¯ÊôĞÔ£ºobj2world¡¢world2obj ºÍ baseColor
+        // ç¤ºä¾‹ä¸­ï¼Œç®¡ç† 3 ä¸ªå®ä¾‹åŒ–å±æ€§ï¼šobj2worldã€world2obj å’Œ baseColor
         var batchMetadata = new NativeArray<MetadataValue>(3, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
 
-        // Åú´¦ÀíÔªÊı¾İ»º³åÇø
+        // æ‰¹å¤„ç†å…ƒæ•°æ®ç¼“å†²åŒº
         int objectToWorldID = Shader.PropertyToID("unity_ObjectToWorld");
         int worldToObjectID = Shader.PropertyToID("unity_WorldToObject");
         int colorID = Shader.PropertyToID("_BaseColor");
 
-        // ´´½¨´óĞÍ GPU Ô­Ê¼»º³åÇøµÄÏµÍ³ÄÚ´æ¿½±´
+        // åˆ›å»ºå¤§å‹ GPU åŸå§‹ç¼“å†²åŒºçš„ç³»ç»Ÿå†…å­˜æ‹·è´
         m_sysmemBuffer = new NativeArray<float4>(m_totalGpuBufferSize / 16, Allocator.Persistent, NativeArrayOptions.ClearMemory);
 
-        // Îª´óĞÍ BRG Ô­Ê¼»º³åÇøÖĞµÄÃ¿¸ö¡°´°¿Ú¡±×¢²áÒ»¸öÅú´Î
+        // ä¸ºå¤§å‹ BRG åŸå§‹ç¼“å†²åŒºä¸­çš„æ¯ä¸ªâ€œçª—å£â€æ³¨å†Œä¸€ä¸ªæ‰¹æ¬¡
         m_batchIDs = new BatchID[m_windowCount];
         for (int b = 0; b < m_windowCount; b++)
         {
-            batchMetadata[0] = CreateMetadataValue(objectToWorldID, 0, true);       // ¾ØÕóÊı¾İ
-            batchMetadata[1] = CreateMetadataValue(worldToObjectID, m_maxInstancePerWindow * 3 * 16, true); // Äæ¾ØÕóÊı¾İ
-            batchMetadata[2] = CreateMetadataValue(colorID, m_maxInstancePerWindow * 3 * 2 * 16, true); // ÑÕÉ«Êı¾İ
+            batchMetadata[0] = CreateMetadataValue(objectToWorldID, 0, true);       // çŸ©é˜µæ•°æ®
+            batchMetadata[1] = CreateMetadataValue(worldToObjectID, m_maxInstancePerWindow * 3 * 16, true); // é€†çŸ©é˜µæ•°æ®
+            batchMetadata[2] = CreateMetadataValue(colorID, m_maxInstancePerWindow * 3 * 2 * 16, true); // é¢œè‰²æ•°æ®
             int offset = b * m_alignedGPUWindowSize;
             m_batchIDs[b] = m_BatchRendererGroup.AddBatch(batchMetadata, m_GPUPersistentInstanceData.bufferHandle, (uint)offset, UseConstantBuffer ? (uint)m_alignedGPUWindowSize : 0);
         }
 
-        // ²»ÔÙĞèÒªÕâ¸öÔªÊı¾İÃèÊöÊı×é£¬ÊÍ·ÅËü
+        // ä¸å†éœ€è¦è¿™ä¸ªå…ƒæ•°æ®æè¿°æ•°ç»„ï¼Œé‡Šæ”¾å®ƒ
         batchMetadata.Dispose();
 
-        // ÉèÖÃÒ»¸ö·Ç³£´óµÄ°üÎ§ºĞ£¬È·±£ BRG ÓÀÔ¶²»»á±»ÌŞ³ı
+        // è®¾ç½®ä¸€ä¸ªéå¸¸å¤§çš„åŒ…å›´ç›’ï¼Œç¡®ä¿ BRG æ°¸è¿œä¸ä¼šè¢«å‰”é™¤
         UnityEngine.Bounds bounds = new Bounds(new Vector3(0, 0, 0), new Vector3(1048576.0f, 1048576.0f, 1048576.0f));
         m_BatchRendererGroup.SetGlobalBounds(bounds);
 
-        // ×¢²á mesh ºÍ material
+        // æ³¨å†Œ mesh å’Œ material
         if (mesh) m_meshID = m_BatchRendererGroup.RegisterMesh(mesh);
         if (mat) m_materialID = m_BatchRendererGroup.RegisterMaterial(mat);
 
@@ -107,8 +107,8 @@ public unsafe class BRG_Container
         return true;
     }
 
-    // ¸ù¾İ "ÊµÀıÊıÁ¿" ÉÏ´«×îĞ¡ GPU Êı¾İ
-    // ÓÉÓÚÊ¹ÓÃ SoA£¨½á¹¹»¯Êı×é£©²¢ÇÒ´ËÀà¹ÜÀí 3 ¸ö BRG ÊôĞÔ£¨2 ¸ö¾ØÕóºÍ 1 ¸öÑÕÉ«£©£¬×îºóÒ»¸ö´°¿Ú¿ÉÄÜĞèÒª×î¶à 3 ´Î SetData µ÷ÓÃ
+    // æ ¹æ® "å®ä¾‹æ•°é‡" ä¸Šä¼ æœ€å° GPU æ•°æ®
+    // ç”±äºä½¿ç”¨ SoAï¼ˆç»“æ„åŒ–æ•°ç»„ï¼‰å¹¶ä¸”æ­¤ç±»ç®¡ç† 3 ä¸ª BRG å±æ€§ï¼ˆ2 ä¸ªçŸ©é˜µå’Œ 1 ä¸ªé¢œè‰²ï¼‰ï¼Œæœ€åä¸€ä¸ªçª—å£å¯èƒ½éœ€è¦æœ€å¤š 3 æ¬¡ SetData è°ƒç”¨
     [BurstCompile]
     public bool UploadGpuData(int instanceCount)
     {
@@ -118,14 +118,14 @@ public unsafe class BRG_Container
         m_instanceCount = instanceCount;
         int completeWindows = m_instanceCount / m_maxInstancePerWindow;
 
-        // Ò»´ÎĞÔ¸üĞÂËùÓĞÍêÕû´°¿ÚµÄÊı¾İ
+        // ä¸€æ¬¡æ€§æ›´æ–°æ‰€æœ‰å®Œæ•´çª—å£çš„æ•°æ®
         if (completeWindows > 0)
         {
             int sizeInFloat4 = (completeWindows * m_alignedGPUWindowSize) / 16;
             m_GPUPersistentInstanceData.SetData(m_sysmemBuffer, 0, 0, sizeInFloat4);
         }
 
-        // ¸üĞÂ×îºóÒ»¸ö£¨²»ÍêÕûµÄ£©´°¿ÚµÄÊı¾İ
+        // æ›´æ–°æœ€åä¸€ä¸ªï¼ˆä¸å®Œæ•´çš„ï¼‰çª—å£çš„æ•°æ®
         int lastBatchId = completeWindows;
         int itemInLastBatch = m_instanceCount - m_maxInstancePerWindow * completeWindows;
 
@@ -135,15 +135,15 @@ public unsafe class BRG_Container
             int offsetMat1 = windowOffsetInFloat4 + m_maxInstancePerWindow * 0;
             int offsetMat2 = windowOffsetInFloat4 + m_maxInstancePerWindow * 3;
             int offsetColor = windowOffsetInFloat4 + m_maxInstancePerWindow * 3 * 2;
-            m_GPUPersistentInstanceData.SetData(m_sysmemBuffer, offsetMat1, offsetMat1, itemInLastBatch * 3);     // 3 ¸ö float4 ±íÊ¾ obj2world
-            m_GPUPersistentInstanceData.SetData(m_sysmemBuffer, offsetMat2, offsetMat2, itemInLastBatch * 3);    // 3 ¸ö float4 ±íÊ¾ world2obj
-            m_GPUPersistentInstanceData.SetData(m_sysmemBuffer, offsetColor, offsetColor, itemInLastBatch * 1);   // 1 ¸ö float4 ±íÊ¾ÑÕÉ«
+            m_GPUPersistentInstanceData.SetData(m_sysmemBuffer, offsetMat1, offsetMat1, itemInLastBatch * 3);     // 3 ä¸ª float4 è¡¨ç¤º obj2world
+            m_GPUPersistentInstanceData.SetData(m_sysmemBuffer, offsetMat2, offsetMat2, itemInLastBatch * 3);    // 3 ä¸ª float4 è¡¨ç¤º world2obj
+            m_GPUPersistentInstanceData.SetData(m_sysmemBuffer, offsetColor, offsetColor, itemInLastBatch * 1);   // 1 ä¸ª float4 è¡¨ç¤ºé¢œè‰²
         }
 
         return true;
     }
 
-    // ÊÍ·ÅËùÓĞ·ÖÅäµÄ»º³åÇø
+    // é‡Šæ”¾æ‰€æœ‰åˆ†é…çš„ç¼“å†²åŒº
     public void Shutdown()
     {
         if (m_initialized)
@@ -159,7 +159,7 @@ public unsafe class BRG_Container
         }
     }
 
-    // ·µ»ØÏµÍ³ÄÚ´æ»º³åÇøºÍ´°¿Ú´óĞ¡£¬ÒÔ±ã BRG_Background ºÍ BRG_Debris Ìî³äĞÂÄÚÈİ
+    // è¿”å›ç³»ç»Ÿå†…å­˜ç¼“å†²åŒºå’Œçª—å£å¤§å°ï¼Œä»¥ä¾¿ BRG_Background å’Œ BRG_Debris å¡«å……æ–°å†…å®¹
     public NativeArray<float4> GetSysmemBuffer(out int totalSize, out int alignedWindowSize)
     {
         totalSize = m_totalGpuBufferSize;
@@ -167,7 +167,7 @@ public unsafe class BRG_Container
         return m_sysmemBuffer;
     }
 
-    // ¸¨Öúº¯Êı£º´´½¨ 32 Î»ÔªÊı¾İÖµ¡£µÚ 31 Î»£¨×î¸ßÎ»£©±íÊ¾¸ÃÊôĞÔÎª per-instance£¨Ã¿¸öÊµÀı²»Í¬£©
+    // è¾…åŠ©å‡½æ•°ï¼šåˆ›å»º 32 ä½å…ƒæ•°æ®å€¼ã€‚ç¬¬ 31 ä½ï¼ˆæœ€é«˜ä½ï¼‰è¡¨ç¤ºè¯¥å±æ€§ä¸º per-instanceï¼ˆæ¯ä¸ªå®ä¾‹ä¸åŒï¼‰
     static MetadataValue CreateMetadataValue(int nameID, int gpuOffset, bool isPerInstance)
     {
         const uint kIsPerInstanceBit = 0x80000000;
@@ -178,7 +178,7 @@ public unsafe class BRG_Container
         };
     }
 
-    // ¸¨Öúº¯Êı£ºÔÚ BRG »Øµ÷ÖĞ·ÖÅä»º³åÇø
+    // è¾…åŠ©å‡½æ•°ï¼šåœ¨ BRG å›è°ƒä¸­åˆ†é…ç¼“å†²åŒº
     private static T* Malloc<T>(uint count) where T : unmanaged
     {
         return (T*)UnsafeUtility.Malloc(
@@ -187,8 +187,8 @@ public unsafe class BRG_Container
             Allocator.TempJob);
     }
 
-    // Ã¿Ö¡µÄÖ÷Òª BRG Èë¿Úº¯Êı¡£´ËÊ¾ÀıÖĞ²»Ê¹ÓÃ BatchCullingContext£¬ÒòÎªÎÒÃÇ²»ĞèÒªÌŞ³ı¡£
-    // Õâ¸ö»Øµ÷¸ºÔğÌî³ä cullingOutput£¬Ìá¹©äÖÈ¾ËùÓĞÊµÀıËùĞèµÄ»æÖÆÃüÁî¡£
+    // æ¯å¸§çš„ä¸»è¦ BRG å…¥å£å‡½æ•°ã€‚æ­¤ç¤ºä¾‹ä¸­ä¸ä½¿ç”¨ BatchCullingContextï¼Œå› ä¸ºæˆ‘ä»¬ä¸éœ€è¦å‰”é™¤ã€‚
+    // è¿™ä¸ªå›è°ƒè´Ÿè´£å¡«å…… cullingOutputï¼Œæä¾›æ¸²æŸ“æ‰€æœ‰å®ä¾‹æ‰€éœ€çš„ç»˜åˆ¶å‘½ä»¤ã€‚
     [BurstCompile]
     public JobHandle OnPerformCulling(BatchRendererGroup rendererGroup, BatchCullingContext cullingContext, BatchCullingOutput cullingOutput, IntPtr userContext)
     {
@@ -196,12 +196,12 @@ public unsafe class BRG_Container
         {
             BatchCullingOutputDrawCommands drawCommands = new BatchCullingOutputDrawCommands();
 
-            // ¼ÆËãÔÚ UBO Ä£Ê½ÏÂĞèÒªµÄ»æÖÆÃüÁîÊıÁ¿£¨Ã¿¸ö´°¿Ú¶ÔÓ¦Ò»¸ö»æÖÆÃüÁî£©
+            // è®¡ç®—åœ¨ UBO æ¨¡å¼ä¸‹éœ€è¦çš„ç»˜åˆ¶å‘½ä»¤æ•°é‡ï¼ˆæ¯ä¸ªçª—å£å¯¹åº”ä¸€ä¸ªç»˜åˆ¶å‘½ä»¤ï¼‰
             int drawCommandCount = (m_instanceCount + m_maxInstancePerWindow - 1) / m_maxInstancePerWindow;
             int maxInstancePerDrawCommand = m_maxInstancePerWindow;
             drawCommands.drawCommandCount = drawCommandCount;
 
-            // ·ÖÅäÒ»¸ö BatchDrawRange£¨ËùÓĞ»æÖÆÃüÁî¶¼½«ÒıÓÃÕâ¸ö BatchDrawRange£©
+            // åˆ†é…ä¸€ä¸ª BatchDrawRangeï¼ˆæ‰€æœ‰ç»˜åˆ¶å‘½ä»¤éƒ½å°†å¼•ç”¨è¿™ä¸ª BatchDrawRangeï¼‰
             drawCommands.drawRangeCount = 1;
             drawCommands.drawRanges = Malloc<BatchDrawRange>(1);
             drawCommands.drawRanges[0] = new BatchDrawRange
@@ -222,20 +222,20 @@ public unsafe class BRG_Container
 
             if (drawCommands.drawCommandCount > 0)
             {
-                // ÒòÎª²»ĞèÒªÌŞ³ı£¬ËùÓĞ»æÖÆÃüÁîµÄ¿É¼ûĞÔÊı×é½«Ê¼ÖÕÊÇ {0,1,2,3,...}£¬
-                // ËùÒÔÖ»·ÖÅä maxInstancePerDrawCommand µÄ¿Õ¼ä£¬²¢Ìî³äËü¡£
+                // å› ä¸ºä¸éœ€è¦å‰”é™¤ï¼Œæ‰€æœ‰ç»˜åˆ¶å‘½ä»¤çš„å¯è§æ€§æ•°ç»„å°†å§‹ç»ˆæ˜¯ {0,1,2,3,...}ï¼Œ
+                // æ‰€ä»¥åªåˆ†é… maxInstancePerDrawCommand çš„ç©ºé—´ï¼Œå¹¶å¡«å……å®ƒã€‚
                 int visibilityArraySize = maxInstancePerDrawCommand;
                 if (m_instanceCount < visibilityArraySize)
                     visibilityArraySize = m_instanceCount;
 
                 drawCommands.visibleInstances = Malloc<int>((uint)visibilityArraySize);
 
-                // ÓÉÓÚÔÚÎÒÃÇµÄ³¡¾°ÖĞ²»ĞèÒªÊÓ×¶ÌåÌŞ³ı£¬Òò´Ë¿É¼ûĞÔÊı×éÖ±½ÓÌî³ä {0,1,2,3,...}
+                // ç”±äºåœ¨æˆ‘ä»¬çš„åœºæ™¯ä¸­ä¸éœ€è¦è§†é”¥ä½“å‰”é™¤ï¼Œå› æ­¤å¯è§æ€§æ•°ç»„ç›´æ¥å¡«å…… {0,1,2,3,...}
                 for (int i = 0; i < visibilityArraySize; i++)
                     drawCommands.visibleInstances[i] = i;
 
-                // ·ÖÅä BatchDrawCommand Êı×é£¨¹²ÓĞ drawCommandCount ¸öÃüÁî£©
-                // ÔÚ SSBO Ä£Ê½ÏÂ£¬drawCommandCount ¿ÉÄÜÖ»ÓĞ 1
+                // åˆ†é… BatchDrawCommand æ•°ç»„ï¼ˆå…±æœ‰ drawCommandCount ä¸ªå‘½ä»¤ï¼‰
+                // åœ¨ SSBO æ¨¡å¼ä¸‹ï¼ŒdrawCommandCount å¯èƒ½åªæœ‰ 1
                 drawCommands.drawCommands = Malloc<BatchDrawCommand>((uint)drawCommandCount);
                 int left = m_instanceCount;
                 for (int b = 0; b < drawCommandCount; b++)
@@ -243,7 +243,7 @@ public unsafe class BRG_Container
                     int inBatchCount = left > maxInstancePerDrawCommand ? maxInstancePerDrawCommand : left;
                     drawCommands.drawCommands[b] = new BatchDrawCommand
                     {
-                        visibleOffset = (uint)0,    // ËùÓĞ»æÖÆÃüÁî¹²ÏíÍ¬Ò»¸ö {0,1,2,3,...} µÄ¿É¼ûĞÔÊı×é
+                        visibleOffset = (uint)0,    // æ‰€æœ‰ç»˜åˆ¶å‘½ä»¤å…±äº«åŒä¸€ä¸ª {0,1,2,3,...} çš„å¯è§æ€§æ•°ç»„
                         visibleCount = (uint)inBatchCount,
                         batchID = m_batchIDs[b],
                         materialID = m_materialID,

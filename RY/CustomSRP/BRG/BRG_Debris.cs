@@ -16,7 +16,7 @@ public unsafe class BRG_Debris : MonoBehaviour
     public static BRG_Debris gDebrisManager;
 
     public const int kMaxDebris = 16 * 1024;
-    public const int kDebrisGpuSize = (3 + 3 + 1) * 16;     // 3¸ö float4 ±íÊ¾ obj2world ¾ØÕó£¬3¸ö float4 ±íÊ¾ world2obj ¾ØÕó£¬1¸ö float4 ±íÊ¾ÑÕÉ«
+    public const int kDebrisGpuSize = (3 + 3 + 1) * 16;     // 3ä¸ª float4 è¡¨ç¤º obj2world çŸ©é˜µï¼Œ3ä¸ª float4 è¡¨ç¤º world2obj çŸ©é˜µï¼Œ1ä¸ª float4 è¡¨ç¤ºé¢œè‰²
     private const int kMaxJustLandedPerFrame = 256;
     private const int kMaxDeadPerFrame = 256;
     private const float kDebrisScale = 1.0f / 4.0f;
@@ -31,7 +31,7 @@ public unsafe class BRG_Debris : MonoBehaviour
 
     private Unity.Mathematics.Random m_rndGen;
 
-    // äÖÈ¾Ïî½á¹¹Ìå£¬´æ´¢ËéÆ¬µÄÎ»ÖÃ¡¢ËùÊôµØÃæµ¥Ôª¡¢ËÙ¶È¡¢Ğı×ª¾ØÕó¡¢ÑÕÉ«¡¢·À z-fighting ²ÎÊı¼°ÂäµØ´ÎÊı
+    // æ¸²æŸ“é¡¹ç»“æ„ä½“ï¼Œå­˜å‚¨ç¢ç‰‡çš„ä½ç½®ã€æ‰€å±åœ°é¢å•å…ƒã€é€Ÿåº¦ã€æ—‹è½¬çŸ©é˜µã€é¢œè‰²ã€é˜² z-fighting å‚æ•°åŠè½åœ°æ¬¡æ•°
     struct GfxItem
     {
         public float3 pos;
@@ -43,7 +43,7 @@ public unsafe class BRG_Debris : MonoBehaviour
         public int landedCount;
     };
 
-    // ËéÆ¬Éú³ÉÃèÊö½á¹¹Ìå£¬¼ÇÂ¼Éú³ÉËéÆ¬µÄÎ»ÖÃ¡¢ÊıÁ¿ºÍËæ»úÉ«µ÷
+    // ç¢ç‰‡ç”Ÿæˆæè¿°ç»“æ„ä½“ï¼Œè®°å½•ç”Ÿæˆç¢ç‰‡çš„ä½ç½®ã€æ•°é‡å’Œéšæœºè‰²è°ƒ
     struct DebrisSpawnDesc
     {
         public float3 pos;
@@ -63,7 +63,7 @@ public unsafe class BRG_Debris : MonoBehaviour
         gDebrisManager = this;
     }
 
-    // Start ÔÚÓÎÏ·¿ªÊ¼Ç°µ÷ÓÃÒ»´Î£¬³õÊ¼»¯Ëæ»úÊı¡¢BRG ÈİÆ÷¡¢¼ÆÊıÊı¾İºÍËéÆ¬Êı×é
+    // Start åœ¨æ¸¸æˆå¼€å§‹å‰è°ƒç”¨ä¸€æ¬¡ï¼Œåˆå§‹åŒ–éšæœºæ•°ã€BRG å®¹å™¨ã€è®¡æ•°æ•°æ®å’Œç¢ç‰‡æ•°ç»„
     void Start()
     {
         m_rndGen = new Unity.Mathematics.Random(0x22112003);
@@ -75,11 +75,11 @@ public unsafe class BRG_Debris : MonoBehaviour
         m_justLandedList = new NativeArray<int>(kMaxJustLandedPerFrame, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
         m_justDeadList = new NativeArray<int>(kMaxDeadPerFrame, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
 
-        // ³õÊ¼»¯ËéÆ¬Êı×é£¬½«ËùÓĞËéÆ¬µÄ³õÊ¼Êı¾İÇåÁã
+        // åˆå§‹åŒ–ç¢ç‰‡æ•°ç»„ï¼Œå°†æ‰€æœ‰ç¢ç‰‡çš„åˆå§‹æ•°æ®æ¸…é›¶
         m_gfxItems = new NativeArray<GfxItem>(kMaxDebris, Allocator.Persistent, NativeArrayOptions.ClearMemory);
     }
 
-    // Éú³ÉÒ»²¨ËéÆ¬±¬Õ¨ÃèÊö£¬°üº¬Éú³ÉÎ»ÖÃ¡¢ÊıÁ¿ºÍËæ»úÉ«µ÷
+    // ç”Ÿæˆä¸€æ³¢ç¢ç‰‡çˆ†ç‚¸æè¿°ï¼ŒåŒ…å«ç”Ÿæˆä½ç½®ã€æ•°é‡å’Œéšæœºè‰²è°ƒ
     public void GenerateBurstOfDebris(Vector3 pos, int count, float rndHue)
     {
         DebrisSpawnDesc foo;
@@ -89,7 +89,7 @@ public unsafe class BRG_Debris : MonoBehaviour
         m_debrisExplosions.Add(foo);
     }
 
-    // Burst ±àÒëµÄ Job£¬ÓÃÓÚÉú³ÉĞÂµÄËéÆ¬Êı¾İ
+    // Burst ç¼–è¯‘çš„ Jobï¼Œç”¨äºç”Ÿæˆæ–°çš„ç¢ç‰‡æ•°æ®
     [BurstCompile]
     private struct DebrisGenerationJob : IJob
     {
@@ -132,7 +132,7 @@ public unsafe class BRG_Debris : MonoBehaviour
                     rndSpeed.y = _rnd.NextFloat(-1.0f, 1.0f);
                     rndSpeed.z = _rnd.NextFloat(-1.0f, 1.0f);
                     rndSpeed.Normalize();
-                    rndSpeed += new Vector3(0, 1, 1);   // ³õÊ¼ËÙ¶ÈÂÔÏòÉÏºÍÏòºó
+                    rndSpeed += new Vector3(0, 1, 1);   // åˆå§‹é€Ÿåº¦ç•¥å‘ä¸Šå’Œå‘å
                     item.speed = rndSpeed * rndImpulse * _rnd.NextFloat(1.0f, 2.0f);
 
                     item.groundCell = -1;
@@ -146,7 +146,7 @@ public unsafe class BRG_Debris : MonoBehaviour
         }
     }
 
-    // Burst ±àÒëµÄ Job£¬ÓÃÓÚ´¦Àí±³¾°£¨ÀıÈç½µµÍ±³¾°¸ß¶È¡¢¸Ä±äÑÕÉ«¡¢Ôö¼ÓÈ¨ÖØ£©
+    // Burst ç¼–è¯‘çš„ Jobï¼Œç”¨äºå¤„ç†èƒŒæ™¯ï¼ˆä¾‹å¦‚é™ä½èƒŒæ™¯é«˜åº¦ã€æ”¹å˜é¢œè‰²ã€å¢åŠ æƒé‡ï¼‰
     [BurstCompile]
     private struct BackgroundDiggerJob : IJob
     {
@@ -161,8 +161,8 @@ public unsafe class BRG_Debris : MonoBehaviour
 
         public void Execute()
         {
-            // ÏÖÔÚ GPU Ô­Ê¼»º³åÇøÊı¾İÒÑ¸üĞÂ£¬°üº¬ _inOutCounters[kDebrisCounter]
-            // Ó¦½«¸Ã¼ÆÊı±¸·İ£¬¹©ÉÔºó UploadGpuData Ê¹ÓÃ
+            // ç°åœ¨ GPU åŸå§‹ç¼“å†²åŒºæ•°æ®å·²æ›´æ–°ï¼ŒåŒ…å« _inOutCounters[kDebrisCounter]
+            // åº”å°†è¯¥è®¡æ•°å¤‡ä»½ï¼Œä¾›ç¨å UploadGpuData ä½¿ç”¨
             _inOutCounters[kGpuItemsCounter] = _inOutCounters[kDebrisCounter];
 
             int justLandedCount = _inOutCounters[kJustLandedCounter];
@@ -183,7 +183,7 @@ public unsafe class BRG_Debris : MonoBehaviour
         }
     }
 
-    // Burst ±àÒëµÄ Job£¬ÓÃÓÚ»ØÊÕËÀÍöµÄËéÆ¬Êı¾İ
+    // Burst ç¼–è¯‘çš„ Jobï¼Œç”¨äºå›æ”¶æ­»äº¡çš„ç¢ç‰‡æ•°æ®
     [BurstCompile]
     private struct DebrisRecyclingJob : IJob
     {
@@ -193,7 +193,7 @@ public unsafe class BRG_Debris : MonoBehaviour
 
         public void Execute()
         {
-            // »ØÊÕËÀÍöµÄÁ£×Ó
+            // å›æ”¶æ­»äº¡çš„ç²’å­
             int recycled = 0;
             int iEnd = _inOutCounters[kDebrisCounter];
             int count = _inOutCounters[kJustDeadCounter];
@@ -213,7 +213,7 @@ public unsafe class BRG_Debris : MonoBehaviour
         }
     }
 
-    // Burst ±àÒëµÄ²¢ĞĞ Job£¬ÓÃÓÚÎïÀí¸üĞÂ£¨Î»ÖÃ¡¢ËÙ¶È¡¢±³¾°Åö×²¡¢¸üĞÂ GPU ÏµÍ³ÄÚ´æ»º³åÇøµÈ£©
+    // Burst ç¼–è¯‘çš„å¹¶è¡Œ Jobï¼Œç”¨äºç‰©ç†æ›´æ–°ï¼ˆä½ç½®ã€é€Ÿåº¦ã€èƒŒæ™¯ç¢°æ’ã€æ›´æ–° GPU ç³»ç»Ÿå†…å­˜ç¼“å†²åŒºç­‰ï¼‰
     [BurstCompile]
     private struct PhysicsUpdateJob : IJobFor
     {
@@ -242,7 +242,7 @@ public unsafe class BRG_Debris : MonoBehaviour
         public int _windowSizeInFloat4;
         public Unity.Mathematics.Random _rnd;
 
-        // ¸üĞÂ GPU ÏµÍ³ÄÚ´æ»º³åÇøÖĞµÄÊı¾İ£¬¶ÔÓÚÃ¿¸öËéÆ¬£¬¸ù¾İÆäÎ»ÖÃºÍĞı×ª¼ÆËãĞÂµÄ¾ØÕóÊı¾İ£¬²¢Ğ´ÈëÏµÍ³ÄÚ´æ»º³åÇø
+        // æ›´æ–° GPU ç³»ç»Ÿå†…å­˜ç¼“å†²åŒºä¸­çš„æ•°æ®ï¼Œå¯¹äºæ¯ä¸ªç¢ç‰‡ï¼Œæ ¹æ®å…¶ä½ç½®å’Œæ—‹è½¬è®¡ç®—æ–°çš„çŸ©é˜µæ•°æ®ï¼Œå¹¶å†™å…¥ç³»ç»Ÿå†…å­˜ç¼“å†²åŒº
         private void updateGpuSysmemBuffer(int index, in GfxItem item)
         {
             int i;
@@ -252,17 +252,17 @@ public unsafe class BRG_Debris : MonoBehaviour
             Vector3 bpos = item.pos;
             float3x3 rot = item.mat;
 
-            // ¼ÆËãµ±Ç°Ö¡µÄĞÂ obj2world ¾ØÕó£¨·ÖÎª3¸ö float4 ´æ´¢£©
+            // è®¡ç®—å½“å‰å¸§çš„æ–° obj2world çŸ©é˜µï¼ˆåˆ†ä¸º3ä¸ª float4 å­˜å‚¨ï¼‰
             _sysmemBuffer[(windowOffsetInFloat4 + i * 3 + 0)] = new float4(rot.c0.x, rot.c0.y, rot.c0.z, rot.c1.x);
             _sysmemBuffer[(windowOffsetInFloat4 + i * 3 + 1)] = new float4(rot.c1.y, rot.c1.z, rot.c2.x, rot.c2.y);
             _sysmemBuffer[(windowOffsetInFloat4 + i * 3 + 2)] = new float4(rot.c2.z, bpos.x, bpos.y, bpos.z);
 
-            // ¼ÆËãĞÂÄæ¾ØÕó
+            // è®¡ç®—æ–°é€†çŸ©é˜µ
             _sysmemBuffer[(windowOffsetInFloat4 + _maxInstancePerWindow * 3 * 1 + i * 3 + 0)] = new float4(rot.c0.x, rot.c1.x, rot.c2.x, rot.c0.y);
             _sysmemBuffer[(windowOffsetInFloat4 + _maxInstancePerWindow * 3 * 1 + i * 3 + 1)] = new float4(rot.c1.y, rot.c2.y, rot.c0.z, rot.c1.z);
             _sysmemBuffer[(windowOffsetInFloat4 + _maxInstancePerWindow * 3 * 1 + i * 3 + 2)] = new float4(rot.c2.z, -bpos.x, -bpos.y, -bpos.z);
 
-            // ¸üĞÂÑÕÉ«Êı¾İ
+            // æ›´æ–°é¢œè‰²æ•°æ®
             _sysmemBuffer[windowOffsetInFloat4 + _maxInstancePerWindow * 3 * 2 + i] = new float4(item.color, 1);
         }
 
@@ -280,9 +280,9 @@ public unsafe class BRG_Debris : MonoBehaviour
                 item.pos.y = cell.h + kDebrisScale * 0.5f + item.antiZFight;
                 if ((cell.magnetIntensity > 0.5f) && (cell.magnetIntensity < 1.0f))
                 {
-                    // µ±±³¾°µ¥ÔªÊÜµ½´Å³¡×÷ÓÃ¸Õµ¯³öÊ±£¬ËéÆ¬Ó¦±»Í¶Éä³öÈ¥
+                    // å½“èƒŒæ™¯å•å…ƒå—åˆ°ç£åœºä½œç”¨åˆšå¼¹å‡ºæ—¶ï¼Œç¢ç‰‡åº”è¢«æŠ•å°„å‡ºå»
                     item.speed = new float3(_rnd.NextFloat(-2.0f, 2.0f), 8.0f, _rnd.NextFloat(-2.0f, 2.0f));
-                    item.groundCell = -1;       // ²»ÔÙ¹ØÁªÄ³¸ö±³¾°µ¥Ôª
+                    item.groundCell = -1;       // ä¸å†å…³è”æŸä¸ªèƒŒæ™¯å•å…ƒ
                 }
             }
             else
@@ -290,7 +290,7 @@ public unsafe class BRG_Debris : MonoBehaviour
                 item.pos += item.speed * _dt;
                 item.pos.z -= _zDisplacement;
                 item.speed += acc;
-                // ²éÕÒ±³¾°µ¥Ôª
+                // æŸ¥æ‰¾èƒŒæ™¯å•å…ƒ
                 uint xc = (uint)(int)(item.pos.x);
                 uint zc = (uint)(int)(item.pos.z + 0.5f + _smoothScrolling);
                 if ((xc < _w) && (zc < _h))
@@ -300,18 +300,18 @@ public unsafe class BRG_Debris : MonoBehaviour
                     BRG_Background.BackgroundItem cell = _backgroundItems[cellId];
                     if (item.pos.y <= cell.h)
                     {
-                        // ËéÆ¬¸Õ¸ÕÂäµØ
-                        item.antiZFight = (index & 31) * 0.001f; // ·ÀÖ¹ Z-fighting
+                        // ç¢ç‰‡åˆšåˆšè½åœ°
+                        item.antiZFight = (index & 31) * 0.001f; // é˜²æ­¢ Z-fighting
                         item.pos.y = cell.h + kDebrisScale * 0.5f + item.antiZFight;
                         item.groundCell = cellId;
                         item.landedCount++;
 
                         if (item.landedCount == 1)
                         {
-                            // ½öÔÚµÚÒ»´ÎÂäµØÊ±£¬ÈÃµØÃæµ¥ÔªÉÁË¸
+                            // ä»…åœ¨ç¬¬ä¸€æ¬¡è½åœ°æ—¶ï¼Œè®©åœ°é¢å•å…ƒé—ªçƒ
                             item.color *= 0.5f;
-                            // ½«±³¾°µ¥ÔªÌí¼Óµ½¡°¸ÕÂäµØ¡±ÁĞ±íÖĞ
-                            int outIndex = Interlocked.Add(ref pCounter[kJustLandedCounter], 1) - 1; // ·µ»ØÔö¼ÓºóµÄÖµ¼õ 1
+                            // å°†èƒŒæ™¯å•å…ƒæ·»åŠ åˆ°â€œåˆšè½åœ°â€åˆ—è¡¨ä¸­
+                            int outIndex = Interlocked.Add(ref pCounter[kJustLandedCounter], 1) - 1; // è¿”å›å¢åŠ åçš„å€¼å‡ 1
                             if (outIndex < kMaxJustLandedPerFrame)
                             {
                                 _justLandedList[outIndex] = cellId;
@@ -323,7 +323,7 @@ public unsafe class BRG_Debris : MonoBehaviour
 
             updateGpuSysmemBuffer(index, item);
 
-            // Èç¹ûËéÆ¬ÒÑ¾­ËÀÍö
+            // å¦‚æœç¢ç‰‡å·²ç»æ­»äº¡
             if ((item.pos.z < 0.0f) || (item.pos.y < -5.0f))
             {
                 int outIndex = Interlocked.Add(ref pCounter[kJustDeadCounter], 1) - 1;
@@ -337,7 +337,7 @@ public unsafe class BRG_Debris : MonoBehaviour
         }
     }
 
-    // Ìí¼ÓÎïÀí¸üĞÂ Job£¬°üº¬ËéÆ¬ÎïÀí¡¢±³¾°¸üĞÂºÍ»ØÊÕ
+    // æ·»åŠ ç‰©ç†æ›´æ–° Jobï¼ŒåŒ…å«ç¢ç‰‡ç‰©ç†ã€èƒŒæ™¯æ›´æ–°å’Œå›æ”¶
     public JobHandle AddPhysicsUpdateJob(NativeArray<BRG_Background.BackgroundItem> backgroundItems, int sliceId, uint w, uint h, float dt, float zDisplacement, float smoothScrollingPos)
     {
         m_inOutCounters[kJustLandedCounter] = 0;
@@ -345,7 +345,7 @@ public unsafe class BRG_Debris : MonoBehaviour
 
         JobHandle jobFence = new JobHandle();
 
-        // µÚÒ»½×¶Î£ºµ÷¶ÈËéÆ¬ÎïÀí Job£¨ÖØÁ¦¡¢ÓëµØÃæÅö×²¡¢¸üĞÂ¡°¸ÕÂäµØ¡±»ò¡°¸ÕËÀÍö¡±ÁĞ±í£©
+        // ç¬¬ä¸€é˜¶æ®µï¼šè°ƒåº¦ç¢ç‰‡ç‰©ç† Jobï¼ˆé‡åŠ›ã€ä¸åœ°é¢ç¢°æ’ã€æ›´æ–°â€œåˆšè½åœ°â€æˆ–â€œåˆšæ­»äº¡â€åˆ—è¡¨ï¼‰
         int totalGpuBufferSize;
         int alignedWindowSize;
         NativeArray<float4> sysmemBuffer = m_brgContainer.GetSysmemBuffer(out totalGpuBufferSize, out alignedWindowSize);
@@ -369,9 +369,9 @@ public unsafe class BRG_Debris : MonoBehaviour
             _rnd = m_rndGen
         };
 
-        jobFence = myJob.ScheduleParallel(m_inOutCounters[kDebrisCounter], 256, jobFence); // Ã¿¸ö Execute ´¦Àí 256 ¸öËéÆ¬
+        jobFence = myJob.ScheduleParallel(m_inOutCounters[kDebrisCounter], 256, jobFence); // æ¯ä¸ª Execute å¤„ç† 256 ä¸ªç¢ç‰‡
 
-        // µÚ¶ş½×¶Î£ºµ÷¶È BackgroundDiggerJob ´¦Àí¡°¸ÕÂäµØ¡±µÄËéÆ¬
+        // ç¬¬äºŒé˜¶æ®µï¼šè°ƒåº¦ BackgroundDiggerJob å¤„ç†â€œåˆšè½åœ°â€çš„ç¢ç‰‡
         BackgroundDiggerJob diggerJob = new BackgroundDiggerJob()
         {
             _backgroundItems = backgroundItems,
@@ -380,7 +380,7 @@ public unsafe class BRG_Debris : MonoBehaviour
         };
         jobFence = diggerJob.Schedule(jobFence);
 
-        // µÚÈı½×¶Î£ºµ÷¶È DebrisRecyclingJob »ØÊÕ¡°¸ÕËÀÍö¡±µÄËéÆ¬
+        // ç¬¬ä¸‰é˜¶æ®µï¼šè°ƒåº¦ DebrisRecyclingJob å›æ”¶â€œåˆšæ­»äº¡â€çš„ç¢ç‰‡
         DebrisRecyclingJob recyclingJob = new DebrisRecyclingJob()
         {
             _inOutCounters = m_inOutCounters,
@@ -389,17 +389,17 @@ public unsafe class BRG_Debris : MonoBehaviour
         };
         jobFence = recyclingJob.Schedule(jobFence);
 
-        // Èç¹ûÓĞ±¬Õ¨²úÉúĞÂµÄËéÆ¬£¬Ôòµ÷¶È DebrisGenerationJob
+        // å¦‚æœæœ‰çˆ†ç‚¸äº§ç”Ÿæ–°çš„ç¢ç‰‡ï¼Œåˆ™è°ƒåº¦ DebrisGenerationJob
         int explosionsCount = m_debrisExplosions.Count;
         if (explosionsCount > 0)
         {
-            // ¸´ÖÆ²¢Çå¿Õµ±Ç°Ö¡µÄËùÓĞ±¬Õ¨ĞÅÏ¢
+            // å¤åˆ¶å¹¶æ¸…ç©ºå½“å‰å¸§çš„æ‰€æœ‰çˆ†ç‚¸ä¿¡æ¯
             NativeArray<DebrisSpawnDesc> na = new NativeArray<DebrisSpawnDesc>(explosionsCount, Allocator.TempJob);
             for (int i = 0; i < m_debrisExplosions.Count; i++)
                 na[i] = m_debrisExplosions[i];
             m_debrisExplosions.Clear();
 
-            // µ÷¶ÈÉú³É Job
+            // è°ƒåº¦ç”Ÿæˆ Job
             DebrisGenerationJob generationJob = new DebrisGenerationJob()
             {
                 _gfxItems = m_gfxItems,
@@ -414,13 +414,13 @@ public unsafe class BRG_Debris : MonoBehaviour
         return jobFence;
     }
 
-    // ÉÏ´« GPU Êı¾İ£ºµ÷ÓÃ BRG ÈİÆ÷µÄ UploadGpuData£¬½«ÏµÍ³ÄÚ´æ»º³åÇøÊı¾İ´«¸ø GPU
+    // ä¸Šä¼  GPU æ•°æ®ï¼šè°ƒç”¨ BRG å®¹å™¨çš„ UploadGpuDataï¼Œå°†ç³»ç»Ÿå†…å­˜ç¼“å†²åŒºæ•°æ®ä¼ ç»™ GPU
     public void UploadGpuData()
     {
         m_brgContainer.UploadGpuData(m_inOutCounters[kGpuItemsCounter]);
     }
 
-    // µ±¶ÔÏóÏú»ÙÊ±£¬ÊÍ·ÅËùÓĞ×ÊÔ´
+    // å½“å¯¹è±¡é”€æ¯æ—¶ï¼Œé‡Šæ”¾æ‰€æœ‰èµ„æº
     private void OnDestroy()
     {
         if (m_brgContainer != null)

@@ -5,10 +5,10 @@ using System.Text;
 using UnityEngine;
 namespace GameFrame.BaseClass
 {
-    // ¡ª¡ª 1. CRC32 ¹¤¾ßÀà ¡ª¡ª 
+    // â€”â€” 1. CRC32 å·¥å…·ç±» â€”â€” 
     public static class Crc32Helper
     {
-        // Ô¤Éú³ÉµÄ CRC ±í£¨0x04C11DB7£©
+        // é¢„ç”Ÿæˆçš„ CRC è¡¨ï¼ˆ0x04C11DB7ï¼‰
         private static readonly uint[] Table = GenerateTable();
 
         private static uint[] GenerateTable()
@@ -35,15 +35,15 @@ namespace GameFrame.BaseClass
         }
     }
 
-    // ¡ª¡ª 2. AES ¹¤¾ßÀà ¡ª¡ª 
+    // â€”â€” 2. AES å·¥å…·ç±» â€”â€” 
     public static class AesHelper
     {
-        // 16 ×Ö½ÚÃÜÔ¿£¨AES-128£©
+        // 16 å­—èŠ‚å¯†é’¥ï¼ˆAES-128ï¼‰
         private static readonly byte[] KEY =
-            Encoding.UTF8.GetBytes("1234567890ABCDEF"); // Ò»¶¨Òª 16 ×Ö½Ú
-                                                        // 16 ×Ö½Ú³õÊ¼ÏòÁ¿
+            Encoding.UTF8.GetBytes("1234567890ABCDEF"); // ä¸€å®šè¦ 16 å­—èŠ‚
+                                                        // 16 å­—èŠ‚åˆå§‹å‘é‡
         private static readonly byte[] IV =
-            Encoding.UTF8.GetBytes("FEDCBA0987654321"); // 16 ×Ö½Ú
+            Encoding.UTF8.GetBytes("FEDCBA0987654321"); // 16 å­—èŠ‚
 
         public static byte[] Encrypt(string plainText)
         {

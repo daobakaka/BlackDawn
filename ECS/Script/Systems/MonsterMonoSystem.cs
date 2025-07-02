@@ -9,11 +9,11 @@ using Unity.Physics;
 using Unity.Transforms;
 using UnityEngine.Scripting;
 /// <summary>
-/// ·Ö¹Ü¹ÖÎïËÀÍö½Å±¾£¬ºóĞøÌí¼ÓËÀÍöÌØĞ§¡¢¶¯»­¡¢»òÊÂ¼şÂß¼­£¬ËÀÍöÌØĞ§Óë renderEffects ÅäºÏ
+/// åˆ†ç®¡æ€ªç‰©æ­»äº¡è„šæœ¬ï¼Œåç»­æ·»åŠ æ­»äº¡ç‰¹æ•ˆã€åŠ¨ç”»ã€æˆ–äº‹ä»¶é€»è¾‘ï¼Œæ­»äº¡ç‰¹æ•ˆä¸ renderEffects é…åˆ
 /// </summary>
 namespace BlackDawn.DOTS
 {
-    //ÔÚäÖÈ¾Ö®ºó
+    //åœ¨æ¸²æŸ“ä¹‹å
     [BurstCompile]
     [UpdateAfter(typeof(HeroSkillsCallbackSystemBase))]
     [UpdateInGroup(typeof(MainThreadSystemGroup))]
@@ -24,7 +24,7 @@ namespace BlackDawn.DOTS
         void OnCreate(ref SystemState state) 
         {
 
-            //Íâ²¿¿ØÖÆ
+            //å¤–éƒ¨æ§åˆ¶
             state.RequireForUpdate<EnableEnemyPropMonoSystemTag>();
 
 
@@ -34,16 +34,16 @@ namespace BlackDawn.DOTS
         void OnUpdate(ref SystemState state)
 
         {
-          //µÈ´ıÆäËûµØ·½jobÍê³É£¬×îºóÖ´ĞĞÇåÀí
+          //ç­‰å¾…å…¶ä»–åœ°æ–¹jobå®Œæˆï¼Œæœ€åæ‰§è¡Œæ¸…ç†
            // state.Dependency.Complete();
 
             var ecb = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
-            //ecb ¶¼ÊÇÁÙÊ±¶¨Òå
+            //ecb éƒ½æ˜¯ä¸´æ—¶å®šä¹‰
           //  var ecb = new EntityCommandBuffer(Allocator.Temp);
             _timer = SystemAPI.Time.DeltaTime;
 
 
-            //Ïú»ÙµĞÈË·ÉĞĞµÀ¾ß¡¢¼¼ÄÜµÈ
+            //é”€æ¯æ•Œäººé£è¡Œé“å…·ã€æŠ€èƒ½ç­‰
             foreach (var (enemyFlightProp,trans,entity) in SystemAPI.Query<RefRW<EnemyFlightProp>, RefRW<LocalTransform>>().WithEntityAccess())
             {
                 if (enemyFlightProp.ValueRO.destory == true)
@@ -59,31 +59,31 @@ namespace BlackDawn.DOTS
 
 
 
-            //entiy Ïú»Ù»Øµ½Ö÷Ïß³Ì,²éÕÒ»î¹Ö±êÇ©£¬¼õÉÙjobÅĞ¶Ï£¬Ä£Äâ×´Ì¬»ú,Ã²ËÆ1.4 Ö»ÄÜÖ´ĞĞÒ»´Î£¿1
+            //entiy é”€æ¯å›åˆ°ä¸»çº¿ç¨‹,æŸ¥æ‰¾æ´»æ€ªæ ‡ç­¾ï¼Œå‡å°‘jobåˆ¤æ–­ï¼Œæ¨¡æ‹ŸçŠ¶æ€æœº,è²Œä¼¼1.4 åªèƒ½æ‰§è¡Œä¸€æ¬¡ï¼Ÿ1
             foreach (var(attrRW,collider,agent,agentShape,liveMonster,animatorAspect, entity) in SystemAPI.Query<RefRW<MonsterDefenseAttribute>,RefRW<PhysicsCollider>,
                 RefRW<AgentBody>, RefRW<AgentShape>,
                 RefRW<LiveMonster>,GpuEcsAnimatorAspect> ().WithEntityAccess())
             {
          
                 if (attrRW.ValueRW.hp <= 0.00f)
-                //¹Ì¶¨ËÀÍö¶¯»­
+                //å›ºå®šæ­»äº¡åŠ¨ç”»
                 {
                     if (!attrRW.ValueRW.death)
                     {
-                        // DevDebug.Log("²¥·ÅËÀÍö¶¯»­");
-                        //ÕâÀï´æÔÚ¶àÏß³Ì»úÖÆ£¿Í¬Ò»Ö¡µ¥´ÎĞ´ÓĞ¿ÉÄÜ²»±»ÃüÖĞ£¡£¡£¨·Ç³£ÖØÒª½÷¼Ç£©
+                        // DevDebug.Log("æ’­æ”¾æ­»äº¡åŠ¨ç”»");
+                        //è¿™é‡Œå­˜åœ¨å¤šçº¿ç¨‹æœºåˆ¶ï¼ŸåŒä¸€å¸§å•æ¬¡å†™æœ‰å¯èƒ½ä¸è¢«å‘½ä¸­ï¼ï¼ï¼ˆéå¸¸é‡è¦è°¨è®°ï¼‰
                         attrRW.ValueRW.death = true;
-                        //Ê§»îliveMonster×é¼ş£¬±ÜÃâjob¼ÆËã
+                        //å¤±æ´»liveMonsterç»„ä»¶ï¼Œé¿å…jobè®¡ç®—
                         ecb.SetComponentEnabled<LiveMonster>(entity, false);
-                        //Ö»²¥Ò»´Î£¬Ä¬ÈÏ¶¯»­4ËÀÍö£¬ºóĞøÓĞ¾«Ó¢¹Ö¼ÓÈëÒ²Ä¬ÈÏ4
+                        //åªæ’­ä¸€æ¬¡ï¼Œé»˜è®¤åŠ¨ç”»4æ­»äº¡ï¼Œåç»­æœ‰ç²¾è‹±æ€ªåŠ å…¥ä¹Ÿé»˜è®¤4
                         animatorAspect.RunAnimation(4, 0, 1);
 
-                        // 2) ÒÆ³ıÅö×²×é¼ş£¬ÎïÀíÒıÇæ¾Í²»»áÔÙ¼ì²âËü
+                        // 2) ç§»é™¤ç¢°æ’ç»„ä»¶ï¼Œç‰©ç†å¼•æ“å°±ä¸ä¼šå†æ£€æµ‹å®ƒ
                         ecb.RemoveComponent<PhysicsCollider>(entity);
 
-                        //ÒÆ³ıµ¼º½»ù´¡×é¼ş
+                        //ç§»é™¤å¯¼èˆªåŸºç¡€ç»„ä»¶
                         ecb.RemoveComponent<AgentBody>(entity);
-                        //ÒÆ³ıµ¼º½Â·ÕÏ
+                        //ç§»é™¤å¯¼èˆªè·¯éšœ
                         ecb.RemoveComponent<AgentShape>(entity);
                     }
                    
@@ -91,13 +91,13 @@ namespace BlackDawn.DOTS
   
             }
 
-            //ËÀÍöÏú»ÙÂß¼­£¬Ö»ÄÜ·Ö¿ª£¿,¶øÇÒÉÏÃæµÄ death ±êÇ©¾­³£ÎŞ·¨ÓĞĞ§ÉèÖÃ£¿ ÓĞÏß³Ì¾ºÕù£¬ÓĞÒ»¶¨¸ÅÂÊÄÃµ½ÀÏÖµ£¬ËùÒÔÕâÀïĞèÒª  state.EntityManager.CompleteAllTrackedJobs();£¿
+            //æ­»äº¡é”€æ¯é€»è¾‘ï¼Œåªèƒ½åˆ†å¼€ï¼Ÿ,è€Œä¸”ä¸Šé¢çš„ death æ ‡ç­¾ç»å¸¸æ— æ³•æœ‰æ•ˆè®¾ç½®ï¼Ÿ æœ‰çº¿ç¨‹ç«äº‰ï¼Œæœ‰ä¸€å®šæ¦‚ç‡æ‹¿åˆ°è€å€¼ï¼Œæ‰€ä»¥è¿™é‡Œéœ€è¦  state.EntityManager.CompleteAllTrackedJobs();ï¼Ÿ
             foreach (var (attrRW, entity) in SystemAPI.Query<RefRW<MonsterDefenseAttribute>>().WithDisabled<LiveMonster>().WithEntityAccess())
             {
                
                 
                     attrRW.ValueRW.survivalTime -= _timer;
-                    //´æ»îÊ±¼äÍê±ÏÖ®ºóÏú»Ù
+                    //å­˜æ´»æ—¶é—´å®Œæ¯•ä¹‹åé”€æ¯
                     if (attrRW.ValueRO.survivalTime <= 0)
                         ecb.DestroyEntity(entity);
 
@@ -105,7 +105,7 @@ namespace BlackDawn.DOTS
             
             }
 
-            //¶¯»­ÊÂ¼şĞŞÕı£¿¶¯»­ÊÂ¼şÎ´´¥·¢£¿Ä¿Ç°Ã»ÓĞÕÒµ½Ô­Òò
+            //åŠ¨ç”»äº‹ä»¶ä¿®æ­£ï¼ŸåŠ¨ç”»äº‹ä»¶æœªè§¦å‘ï¼Ÿç›®å‰æ²¡æœ‰æ‰¾åˆ°åŸå› 
 
 
 

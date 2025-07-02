@@ -1,4 +1,4 @@
-﻿namespace GameFrame.Runtime
+namespace GameFrame.Runtime
 {
     /// <summary>
     /// 输入代码

@@ -5,57 +5,57 @@ using Unity.Mathematics;
 namespace BlackDawn.DOTS
 {
     /// <summary>
-    /// ¼¼ÄÜÉËº¦²ÎÊı·â×°£¬°üº¬ÎïÀíË²Ê±ÉËº¦¡¢5 ÖÖÔªËØË²Ê±ÉËº¦ºÍ 6 ÖÖ³ÖĞøĞÔÉËº¦
+    /// æŠ€èƒ½ä¼¤å®³å‚æ•°å°è£…ï¼ŒåŒ…å«ç‰©ç†ç¬æ—¶ä¼¤å®³ã€5 ç§å…ƒç´ ç¬æ—¶ä¼¤å®³å’Œ 6 ç§æŒç»­æ€§ä¼¤å®³
     /// </summary>
     [Serializable]
     public struct SkillsDamageCalPar : IComponentData
     {
 
         public Entity heroRef;
-        /// <summary>ÎïÀíË²Ê±´ø±©»÷ÉËº¦</summary>
+        /// <summary>ç‰©ç†ç¬æ—¶å¸¦æš´å‡»ä¼¤å®³</summary>
         public float instantPhysicalDamage;
 
-        // ¡ª¡ª ÔªËØË²Ê±ÉËº¦ ¡ª¡ª
-        /// <summary>±ùËªË²Ê±ÉËº¦</summary>
+        // â€”â€” å…ƒç´ ç¬æ—¶ä¼¤å®³ â€”â€”
+        /// <summary>å†°éœœç¬æ—¶ä¼¤å®³</summary>
         public float frostDamage;
-        /// <summary>ÉÁµçË²Ê±ÉËº¦</summary>
+        /// <summary>é—ªç”µç¬æ—¶ä¼¤å®³</summary>
         public float lightningDamage;
-        /// <summary>¶¾ËØË²Ê±ÉËº¦</summary>
+        /// <summary>æ¯’ç´ ç¬æ—¶ä¼¤å®³</summary>
         public float poisonDamage;
-        /// <summary>°µÓ°Ë²Ê±ÉËº¦</summary>
+        /// <summary>æš—å½±ç¬æ—¶ä¼¤å®³</summary>
         public float shadowDamage;
-        /// <summary>»ğÑæË²Ê±ÉËº¦</summary>
+        /// <summary>ç«ç„°ç¬æ—¶ä¼¤å®³</summary>
         public float fireDamage;
 
-        // ¡ª¡ª ³ÖĞøĞÔ£¨DOT£©ÉËº¦ ¡ª¡ª
-        /// <summary>±ùËª³ÖĞøĞÔÉËº¦</summary>
+        // â€”â€” æŒç»­æ€§ï¼ˆDOTï¼‰ä¼¤å®³ â€”â€”
+        /// <summary>å†°éœœæŒç»­æ€§ä¼¤å®³</summary>
         public float frostDotDamage;
-        /// <summary>ÉÁµç³ÖĞøĞÔÉËº¦</summary>
+        /// <summary>é—ªç”µæŒç»­æ€§ä¼¤å®³</summary>
         public float lightningDotDamage;
-        /// <summary>¶¾ËØ³ÖĞøĞÔÉËº¦</summary>
+        /// <summary>æ¯’ç´ æŒç»­æ€§ä¼¤å®³</summary>
         public float poisonDotDamage;
-        /// <summary>°µÓ°³ÖĞøĞÔÉËº¦</summary>
+        /// <summary>æš—å½±æŒç»­æ€§ä¼¤å®³</summary>
         public float shadowDotDamage;
-        /// <summary>»ğÑæ³ÖĞøĞÔÉËº¦</summary>
+        /// <summary>ç«ç„°æŒç»­æ€§ä¼¤å®³</summary>
         public float fireDotDamage;
-        /// <summary>Á÷Ñª³ÖĞøĞÔÉËº¦£¬ÓÉÎïÀíÉËº¦´¥·¢</summary>
+        /// <summary>æµè¡€æŒç»­æ€§ä¼¤å®³ï¼Œç”±ç‰©ç†ä¼¤å®³è§¦å‘</summary>
         public float bleedDotDamage;
 
-        /// <summary>²¢ĞĞ´¦ÀíÊıÁ¿,Ä¬ÈÏ100£¬¸ù¾İ¼¼ÄÜµ÷Õû</summary>
+        /// <summary>å¹¶è¡Œå¤„ç†æ•°é‡,é»˜è®¤100ï¼Œæ ¹æ®æŠ€èƒ½è°ƒæ•´</summary>
         public int ParallelCount;
-        // ¡ª¡ª ÁÙÊ±ĞÔ£¨¿ØÖÆÊôĞÔ£© ¡ª¡ª
-        /// <summary>ÁÙÊ±ĞÔ¿ØÖÆÊôĞÔ</summary>
+        // â€”â€” ä¸´æ—¶æ€§ï¼ˆæ§åˆ¶å±æ€§ï¼‰ â€”â€”
+        /// <summary>ä¸´æ—¶æ€§æ§åˆ¶å±æ€§</summary>
         public float tempFreeze;
         public float tempStun;
         public float tempFear;
         public float tempRoot;
         public float tempSlow;
 
-        /// <summary>ÓÃÓÚ¼¼ÄÜ±ä»¯µÄÕûÌåÉËº¦²Î£¬ÕâÀï¿´µ½ÊÇÔÚ³Ø»¯ÖĞ½øĞĞ¼ÆËãµÄ£¬Ò²Ó¦¸ÃÔÚ¼¼ÄÜ±íÏÖÖĞÔö¼Ó£¬Ä¬ÈÏÖµÎª1</summary>
+        /// <summary>ç”¨äºæŠ€èƒ½å˜åŒ–çš„æ•´ä½“ä¼¤å®³å‚ï¼Œè¿™é‡Œçœ‹åˆ°æ˜¯åœ¨æ± åŒ–ä¸­è¿›è¡Œè®¡ç®—çš„ï¼Œä¹Ÿåº”è¯¥åœ¨æŠ€èƒ½è¡¨ç°ä¸­å¢åŠ ï¼Œé»˜è®¤å€¼ä¸º1</summary>
         public float damageChangePar;
 
         /// <summary>
-        ///ÅĞ¶¨¼¸ÖÖ±©»÷×´Ì¬£¬ÓÃÓÚÉú³É²»Í¬ÑÕÉ«×ÖÌå£¬ºÍ×ÖÌåÌø¶¯¶¯»­
+        ///åˆ¤å®šå‡ ç§æš´å‡»çŠ¶æ€ï¼Œç”¨äºç”Ÿæˆä¸åŒé¢œè‰²å­—ä½“ï¼Œå’Œå­—ä½“è·³åŠ¨åŠ¨ç”»
         /// </summary>
         public bool critTriggered;
         public bool vulTriggered;
@@ -63,17 +63,17 @@ namespace BlackDawn.DOTS
         public bool dotCritTriggered;
         public bool elemCritTriggered;
 
-        //ÉËº¦ÀàĞÍÃ¶¾Ù
+        //ä¼¤å®³ç±»å‹æšä¸¾
         public DamageTriggerType damageTriggerType;
-        //»÷ÖĞºó´æ»îÊ±¼ä£¬ÓÃÓÚ¹¹½¨±¬Õ¨»òÕßÆäËûÊôĞÔ(Èç·ÖÁÑ)
+        //å‡»ä¸­åå­˜æ´»æ—¶é—´ï¼Œç”¨äºæ„å»ºçˆ†ç‚¸æˆ–è€…å…¶ä»–å±æ€§(å¦‚åˆ†è£‚)
         public float hitSurvivalTime;
         public bool hit;
-        //Ô­Ê¼´æ»îÊ±¼ä
+        //åŸå§‹å­˜æ´»æ—¶é—´
         public float originalSurvivalTime;
-        //Ïú»Ù±êÊ¶
+        //é”€æ¯æ ‡è¯†
         public bool  destory;
  
-        ///¼¼ÄÜÌØÊâµÄÇ£ÒıºÍ±¬Õ¨ÊôĞÔ±êÇ©
+        ///æŠ€èƒ½ç‰¹æ®Šçš„ç‰µå¼•å’Œçˆ†ç‚¸å±æ€§æ ‡ç­¾
         public bool enablePull;
         public bool enableExplosion;
 
@@ -82,57 +82,57 @@ namespace BlackDawn.DOTS
 
 
     /// <summary>
-    /// ¼¼ÄÜÉËº¦³ÖĞøĞÔÉËº¦²ÎÊı·â×°£¬°üº¬ÎïÀíË²Ê±ÉËº¦¡¢5 ÖÖÔªËØË²Ê±ÉËº¦ºÍ 6 ÖÖ³ÖĞøĞÔÉËº¦
+    /// æŠ€èƒ½ä¼¤å®³æŒç»­æ€§ä¼¤å®³å‚æ•°å°è£…ï¼ŒåŒ…å«ç‰©ç†ç¬æ—¶ä¼¤å®³ã€5 ç§å…ƒç´ ç¬æ—¶ä¼¤å®³å’Œ 6 ç§æŒç»­æ€§ä¼¤å®³
     /// </summary>
     [Serializable]
     public struct SkillsOverTimeDamageCalPar : IComponentData
     {
 
         public Entity heroRef;
-        /// <summary>ÎïÀíË²Ê±´ø±©»÷ÉËº¦</summary>
+        /// <summary>ç‰©ç†ç¬æ—¶å¸¦æš´å‡»ä¼¤å®³</summary>
         public float instantPhysicalDamage;
 
-        // ¡ª¡ª ÔªËØË²Ê±ÉËº¦ ¡ª¡ª
-        /// <summary>±ùËªË²Ê±ÉËº¦</summary>
+        // â€”â€” å…ƒç´ ç¬æ—¶ä¼¤å®³ â€”â€”
+        /// <summary>å†°éœœç¬æ—¶ä¼¤å®³</summary>
         public float frostDamage;
-        /// <summary>ÉÁµçË²Ê±ÉËº¦</summary>
+        /// <summary>é—ªç”µç¬æ—¶ä¼¤å®³</summary>
         public float lightningDamage;
-        /// <summary>¶¾ËØË²Ê±ÉËº¦</summary>
+        /// <summary>æ¯’ç´ ç¬æ—¶ä¼¤å®³</summary>
         public float poisonDamage;
-        /// <summary>°µÓ°Ë²Ê±ÉËº¦</summary>
+        /// <summary>æš—å½±ç¬æ—¶ä¼¤å®³</summary>
         public float shadowDamage;
-        /// <summary>»ğÑæË²Ê±ÉËº¦</summary>
+        /// <summary>ç«ç„°ç¬æ—¶ä¼¤å®³</summary>
         public float fireDamage;
 
-        // ¡ª¡ª ³ÖĞøĞÔ£¨DOT£©ÉËº¦ ¡ª¡ª
-        /// <summary>±ùËª³ÖĞøĞÔÉËº¦</summary>
+        // â€”â€” æŒç»­æ€§ï¼ˆDOTï¼‰ä¼¤å®³ â€”â€”
+        /// <summary>å†°éœœæŒç»­æ€§ä¼¤å®³</summary>
         public float frostDotDamage;
-        /// <summary>ÉÁµç³ÖĞøĞÔÉËº¦</summary>
+        /// <summary>é—ªç”µæŒç»­æ€§ä¼¤å®³</summary>
         public float lightningDotDamage;
-        /// <summary>¶¾ËØ³ÖĞøĞÔÉËº¦</summary>
+        /// <summary>æ¯’ç´ æŒç»­æ€§ä¼¤å®³</summary>
         public float poisonDotDamage;
-        /// <summary>°µÓ°³ÖĞøĞÔÉËº¦</summary>
+        /// <summary>æš—å½±æŒç»­æ€§ä¼¤å®³</summary>
         public float shadowDotDamage;
-        /// <summary>»ğÑæ³ÖĞøĞÔÉËº¦</summary>
+        /// <summary>ç«ç„°æŒç»­æ€§ä¼¤å®³</summary>
         public float fireDotDamage;
-        /// <summary>Á÷Ñª³ÖĞøĞÔÉËº¦£¬ÓÉÎïÀíÉËº¦´¥·¢</summary>
+        /// <summary>æµè¡€æŒç»­æ€§ä¼¤å®³ï¼Œç”±ç‰©ç†ä¼¤å®³è§¦å‘</summary>
         public float bleedDotDamage;
 
-        /// <summary>²¢ĞĞ´¦ÀíÊıÁ¿,Ä¬ÈÏ100£¬¸ù¾İ¼¼ÄÜµ÷Õû</summary>
+        /// <summary>å¹¶è¡Œå¤„ç†æ•°é‡,é»˜è®¤100ï¼Œæ ¹æ®æŠ€èƒ½è°ƒæ•´</summary>
         public int ParallelCount;
-        // ¡ª¡ª ÁÙÊ±ĞÔ£¨¿ØÖÆÊôĞÔ£© ¡ª¡ª
-        /// <summary>ÁÙÊ±ĞÔ¿ØÖÆÊôĞÔ</summary>
+        // â€”â€” ä¸´æ—¶æ€§ï¼ˆæ§åˆ¶å±æ€§ï¼‰ â€”â€”
+        /// <summary>ä¸´æ—¶æ€§æ§åˆ¶å±æ€§</summary>
         public float tempFreeze;
         public float tempStun;
         public float tempFear;
         public float tempRoot;
         public float tempSlow;
 
-        /// <summary>ÓÃÓÚ¼¼ÄÜ±ä»¯µÄÕûÌåÉËº¦²Î£¬ÕâÀï¿´µ½ÊÇÔÚ³Ø»¯ÖĞ½øĞĞ¼ÆËãµÄ£¬Ò²Ó¦¸ÃÔÚ¼¼ÄÜ±íÏÖÖĞÔö¼Ó£¬Ä¬ÈÏÖµÎª1</summary>
+        /// <summary>ç”¨äºæŠ€èƒ½å˜åŒ–çš„æ•´ä½“ä¼¤å®³å‚ï¼Œè¿™é‡Œçœ‹åˆ°æ˜¯åœ¨æ± åŒ–ä¸­è¿›è¡Œè®¡ç®—çš„ï¼Œä¹Ÿåº”è¯¥åœ¨æŠ€èƒ½è¡¨ç°ä¸­å¢åŠ ï¼Œé»˜è®¤å€¼ä¸º1</summary>
         public float damageChangePar;
 
         /// <summary>
-        ///ÅĞ¶¨¼¸ÖÖ±©»÷×´Ì¬£¬ÓÃÓÚÉú³É²»Í¬ÑÕÉ«×ÖÌå£¬ºÍ×ÖÌåÌø¶¯¶¯»­
+        ///åˆ¤å®šå‡ ç§æš´å‡»çŠ¶æ€ï¼Œç”¨äºç”Ÿæˆä¸åŒé¢œè‰²å­—ä½“ï¼Œå’Œå­—ä½“è·³åŠ¨åŠ¨ç”»
         /// </summary>
         public bool critTriggered;
         public bool vulTriggered;
@@ -140,17 +140,17 @@ namespace BlackDawn.DOTS
         public bool dotCritTriggered;
         public bool elemCritTriggered;
 
-        //ÉËº¦ÀàĞÍÃ¶¾Ù
+        //ä¼¤å®³ç±»å‹æšä¸¾
         public DamageTriggerType damageTriggerType;
-        //»÷ÖĞºó´æ»îÊ±¼ä£¬ÓÃÓÚ¹¹½¨±¬Õ¨»òÕßÆäËûÊôĞÔ(Èç·ÖÁÑ)
+        //å‡»ä¸­åå­˜æ´»æ—¶é—´ï¼Œç”¨äºæ„å»ºçˆ†ç‚¸æˆ–è€…å…¶ä»–å±æ€§(å¦‚åˆ†è£‚)
         public float hitSurvivalTime;
         public bool hit;
-        //Ô­Ê¼´æ»îÊ±¼ä
+        //åŸå§‹å­˜æ´»æ—¶é—´
         public float originalSurvivalTime;
-        //Ïú»Ù±êÊ¶
+        //é”€æ¯æ ‡è¯†
         public bool destory;
 
-        ///¼¼ÄÜÌØÊâµÄÇ£ÒıºÍ±¬Õ¨ÊôĞÔ±êÇ©
+        ///æŠ€èƒ½ç‰¹æ®Šçš„ç‰µå¼•å’Œçˆ†ç‚¸å±æ€§æ ‡ç­¾
         public bool enablePull;
         public bool enableExplosion;
 
@@ -162,140 +162,140 @@ namespace BlackDawn.DOTS
 
 
     /// <summary>
-    /// ±¬·¢ĞÔÉËº¦¼¼ÄÜ±êÇ©£¬Ö»ÄÜ¼Ì³ĞÓÚÔ­¼¼ÄÜ£¬²¢ÓëÆäÁª¶¯£¬¿¿¼¼ÄÜ±êÇ©½øĞĞµ¥´Î¼ÆËã
+    /// çˆ†å‘æ€§ä¼¤å®³æŠ€èƒ½æ ‡ç­¾ï¼Œåªèƒ½ç»§æ‰¿äºåŸæŠ€èƒ½ï¼Œå¹¶ä¸å…¶è”åŠ¨ï¼Œé æŠ€èƒ½æ ‡ç­¾è¿›è¡Œå•æ¬¡è®¡ç®—
     /// </summary>
     [Serializable]
     public struct SkillsBurstDamageCalPar : IComponentData
     {
 
         public Entity heroRef;
-        /// <summary>ÎïÀíË²Ê±´ø±©»÷ÉËº¦</summary>
+        /// <summary>ç‰©ç†ç¬æ—¶å¸¦æš´å‡»ä¼¤å®³</summary>
         public float instantPhysicalDamage;
 
-        // ¡ª¡ª ÔªËØË²Ê±ÉËº¦ ¡ª¡ª
-        /// <summary>±ùËªË²Ê±ÉËº¦</summary>
+        // â€”â€” å…ƒç´ ç¬æ—¶ä¼¤å®³ â€”â€”
+        /// <summary>å†°éœœç¬æ—¶ä¼¤å®³</summary>
         public float frostDamage;
-        /// <summary>ÉÁµçË²Ê±ÉËº¦</summary>
+        /// <summary>é—ªç”µç¬æ—¶ä¼¤å®³</summary>
         public float lightningDamage;
-        /// <summary>¶¾ËØË²Ê±ÉËº¦</summary>
+        /// <summary>æ¯’ç´ ç¬æ—¶ä¼¤å®³</summary>
         public float poisonDamage;
-        /// <summary>°µÓ°Ë²Ê±ÉËº¦</summary>
+        /// <summary>æš—å½±ç¬æ—¶ä¼¤å®³</summary>
         public float shadowDamage;
-        /// <summary>»ğÑæË²Ê±ÉËº¦</summary>
+        /// <summary>ç«ç„°ç¬æ—¶ä¼¤å®³</summary>
         public float fireDamage;
 
-        // ¡ª¡ª ³ÖĞøĞÔ£¨DOT£©ÉËº¦ ¡ª¡ª
-        /// <summary>±ùËª³ÖĞøĞÔÉËº¦</summary>
+        // â€”â€” æŒç»­æ€§ï¼ˆDOTï¼‰ä¼¤å®³ â€”â€”
+        /// <summary>å†°éœœæŒç»­æ€§ä¼¤å®³</summary>
         public float frostDotDamage;
-        /// <summary>ÉÁµç³ÖĞøĞÔÉËº¦</summary>
+        /// <summary>é—ªç”µæŒç»­æ€§ä¼¤å®³</summary>
         public float lightningDotDamage;
-        /// <summary>¶¾ËØ³ÖĞøĞÔÉËº¦</summary>
+        /// <summary>æ¯’ç´ æŒç»­æ€§ä¼¤å®³</summary>
         public float poisonDotDamage;
-        /// <summary>°µÓ°³ÖĞøĞÔÉËº¦</summary>
+        /// <summary>æš—å½±æŒç»­æ€§ä¼¤å®³</summary>
         public float shadowDotDamage;
-        /// <summary>»ğÑæ³ÖĞøĞÔÉËº¦</summary>
+        /// <summary>ç«ç„°æŒç»­æ€§ä¼¤å®³</summary>
         public float fireDotDamage;
-        /// <summary>Á÷Ñª³ÖĞøĞÔÉËº¦£¬ÓÉÎïÀíÉËº¦´¥·¢</summary>
+        /// <summary>æµè¡€æŒç»­æ€§ä¼¤å®³ï¼Œç”±ç‰©ç†ä¼¤å®³è§¦å‘</summary>
         public float bleedDotDamage;
 
-        /// <summary>²¢ĞĞ´¦ÀíÊıÁ¿,Ä¬ÈÏ100£¬¸ù¾İ¼¼ÄÜµ÷Õû</summary>
+        /// <summary>å¹¶è¡Œå¤„ç†æ•°é‡,é»˜è®¤100ï¼Œæ ¹æ®æŠ€èƒ½è°ƒæ•´</summary>
         public int ParallelCount;
-        // ¡ª¡ª ÁÙÊ±ĞÔ£¨¿ØÖÆÊôĞÔ£© ¡ª¡ª
-        /// <summary>ÁÙÊ±ĞÔ¿ØÖÆÊôĞÔ</summary>
+        // â€”â€” ä¸´æ—¶æ€§ï¼ˆæ§åˆ¶å±æ€§ï¼‰ â€”â€”
+        /// <summary>ä¸´æ—¶æ€§æ§åˆ¶å±æ€§</summary>
         public float tempFreeze;
         public float tempStun;
         public float tempFear;
         public float tempRoot;
         public float tempSlow;
 
-        /// <summary>ÓÃÓÚ¼¼ÄÜ±ä»¯µÄÕûÌåÉËº¦²Î£¬ÕâÀï¿´µ½ÊÇÔÚ³Ø»¯ÖĞ½øĞĞ¼ÆËãµÄ£¬Ò²Ó¦¸ÃÔÚ¼¼ÄÜ±íÏÖÖĞÔö¼Ó£¬Ä¬ÈÏÖµÎª1</summary>
+        /// <summary>ç”¨äºæŠ€èƒ½å˜åŒ–çš„æ•´ä½“ä¼¤å®³å‚ï¼Œè¿™é‡Œçœ‹åˆ°æ˜¯åœ¨æ± åŒ–ä¸­è¿›è¡Œè®¡ç®—çš„ï¼Œä¹Ÿåº”è¯¥åœ¨æŠ€èƒ½è¡¨ç°ä¸­å¢åŠ ï¼Œé»˜è®¤å€¼ä¸º1</summary>
         public float damageChangePar;
 
-        //ÉËº¦ÀàĞÍÃ¶¾Ù
+        //ä¼¤å®³ç±»å‹æšä¸¾
         public DamageTriggerType damageTriggerType;
-        //»÷ÖĞºó´æ»îÊ±¼ä£¬ÓÃÓÚ¹¹½¨±¬Õ¨»òÕßÆäËûÊôĞÔ(Èç·ÖÁÑ)
+        //å‡»ä¸­åå­˜æ´»æ—¶é—´ï¼Œç”¨äºæ„å»ºçˆ†ç‚¸æˆ–è€…å…¶ä»–å±æ€§(å¦‚åˆ†è£‚)
         public float hitSurvivalTime;
         public bool hit;
-        //Ô­Ê¼´æ»îÊ±¼ä
+        //åŸå§‹å­˜æ´»æ—¶é—´
         public float originalSurvivalTime;
-        //Ïú»Ù±êÊ¶
+        //é”€æ¯æ ‡è¯†
         public bool destory;
 
-        ///¼¼ÄÜÌØÊâµÄÇ£ÒıºÍ±¬Õ¨ÊôĞÔ±êÇ©
+        ///æŠ€èƒ½ç‰¹æ®Šçš„ç‰µå¼•å’Œçˆ†ç‚¸å±æ€§æ ‡ç­¾
         public bool enablePull;
         public bool enableExplosion;
 
 
-        ///£¡£¡±¬·¢Ê±¼ä
+        ///ï¼ï¼çˆ†å‘æ—¶é—´
         public float burstTime;
 
     }
 
     /// <summary>
-    /// ¿É¹Ø±Õ±êÇ©Âö³å±êÇ©,³õÊ¼»¯Ò»¸öÊ±¼ä£¬ÓÃÓÚ´æ»îÅĞ¶Ï,¿ÉÒÔÊ¹ÓÃ±êÇ©À´¶¨Òå ËÙ¶È  ¶ş½× ´æ»îÊ±¼ä
+    /// å¯å…³é—­æ ‡ç­¾è„‰å†²æ ‡ç­¾,åˆå§‹åŒ–ä¸€ä¸ªæ—¶é—´ï¼Œç”¨äºå­˜æ´»åˆ¤æ–­,å¯ä»¥ä½¿ç”¨æ ‡ç­¾æ¥å®šä¹‰ é€Ÿåº¦  äºŒé˜¶ å­˜æ´»æ—¶é—´
     /// </summary>
     public struct SkillPulseTag : IComponentData, IEnableableComponent
     { public float tagSurvivalTime;
       public float speed;
-      //ĞÎ±ä²ÎÊı
+      //å½¢å˜å‚æ•°
       public float scaleChangePar;
       public bool enableSecond;
-        //ÉËº¦±ä»¯²ÎÊı,Ä¬ÈÏÎª0£¬Íâ²¿¸³Öµ1+
+        //ä¼¤å®³å˜åŒ–å‚æ•°,é»˜è®¤ä¸º0ï¼Œå¤–éƒ¨èµ‹å€¼1+
      public float skillDamageChangeParTag;
 
     }
 
     /// <summary>
-    /// ¿É¹Ø±ÕÂö³å¶ş½×¶Î±¬Õ¨ÇëÇó±êÇ©,²»¼Ì³ĞIComponentData²»ºÏ·¨
+    /// å¯å…³é—­è„‰å†²äºŒé˜¶æ®µçˆ†ç‚¸è¯·æ±‚æ ‡ç­¾,ä¸ç»§æ‰¿IComponentDataä¸åˆæ³•
     /// </summary>
     public struct SkillPulseSecondExplosionRequestTag : IComponentData, IEnableableComponent { }
 
 
 
     /// <summary>
-    /// °µÄÜÇò¸½Ä§Àà
+    /// æš—èƒ½çƒé™„é­”ç±»
     /// </summary>
     public struct SkillDarkEnergyTag : IComponentData, IEnableableComponent
     {
         public float tagSurvivalTime;
         public float speed;
-        //ĞÎ±ä²ÎÊı
+        //å½¢å˜å‚æ•°
         public float scaleChangePar;
         public bool enableSecond;
-        //ÔÊĞíÌØÊâÖ´ĞĞÂß¼­
+        //å…è®¸ç‰¹æ®Šæ‰§è¡Œé€»è¾‘
         public bool enableSpecialEffect;
-        //ÉËº¦±ä»¯²ÎÊı,Ä¬ÈÏÎª0£¬Íâ²¿¸³Öµ1+
+        //ä¼¤å®³å˜åŒ–å‚æ•°,é»˜è®¤ä¸º0ï¼Œå¤–éƒ¨èµ‹å€¼1+
         public float skillDamageChangeParTag;
 
     }
 
     /// <summary>
-    /// º®±ù ¸½Ä§Àà
+    /// å¯’å†° é™„é­”ç±»
     /// </summary>
     public struct SkillFrostTag : IComponentData, IEnableableComponent
     {
         public float3 originalPosition;
         public float tagSurvivalTime;
         public float speed;
-        //ĞÎ±ä²ÎÊı
+        //å½¢å˜å‚æ•°
         public float scaleChangePar;
-        //ÔÊĞíµÚ¶ş½×¶Î
+        //å…è®¸ç¬¬äºŒé˜¶æ®µ
         public bool enableSecond;
-        //ÔÊĞíÌØÊâÖ´ĞĞÂß¼­
+        //å…è®¸ç‰¹æ®Šæ‰§è¡Œé€»è¾‘
         public bool enableSpecialEffect;
-        //ÉËº¦±ä»¯²ÎÊı,Ä¬ÈÏÎª0£¬Íâ²¿¸³Öµ1+
+        //ä¼¤å®³å˜åŒ–å‚æ•°,é»˜è®¤ä¸º0ï¼Œå¤–éƒ¨èµ‹å€¼1+
         public float skillDamageChangeParTag;
-        //»÷ÖĞ¼ä¸ôÊ±¼ä
+        //å‡»ä¸­é—´éš”æ—¶é—´
         public float hitIntervalTime;
-        //»÷ÖĞ´ÎÊı
+        //å‡»ä¸­æ¬¡æ•°
         public int hitCount;
-        //ËéÆ¬ÊıÁ¿
+        //ç¢ç‰‡æ•°é‡
         public int shrapnelCount;
 
 
     }
     /// <summary>
-    /// º®±ùËéÆ¬±êÇ©
+    /// å¯’å†°ç¢ç‰‡æ ‡ç­¾
     /// </summary>
     public struct SkillFrostShrapneTag : IComponentData
     {
@@ -305,73 +305,73 @@ namespace BlackDawn.DOTS
 
 
     /// <summary>
-    /// ±ù»ğÇò £¬³ÖĞøĞı×ª Ä£°å
+    /// å†°ç«çƒ ï¼ŒæŒç»­æ—‹è½¬ æ¨¡æ¿
     /// </summary>
     public struct SkillIceFireTag : IComponentData, IEnableableComponent
     {
         public float tagSurvivalTime;
         public float speed;
         public float radius;
-        public float currentAngle;      // µ±Ç°½Ç¶È£¬µ¥Î»£º»¡¶È
-        //ĞÎ±ä²ÎÊı£¬ÕâÒ»°ãµÚ¶ş½×¶Î¼¼ÄÜÓÃÓÚ¶¯Ì¬¸Ä±äµÄ²ÎÊı
+        public float currentAngle;      // å½“å‰è§’åº¦ï¼Œå•ä½ï¼šå¼§åº¦
+        //å½¢å˜å‚æ•°ï¼Œè¿™ä¸€èˆ¬ç¬¬äºŒé˜¶æ®µæŠ€èƒ½ç”¨äºåŠ¨æ€æ”¹å˜çš„å‚æ•°
         public float originalScale;
         public float scaleChangePar;
         public bool enableSecond;
-        //¶ş½××´Ì¬³ÖĞøÊ±¼ä£¬ ÕâÀïÒ»½××´Ì¬»á¼ÌĞø³ÖĞø
+        //äºŒé˜¶çŠ¶æ€æŒç»­æ—¶é—´ï¼Œ è¿™é‡Œä¸€é˜¶çŠ¶æ€ä¼šç»§ç»­æŒç»­
         public float secondSurvivalTime;
-        //ÔÊĞíÌØÊâÖ´ĞĞÂß¼­
+        //å…è®¸ç‰¹æ®Šæ‰§è¡Œé€»è¾‘
         public bool enableSpecialEffect;
-        //ÉËº¦±ä»¯²ÎÊı,Ä¬ÈÏÎª0£¬Íâ²¿¸³Öµ1+
+        //ä¼¤å®³å˜åŒ–å‚æ•°,é»˜è®¤ä¸º0ï¼Œå¤–éƒ¨èµ‹å€¼1+
         public float skillDamageChangeParTag;
 
     }
 
 
     /// <summary>
-    /// ¿É¹Ø±Õ±ù»ğÇò¶ş½×¶Î±¬Õ¨ÇëÇó±êÇ©
+    /// å¯å…³é—­å†°ç«çƒäºŒé˜¶æ®µçˆ†ç‚¸è¯·æ±‚æ ‡ç­¾
     /// </summary>
     public struct SkillIceFireSecondExplosionRequestTag : IComponentData, IEnableableComponent { }
 
 
     /// <summary>
-    /// ÂäÀ×¿ÉÀí½âÎªËÙ¶ÈÎª0 µÄ¾²Ì¬·ÉĞĞµÀ¾ß£¬ÕâÀïÓĞÒ»¸ö³ÖĞøÊÍ·ÅĞ§¹û£¬»òÓ¦µ±¸Ä±äÂß¼­£¬ÓÃĞ¯³Ì´¦Àí£¿
+    /// è½é›·å¯ç†è§£ä¸ºé€Ÿåº¦ä¸º0 çš„é™æ€é£è¡Œé“å…·ï¼Œè¿™é‡Œæœ‰ä¸€ä¸ªæŒç»­é‡Šæ”¾æ•ˆæœï¼Œæˆ–åº”å½“æ”¹å˜é€»è¾‘ï¼Œç”¨æºç¨‹å¤„ç†ï¼Ÿ
     /// </summary>
     public struct SkillThunderStrikeTag : IComponentData, IEnableableComponent
     {
         public float tagSurvivalTime;
-        //ĞÎ±ä²ÎÊı
+        //å½¢å˜å‚æ•°
         public float scaleChangePar;
-        //ÉËº¦±ä»¯²ÎÊı,Ä¬ÈÏÎª0£¬Íâ²¿¸³Öµ1+
+        //ä¼¤å®³å˜åŒ–å‚æ•°,é»˜è®¤ä¸º0ï¼Œå¤–éƒ¨èµ‹å€¼1+
         public float skillDamageChangeParTag;
 
     }
 
     /// <summary>
-    /// ·¨ÕóÊÇ³ÖĞøĞÔÏûºÄÀàµÀ¾ß£¬Í¬Ò»Ê±¼äÖ»ÄÜ´æÔÚÒ»¸ö£¿ÕâÀïÉè¼Æ»Øµ÷£¿clsssÖĞµ¥Àı»ñÈ¡ ²»¼Ó¿É¹Ø±Õ±êÇ©
+    /// æ³•é˜µæ˜¯æŒç»­æ€§æ¶ˆè€—ç±»é“å…·ï¼ŒåŒä¸€æ—¶é—´åªèƒ½å­˜åœ¨ä¸€ä¸ªï¼Ÿè¿™é‡Œè®¾è®¡å›è°ƒï¼Ÿclsssä¸­å•ä¾‹è·å– ä¸åŠ å¯å…³é—­æ ‡ç­¾
     /// </summary>
     public struct SkillArcaneCircleTag : IComponentData
     {
-        //ÕâÀïÒª×÷Îª¼¼ÄÜÁ´½Óµã
+        //è¿™é‡Œè¦ä½œä¸ºæŠ€èƒ½é“¾æ¥ç‚¹
         public Entity heroRef;
 
         public float tagSurvivalTime;
-        //ĞÎ±ä²ÎÊı
+        //å½¢å˜å‚æ•°
         public float scaleChangePar;
         public bool enableSecondA;
         public bool enableSecondB;
 
-        //ÉËº¦±ä»¯²ÎÊı,Ä¬ÈÏÎª0£¬Íâ²¿¸³Öµ1+
+        //ä¼¤å®³å˜åŒ–å‚æ•°,é»˜è®¤ä¸º0ï¼Œå¤–éƒ¨èµ‹å€¼1+
         public float skillDamageChangeParTag;
-        //ÕâÀïÌí¼ÓµÈ¼¶±êÇ©£¬¶ş½×¼¼ÄÜ¿Û³ıÉúÃüÖµ¸úµÈ¼¶ÓĞ¹Ø
+        //è¿™é‡Œæ·»åŠ ç­‰çº§æ ‡ç­¾ï¼ŒäºŒé˜¶æŠ€èƒ½æ‰£é™¤ç”Ÿå‘½å€¼è·Ÿç­‰çº§æœ‰å…³
         public int level;
 
-        //ÊÖ¶¯¹Ø±Õ
+        //æ‰‹åŠ¨å…³é—­
         public bool closed;
 
     }
     /// <summary>
-    /// ¶ş½×ÁéÄÜ·¨Õó±êÇ©£¬ÕâÀïÓ¦¸ÃÊÇÒ»¸öbuffer£¬Õâ¸öbuffer¿ÉÒÔÌí¼Ó²»Í¬µÄlink£¬ÓÃÓÚ°ÑÏà¹ØµÄ²ÎÊıÁ´½Ó
-    /// ±£ÁôÄ¿±êºÍÊ±¼ä °´ÕÕdot·ÖÅä£¿6Ãë,²»ÄÜÌ«³¤»á³¬³ö16KBÏŞ¶¨·¶Î§
+    /// äºŒé˜¶çµèƒ½æ³•é˜µæ ‡ç­¾ï¼Œè¿™é‡Œåº”è¯¥æ˜¯ä¸€ä¸ªbufferï¼Œè¿™ä¸ªbufferå¯ä»¥æ·»åŠ ä¸åŒçš„linkï¼Œç”¨äºæŠŠç›¸å…³çš„å‚æ•°é“¾æ¥
+    /// ä¿ç•™ç›®æ ‡å’Œæ—¶é—´ æŒ‰ç…§dotåˆ†é…ï¼Ÿ6ç§’,ä¸èƒ½å¤ªé•¿ä¼šè¶…å‡º16KBé™å®šèŒƒå›´
     /// </summary>
     [InternalBufferCapacity(1000)]
     public struct SkillArcaneCircleSecondBufferTag : IBufferElementData 
@@ -382,61 +382,61 @@ namespace BlackDawn.DOTS
         
     }
     /// <summary>
-    /// ½ö½öÓÃÓÚÊÕ¼¯Åö×²¶Ô
+    /// ä»…ä»…ç”¨äºæ”¶é›†ç¢°æ’å¯¹
     /// </summary>
     public struct SkillArcaneCircleSecondTag : IComponentData { }
 
     /// <summary>
-    /// ·¨Õó¶ş½×¼¼ÄÜäÖÈ¾±êÇ©
+    /// æ³•é˜µäºŒé˜¶æŠ€èƒ½æ¸²æŸ“æ ‡ç­¾
     /// </summary>
     public struct SkillArcaneCircleSecondRenderTag : IComponentData, IEnableableComponent { }
     /// <summary>
-    /// Èı½×·¨Õó±êÇ©
+    /// ä¸‰é˜¶æ³•é˜µæ ‡ç­¾
     /// </summary>
     public struct SkillArcaneCircleThirdTag : IComponentData, IEnableableComponent { }
 
 
     /// <summary>
-    /// ÔªËØ¹²Ãù
+    /// å…ƒç´ å…±é¸£
     /// </summary>
     public struct SkillElementResonanceTag : IComponentData 
     {
         public float tagSurvivalTime;
 
         public bool enableSecondA;
-        //¶şÖØ±ä»¯Òò×Ó£¬¼¼ÄÜ³õÊ¼»¯Ê±´«Èë
+        //äºŒé‡å˜åŒ–å› å­ï¼ŒæŠ€èƒ½åˆå§‹åŒ–æ—¶ä¼ å…¥
         public float secondDamagePar;
 
         public bool enableSecondB;
-        //ÈıÖØ±ä»¯Òò×Ó£¬¼¼ÄÜ³õÊ¼»¯Ê±´«Èë
+        //ä¸‰é‡å˜åŒ–å› å­ï¼ŒæŠ€èƒ½åˆå§‹åŒ–æ—¶ä¼ å…¥
         public float thridDamagePar;
 
     }
     /// <summary>
-    /// ¾²µçÀÎÁı
+    /// é™ç”µç‰¢ç¬¼
     /// </summary>
     public struct SkillElectroCageTag : IComponentData
     {
         public float tagSurvivalTime;
-        //ĞÎ±ä²ÎÊı
+        //å½¢å˜å‚æ•°
         public float scaleChangePar;
         public bool enableSecondA;
         public bool enableSecondB;
-        //¼ä¸ôÊ±¼ä
+        //é—´éš”æ—¶é—´
         public float intervalTimer;
-        //ÄÚ²¿±ê¼ÇÊ±¼ä
+        //å†…éƒ¨æ ‡è®°æ—¶é—´
         public float timerA;
         public float timerB;
-        //ÉËº¦±ä»¯²ÎÊı,Ä¬ÈÏÎª0£¬Íâ²¿¸³Öµ1+
+        //ä¼¤å®³å˜åŒ–å‚æ•°,é»˜è®¤ä¸º0ï¼Œå¤–éƒ¨èµ‹å€¼1+
         public float skillDamageChangeParTag;
-        //ÕâÀïÌí¼ÓµÈ¼¶±êÇ©£¬¶ş½×¼¼ÄÜ¿Û³ıÉúÃüÖµ¸úµÈ¼¶ÓĞ¹Ø
+        //è¿™é‡Œæ·»åŠ ç­‰çº§æ ‡ç­¾ï¼ŒäºŒé˜¶æŠ€èƒ½æ‰£é™¤ç”Ÿå‘½å€¼è·Ÿç­‰çº§æœ‰å…³
         public int level;
-        //´«µ¼´ÎÊı
+        //ä¼ å¯¼æ¬¡æ•°
         public int StackCount;
 
     }
     /// <summary>
-    /// ¾²µçÀÎÁı2½×À×±©£¬1Ãë
+    /// é™ç”µç‰¢ç¬¼2é˜¶é›·æš´ï¼Œ1ç§’
     /// </summary>
     public struct SkillElectroCageScoendTag : IComponentData
     {
@@ -445,66 +445,66 @@ namespace BlackDawn.DOTS
 
     }
     /// <summary>
-    /// ¶¾±¬µØÀ×,¿ÉÒÔ¹Ø±Õ£¬¾Í¿ÉÒÔÈ¡ÏûÅö×²¶ÔÊÕ¼¯£¬²¢´ò¿ª¶ş½×¶ÎµÄ±¬Õ¨Ğ§¹û£¬ÖØĞÂ¸³ÖµÉËº¦
+    /// æ¯’çˆ†åœ°é›·,å¯ä»¥å…³é—­ï¼Œå°±å¯ä»¥å–æ¶ˆç¢°æ’å¯¹æ”¶é›†ï¼Œå¹¶æ‰“å¼€äºŒé˜¶æ®µçš„çˆ†ç‚¸æ•ˆæœï¼Œé‡æ–°èµ‹å€¼ä¼¤å®³
     /// </summary>
     public struct SkillMineBlastTag : IComponentData,IEnableableComponent
     {
 
 
         public float tagSurvivalTime;
-        //ĞÎ±ä²ÎÊı
+        //å½¢å˜å‚æ•°
         public float scaleChangePar;
 
-        //ÉËº¦±ä»¯²ÎÊı,Ä¬ÈÏÎª0£¬Íâ²¿¸³Öµ1+
+        //ä¼¤å®³å˜åŒ–å‚æ•°,é»˜è®¤ä¸º0ï¼Œå¤–éƒ¨èµ‹å€¼1+
         public float skillDamageChangeParTag;
-        //ÕâÀïÌí¼ÓµÈ¼¶±êÇ©£¬¶ş½×¼¼ÄÜ¿Û³ıÉúÃüÖµ¸úµÈ¼¶ÓĞ¹Ø
+        //è¿™é‡Œæ·»åŠ ç­‰çº§æ ‡ç­¾ï¼ŒäºŒé˜¶æŠ€èƒ½æ‰£é™¤ç”Ÿå‘½å€¼è·Ÿç­‰çº§æœ‰å…³
         public int level;
   
     }
 
     /// <summary>
-    /// ¶¾±¬£¬±¬Õ¨ºóµÄ±êÇ©£¬ ÓÃÓÚÒÆ³ı Ô­Ê¼±êÇ©µÄµ¥¶ÀÅö×²¼ì²âĞ§¹û
+    /// æ¯’çˆ†ï¼Œçˆ†ç‚¸åçš„æ ‡ç­¾ï¼Œ ç”¨äºç§»é™¤ åŸå§‹æ ‡ç­¾çš„å•ç‹¬ç¢°æ’æ£€æµ‹æ•ˆæœ
     /// </summary>
     public struct SkillMineBlastExplosionTag : IComponentData, IEnableableComponent
     {
 
         public float tagSurvivalTime;
-        //±¬Õ¨ÒÅÁôÊ±¼ä
+        //çˆ†ç‚¸é—ç•™æ—¶é—´
         public float tagSurvivalTimeSecond;
-        //ĞÎ±ä²ÎÊı
+        //å½¢å˜å‚æ•°
         public float scaleChangePar;
         public bool enableSecondA;
         public bool enableSecondB;
         public bool enableSecondC;
-        //ÉËº¦±ä»¯²ÎÊı,Ä¬ÈÏÎª0£¬Íâ²¿¸³Öµ1+
+        //ä¼¤å®³å˜åŒ–å‚æ•°,é»˜è®¤ä¸º0ï¼Œå¤–éƒ¨èµ‹å€¼1+
         public float skillDamageChangeParTag;
-        //¿ªÊ¼µÚ¶ş½×¶Î
+        //å¼€å§‹ç¬¬äºŒé˜¶æ®µ
         public bool startSecondA;
-        //µÈ¼¶
+        //ç­‰çº§
         public int level;
     }
 
     /// <summary>
-    /// ¶¾Óê
+    /// æ¯’é›¨
     /// </summary>
     public struct SkillPoisonRainTag : IComponentData
     {
 
         public float tagSurvivalTime;
-        //ĞÎ±ä²ÎÊı
+        //å½¢å˜å‚æ•°
         public float scaleChangePar;
         public bool enableSecondA;
         public bool enableSecondB;
         public bool enableSecondC;
-        //ÉËº¦±ä»¯²ÎÊı,Ä¬ÈÏÎª0£¬Íâ²¿¸³Öµ1+
+        //ä¼¤å®³å˜åŒ–å‚æ•°,é»˜è®¤ä¸º0ï¼Œå¤–éƒ¨èµ‹å€¼1+
         public float skillDamageChangeParTag;
-        //¿ªÊ¼µÚ¶ş½×¶Î
+        //å¼€å§‹ç¬¬äºŒé˜¶æ®µ
         public bool startSecondA;
-        //µÈ¼¶
+        //ç­‰çº§
         public int level;
     }
     /// <summary>
-    /// ¶¾ÓêA ½×¶ÎTAG
+    /// æ¯’é›¨A é˜¶æ®µTAG
     /// </summary>
     public struct SkillPoisonRainATag : IComponentData
     {
@@ -512,32 +512,32 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// °µÓ°ºéÁ÷
+    /// æš—å½±æ´ªæµ
     /// </summary>
     public struct SkillShadowTideTag : IComponentData
     {
 
         public float tagSurvivalTime;
-        //ĞÎ±ä²ÎÊı
+        //å½¢å˜å‚æ•°
         public float scaleChangePar;
         public bool enableSecondA;
         public bool enableSecondB;
         public bool enableSecondC;
-        //ÉËº¦±ä»¯²ÎÊı,Ä¬ÈÏÎª0£¬Íâ²¿¸³Öµ1+
+        //ä¼¤å®³å˜åŒ–å‚æ•°,é»˜è®¤ä¸º0ï¼Œå¤–éƒ¨èµ‹å€¼1+
         public float skillDamageChangeParTag;
-        //¿ªÊ¼µÚ¶ş½×¶Î
+        //å¼€å§‹ç¬¬äºŒé˜¶æ®µ
         public bool startSecondA;
-        //µÈ¼¶
+        //ç­‰çº§
         public int level;
-        //ÊÖ¶¯¹Ø±Õ
+        //æ‰‹åŠ¨å…³é—­
         public bool closed;
-        //ÌØĞ§ÏûÍöÊ±¼ä
+        //ç‰¹æ•ˆæ¶ˆäº¡æ—¶é—´
         public float effectDissolveTime;
-        //B ½×¶ÎµÄÊ±¼ä¼ÆÊıÆ÷
+        //B é˜¶æ®µçš„æ—¶é—´è®¡æ•°å™¨
         public float secondBTimer;
     }
     /// <summary>
-    ///°µÓ°ºéÁ÷ĞÎ³ÉµÄÁÒÑæÅçÉä¼¼ÄÜ£¬½ö´¢´æÒ»¸öÊ±¼ä±êÇ©¼´¿É£¬½ö¼Ì³Ğ»ğÑæÉËº¦
+    ///æš—å½±æ´ªæµå½¢æˆçš„çƒˆç„°å–·å°„æŠ€èƒ½ï¼Œä»…å‚¨å­˜ä¸€ä¸ªæ—¶é—´æ ‡ç­¾å³å¯ï¼Œä»…ç»§æ‰¿ç«ç„°ä¼¤å®³
     /// </summary>
     public struct SkillShadowTideBTag : IComponentData
     {

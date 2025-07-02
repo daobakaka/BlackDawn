@@ -14,10 +14,10 @@ namespace BlackDawn
         public Mesh mesh;
         public Material material;
 
-        // Í¨¹ı Inspector ´«ÈëÊµÀıÊıÁ¿¡¢ÊµÀı¼ä¾àºÍĞı×ªËÙ¶È
-        public int instanceCount = 27; // Ä¬ÈÏÉú³É 27 ¸öÊµÀı£¨ÀıÈç 3x3x3 µÄÕı·½Ìå²¼¾Ö£©
-        public float spacing = 2.0f;     // ÊµÀıÖ®¼äµÄ¼ä¾à
-        public float rotationSpeed = 10.0f; // Ã¿ÃëÈÆ Y ÖáĞı×ªµÄ½Ç¶È
+        // é€šè¿‡ Inspector ä¼ å…¥å®ä¾‹æ•°é‡ã€å®ä¾‹é—´è·å’Œæ—‹è½¬é€Ÿåº¦
+        public int instanceCount = 27; // é»˜è®¤ç”Ÿæˆ 27 ä¸ªå®ä¾‹ï¼ˆä¾‹å¦‚ 3x3x3 çš„æ­£æ–¹ä½“å¸ƒå±€ï¼‰
+        public float spacing = 2.0f;     // å®ä¾‹ä¹‹é—´çš„é—´è·
+        public float rotationSpeed = 10.0f; // æ¯ç§’ç»• Y è½´æ—‹è½¬çš„è§’åº¦
         public bool enableUpdate = true;
 
         private BatchRendererGroup m_BRG;
@@ -26,25 +26,25 @@ namespace BlackDawn
         private BatchMeshID m_MeshID;
         private BatchMaterialID m_MaterialID;
 
-        // Ò»Ğ©¸¨Öú³£Á¿£¬±ãÓÚ¼ÆËã
-        private const int kSizeOfMatrix = sizeof(float) * 4 * 4;           // 4x4 ¾ØÕóËùÕ¼×Ö½ÚÊı
-        private const int kSizeOfPackedMatrix = sizeof(float) * 4 * 3;       // Ñ¹Ëõ¾ØÕó£¨PackedMatrix£©µÄ×Ö½ÚÊı£¨Ö»´æ´¢Ã¿ÁĞÇ°Èı¸ö·ÖÁ¿£©
-        private const int kSizeOfFloat4 = sizeof(float) * 4;               // float4 µÄ×Ö½ÚÊı
-        // Ã¿¸öÊµÀıËùĞè×Ö½ÚÊı = 2 ¸öÑ¹Ëõ¾ØÕó£¨obj2world ºÍ world2obj£©+ 1 ¸ö float4£¨ÑÕÉ«£©
+        // ä¸€äº›è¾…åŠ©å¸¸é‡ï¼Œä¾¿äºè®¡ç®—
+        private const int kSizeOfMatrix = sizeof(float) * 4 * 4;           // 4x4 çŸ©é˜µæ‰€å å­—èŠ‚æ•°
+        private const int kSizeOfPackedMatrix = sizeof(float) * 4 * 3;       // å‹ç¼©çŸ©é˜µï¼ˆPackedMatrixï¼‰çš„å­—èŠ‚æ•°ï¼ˆåªå­˜å‚¨æ¯åˆ—å‰ä¸‰ä¸ªåˆ†é‡ï¼‰
+        private const int kSizeOfFloat4 = sizeof(float) * 4;               // float4 çš„å­—èŠ‚æ•°
+        // æ¯ä¸ªå®ä¾‹æ‰€éœ€å­—èŠ‚æ•° = 2 ä¸ªå‹ç¼©çŸ©é˜µï¼ˆobj2world å’Œ world2objï¼‰+ 1 ä¸ª float4ï¼ˆé¢œè‰²ï¼‰
         private int kBytesPerInstance { get { return (kSizeOfPackedMatrix * 2) + kSizeOfFloat4; } }
-        // ¶îÍâÔ¤ÁôµÄ×Ö½ÚÊı£¨ÀıÈç¶ÔÆë£©£¬²»ĞèÒªĞŞ¸Ä
+        // é¢å¤–é¢„ç•™çš„å­—èŠ‚æ•°ï¼ˆä¾‹å¦‚å¯¹é½ï¼‰ï¼Œä¸éœ€è¦ä¿®æ”¹
         private const int kExtraBytes = kSizeOfMatrix * 2;
 
-        // Ê¹ÓÃ NativeArray ´æ´¢Ã¿¸öÊµÀıµÄ±ä»»¾ØÕó£¨Ê¹ÓÃ math.float4x4£©£¬ÒÔ±ãÔÚ Job ÖĞ¸üĞÂ
+        // ä½¿ç”¨ NativeArray å­˜å‚¨æ¯ä¸ªå®ä¾‹çš„å˜æ¢çŸ©é˜µï¼ˆä½¿ç”¨ math.float4x4ï¼‰ï¼Œä»¥ä¾¿åœ¨ Job ä¸­æ›´æ–°
         private NativeArray<float4x4> m_NativeInstanceMatrices;
-        // ÓÃÓÚ´æ´¢´ò°üºóµÄ obj2world ºÍ world2obj Êı¾İ£¬¾ùÊ¹ÓÃ×Ô¶¨ÒåµÄ PackedMatrix ½á¹¹
+        // ç”¨äºå­˜å‚¨æ‰“åŒ…åçš„ obj2world å’Œ world2obj æ•°æ®ï¼Œå‡ä½¿ç”¨è‡ªå®šä¹‰çš„ PackedMatrix ç»“æ„
         private NativeArray<PackedMatrix> m_NativeObjectToWorld;
         private NativeArray<PackedMatrix> m_NativeWorldToObject;
 
-        // ÓÃÓÚ³õÊ¼»¯¹¹ÔìÕı·½Ìå²¼¾ÖÊ±µÄÁÙÊ±Êı×é£¨½öÓÃÓÚ³õÊ¼»¯Ê±×ª»»µ½ NativeArray£©
+        // ç”¨äºåˆå§‹åŒ–æ„é€ æ­£æ–¹ä½“å¸ƒå±€æ—¶çš„ä¸´æ—¶æ•°ç»„ï¼ˆä»…ç”¨äºåˆå§‹åŒ–æ—¶è½¬æ¢åˆ° NativeArrayï¼‰
         private Matrix4x4[] m_InstanceMatrices;
 
-        // PackedMatrix£º½« Unity.Mathematics.float4x4 ×ª»»ÎªÑ¹Ëõ¸ñÊ½£¨Ö»±£ÁôÃ¿ÁĞÇ°Èı¸ö·ÖÁ¿£©
+        // PackedMatrixï¼šå°† Unity.Mathematics.float4x4 è½¬æ¢ä¸ºå‹ç¼©æ ¼å¼ï¼ˆåªä¿ç•™æ¯åˆ—å‰ä¸‰ä¸ªåˆ†é‡ï¼‰
         public struct PackedMatrix
         {
             public float c0x;
@@ -61,7 +61,7 @@ namespace BlackDawn
             public float c3z;
         }
 
-        // ½« UnityEngine.Matrix4x4 ×ª»»Îª Unity.Mathematics.float4x4
+        // å°† UnityEngine.Matrix4x4 è½¬æ¢ä¸º Unity.Mathematics.float4x4
         private float4x4 ConvertToFloat4x4(Matrix4x4 m)
         {
             return new float4x4(
@@ -74,18 +74,18 @@ namespace BlackDawn
 
         private void Start()
         {
-            // ´´½¨ BatchRendererGroup£¬²¢Ö¸¶¨ÌŞ³ı»Øµ÷º¯Êı OnPerformCulling
+            // åˆ›å»º BatchRendererGroupï¼Œå¹¶æŒ‡å®šå‰”é™¤å›è°ƒå‡½æ•° OnPerformCulling
             m_BRG = new BatchRendererGroup(this.OnPerformCulling, IntPtr.Zero);
             m_MeshID = m_BRG.RegisterMesh(mesh);
             m_MaterialID = m_BRG.RegisterMaterial(material);
 
-            // ³õÊ¼»¯ GPU ÊµÀıÊı¾İ»º³åÇø
+            // åˆå§‹åŒ– GPU å®ä¾‹æ•°æ®ç¼“å†²åŒº
             AllocateInstanceDataBuffer();
-            // Éú³ÉÕı·½Ìå²¼¾ÖµÄ±ä»»¾ØÕó£¬²¢×ª»»Îª NativeArray ¸ñÊ½£¬¹©ºóĞø Job ¸üĞÂ
+            // ç”Ÿæˆæ­£æ–¹ä½“å¸ƒå±€çš„å˜æ¢çŸ©é˜µï¼Œå¹¶è½¬æ¢ä¸º NativeArray æ ¼å¼ï¼Œä¾›åç»­ Job æ›´æ–°
             PopulateInstanceDataBuffer();
         }
 
-        // ·ÖÅä GraphicsBuffer ÓÃÓÚ´æ´¢ÊµÀıÊı¾İ
+        // åˆ†é… GraphicsBuffer ç”¨äºå­˜å‚¨å®ä¾‹æ•°æ®
         private void AllocateInstanceDataBuffer()
         {
             m_InstanceData = new GraphicsBuffer(GraphicsBuffer.Target.Raw,
@@ -93,15 +93,15 @@ namespace BlackDawn
                 sizeof(int));
         }
 
-        // ³õÊ¼»¯ÊµÀıÊı¾İ£ºÉú³ÉÕı·½Ìå²¼¾ÖµÄ³õÊ¼±ä»»¾ØÕó£¬²¢×ª»»µ½ NativeArray ÖĞ
+        // åˆå§‹åŒ–å®ä¾‹æ•°æ®ï¼šç”Ÿæˆæ­£æ–¹ä½“å¸ƒå±€çš„åˆå§‹å˜æ¢çŸ©é˜µï¼Œå¹¶è½¬æ¢åˆ° NativeArray ä¸­
         private void PopulateInstanceDataBuffer()
         {
-            // 1. ÔÚÊµÀıÊı¾İ»º³åÇø¿ªÊ¼Î»ÖÃ·ÅÖÃÒ»¸öÁã¾ØÕó£¬È·±£´ÓµØÖ· 0 ¶ÁÈ¡·µ»ØÁãÖµ
+            // 1. åœ¨å®ä¾‹æ•°æ®ç¼“å†²åŒºå¼€å§‹ä½ç½®æ”¾ç½®ä¸€ä¸ªé›¶çŸ©é˜µï¼Œç¡®ä¿ä»åœ°å€ 0 è¯»å–è¿”å›é›¶å€¼
             var zero = new Matrix4x4[1] { Matrix4x4.zero };
 
-            // 2. °´Õı·½Ìå²¼¾ÖÉú³É instanceCount ¸öÊµÀıµÄ±ä»»¾ØÕó
+            // 2. æŒ‰æ­£æ–¹ä½“å¸ƒå±€ç”Ÿæˆ instanceCount ä¸ªå®ä¾‹çš„å˜æ¢çŸ©é˜µ
             int cubeSize = Mathf.CeilToInt(Mathf.Pow(instanceCount, 1f / 3f));
-            float offset = (cubeSize - 1) * spacing * 0.5f; // ¼ÆËã¾ÓÖĞÆ«ÒÆÁ¿
+            float offset = (cubeSize - 1) * spacing * 0.5f; // è®¡ç®—å±…ä¸­åç§»é‡
             m_InstanceMatrices = new Matrix4x4[instanceCount];
             int idx = 0;
             for (int x = 0; x < cubeSize; x++)
@@ -113,7 +113,7 @@ namespace BlackDawn
                         if (idx < instanceCount)
                         {
                             Vector3 pos = new Vector3(x * spacing - offset, y * spacing - offset, z * spacing - offset);
-                            // Ê¹ÓÃ TRS ¹¹Ôì±ä»»¾ØÕó£¨Î»ÖÃ¡¢ÎŞĞı×ª¡¢µ¥Î»Ëõ·Å£©
+                            // ä½¿ç”¨ TRS æ„é€ å˜æ¢çŸ©é˜µï¼ˆä½ç½®ã€æ— æ—‹è½¬ã€å•ä½ç¼©æ”¾ï¼‰
                             m_InstanceMatrices[idx] = Matrix4x4.TRS(pos, Quaternion.identity, Vector3.one);
                             idx++;
                         }
@@ -121,54 +121,54 @@ namespace BlackDawn
                 }
             }
 
-            // ½«¹ÜÀíĞÍ Matrix4x4 Êı×é×ª»»Îª NativeArray<float4x4>£¨Ê¹ÓÃ math.float4x4£©
+            // å°†ç®¡ç†å‹ Matrix4x4 æ•°ç»„è½¬æ¢ä¸º NativeArray<float4x4>ï¼ˆä½¿ç”¨ math.float4x4ï¼‰
             m_NativeInstanceMatrices = new NativeArray<float4x4>(instanceCount, Allocator.Persistent);
             for (int i = 0; i < instanceCount; i++)
             {
                 m_NativeInstanceMatrices[i] = ConvertToFloat4x4(m_InstanceMatrices[i]);
             }
 
-            // ·ÖÅäÓÃÓÚ´æ´¢´ò°üºó¾ØÕóµÄ NativeArray
+            // åˆ†é…ç”¨äºå­˜å‚¨æ‰“åŒ…åçŸ©é˜µçš„ NativeArray
             m_NativeObjectToWorld = new NativeArray<PackedMatrix>(instanceCount, Allocator.Persistent);
             m_NativeWorldToObject = new NativeArray<PackedMatrix>(instanceCount, Allocator.Persistent);
 
-            // 3. ÎªÃ¿¸öÊµÀıÉú³ÉËæ»úÑÕÉ«£¨ÕâÀïÊ¹ÓÃËæ»úÑÕÉ«£©£¬ÑÕÉ«Êı¾İÍ¨¹ı GraphicsBuffer ÉÏ´«£¨±¾Àı½öÉÏ´«Ò»´Î£©
+            // 3. ä¸ºæ¯ä¸ªå®ä¾‹ç”Ÿæˆéšæœºé¢œè‰²ï¼ˆè¿™é‡Œä½¿ç”¨éšæœºé¢œè‰²ï¼‰ï¼Œé¢œè‰²æ•°æ®é€šè¿‡ GraphicsBuffer ä¸Šä¼ ï¼ˆæœ¬ä¾‹ä»…ä¸Šä¼ ä¸€æ¬¡ï¼‰
             var colors = new Vector4[instanceCount];
             for (int i = 0; i < instanceCount; i++)
             {
                 colors[i] = new Vector4(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value, 1);
             }
 
-            // 4. Éè¶¨»º³åÇøÊı¾İ²¼¾ÖËµÃ÷£º
-            // Offset | ÃèÊö
-            //      0 | 64 ×Ö½ÚµÄÁãÖµ£¬±£Ö¤´ÓµØÖ· 0 ¶ÁÈ¡·µ»ØÁãÖµ
-            //     64 | 32 ×Ö½ÚÎ´³õÊ¼»¯ÇøÓò£¨½öÎª SetData ·½±ã£¬²»±ØĞë£©
-            //     96 | unity_ObjectToWorld£¬instanceCount ¸öÑ¹Ëõ¾ØÕó
-            //    ... | unity_WorldToObject£¬instanceCount ¸öÑ¹Ëõ¾ØÕó
-            //    ... | _BaseColor£¬instanceCount ¸ö float4
+            // 4. è®¾å®šç¼“å†²åŒºæ•°æ®å¸ƒå±€è¯´æ˜ï¼š
+            // Offset | æè¿°
+            //      0 | 64 å­—èŠ‚çš„é›¶å€¼ï¼Œä¿è¯ä»åœ°å€ 0 è¯»å–è¿”å›é›¶å€¼
+            //     64 | 32 å­—èŠ‚æœªåˆå§‹åŒ–åŒºåŸŸï¼ˆä»…ä¸º SetData æ–¹ä¾¿ï¼Œä¸å¿…é¡»ï¼‰
+            //     96 | unity_ObjectToWorldï¼ŒinstanceCount ä¸ªå‹ç¼©çŸ©é˜µ
+            //    ... | unity_WorldToObjectï¼ŒinstanceCount ä¸ªå‹ç¼©çŸ©é˜µ
+            //    ... | _BaseColorï¼ŒinstanceCount ä¸ª float4
 
             uint byteAddressObjectToWorld = (uint)(kSizeOfPackedMatrix * 2);
             uint byteAddressWorldToObject = byteAddressObjectToWorld + (uint)(kSizeOfPackedMatrix * instanceCount);
             uint byteAddressColor = byteAddressWorldToObject + (uint)(kSizeOfPackedMatrix * instanceCount);
 
-            // 7. ÉÏ´«Êı¾İµ½ GraphicsBuffer ÖĞ£»ÕâÀïÖ»ÉÏ´«ÑÕÉ«Êı¾İ£¬¾ØÕóÊı¾İÒÔºóÍ¨¹ı Job ¸üĞÂÉÏ´«
+            // 7. ä¸Šä¼ æ•°æ®åˆ° GraphicsBuffer ä¸­ï¼›è¿™é‡Œåªä¸Šä¼ é¢œè‰²æ•°æ®ï¼ŒçŸ©é˜µæ•°æ®ä»¥åé€šè¿‡ Job æ›´æ–°ä¸Šä¼ 
             m_InstanceData.SetData(zero, 0, 0, 1);
             m_InstanceData.SetData(colors, 0, (int)(byteAddressColor / kSizeOfFloat4), colors.Length);
 
-            // 8. ÉèÖÃÔªÊı¾İ£¬ÓÃÓÚÖ¸Ã÷Ã¿¸öÊôĞÔÔÚ»º³åÇøÖĞµÄÆğÊ¼×Ö½ÚµØÖ·
-            //    ½«×î¸ßÎ»ÉèÖÃÎª 0x80000000£¬¸æÖª Shader ÕâĞ©Êı¾İÎª per-instance£¨°´ÊµÀıË÷Òı·ÃÎÊ£©
+            // 8. è®¾ç½®å…ƒæ•°æ®ï¼Œç”¨äºæŒ‡æ˜æ¯ä¸ªå±æ€§åœ¨ç¼“å†²åŒºä¸­çš„èµ·å§‹å­—èŠ‚åœ°å€
+            //    å°†æœ€é«˜ä½è®¾ç½®ä¸º 0x80000000ï¼Œå‘ŠçŸ¥ Shader è¿™äº›æ•°æ®ä¸º per-instanceï¼ˆæŒ‰å®ä¾‹ç´¢å¼•è®¿é—®ï¼‰
             var metadata = new NativeArray<MetadataValue>(3, Allocator.Temp);
             metadata[0] = new MetadataValue { NameID = Shader.PropertyToID("unity_ObjectToWorld"), Value = 0x80000000 | byteAddressObjectToWorld };
             metadata[1] = new MetadataValue { NameID = Shader.PropertyToID("unity_WorldToObject"), Value = 0x80000000 | byteAddressWorldToObject };
             metadata[2] = new MetadataValue { NameID = Shader.PropertyToID("_BaseColor"), Value = 0x80000000 | byteAddressColor };
 
-            // 9. ½« GraphicsBuffer ºÍÔªÊı¾İ´«µİ¸ø BatchRendererGroup£¬´´½¨Åú´Î£¬
-            //    ÕâÑù Shader ÔÚäÖÈ¾Ê±ÄÜÕıÈ·¶ÁÈ¡Ã¿¸öÊµÀıÊı¾İ
+            // 9. å°† GraphicsBuffer å’Œå…ƒæ•°æ®ä¼ é€’ç»™ BatchRendererGroupï¼Œåˆ›å»ºæ‰¹æ¬¡ï¼Œ
+            //    è¿™æ · Shader åœ¨æ¸²æŸ“æ—¶èƒ½æ­£ç¡®è¯»å–æ¯ä¸ªå®ä¾‹æ•°æ®
             m_BatchID = m_BRG.AddBatch(metadata, m_InstanceData.bufferHandle);
             metadata.Dispose();
         }
 
-        // ¼ÆËãËùĞèµÄ int ÊıÁ¿£¬ÒòÎª GraphicsBuffer ÒÔ int Îªµ¥Î»·ÖÅäÄÚ´æ
+        // è®¡ç®—æ‰€éœ€çš„ int æ•°é‡ï¼Œå› ä¸º GraphicsBuffer ä»¥ int ä¸ºå•ä½åˆ†é…å†…å­˜
         int BufferCountForInstances(int bytesPerInstance, int numInstances, int extraBytes = 0)
         {
             bytesPerInstance = (bytesPerInstance + sizeof(int) - 1) / sizeof(int) * sizeof(int);
@@ -177,52 +177,52 @@ namespace BlackDawn
             return totalBytes / sizeof(int);
         }
 
-        // Burst ±àÒëµÄ Job£¬ÓÃÓÚ²¢ĞĞ¸üĞÂÃ¿¸öÊµÀıµÄ¾ØÕó£¨Ó¦ÓÃ¹«¹²Ğı×ª£¬Í¬Ê±Ôö¼ÓÃ¿¸öÊµÀıµÄËæ»úĞı×ªºÍÎ»ÖÃÈÅ¶¯£©
+        // Burst ç¼–è¯‘çš„ Jobï¼Œç”¨äºå¹¶è¡Œæ›´æ–°æ¯ä¸ªå®ä¾‹çš„çŸ©é˜µï¼ˆåº”ç”¨å…¬å…±æ—‹è½¬ï¼ŒåŒæ—¶å¢åŠ æ¯ä¸ªå®ä¾‹çš„éšæœºæ—‹è½¬å’Œä½ç½®æ‰°åŠ¨ï¼‰
         [BurstCompile]
         private struct UpdateInstanceMatricesJob : IJobParallelFor
         {
-            // ´«ÈëµÄ¹«¹²Ğı×ª¾ØÕó£¨math.float4x4£©
+            // ä¼ å…¥çš„å…¬å…±æ—‹è½¬çŸ©é˜µï¼ˆmath.float4x4ï¼‰
             public float4x4 rotation;
-            // Ã¿¸öÊµÀıµÄ±ä»»¾ØÕó£¨ÒÔ math.float4x4 ´æ´¢£©
+            // æ¯ä¸ªå®ä¾‹çš„å˜æ¢çŸ©é˜µï¼ˆä»¥ math.float4x4 å­˜å‚¨ï¼‰
             public NativeArray<float4x4> instanceMatrices;
-            // Êä³ö£º´ò°üºóµÄ obj2world Êı¾İ
+            // è¾“å‡ºï¼šæ‰“åŒ…åçš„ obj2world æ•°æ®
             public NativeArray<PackedMatrix> objectToWorld;
-            // Êä³ö£º´ò°üºóµÄ world2obj Êı¾İ
+            // è¾“å‡ºï¼šæ‰“åŒ…åçš„ world2obj æ•°æ®
             public NativeArray<PackedMatrix> worldToObject;
 
             public void Execute(int index)
             {
-                // »ñÈ¡µ±Ç°ÊµÀıµÄ¾ØÕó
+                // è·å–å½“å‰å®ä¾‹çš„çŸ©é˜µ
                 float4x4 current = instanceMatrices[index];
-                // Ê¹ÓÃ index Éú³ÉÒ»¸ö¼òµ¥µÄÎ±Ëæ»úÖµ×÷ÎªÈÅ¶¯ÖÖ×Ó
+                // ä½¿ç”¨ index ç”Ÿæˆä¸€ä¸ªç®€å•çš„ä¼ªéšæœºå€¼ä½œä¸ºæ‰°åŠ¨ç§å­
                 uint hash = (uint)index;
-                // Éú³ÉÒ»¸öĞ¡µÄËæ»ú½Ç¶È£¨µ¥Î»£º»¡¶È£©£¬ÈÅ¶¯·¶Î§Ô¼Îª [0, 0.1] »¡¶È
+                // ç”Ÿæˆä¸€ä¸ªå°çš„éšæœºè§’åº¦ï¼ˆå•ä½ï¼šå¼§åº¦ï¼‰ï¼Œæ‰°åŠ¨èŒƒå›´çº¦ä¸º [0, 0.1] å¼§åº¦
                 float randomAngle = math.frac(math.sin(hash * 12.9898f)) * 0.01f;
-                // Éú³ÉÎ§ÈÆ Y ÖáµÄËæ»úĞı×ª£¨ÈÅ¶¯£©
+                // ç”Ÿæˆå›´ç»• Y è½´çš„éšæœºæ—‹è½¬ï¼ˆæ‰°åŠ¨ï¼‰
                 quaternion randomRot = quaternion.AxisAngle(new float3(0, 1, 0), randomAngle);
-                // Ê¹ÓÃ TRS ¹¹ÔìËæ»úĞı×ª¾ØÕó£¬Æ½ÒÆÎªÁã£¬Ëõ·ÅÎªµ¥Î»ÏòÁ¿
+                // ä½¿ç”¨ TRS æ„é€ éšæœºæ—‹è½¬çŸ©é˜µï¼Œå¹³ç§»ä¸ºé›¶ï¼Œç¼©æ”¾ä¸ºå•ä½å‘é‡
                 float4x4 randomRotMat = float4x4.TRS(float3.zero, randomRot, new float3(1, 1, 1));
 
-                // ×éºÏ¹«¹²Ğı×ªºÍËæ»úĞı×ª
+                // ç»„åˆå…¬å…±æ—‹è½¬å’Œéšæœºæ—‹è½¬
                 float4x4 combinedRot = math.mul(rotation, randomRotMat);
 
-                // ¸üĞÂ¾ØÕóÎª£ºcombinedRot * current
+                // æ›´æ–°çŸ©é˜µä¸ºï¼šcombinedRot * current
                 float4x4 updated = math.mul(combinedRot, current);
 
-                // ÎªÎ»ÖÃÈÅ¶¯Ìí¼ÓÒ»¸öĞ¡Æ«ÒÆ
+                // ä¸ºä½ç½®æ‰°åŠ¨æ·»åŠ ä¸€ä¸ªå°åç§»
                 float3 pos = updated.c3.xyz;
-                // Ê¹ÓÃ hash Éú³ÉÎ»ÖÃÈÅ¶¯£¬ÈÅ¶¯·¶Î§Ô¼ [-0.1, 0.1]
+                // ä½¿ç”¨ hash ç”Ÿæˆä½ç½®æ‰°åŠ¨ï¼Œæ‰°åŠ¨èŒƒå›´çº¦ [-0.1, 0.1]
                 float disturbX = (math.frac(math.sin(hash * 7.123f)) - 0.5f) * 0.2f;
                 float disturbY = (math.frac(math.sin(hash * 13.37f)) - 0.5f) * 0.2f;
                 float disturbZ = (math.frac(math.sin(hash * 9.99f)) - 0.5f) * 0.2f;
                 pos += new float3(disturbX, disturbY, disturbZ);
-                // ¸üĞÂÆ½ÒÆ²¿·Ö
+                // æ›´æ–°å¹³ç§»éƒ¨åˆ†
                 updated.c3 = new float4(pos, 1);
 
-                // ½«¸üĞÂºóµÄ¾ØÕóĞ´»ØÊµÀı¾ØÕóÊı×é
+                // å°†æ›´æ–°åçš„çŸ©é˜µå†™å›å®ä¾‹çŸ©é˜µæ•°ç»„
                 instanceMatrices[index] = updated;
 
-                // ´ò°ü¾ØÕóÊı¾İ×÷Îª obj2world Êı¾İ£¨Ö»´æ´¢Ã¿ÁĞµÄÇ°Èı¸ö·ÖÁ¿£©
+                // æ‰“åŒ…çŸ©é˜µæ•°æ®ä½œä¸º obj2world æ•°æ®ï¼ˆåªå­˜å‚¨æ¯åˆ—çš„å‰ä¸‰ä¸ªåˆ†é‡ï¼‰
                 PackedMatrix pack;
                 pack.c0x = updated.c0.x; pack.c0y = updated.c0.y; pack.c0z = updated.c0.z;
                 pack.c1x = updated.c1.x; pack.c1y = updated.c1.y; pack.c1z = updated.c1.z;
@@ -230,7 +230,7 @@ namespace BlackDawn
                 pack.c3x = updated.c3.x; pack.c3y = updated.c3.y; pack.c3z = updated.c3.z;
                 objectToWorld[index] = pack;
 
-                // ¼ÆËã updated µÄÄæ¾ØÕó£¬²¢´ò°ü×÷Îª world2obj Êı¾İ
+                // è®¡ç®— updated çš„é€†çŸ©é˜µï¼Œå¹¶æ‰“åŒ…ä½œä¸º world2obj æ•°æ®
                 float4x4 inv = math.inverse(updated);
                 PackedMatrix packInv;
                 packInv.c0x = inv.c0.x; packInv.c0y = inv.c0.y; packInv.c0z = inv.c0.z;
@@ -241,18 +241,18 @@ namespace BlackDawn
             }
         }
 
-        // Update() ÖĞµ÷ÓÃ Job ¸üĞÂÊµÀı±ä»»¾ØÕó£¬²¢ÉÏ´«¸üĞÂºóµÄ¾ØÕóÊı¾İµ½ GPU »º³åÇø
+        // Update() ä¸­è°ƒç”¨ Job æ›´æ–°å®ä¾‹å˜æ¢çŸ©é˜µï¼Œå¹¶ä¸Šä¼ æ›´æ–°åçš„çŸ©é˜µæ•°æ®åˆ° GPU ç¼“å†²åŒº
         private void Update()
         {
             if (enableUpdate)
             {
-                // Ê¹ÓÃ public µÄ rotationSpeed ¼ÆËã¹«¹²Ğı×ª¾ØÕó£¨ÈÆ Y ÖáĞı×ª rotationSpeed * Time.deltaTime ¶È£©
+                // ä½¿ç”¨ public çš„ rotationSpeed è®¡ç®—å…¬å…±æ—‹è½¬çŸ©é˜µï¼ˆç»• Y è½´æ—‹è½¬ rotationSpeed * Time.deltaTime åº¦ï¼‰
                 float angle = rotationSpeed * Time.deltaTime;
-                // ×¢Òâ£ºÊ¹ÓÃ Unity.Mathematics.quaternion.Euler Éú³ÉĞı×ªÊ±£¬½Ç¶ÈĞèÒª×ª»»Îª»¡¶È
+                // æ³¨æ„ï¼šä½¿ç”¨ Unity.Mathematics.quaternion.Euler ç”Ÿæˆæ—‹è½¬æ—¶ï¼Œè§’åº¦éœ€è¦è½¬æ¢ä¸ºå¼§åº¦
                 quaternion mathQuat = quaternion.EulerXYZ(new float3(0, math.radians(angle), 0));
                 float4x4 rotMat = float4x4.TRS(float3.zero, mathQuat, new float3(1, 1, 1));
 
-                // µ÷¶È Burst Job ²¢ĞĞ¸üĞÂÊµÀı¾ØÕó
+                // è°ƒåº¦ Burst Job å¹¶è¡Œæ›´æ–°å®ä¾‹çŸ©é˜µ
                 UpdateInstanceMatricesJob job = new UpdateInstanceMatricesJob()
                 {
                     rotation = rotMat,
@@ -263,16 +263,16 @@ namespace BlackDawn
                 JobHandle handle = job.Schedule(m_NativeInstanceMatrices.Length, 64);
                 handle.Complete();
 
-                // ¼ÆËã¸÷²¿·ÖÊı¾İÔÚ GPU »º³åÇøÖĞµÄÆğÊ¼×Ö½ÚµØÖ·£¬Óë PopulateInstanceDataBuffer() ÖĞµÄ±£³ÖÒ»ÖÂ
+                // è®¡ç®—å„éƒ¨åˆ†æ•°æ®åœ¨ GPU ç¼“å†²åŒºä¸­çš„èµ·å§‹å­—èŠ‚åœ°å€ï¼Œä¸ PopulateInstanceDataBuffer() ä¸­çš„ä¿æŒä¸€è‡´
                 uint byteAddressObjectToWorld = (uint)(kSizeOfPackedMatrix * 2);
                 uint byteAddressWorldToObject = byteAddressObjectToWorld + (uint)(kSizeOfPackedMatrix * instanceCount);
-                // ½«¸üĞÂºóµÄ¾ØÕóÊı¾İÉÏ´«µ½ GPU »º³åÇø£¨Ö±½Ó´«Èë NativeArray£¬ÎŞĞè GetUnsafePtr()£©
+                // å°†æ›´æ–°åçš„çŸ©é˜µæ•°æ®ä¸Šä¼ åˆ° GPU ç¼“å†²åŒºï¼ˆç›´æ¥ä¼ å…¥ NativeArrayï¼Œæ— éœ€ GetUnsafePtr()ï¼‰
                 m_InstanceData.SetData(m_NativeObjectToWorld, 0, (int)(byteAddressObjectToWorld / kSizeOfPackedMatrix), m_NativeObjectToWorld.Length);
                 m_InstanceData.SetData(m_NativeWorldToObject, 0, (int)(byteAddressWorldToObject / kSizeOfPackedMatrix), m_NativeWorldToObject.Length);
             }
         }
 
-        // ÔÚ OnDisable ºÍ OnDestroy ÖĞÊÍ·ÅËùÓĞ·ÖÅäµÄ×ÊÔ´
+        // åœ¨ OnDisable å’Œ OnDestroy ä¸­é‡Šæ”¾æ‰€æœ‰åˆ†é…çš„èµ„æº
         private void OnDisable()
         {
             m_BRG.Dispose();
@@ -291,24 +291,24 @@ namespace BlackDawn
             if (m_NativeWorldToObject.IsCreated) m_NativeWorldToObject.Dispose();
         }
 
-        // Ã¿Ö¡ BRG ÌŞ³ı»Øµ÷º¯Êı¡£´Ëº¯Êı¹¹Ôì»æÖÆÃüÁî£¬½«ËùÓĞÊµÀıÊÓÎª¿É¼û£¨²»×öÌŞ³ı£©
+        // æ¯å¸§ BRG å‰”é™¤å›è°ƒå‡½æ•°ã€‚æ­¤å‡½æ•°æ„é€ ç»˜åˆ¶å‘½ä»¤ï¼Œå°†æ‰€æœ‰å®ä¾‹è§†ä¸ºå¯è§ï¼ˆä¸åšå‰”é™¤ï¼‰
         public unsafe JobHandle OnPerformCulling(
             BatchRendererGroup rendererGroup,
             BatchCullingContext cullingContext,
             BatchCullingOutput cullingOutput,
             IntPtr userContext)
         {
-            // »ñÈ¡¶ÔÆë·½Ê½£¬Ê¹ÓÃ long µÄ¶ÔÆëÒªÇó×÷ÎªÄ¬ÈÏÖµ
+            // è·å–å¯¹é½æ–¹å¼ï¼Œä½¿ç”¨ long çš„å¯¹é½è¦æ±‚ä½œä¸ºé»˜è®¤å€¼
             int alignment = UnsafeUtility.AlignOf<long>();
 
-            // »ñÈ¡ BatchCullingOutputDrawCommands ½á¹¹µÄÖ¸Õë£¬±ãÓÚÖ±½ÓĞŞ¸Ä
+            // è·å– BatchCullingOutputDrawCommands ç»“æ„çš„æŒ‡é’ˆï¼Œä¾¿äºç›´æ¥ä¿®æ”¹
             var drawCommands = (BatchCullingOutputDrawCommands*)cullingOutput.drawCommands.GetUnsafePtr();
 
-            // ·ÖÅäÄÚ´æ¸øÊä³öÊı×é¡£´ËÊ¾Àı¼ÙÉèËùÓĞÊµÀı¶¼¿É¼û£¬Òò´ËÎªÃ¿¸öÊµÀı·ÖÅäÄÚ´æ£º
-            // - Ò»¸ö»æÖÆÃüÁî£¨»æÖÆ instanceCount ¸öÊµÀı£©
-            // - Ò»¸ö»æÖÆ·¶Î§£¨¸²¸Ç¸Ã»æÖÆÃüÁî£©
-            // - instanceCount ¸ö¿É¼ûÊµÀıË÷Òı
-            // Êı×é±ØĞëÊ¹ÓÃ Allocator.TempJob ·ÖÅä
+            // åˆ†é…å†…å­˜ç»™è¾“å‡ºæ•°ç»„ã€‚æ­¤ç¤ºä¾‹å‡è®¾æ‰€æœ‰å®ä¾‹éƒ½å¯è§ï¼Œå› æ­¤ä¸ºæ¯ä¸ªå®ä¾‹åˆ†é…å†…å­˜ï¼š
+            // - ä¸€ä¸ªç»˜åˆ¶å‘½ä»¤ï¼ˆç»˜åˆ¶ instanceCount ä¸ªå®ä¾‹ï¼‰
+            // - ä¸€ä¸ªç»˜åˆ¶èŒƒå›´ï¼ˆè¦†ç›–è¯¥ç»˜åˆ¶å‘½ä»¤ï¼‰
+            // - instanceCount ä¸ªå¯è§å®ä¾‹ç´¢å¼•
+            // æ•°ç»„å¿…é¡»ä½¿ç”¨ Allocator.TempJob åˆ†é…
             drawCommands->drawCommands = (BatchDrawCommand*)UnsafeUtility.Malloc(UnsafeUtility.SizeOf<BatchDrawCommand>(), alignment, Allocator.TempJob);
             drawCommands->drawRanges = (BatchDrawRange*)UnsafeUtility.Malloc(UnsafeUtility.SizeOf<BatchDrawRange>(), alignment, Allocator.TempJob);
             drawCommands->visibleInstances = (int*)UnsafeUtility.Malloc(instanceCount * sizeof(int), alignment, Allocator.TempJob);
@@ -318,12 +318,12 @@ namespace BlackDawn
             drawCommands->drawRangeCount = 1;
             drawCommands->visibleInstanceCount = instanceCount;
 
-            // ²»Ê¹ÓÃÉî¶ÈÅÅĞò£¬Òò´Ë instanceSortingPositions ÉèÎª null
+            // ä¸ä½¿ç”¨æ·±åº¦æ’åºï¼Œå› æ­¤ instanceSortingPositions è®¾ä¸º null
             drawCommands->instanceSortingPositions = null;
             drawCommands->instanceSortingPositionFloatCount = 0;
 
-            // ÅäÖÃµ¥¸ö»æÖÆÃüÁî£¬»æÖÆ instanceCount ¸öÊµÀı£¬
-            // Ê¹ÓÃ Start() ÖĞ×¢²áµÄ batchID¡¢materialID ºÍ meshID£¬ÇÒÃ»ÓĞÉèÖÃÌØÊâ±êÖ¾
+            // é…ç½®å•ä¸ªç»˜åˆ¶å‘½ä»¤ï¼Œç»˜åˆ¶ instanceCount ä¸ªå®ä¾‹ï¼Œ
+            // ä½¿ç”¨ Start() ä¸­æ³¨å†Œçš„ batchIDã€materialID å’Œ meshIDï¼Œä¸”æ²¡æœ‰è®¾ç½®ç‰¹æ®Šæ ‡å¿—
             drawCommands->drawCommands[0].visibleOffset = 0;
             drawCommands->drawCommands[0].visibleCount = (uint)instanceCount;
             drawCommands->drawCommands[0].batchID = m_BatchID;
@@ -334,19 +334,19 @@ namespace BlackDawn
             drawCommands->drawCommands[0].flags = 0;
             drawCommands->drawCommands[0].sortingPosition = 0;
 
-            // ÅäÖÃ»æÖÆ·¶Î§£¬Ê¹Æä¸²¸ÇÆ«ÒÆÎª 0 µÄµ¥¸ö»æÖÆÃüÁî
+            // é…ç½®ç»˜åˆ¶èŒƒå›´ï¼Œä½¿å…¶è¦†ç›–åç§»ä¸º 0 çš„å•ä¸ªç»˜åˆ¶å‘½ä»¤
             drawCommands->drawRanges[0].drawCommandsBegin = 0;
             drawCommands->drawRanges[0].drawCommandsCount = 1;
 
-            // ´ËÊ¾Àı²»¹ØĞÄÒõÓ°»òÔË¶¯Ê¸Á¿£¬Òò´Ë³ıÁË renderingLayerMask ÉèÎªÈ« 1£¬ÆäÓà±£³ÖÄ¬ÈÏ 0
+            // æ­¤ç¤ºä¾‹ä¸å…³å¿ƒé˜´å½±æˆ–è¿åŠ¨çŸ¢é‡ï¼Œå› æ­¤é™¤äº† renderingLayerMask è®¾ä¸ºå…¨ 1ï¼Œå…¶ä½™ä¿æŒé»˜è®¤ 0
             drawCommands->drawRanges[0].filterSettings = new BatchFilterSettings { renderingLayerMask = 0xffffffff, };
 
-            // ½«¿É¼ûÊµÀıË÷ÒıĞ´ÈëÊı×é¡£´ËÊ¾Àı¼ÙÉèËùÓĞÊµÀı¶¼¿É¼û
+            // å°†å¯è§å®ä¾‹ç´¢å¼•å†™å…¥æ•°ç»„ã€‚æ­¤ç¤ºä¾‹å‡è®¾æ‰€æœ‰å®ä¾‹éƒ½å¯è§
             for (int i = 0; i < instanceCount; ++i)
                 drawCommands->visibleInstances[i] = i;
 
-            // ´Ë¼òµ¥Ê¾Àı²»Ê¹ÓÃ Job ÏµÍ³£¬Òò´Ë·µ»ØÒ»¸ö¿ÕµÄ JobHandle¡£
-            // ĞÔÄÜÃô¸ĞµÄÓ¦ÓÃ½¨ÒéÊ¹ÓÃ Burst Job À´ÊµÏÖ¸ßĞÔÄÜÌŞ³ı£¬²¢·µ»ØÏàÓ¦µÄ JobHandle¡£
+            // æ­¤ç®€å•ç¤ºä¾‹ä¸ä½¿ç”¨ Job ç³»ç»Ÿï¼Œå› æ­¤è¿”å›ä¸€ä¸ªç©ºçš„ JobHandleã€‚
+            // æ€§èƒ½æ•æ„Ÿçš„åº”ç”¨å»ºè®®ä½¿ç”¨ Burst Job æ¥å®ç°é«˜æ€§èƒ½å‰”é™¤ï¼Œå¹¶è¿”å›ç›¸åº”çš„ JobHandleã€‚
             return new JobHandle();
         }
     }

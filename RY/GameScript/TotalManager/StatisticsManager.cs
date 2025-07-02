@@ -11,13 +11,13 @@ namespace BlackDawn
         [Serializable]
         public struct RunStats
         {
-            public int enemiesKilled;   // »÷É±¹ÖÎï×ÜÊı
-            public float damageDealt;     // Ôì³É×ÜÉËº¦
-            public int goldCollected;   // Ê°È¡½ğ±Ò×ÜÊı
-            public int itemsCollected;  // »ñµÃµÀ¾ß×ÜÊı
-            public float runDuration;     // ±¾´ÎÕ½¶·Ê±³¤£¨Ãë£©
+            public int enemiesKilled;   // å‡»æ€æ€ªç‰©æ€»æ•°
+            public float damageDealt;     // é€ æˆæ€»ä¼¤å®³
+            public int goldCollected;   // æ‹¾å–é‡‘å¸æ€»æ•°
+            public int itemsCollected;  // è·å¾—é“å…·æ€»æ•°
+            public float runDuration;     // æœ¬æ¬¡æˆ˜æ–—æ—¶é•¿ï¼ˆç§’ï¼‰
 
-            /// <summary>Õ½¶·¿ªÊ¼Ê±µ÷ÓÃ£¬ÖØÖÃËùÓĞ×Ö¶Î²¢¼ÇÂ¼¿ªÊ¼Ê±¼ä</summary>
+            /// <summary>æˆ˜æ–—å¼€å§‹æ—¶è°ƒç”¨ï¼Œé‡ç½®æ‰€æœ‰å­—æ®µå¹¶è®°å½•å¼€å§‹æ—¶é—´</summary>
             [NonSerialized] public float _startTime;
         }
 
@@ -29,10 +29,10 @@ namespace BlackDawn
 
         private const string SAVE_FILE = "run_stats.json";
 
-        /// <summary>µ±Ç°Õ½¶·µÄÍ³¼ÆÊı¾İ</summary>
+        /// <summary>å½“å‰æˆ˜æ–—çš„ç»Ÿè®¡æ•°æ®</summary>
         public RunStats currentRun;
 
-        /// <summary>ÀúÊ·ËùÓĞÕ½¶·µÄÍ³¼ÆÁĞ±í</summary>
+        /// <summary>å†å²æ‰€æœ‰æˆ˜æ–—çš„ç»Ÿè®¡åˆ—è¡¨</summary>
         public List<RunStats> history = new List<RunStats>();
 
         private StatisticsManager()
@@ -40,7 +40,7 @@ namespace BlackDawn
             LoadHistory();
         }
 
-        /// <summary>ÔÚĞÂÕ½¶·¿ªÊ¼Ç°µ÷ÓÃ£¬ÖØÖÃ currentRun</summary>
+        /// <summary>åœ¨æ–°æˆ˜æ–—å¼€å§‹å‰è°ƒç”¨ï¼Œé‡ç½® currentRun</summary>
         public void StartRun()
         {
             currentRun = new RunStats();
@@ -48,32 +48,32 @@ namespace BlackDawn
             Debug.Log("[Statistics] New run started");
         }
 
-        /// <summary>Õ½¶·ÖĞ£º¼ÇÂ¼Ò»´Î»÷É±</summary>
+        /// <summary>æˆ˜æ–—ä¸­ï¼šè®°å½•ä¸€æ¬¡å‡»æ€</summary>
         public void RecordKill(int count = 1)
         {
             currentRun.enemiesKilled += count;
         }
 
-        /// <summary>Õ½¶·ÖĞ£º¼ÇÂ¼Ò»´ÎÉËº¦</summary>
+        /// <summary>æˆ˜æ–—ä¸­ï¼šè®°å½•ä¸€æ¬¡ä¼¤å®³</summary>
         public void RecordDamage(float dmg)
         {
             currentRun.damageDealt += dmg;
         }
 
-        /// <summary>Õ½¶·ÖĞ£º¼ÇÂ¼Ê°È¡½ğ±Ò</summary>
+        /// <summary>æˆ˜æ–—ä¸­ï¼šè®°å½•æ‹¾å–é‡‘å¸</summary>
         public void RecordGold(int amount)
         {
             currentRun.goldCollected += amount;
         }
 
-        /// <summary>Õ½¶·ÖĞ£º¼ÇÂ¼»ñµÃµÀ¾ß</summary>
+        /// <summary>æˆ˜æ–—ä¸­ï¼šè®°å½•è·å¾—é“å…·</summary>
         public void RecordItem(int count = 1)
         {
             currentRun.itemsCollected += count;
         }
 
         /// <summary>
-        /// Õ½¶·½áÊøÊ±µ÷ÓÃ£º¼ÆËã runDuration£¬¼ÓÈëÀúÊ·£¬³Ö¾Ã»¯µ½±¾µØ
+        /// æˆ˜æ–—ç»“æŸæ—¶è°ƒç”¨ï¼šè®¡ç®— runDurationï¼ŒåŠ å…¥å†å²ï¼ŒæŒä¹…åŒ–åˆ°æœ¬åœ°
         /// </summary>
         public void EndRun()
         {
@@ -85,9 +85,9 @@ namespace BlackDawn
                 $"Items={currentRun.itemsCollected}, Duration={currentRun.runDuration:F1}s");
         }
 
-        #region ¡ª ±¾µØ³Ö¾Ã»¯ ¡ª
+        #region â€” æœ¬åœ°æŒä¹…åŒ– â€”
 
-        /// <summary>½« history ±£´æµ½ Application.persistentDataPath/SAVE_FILE</summary>
+        /// <summary>å°† history ä¿å­˜åˆ° Application.persistentDataPath/SAVE_FILE</summary>
         public void SaveHistory()
         {
             var data = new StatsSaveData { runs = history };
@@ -105,14 +105,14 @@ namespace BlackDawn
             }
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            // Ã÷ÎÄ±¸·İ
+            // æ˜æ–‡å¤‡ä»½
             string debugPath = Path.Combine(Application.persistentDataPath, "run_stats_debug.json");
             File.WriteAllText(debugPath, json);
             Debug.Log($"[Statistics] Debug JSON to {debugPath}");
 #endif
         }
 
-        /// <summary>´Ó±¾µØ¶ÁÈ¡²¢»Ö¸´ÀúÊ· run ÁĞ±í</summary>
+        /// <summary>ä»æœ¬åœ°è¯»å–å¹¶æ¢å¤å†å² run åˆ—è¡¨</summary>
         public void LoadHistory()
         {
             string path = Path.Combine(Application.persistentDataPath, SAVE_FILE);

@@ -8,7 +8,7 @@ using Unity.Transforms;
 namespace BlackDawn.DOTS
 {
     /// <summary>
-    /// ·ÉĞĞµÀ¾ßSystem
+    /// é£è¡Œé“å…·System
     /// </summary>
     [BurstCompile]
     [UpdateAfter(typeof(HeroSkillsMonoSystem))]
@@ -19,7 +19,7 @@ namespace BlackDawn.DOTS
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            //Íâ²¿¿ØÖÆ
+            //å¤–éƒ¨æ§åˆ¶
             state.RequireForUpdate<EnableEnemyPropMonoSystemTag>();
         }
 
@@ -49,7 +49,7 @@ namespace BlackDawn.DOTS
         }
     }
     /// <summary>
-    /// ÒÀÀµ¹ÜÀíÁ¼ºÃ°æ±¾£¬ËùÓĞ±ä¸üÍ¨¹ıECB¼ÇÂ¼ Í³Ò»¸Ä»Ø
+    /// ä¾èµ–ç®¡ç†è‰¯å¥½ç‰ˆæœ¬ï¼Œæ‰€æœ‰å˜æ›´é€šè¿‡ECBè®°å½• ç»Ÿä¸€æ”¹å›
     /// </summary>
     [BurstCompile]
     partial struct EnemyFlightPropJob : IJobEntity
@@ -58,11 +58,11 @@ namespace BlackDawn.DOTS
         public float Time;
 
         void Execute(Entity entity,
-                     in LocalTransform transform, // Ö»¶Á·ÃÎÊ
+                     in LocalTransform transform, // åªè¯»è®¿é—®
                      ref EnemyFlightProp enemyFlightProp,
                      [EntityIndexInQuery] int sortKey)
         {
-            // ´æ»îÊ±¼ä´¦Àí
+            // å­˜æ´»æ—¶é—´å¤„ç†
             enemyFlightProp.survivalTime -= Time;
 
             if (enemyFlightProp.destory == true)
@@ -75,18 +75,18 @@ namespace BlackDawn.DOTS
                 return;
             }
 
-            // ¼ÆËãĞÂÎ»ÖÃºÍĞı×ª
+            // è®¡ç®—æ–°ä½ç½®å’Œæ—‹è½¬
             float3 newPos = transform.Position + enemyFlightProp.speed * Time * enemyFlightProp.dir;
-            newPos.y = 1; // Ç¿ÖÆ Y ¸ß¶ÈÎª 1
+            newPos.y = 1; // å¼ºåˆ¶ Y é«˜åº¦ä¸º 1
 
             quaternion newRot = quaternion.LookRotationSafe(enemyFlightProp.dir, math.up());
 
-            // Ğ´»Ø LocalTransform
+            // å†™å› LocalTransform
             ECB.SetComponent(sortKey, entity, new LocalTransform
             {
                 Position = newPos,
                 Rotation = newRot,
-                Scale = transform.Scale // ±£³ÖÔ­Ê¼Ëõ·Å
+                Scale = transform.Scale // ä¿æŒåŸå§‹ç¼©æ”¾
             });
         }
     }

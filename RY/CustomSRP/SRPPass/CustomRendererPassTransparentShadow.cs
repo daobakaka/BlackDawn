@@ -5,7 +5,7 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.Rendering;
 
 /// <summary>
-/// Í¸Ã÷ÎïÌåÒõÓ°
+/// é€æ˜ç‰©ä½“é˜´å½±
 /// </summary>
 public class CustomRendererPassTransparentShadow : ScriptableRenderPass
 {
@@ -14,7 +14,7 @@ public class CustomRendererPassTransparentShadow : ScriptableRenderPass
     private RenderTargetIdentifier _cameraColorTarget;
     private SortingCriteria _sort;
 
-    // ĞŞ¸Ä¹¹Ôìº¯Êı£¬Ôö¼ÓÒ»¸ö filterRange ²ÎÊı
+    // ä¿®æ”¹æ„é€ å‡½æ•°ï¼Œå¢åŠ ä¸€ä¸ª filterRange å‚æ•°
     public CustomRendererPassTransparentShadow(string tag, RenderPassEvent passEvent, RenderQueueRange filterRange)
     {
         _profilerTag = tag;
@@ -27,12 +27,12 @@ public class CustomRendererPassTransparentShadow : ScriptableRenderPass
     {
         CommandBuffer cmd = CommandBufferPool.Get(_profilerTag);
 
-        // Ê¹ÓÃ×Ô¶¨ÒåµÄ LightMode ±êÇ©"CustomPassTest"
+        // ä½¿ç”¨è‡ªå®šä¹‰çš„ LightMode æ ‡ç­¾"CustomPassTest"
         var drawSettings = CreateDrawingSettings(
             new ShaderTagId(_profilerTag),
             ref renderingData,
 
-        // ¸ù¾İ filterRange À´¾ö¶¨ÅÅĞò±ê×¼£ºÈôÊÇÍ¸Ã÷£¬ÔòÓÃ CommonTransparent£»·ñÔòÓÃ CommonOpaque
+        // æ ¹æ® filterRange æ¥å†³å®šæ’åºæ ‡å‡†ï¼šè‹¥æ˜¯é€æ˜ï¼Œåˆ™ç”¨ CommonTransparentï¼›å¦åˆ™ç”¨ CommonOpaque
         (_filteringSettings.renderQueueRange == RenderQueueRange.transparent) ?
             SortingCriteria.CommonTransparent : SortingCriteria.CommonOpaque
         );

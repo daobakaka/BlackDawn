@@ -6,72 +6,72 @@ using UnityEngine;
 namespace BlackDawn
 {
     /// <summary>
-    /// ÈÃµ±Ç°ÎïÌåÔÚ¸¸ÎïÌåµÄ (¸¸Î»ÖÃ + ÊÀ½çÆ«ÒÆ) ×÷ÎªÔ²ĞÄ£¬ÔÚË®Æ½ÃæÉÏ×öÔ²ÖÜÔË¶¯£¬
-    /// ³¯ÏòÊ¼ÖÕÃæÏòÔ¶ÀëÔ²ĞÄµÄ·½Ïò£¬ÇÒ²»ÊÜ¸¸ÎïÌå×ÔÉíĞı×ªÓ°Ïì¡£
+    /// è®©å½“å‰ç‰©ä½“åœ¨çˆ¶ç‰©ä½“çš„ (çˆ¶ä½ç½® + ä¸–ç•Œåç§») ä½œä¸ºåœ†å¿ƒï¼Œåœ¨æ°´å¹³é¢ä¸Šåšåœ†å‘¨è¿åŠ¨ï¼Œ
+    /// æœå‘å§‹ç»ˆé¢å‘è¿œç¦»åœ†å¿ƒçš„æ–¹å‘ï¼Œä¸”ä¸å—çˆ¶ç‰©ä½“è‡ªèº«æ—‹è½¬å½±å“ã€‚
     /// </summary>
     public class WeaponState : MonoBehaviour
     {
-        [Header("Ô²ÖÜÔË¶¯ÉèÖÃ")]
-        [Tooltip("Ô²ÖÜÔË¶¯°ë¾¶")]
+        [Header("åœ†å‘¨è¿åŠ¨è®¾ç½®")]
+        [Tooltip("åœ†å‘¨è¿åŠ¨åŠå¾„")]
         public float radius = 2f;
 
-        [Tooltip("ÔË¶¯ËÙ¶È£¨¶È/Ãë£©")]
+        [Tooltip("è¿åŠ¨é€Ÿåº¦ï¼ˆåº¦/ç§’ï¼‰")]
         public float orbitSpeed = 90f;
 
-        [Tooltip("Ğı×ªÖá£¨ÊÀ½ç×ø±êÏµ£©")]
+        [Tooltip("æ—‹è½¬è½´ï¼ˆä¸–ç•Œåæ ‡ç³»ï¼‰")]
         public Vector3 rotationAxis = Vector3.up;
 
-        [Tooltip("Ïà¶ÔÓÚ¸¸ÎïÌåÎ»ÖÃµÄ¹Ì¶¨ÊÀ½ç×ø±êÆ«ÒÆÁ¿£¬×÷ÎªÔ²ĞÄµÄ¶îÍâÆ«ÒÆ")]
+        [Tooltip("ç›¸å¯¹äºçˆ¶ç‰©ä½“ä½ç½®çš„å›ºå®šä¸–ç•Œåæ ‡åç§»é‡ï¼Œä½œä¸ºåœ†å¿ƒçš„é¢å¤–åç§»")]
         public Vector3 offsetWorld = Vector3.zero;
 
-        [Tooltip("ÆğÊ¼½Ç¶È£¨¶È£©")]
+        [Tooltip("èµ·å§‹è§’åº¦ï¼ˆåº¦ï¼‰")]
         public float startAngle = 0f;
 
-        // µ±Ç°½Ç¶È£¨»¡¶È£©
+        // å½“å‰è§’åº¦ï¼ˆå¼§åº¦ï¼‰
         private float _angle;
 
         void Start()
         {
-            // ½«ÆğÊ¼½Ç¶È×ª»»Îª»¡¶È
+            // å°†èµ·å§‹è§’åº¦è½¬æ¢ä¸ºå¼§åº¦
             _angle = startAngle * Mathf.Deg2Rad;
 
-            // ³õÊ¼»¯Î»ÖÃºÍ³¯Ïò
+            // åˆå§‹åŒ–ä½ç½®å’Œæœå‘
             UpdatePosition();
         }
 
         void Update()
         {
-            // ¸ù¾İËÙ¶ÈÔöÁ¿¸üĞÂ½Ç¶È£¨¶È×ª»¡¶È£©
+            // æ ¹æ®é€Ÿåº¦å¢é‡æ›´æ–°è§’åº¦ï¼ˆåº¦è½¬å¼§åº¦ï¼‰
             _angle += orbitSpeed * Mathf.Deg2Rad * Time.deltaTime;
 
-            // ±£³Ö½Ç¶ÈÔÚ 0 µ½ 2¦Ğ ·¶Î§ÄÚ
+            // ä¿æŒè§’åº¦åœ¨ 0 åˆ° 2Ï€ èŒƒå›´å†…
             if (_angle > Mathf.PI * 2f)
                 _angle -= Mathf.PI * 2f;
 
-            // ¸üĞÂÎ»ÖÃºÍ³¯Ïò
+            // æ›´æ–°ä½ç½®å’Œæœå‘
             UpdatePosition();
         }
 
         /// <summary>
-        /// ¼ÆËã²¢ÉèÖÃÊÀ½ç×ø±êÏµÖĞµÄÎ»ÖÃºÍ³¯Ïò
+        /// è®¡ç®—å¹¶è®¾ç½®ä¸–ç•Œåæ ‡ç³»ä¸­çš„ä½ç½®å’Œæœå‘
         /// </summary>
         private void UpdatePosition()
         {
             Transform parent = transform.parent;
             if (parent == null) return;
 
-            // Ô²ĞÄ = ¸¸ÎïÌåÎ»ÖÃ + ¹Ì¶¨Æ«ÒÆ
+            // åœ†å¿ƒ = çˆ¶ç‰©ä½“ä½ç½® + å›ºå®šåç§»
             Vector3 center = parent.position + offsetWorld;
 
-            // ¼ÆËãÔ²ÖÜÆ«ÒÆ£¨ÊÀ½ç×ø±êÏµ£©£¬ÈÆ Y ÖáÔÚ XZ Æ½Ãæ
+            // è®¡ç®—åœ†å‘¨åç§»ï¼ˆä¸–ç•Œåæ ‡ç³»ï¼‰ï¼Œç»• Y è½´åœ¨ XZ å¹³é¢
             float x = Mathf.Cos(_angle) * radius;
             float z = Mathf.Sin(_angle) * radius;
             Vector3 circleOffset = new Vector3(x, 0f, z);
 
-            // ×îÖÕÎ»ÖÃ = Ô²ĞÄ + Ô²ÖÜÆ«ÒÆ
+            // æœ€ç»ˆä½ç½® = åœ†å¿ƒ + åœ†å‘¨åç§»
             transform.position = center + circleOffset;
 
-            // Ê¼ÖÕÃæÏòÔ¶ÀëÔ²ĞÄµÄ·½Ïò
+            // å§‹ç»ˆé¢å‘è¿œç¦»åœ†å¿ƒçš„æ–¹å‘
             Vector3 forward = (transform.position - center).normalized;
             transform.rotation = Quaternion.LookRotation(forward, rotationAxis);
         }

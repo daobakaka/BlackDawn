@@ -6,7 +6,7 @@ using GameFrame.EventBus;
 
 namespace BlackDawn
 {/// <summary>
-/// ÊÂ¼ş×ÜÏß¹ÜÀíÆ÷£¬ÄÚº¬ÊÂ¼ş·½·¨
+/// äº‹ä»¶æ€»çº¿ç®¡ç†å™¨ï¼Œå†…å«äº‹ä»¶æ–¹æ³•
 /// </summary>
     public class EventBusManager :Singleton<EventBusManager> 
     {
@@ -17,7 +17,7 @@ namespace BlackDawn
         {
 
 
-            DevDebug.Log("²âÊÔÊÂ¼ş·½·¨" + testEvent.Position + testEvent.text);
+            DevDebug.Log("æµ‹è¯•äº‹ä»¶æ–¹æ³•" + testEvent.Position + testEvent.text);
         
         }
 
@@ -27,7 +27,7 @@ namespace BlackDawn
 
     }
 
-    #region ÊÂ¼ş½á¹¹Ìå
+    #region äº‹ä»¶ç»“æ„ä½“
     public struct PlayerTestEvent
     {
         public Vector3 Position;
