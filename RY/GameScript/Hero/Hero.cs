@@ -17,7 +17,6 @@ using Unity.Transforms;
 using UnityEngine;
 using static UnityEngine.GraphicsBuffer;
 using Random = UnityEngine.Random;
-
 namespace BlackDawn
 {
     /// <summary>

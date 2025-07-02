@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using GameFrame.BaseClass;
 using BlackDawn.DOTS;
@@ -8,10 +7,9 @@ using Unity.Transforms;
 using Unity.Mathematics;
 using Random = Unity.Mathematics.Random;
 using Unity.Collections;
-using ProjectDawn.Entities;
-using System;
-using Unity.Entities.UniversalDelegates;
 using Unity.Physics;
+
+
 
 
 namespace BlackDawn
@@ -19,7 +17,7 @@ namespace BlackDawn
 {/// <summary>
 /// 主管英雄技能的核心类，在英雄Mono脚本中初始化之后，通过获取单例从构造函数进行初始化
 /// </summary>
-    public class HeroSkills : Singleton<HeroSkills>
+    public class HeroSkills : GameFrame.BaseClass.Singleton<HeroSkills>
     {
         ScenePrefabsSingleton _skillPrefabs;
         EntityManager _entityManager;
@@ -746,12 +744,49 @@ namespace BlackDawn
                             }
 
                             break;
-
-
-
                     }
 
-                    break;                                      
+                    break;
+                //寒霜新星, 瞬时 22    
+                 case HeroSkillID.FrostNova:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+
+                            var entityFrostNova = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_FrostNova, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            //添加技能专用标签用于检测等运动等    
+                            _entityManager.AddComponentData(entityFrostNova, new SkillFrostNovaTag() { tagSurvivalTime = 3 });
+                            var skillDamageCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityFrostNova);
+
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            var entityFrostNovaA = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_FrostNova, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.3f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            _entityManager.AddComponentData(entityFrostNovaA, new SkillFrostNovaTag() { tagSurvivalTime = 3 });
+                            //获得冻结值，成长20
+                            var skillDamageCalA = _entityManager.GetComponentData<SkillsDamageCalPar>(entityFrostNovaA);
+                            skillDamageCalA.tempFreeze = 301;
+                            _entityManager.SetComponentData(entityFrostNovaA, skillDamageCalA);
+
+
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                            var entityFrostNovaB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_FrostNova, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            //二阶段增加
+                            _entityManager.AddComponentData(entityFrostNovaB, new SkillFrostNovaTag() { tagSurvivalTime = 3, enableSecondB = true });
+
+                            break;
+                            //开启第二阶段增加体积值，增加冻结值，获取控制标签
+                        case HeroSkillPsionicType.PsionicAB:
+                            var entityFrostNovaAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_FrostNova, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.3f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            _entityManager.AddComponentData(entityFrostNovaAB, new SkillFrostNovaTag() { tagSurvivalTime = 3 ,enableSecondB=true});
+                            //获得冻结值，成长20
+                            var skillDamageCalAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityFrostNovaAB);
+                            skillDamageCalAB.tempFreeze = 301;
+                            _entityManager.SetComponentData(entityFrostNovaAB, skillDamageCalAB);
+               
+                            break;
+                    }
+                    break;
                 //毒雨,持续,技能附带的控制参数， 可以通过配置表进行配置
                 case HeroSkillID.PoisonRain:
                     switch (psionicType)

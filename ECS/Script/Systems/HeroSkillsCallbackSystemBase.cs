@@ -412,11 +412,8 @@ namespace BlackDawn.DOTS
 
             //技能 暗影洪流,引导，跟随，旋转
             SkillCallBack_ShadowTide(timer, ecb, heroPar);
-
-
-
-
-
+            //技能 冰霜新星
+            SkillCallBack_FrostNova(timer, ecb, _prefabs);
 
             // 播放并清理
             //ecb.Playback(base.EntityManager);
@@ -541,37 +538,75 @@ namespace BlackDawn.DOTS
         }
 
 
+        // 技能 冰霜新星
+        void SkillCallBack_FrostNova(float timer, EntityCommandBuffer ecb, ScenePrefabsSingleton prefab)
+        {
+            Entities
+                .WithName("SkillTimeFrostNova")
+                .ForEach((Entity entity, VisualEffect vfx,
+                    ref SkillFrostNovaTag skillTag,
+                    ref SkillsDamageCalPar damageCalPar,
+                    ref LocalTransform transform) =>
+                {
+                    skillTag.tagSurvivalTime -= timer;
+                    if (skillTag.tagSurvivalTime <= 0)
+                    {
+                        damageCalPar.destory = true;
+                        return;
+                    }
 
+                    // 冷却进入最后4.5秒时触发
+                    if (skillTag.tagSurvivalTime <= 2.5f && skillTag.tagSurvivalTime > 2.5f - timer)
+                    {
+                        if (skillTag.enableSecondB)
+                        {
+                            for (int i = 0; i < 2; i++)
+                            {
+                                // 实例第二阶段实体
+                                var frostWave = ecb.Instantiate(prefab.HeroSkillAssistive_FrostNovaB);
 
+                                // 设置旋转角度，i=0时为+90度，i=1时为-90度，传递体积参数
+                                var trsCopy = transform;
+                                float angle = (i == 0) ? math.radians(90f) : math.radians(-90f);
+                                trsCopy.Rotation = math.mul(trsCopy.Rotation, quaternion.EulerXYZ(0f, angle, 0f)); // 累加旋转
+                                                                                                                   // 这里还传递了体积值
+                                ecb.SetComponent(frostWave, trsCopy); // 设置
 
+                                // 添加第二阶段标签，并赋予速度和生存时间
+                                ecb.AddComponent(frostWave, new SkillFrostNovaBTag { tagSurvivalTime = 3 });
 
+                                // 继承伤害参数和冻结值,传递等级，这里实际上只需要传递一个冻结值就可以了
+                                var newCal = damageCalPar;
+                                newCal.damageChangePar = damageCalPar.damageChangePar * (1 + skillTag.level * 0.05f);
 
+                                ecb.AddComponent(frostWave, newCal);
 
+                                // 添加命中记录Buffer
+                                ecb.AddBuffer<HitRecord>(frostWave);
+                                ecb.AddBuffer<HitElementResonanceRecord>(frostWave);
+                            }
+                        }
+                    }
+                })
+                .WithoutBurst().Run();
+            //两个阶段写在一个系统里面便于调式
+              Entities
+                .WithName("SkillTimeFrostNovaB")
+                .ForEach((Entity entity, VisualEffect vfx,
+                    ref SkillFrostNovaBTag skillTag,
+                    ref SkillsDamageCalPar damageCalPar,
+                    ref LocalTransform transform) =>
+                {
+                    skillTag.tagSurvivalTime -= timer;
+                    if (skillTag.tagSurvivalTime <= 0)
+                    {
+                        damageCalPar.destory = true;
+                        return;
+                    }                  
+                })
+                .WithoutBurst().Run();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
 
 
 

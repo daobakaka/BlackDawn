@@ -208,14 +208,15 @@ namespace BlackDawn
     /// 英雄技能辅助映射枚举
     /// </summary>
     public enum HeroSkillAssistiveID
-    { 
-    // 冰火-》火
-     IceFireFire,
-     Frost_Fragment,
-     ElectroCage_Lightning,
-     PoisonRainB,
-     ShadowTideA,
-     ShadowTideB,
+    {
+        // 冰火-》火
+        IceFireFire,
+        Frost_Fragment,
+        ElectroCage_Lightning,
+        PoisonRainB,
+        ShadowTideA,
+        ShadowTideB,
+        FrostNovaB,
 
     }
     /// <summary>

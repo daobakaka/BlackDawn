@@ -72,95 +72,95 @@ namespace BlackDawn.DOTS
 
     }
     /// <summary>
-    /// Åö×²¼ì²â
+    /// ç¢°æ’æ£€æµ‹
     /// </summary>
     public struct EnableHeroSkillsDamageOverTimeSystemTag : IComponentData,IEnableableComponent { };
     /// <summary>
-    /// Íæ¼ÒÕì²ì
+    /// ç©å®¶ä¾¦å¯Ÿ
     /// </summary>
     public struct EnableDetectionSystemTag:IComponentData, IEnableableComponent { };
     /// <summary>
-    /// ·ÉĞĞµÀ¾ßÉËº¦
+    /// é£è¡Œé“å…·ä¼¤å®³
     /// </summary>
     public struct EnablePropDamageSystemTag : IComponentData, IEnableableComponent { };
 
     /// <summary>
-    /// ·ÉĞĞµÀ¾ßMono
+    /// é£è¡Œé“å…·Mono
     /// </summary>
     public struct EnablePropMonoSystemTag :IComponentData, IEnableableComponent { };
 
     /// <summary>
-    ///Æô¶¯äÖÈ¾½»»¥
+    ///å¯åŠ¨æ¸²æŸ“äº¤äº’
     /// </summary>
     public struct EnableRenderEffectSystemTag : IComponentData, IEnableableComponent { };
 
     /// <summary>
-    /// Æô¶¯¶¯×÷½»»¥
+    /// å¯åŠ¨åŠ¨ä½œäº¤äº’
     /// </summary>
     public struct EnableActionSystemTag : IComponentData, IEnableableComponent { };
 
     /// <summary>
-    /// µĞÈË·ÉĞĞµÀ¾ßÉËº¦
+    /// æ•Œäººé£è¡Œé“å…·ä¼¤å®³
     /// </summary>
     public struct EnableEnemyPropDamageSystemTag : IComponentData, IEnableableComponent { };
 
     /// <summary>
-    /// µĞÈË·ÉĞĞµÀ¾ßMono
+    /// æ•Œäººé£è¡Œé“å…·Mono
     /// </summary>
     public struct EnableEnemyPropMonoSystemTag : IComponentData, IEnableableComponent { };
 
 
     /// <summary>
-    /// Åö×²ÉËº¦¼ÆËãËø¶¨
+    /// ç¢°æ’ä¼¤å®³è®¡ç®—é”å®š
     /// </summary>
     public struct EnableAttackRecordBufferSystemTag: IComponentData, IEnableableComponent { };
 
     /// <summary>
-    /// ¹ÖÎïËÀÍö×´Ì¬Âß¼­
+    /// æ€ªç‰©æ­»äº¡çŠ¶æ€é€»è¾‘
     /// </summary>
     public struct EnableMonsterMonoSystemTag : IComponentData, IEnableableComponent { };
 
     /// <summary>
-    /// ¹ÖÎï½üÕ½ºÍ»ù´¡Åö×²ÉËº¦
+    /// æ€ªç‰©è¿‘æˆ˜å’ŒåŸºç¡€ç¢°æ’ä¼¤å®³
     /// </summary>
     public struct EnableEnemyBaseDamageSystemTag : IComponentData, IEnableableComponent { };
 
 
     /// <summary>
-    /// ¿ØÖÆÏµÍ³
+    /// æ§åˆ¶ç³»ç»Ÿ
     /// </summary>
     public struct EnableBehaviorControlSystemTag :IComponentData,IEnableableComponent{ };
 
     /// <summary>
-    /// Ó¢ĞÛ¼¼ÄÜ¼ì²âºÍÉËº¦¼ÆËãÏµÍ³
+    /// è‹±é›„æŠ€èƒ½æ£€æµ‹å’Œä¼¤å®³è®¡ç®—ç³»ç»Ÿ
     /// </summary>
     public struct EnableHeroSkillsDamageSystemTag : IComponentData, IEnableableComponent { };
 
 
     /// <summary>
-    /// Ó¢ĞÛ¼¼ÄÜMonoÏµÍ³
+    /// è‹±é›„æŠ€èƒ½Monoç³»ç»Ÿ
     /// </summary>
     public struct EnableHeroSkillsMonoSystemTag : IComponentData, IEnableableComponent { };
 
 
     /// <summary>
-    /// DoTÉËº¦¼ÆËãÏµÍ³
+    /// DoTä¼¤å®³è®¡ç®—ç³»ç»Ÿ
     /// </summary>
     public struct EnableDotDamageSystemTag : IComponentData, IEnableableComponent { };
 
     /// <summary>
-    /// ÌØ±ğ¼¼ÄÜÉËº¦ ±íÏÖ¼°¼ì²âÏµÍ³£¨Èç·¨ÕóµÚ¶ş½× ºçÎü,¶¾Óê¡¢¶¾±¬µØÀ×µÈ£©
+    /// ç‰¹åˆ«æŠ€èƒ½ä¼¤å®³ è¡¨ç°åŠæ£€æµ‹ç³»ç»Ÿï¼ˆå¦‚æ³•é˜µç¬¬äºŒé˜¶ è™¹å¸,æ¯’é›¨ã€æ¯’çˆ†åœ°é›·ç­‰ï¼‰
     /// </summary>
     public struct EnableHeroSpecialSkillsDamageSystemTag : IComponentData, IEnableableComponent { };
 
 
     /// <summary>
-    /// ·¶Î§¸ßĞÔÄÜ²¢ĞĞ¼ì²â±êÇ©£¨Õì²â¡¢ ·¶Î§¼¼ÄÜ£©
+    /// èŒƒå›´é«˜æ€§èƒ½å¹¶è¡Œæ£€æµ‹æ ‡ç­¾ï¼ˆä¾¦æµ‹ã€ èŒƒå›´æŠ€èƒ½ï¼‰
     /// </summary>
     public struct EnableOverlapDetectionSystemTag : IComponentData, IEnableableComponent { };
 
     /// <summary>
-    /// ±¬·¢ĞÔ¼¼ÄÜ±êÇ©
+    /// çˆ†å‘æ€§æŠ€èƒ½æ ‡ç­¾
     /// </summary>
     public struct EnableHeroSkillsDamageBurstSystemTag : IComponentData, IEnableableComponent { };
 

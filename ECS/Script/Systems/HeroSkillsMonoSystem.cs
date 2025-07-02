@@ -290,7 +290,7 @@ namespace BlackDawn.DOTS
             //技能静电牢笼
             SkillMonoElectroCage(ref state,ecb,prefab);
             //暗影洪流B阶段，瞬时伤害特效控制
-            SkillMineBlastMono( ref state);
+            SkillMineBlastBMono( ref state);
 
 
 
@@ -583,17 +583,18 @@ namespace BlackDawn.DOTS
         /// <param name="state"></param>
         /// <param name="ecb"></param>
 
-        void SkillMineBlastMono(ref SystemState state)
+        void SkillMineBlastBMono(ref SystemState state)
         {
             foreach (var (skillTag, skillCal, entity)
              in SystemAPI.Query<RefRW<SkillShadowTideBTag>, RefRW<SkillsBurstDamageCalPar>>().WithEntityAccess())
-            { 
-               skillTag.ValueRW.tagSurvivalTime -=SystemAPI.Time.DeltaTime;
+            {
+                skillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
                 skillCal.ValueRW.burstTime += SystemAPI.Time.DeltaTime;
 
                 if (skillTag.ValueRW.tagSurvivalTime <= 0)
                     skillCal.ValueRW.destory = true;
-            
+                    
+                               
             }
 
 

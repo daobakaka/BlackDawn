@@ -39,7 +39,9 @@ namespace BlackDawn
                 if (Physics.Raycast(ray, out hit))
                 {
                     fsm.Owner.skillTargetPositon = new Vector3(hit.point.x, 0, hit.point.z);
-                   // fsm.Owner.skillElur = hit.transform.position.normalized;
+                      Vector3 direction = fsm.Owner.skillTargetPositon - fsm.Owner.transform.position;
+                    direction.y = 0; // 保持水平方向
+                     fsm.Owner.transform.rotation = Quaternion.LookRotation(direction);
                    
 
                 }

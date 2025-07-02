@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "../../../../.."
+		}
+	],
+	"settings": {
+		"dotnet.defaultSolution": "BlackDawn.sln",
+		"workbench.colorTheme": "Visual Studio 2019 Light"
+	}
+}

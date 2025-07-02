@@ -71,8 +71,8 @@ namespace BlackDawn.DOTS
         //原始存活时间
         public float originalSurvivalTime;
         //销毁标识
-        public bool  destory;
- 
+        public bool destory;
+
         ///技能特殊的牵引和爆炸属性标签
         public bool enablePull;
         public bool enableExplosion;
@@ -235,13 +235,14 @@ namespace BlackDawn.DOTS
     /// 可关闭标签脉冲标签,初始化一个时间，用于存活判断,可以使用标签来定义 速度  二阶 存活时间
     /// </summary>
     public struct SkillPulseTag : IComponentData, IEnableableComponent
-    { public float tagSurvivalTime;
-      public float speed;
-      //形变参数
-      public float scaleChangePar;
-      public bool enableSecond;
+    {
+        public float tagSurvivalTime;
+        public float speed;
+        //形变参数
+        public float scaleChangePar;
+        public bool enableSecond;
         //伤害变化参数,默认为0，外部赋值1+
-     public float skillDamageChangeParTag;
+        public float skillDamageChangeParTag;
 
     }
 
@@ -327,6 +328,9 @@ namespace BlackDawn.DOTS
     }
 
 
+
+
+
     /// <summary>
     /// 可关闭冰火球二阶段爆炸请求标签
     /// </summary>
@@ -374,12 +378,12 @@ namespace BlackDawn.DOTS
     /// 保留目标和时间 按照dot分配？6秒,不能太长会超出16KB限定范围
     /// </summary>
     [InternalBufferCapacity(1000)]
-    public struct SkillArcaneCircleSecondBufferTag : IBufferElementData 
-    
+    public struct SkillArcaneCircleSecondBufferTag : IBufferElementData
+
     {
         public Entity target;
         public float tagSurvivalTime;
-        
+
     }
     /// <summary>
     /// 仅仅用于收集碰撞对
@@ -399,7 +403,7 @@ namespace BlackDawn.DOTS
     /// <summary>
     /// 元素共鸣
     /// </summary>
-    public struct SkillElementResonanceTag : IComponentData 
+    public struct SkillElementResonanceTag : IComponentData
     {
         public float tagSurvivalTime;
 
@@ -447,7 +451,7 @@ namespace BlackDawn.DOTS
     /// <summary>
     /// 毒爆地雷,可以关闭，就可以取消碰撞对收集，并打开二阶段的爆炸效果，重新赋值伤害
     /// </summary>
-    public struct SkillMineBlastTag : IComponentData,IEnableableComponent
+    public struct SkillMineBlastTag : IComponentData, IEnableableComponent
     {
 
 
@@ -459,7 +463,7 @@ namespace BlackDawn.DOTS
         public float skillDamageChangeParTag;
         //这里添加等级标签，二阶技能扣除生命值跟等级有关
         public int level;
-  
+
     }
 
     /// <summary>
@@ -545,7 +549,34 @@ namespace BlackDawn.DOTS
         public float tagSurvivalTime;
 
     }
+
+    /// <summary>
+    /// 冰霜新星
+    /// </summary>
+    public struct SkillFrostNovaTag : IComponentData
+    {
+
+        public float tagSurvivalTime;
+        //形变参数
+        public float scaleChangePar;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        public bool enableSecondC;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+        //开始第二阶段
+        public bool startSecondA;
+        //等级
+        public int level;
+    }
+
+/// <summary>
+/// 寒冰波技能标签，包含形变参数和二阶技能参数
+/// </summary>
+    public struct SkillFrostNovaBTag : IComponentData
+    {
+        public float tagSurvivalTime;
+        public int level;
+    }
 }
-
-
 
