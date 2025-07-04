@@ -24,6 +24,10 @@ namespace BlackDawn.DOTS
     public partial struct DetectionSystem : ISystem
     {
         private int batchSize;
+        //雷霆之握 技能标签
+        public bool enableSpecialSkillThunderGrip;
+
+
 
         // 每帧要更新的查找
         private ComponentLookup<Detection_DefaultCmpt> _detectionLookup;
@@ -42,6 +46,7 @@ namespace BlackDawn.DOTS
         private ComponentLookup<SkillMineBlastTag> _skillMineBlastTagLookup;
         private ComponentLookup<SkillMineBlastExplosionTag> _skillMineExplosionTagLookup;
         private ComponentLookup<SkillPoisonRainATag> _skillPoisonRainATagLookup;
+        private ComponentLookup<SkillThunderGripTag> _skillThunderGripTagLookup;
 
 
         // 所有用于分类的碰撞对容器
@@ -59,6 +64,9 @@ namespace BlackDawn.DOTS
         private NativeQueue<TriggerPairData> _mineBlastExplosionHitMonster;
         private NativeQueue<TriggerPairData> _poisonRainAHitMonster;
 
+        private NativeQueue<TriggerPairData> _thunderGripHitMonster; // 雷霆之握技能碰撞对
+
+
         //用于在job中并行的array
         public NativeArray<TriggerPairData> heroHitMonsterArray;
         public NativeArray<TriggerPairData> enemyFlightHitHeroArray;
@@ -74,6 +82,8 @@ namespace BlackDawn.DOTS
         public NativeArray<TriggerPairData> mineBlastHitMonsterArray;
         public NativeArray<TriggerPairData> mineBlastExplosionHitMonsterArray;
         public NativeArray<TriggerPairData> posionRainAHitMonsterArray;
+        
+        public NativeArray<TriggerPairData> thunderGripHitMonsterArray; // 雷霆之握技能碰撞对数组
 
 
         public void OnCreate(ref SystemState state)
@@ -98,6 +108,8 @@ namespace BlackDawn.DOTS
             _skillMineBlastTagLookup = SystemAPI.GetComponentLookup<SkillMineBlastTag>(true);
             _skillMineExplosionTagLookup = SystemAPI.GetComponentLookup<SkillMineBlastExplosionTag>(true);
             _skillPoisonRainATagLookup = SystemAPI.GetComponentLookup<SkillPoisonRainATag>(true);
+            //雷霆之握技能标签
+            _skillThunderGripTagLookup = SystemAPI.GetComponentLookup<SkillThunderGripTag>(true);
 
 
             batchSize = UnityEngine.SystemInfo.processorCount > 8 ? 64 : 32;
@@ -106,7 +118,7 @@ namespace BlackDawn.DOTS
             _enemyFlightHitHero = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _flightHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _skillHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
-            _skillOverTimeHitMonster =new NativeQueue<TriggerPairData>(Allocator.Persistent);
+            _skillOverTimeHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _arcaneCircleHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _arcaneCircleHitHero = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _skillElementResonance = new NativeQueue<TriggerPairData>(Allocator.Persistent);
@@ -116,12 +128,16 @@ namespace BlackDawn.DOTS
             _mineBlastHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _mineBlastExplosionHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _poisonRainAHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
+            _thunderGripHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
+
+
+             // enableSpecialSkillThunderGrip =true;
         }
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
 
-          //  DetectionTriggerJob._enqueueCounter = 0;
+            //  DetectionTriggerJob._enqueueCounter = 0;
 
 
             // 更新查找
@@ -141,6 +157,7 @@ namespace BlackDawn.DOTS
             _skillMineBlastTagLookup.Update(ref state);
             _skillMineExplosionTagLookup.Update(ref state);
             _skillPoisonRainATagLookup.Update(ref state);
+            _skillThunderGripTagLookup.Update(ref state);
             //清空区
             _heroHitMonster.Clear();
             _enemyFlightHitHero.Clear();
@@ -160,7 +177,10 @@ namespace BlackDawn.DOTS
             _mineBlastExplosionHitMonster.Clear();
             //毒雨A
             _poisonRainAHitMonster.Clear();
+            //雷霆之握 原始队列
+            _thunderGripHitMonster.Clear();
 
+            //释放所有碰撞数组内存
             DisposeArrayForCollison();
 
             var heroHitMonsterQueue = _heroHitMonster.AsParallelWriter();
@@ -176,7 +196,8 @@ namespace BlackDawn.DOTS
             var mineBlastHitMonsterQueue = _mineBlastHitMonster.AsParallelWriter();
             var mineBlastExplosionHitMonsterQueue = _mineBlastExplosionHitMonster.AsParallelWriter();
             var poisonRainAHitMonsterQueue = _poisonRainAHitMonster.AsParallelWriter();
-   
+            var thunderGripHitMonsterQueue = _thunderGripHitMonster.AsParallelWriter(); // 雷霆之握技能碰撞对
+
 
             // 1. 收集触发：把所有碰撞写入自己实体的 buffer,收集碰撞对的标准并行方式
             var sim = SystemAPI.GetSingleton<SimulationSingleton>();
@@ -186,55 +207,66 @@ namespace BlackDawn.DOTS
                 TransformLookup = _transformLookup,
                 HitBufferLookup = _hitBufferLookup,
                 LiveMonsterLookup = _liveMonsterLookup,
-
                 EnemyFlightPropLookup = _enemyFlightPropLookup,
                 FlightPropDamageCalParLookup = _flightPropDamageCalParLookup,
                 SkillPropDamageCalParLookup = _skillsDamageCalParLookup,
-                SkillOverTimePropDamageCalParLookup=_skillsOverTimeDamageCalParLookup,
+                SkillOverTimePropDamageCalParLookup = _skillsOverTimeDamageCalParLookup,
                 HeroEntityMasterTagLookup = _heroEntityMasterTagLookup,
+                //特殊瞬时碰撞技能区域
+                EnableSpecialSkillThunderGrip = enableSpecialSkillThunderGrip,
+                SkillThunderGripTagLookup = _skillThunderGripTagLookup, // 雷霆之握技能标签
+                ThunderGripHitMonsterQueue = thunderGripHitMonsterQueue, // 雷霆之握技能碰撞对
+                //end
+
+
+
+
                 SkillArcaneCircleSecondTagLookup = _skillArcaneCircleSecondTagLookup,
                 SkillArcaneCircleTagLookup = _skillArcaneCircleTagLookup,
                 SkillElementResonanceTagLookup = _skillElementResonanceTagLookup,
                 SkillMineBlastTagLookup = _skillMineBlastTagLookup,
-                SkillMineBlastExplosionTagLookup= _skillMineExplosionTagLookup,
-                SkillPoisonRainATaglookup =_skillPoisonRainATagLookup,
+                SkillMineBlastExplosionTagLookup = _skillMineExplosionTagLookup,
+                SkillPoisonRainATaglookup = _skillPoisonRainATagLookup,
 
                 HeroHitMonsterQueue = heroHitMonsterQueue,
                 EnemyFlightHitHeroQueue = enemyFlightHitHeroQueue,
                 FlightHitMonsterQueue = flightHitMonsterQueue,
                 SkillHitMonsterQueue = skillHitMonsterQueue,
-                SkillOverTimeHitMonsterQueue =skillOverTimeHitMonsterQueue,
+                SkillOverTimeHitMonsterQueue = skillOverTimeHitMonsterQueue,
                 ArcaneCircleHitMonsterQueue = arcaneCircleHitMonsterQueue,
-                ArcaneCircleHitHeroQueue =arcaneCircleHitHeroQueue,
-                SkillElementResonanceQueue=skillElementResonanceQueue,
-                BaseFlightElementResonanceQueue =baseFlightElementResonanceQueue,
+                ArcaneCircleHitHeroQueue = arcaneCircleHitHeroQueue,
+                SkillElementResonanceQueue = skillElementResonanceQueue,
+                BaseFlightElementResonanceQueue = baseFlightElementResonanceQueue,
                 CombinedElementResonanceQueue = combinedElementResonanceQueue,
                 ResonanceMap = _resonanceMap,
                 //传入毒爆地雷
-                MineBlastHitMonsterQueue =mineBlastHitMonsterQueue,
-                MineBlastExplosionHitMonsterQueue =mineBlastExplosionHitMonsterQueue,
+                MineBlastHitMonsterQueue = mineBlastHitMonsterQueue,
+                MineBlastExplosionHitMonsterQueue = mineBlastExplosionHitMonsterQueue,
                 //传入毒雨A阶段
-                PoisonRainAHitMonsterQueue =poisonRainAHitMonsterQueue,
+                PoisonRainAHitMonsterQueue = poisonRainAHitMonsterQueue,
+
+
 
 
             }.Schedule(sim, state.Dependency);
 
             // 等待收集完成，这里收集原始碰撞数据，要等待完成
-             state.Dependency.Complete();
+            state.Dependency.Complete();
             //这里会分配新的内存， 所以需要在开始释放
             heroHitMonsterArray = _heroHitMonster.ToArray(Allocator.Persistent);
             enemyFlightHitHeroArray = _enemyFlightHitHero.ToArray(Allocator.Persistent);
             flightHitMonsterArray = _flightHitMonster.ToArray(Allocator.Persistent);
             skillHitMonsterArray = _skillHitMonster.ToArray(Allocator.Persistent);
-            skillOverTimeHitMonsterArray=_skillOverTimeHitMonster.ToArray(Allocator.Persistent);
+            skillOverTimeHitMonsterArray = _skillOverTimeHitMonster.ToArray(Allocator.Persistent);
             arcaneCircleHitMonsterArray = _arcaneCircleHitMonster.ToArray(Allocator.Persistent);
             arcaneCircleHitHeroArray = _arcaneCircleHitHero.ToArray(Allocator.Persistent);
-            skillElementResonanceArray =_skillElementResonance.ToArray(Allocator.Persistent);
+            skillElementResonanceArray = _skillElementResonance.ToArray(Allocator.Persistent);
             basePropElementResonanceArray = _basePropElementResonance.ToArray(Allocator.Persistent);
-            combinedElementResonanceArray =_combinedElementResonance.ToArray(Allocator.Persistent);
-            mineBlastHitMonsterArray =_mineBlastHitMonster.ToArray(Allocator.Persistent);
-            mineBlastExplosionHitMonsterArray =_mineBlastExplosionHitMonster.ToArray(Allocator.Persistent);
-            posionRainAHitMonsterArray =_poisonRainAHitMonster.ToArray(Allocator.Persistent);
+            combinedElementResonanceArray = _combinedElementResonance.ToArray(Allocator.Persistent);
+            mineBlastHitMonsterArray = _mineBlastHitMonster.ToArray(Allocator.Persistent);
+            mineBlastExplosionHitMonsterArray = _mineBlastExplosionHitMonster.ToArray(Allocator.Persistent);
+            posionRainAHitMonsterArray = _poisonRainAHitMonster.ToArray(Allocator.Persistent);
+            thunderGripHitMonsterArray = _thunderGripHitMonster.ToArray(Allocator.Persistent); // 雷霆之握技能碰撞对数组
 
 
             //if (heroHitMonsterArray.Length > 0)
@@ -307,9 +339,10 @@ namespace BlackDawn.DOTS
             if (skillElementResonanceArray.IsCreated) skillElementResonanceArray.Dispose();
             if (basePropElementResonanceArray.IsCreated) basePropElementResonanceArray.Dispose();
             if (combinedElementResonanceArray.IsCreated) combinedElementResonanceArray.Dispose();
-            if(mineBlastHitMonsterArray.IsCreated) mineBlastHitMonsterArray.Dispose();
+            if (mineBlastHitMonsterArray.IsCreated) mineBlastHitMonsterArray.Dispose();
             if (mineBlastExplosionHitMonsterArray.IsCreated) mineBlastExplosionHitMonsterArray.Dispose();
             if (posionRainAHitMonsterArray.IsCreated) posionRainAHitMonsterArray.Dispose();
+            if (thunderGripHitMonsterArray.IsCreated) thunderGripHitMonsterArray.Dispose();
 
 
 
@@ -337,7 +370,8 @@ namespace BlackDawn.DOTS
         [ReadOnly] public ComponentLookup<SkillMineBlastExplosionTag> SkillMineBlastExplosionTagLookup;//爆炸后的瘟疫地雷
         [ReadOnly] public ComponentLookup<SkillPoisonRainATag> SkillPoisonRainATaglookup;//毒雨造成的伤害加深
        
-        
+         [ReadOnly] public bool EnableSpecialSkillThunderGrip; // 是否启用雷霆之握技能
+        [ReadOnly] public ComponentLookup<SkillThunderGripTag> SkillThunderGripTagLookup; // 雷霆之握技能标签
         
         public BufferLookup<NearbyHit> HitBufferLookup; // 基础检测系统
         
@@ -366,34 +400,51 @@ namespace BlackDawn.DOTS
         //毒雨 
         public NativeQueue<TriggerPairData>.ParallelWriter PoisonRainAHitMonsterQueue;
 
+        //雷霆之握技能碰撞对
+        public NativeQueue<TriggerPairData>.ParallelWriter ThunderGripHitMonsterQueue; // 雷霆之握技能碰撞对 
+
 
         public void Execute(TriggerEvent triggerEvent)
         {
             var a = triggerEvent.EntityA;
             var b = triggerEvent.EntityB;
 
-           // DevDebug.LogError($"enttyA:{a.Index} entityB{b.Index} ");
+            // DevDebug.LogError($"enttyA:{a.Index} entityB{b.Index} ");
 
 
-           // // 2) 处理元素共鸣同时碰撞的效果
-           //ProcessCombined(a, b);
+            // // 2) 处理元素共鸣同时碰撞的效果
+            //ProcessCombined(a, b);
 
-           // // 分类写入碰撞对容器
+            // // 分类写入碰撞对容器
             AddIfMatch(a, b, HeroEntityMasterTagLookup, LiveMonsterLookup, HeroHitMonsterQueue, true);
-           // AddIfMatch(b, a, HeroEntityMasterTagLookup, LiveMonsterLookup, HeroHitMonsterQueue, true);
+            // AddIfMatch(b, a, HeroEntityMasterTagLookup, LiveMonsterLookup, HeroHitMonsterQueue, true);
 
             AddIfMatch(a, b, EnemyFlightPropLookup, HeroEntityMasterTagLookup, EnemyFlightHitHeroQueue, false);
             AddIfMatch(b, a, EnemyFlightPropLookup, HeroEntityMasterTagLookup, EnemyFlightHitHeroQueue, false);
 
             AddIfMatch(a, b, FlightPropDamageCalParLookup, LiveMonsterLookup, FlightHitMonsterQueue, true);
-           // AddIfMatch(b, a, FlightPropDamageCalParLookup, LiveMonsterLookup, FlightHitMonsterQueue, true);
+            // AddIfMatch(b, a, FlightPropDamageCalParLookup, LiveMonsterLookup, FlightHitMonsterQueue, true);
 
-            //飞行技能
+            //瞬时类技能
             AddIfMatch(a, b, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
             // AddIfMatch(b, a, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
 
+
+
+            //雷霆之握（捕捉活体),技能系统转入控制标签
+                if (EnableSpecialSkillThunderGrip)
+                    AddIfMatch(a, b, SkillThunderGripTagLookup, LiveMonsterLookup, ThunderGripHitMonsterQueue, true);
+
+
+
+
+
+
+
+
+
             //持续性技能
-           // AddIfMatch(a, b, SkillOverTimePropDamageCalParLookup, LiveMonsterLookup, SkillOverTimeHitMonsterQueue, true);
+            // AddIfMatch(a, b, SkillOverTimePropDamageCalParLookup, LiveMonsterLookup, SkillOverTimeHitMonsterQueue, true);
             // AddIfMatch(b, a, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
 
             // //怪物与法阵碰撞

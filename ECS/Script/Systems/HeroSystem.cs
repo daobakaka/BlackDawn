@@ -153,8 +153,8 @@ namespace BlackDawn.DOTS
 
 
 
-            if (!SystemAPI.HasSingleton<ProjectDawn.Navigation.Sample.Crowd.Spawner>())
-                return;
+            // if (!SystemAPI.HasSingleton<ProjectDawn.Navigation.Sample.Crowd.Spawner>())
+            //     return;
 
         }
         /// <summary>

@@ -216,7 +216,12 @@ namespace BlackDawn
                 ecb.AddBuffer<MonsterDotDamageBuffer>(monster);
 
 
+                //--技能预定义标签区域 -- 雷霆之握
+                ecb.AddComponent(monster, new PreDefineHeroSkillThunderGripTag());
+                ecb.SetComponentEnabled<PreDefineHeroSkillThunderGripTag>(monster, false);
 
+
+                
 
                 // 基础属性赋值
                 var monsterBaseAttribute = attributeGet.baseAttribute;

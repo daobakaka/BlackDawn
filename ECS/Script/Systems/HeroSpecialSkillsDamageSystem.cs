@@ -7,6 +7,8 @@ using Unity.Physics;
 using Unity.Transforms;
 using Unity.Mathematics;
 using Unity.Jobs;
+using Unity.VisualScripting;
+
 #if UNITY_EDITOR
 using UnityEditor.Experimental.GraphView;
 #endif
@@ -20,14 +22,14 @@ namespace BlackDawn.DOTS
     /// 特殊技能执行， 如法阵虹吸 效果
     /// </summary>
     [RequireMatchingQueriesForUpdate]
-    [BurstCompile]
+   // [BurstCompile]
     [UpdateInGroup(typeof(ActionSystemGroup))]
     [UpdateAfter(typeof(HeroSkillsDamageOverTimeSystem))]
     public partial struct HeroSpecialSkillsDamageSystem : ISystem
     {
         ComponentLookup<LocalTransform> m_transform;
         private ComponentLookup<MonsterDefenseAttribute> _monsterDefenseAttrLookup;
-        private ComponentLookup<MonsterLossPoolAttribute> _monsterLossPoolAttrLookip;
+        private ComponentLookup<MonsterLossPoolAttribute> _monsterLossPoolAttrLookup;
         private ComponentLookup<MonsterControlledEffectAttribute> _monsterControlledEffectAttrLookup;
         private ComponentLookup<MonsterDebuffAttribute> _monsterDebufferAttributeLookup;
         private ComponentLookup<HeroAttributeCmpt> _heroAttrLookup;
@@ -37,10 +39,12 @@ namespace BlackDawn.DOTS
         private ComponentLookup<SkillsDamageCalPar> _skillsDamageCalParLookup;
         private ComponentLookup<SkillMineBlastExplosionTag> _skillMineBlastExplosionTagLookup;
         private ComponentLookup<SkillPoisonRainATag> _skillPoisonRainATagLookup;
+        private ComponentLookup<SkillThunderGripTag> _skillThunderGripTagLookup;
+        private ComponentLookup<PreDefineHeroSkillThunderGripTag> _preDefineHeroSkillThunderGripTagLookup;
         /// <summary>
         /// 法阵特殊技能造成的伤害表现为DOT伤害
         /// </summary>
-       // private BufferLookup<MonsterDotDamageBuffer> _monsterDotDamageBufferLookup;
+        // private BufferLookup<MonsterDotDamageBuffer> _monsterDotDamageBufferLookup;
 
         //带有技能等级
         private ComponentLookup<SkillArcaneCircleTag> _skillArcaneCircleTagLookup;
@@ -61,7 +65,7 @@ namespace BlackDawn.DOTS
             _detectionSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
 
             _monsterDefenseAttrLookup = SystemAPI.GetComponentLookup<MonsterDefenseAttribute>(true);
-            _monsterLossPoolAttrLookip = SystemAPI.GetComponentLookup<MonsterLossPoolAttribute>(true);
+            _monsterLossPoolAttrLookup = SystemAPI.GetComponentLookup<MonsterLossPoolAttribute>(true);
             _monsterControlledEffectAttrLookup = SystemAPI.GetComponentLookup<MonsterControlledEffectAttribute>(true);
             _heroAttrLookup = SystemAPI.GetComponentLookup<HeroAttributeCmpt>(true);
             _skillArcaneCircleSecondBufferLookup = SystemAPI.GetBufferLookup<SkillArcaneCircleSecondBufferTag>(true);
@@ -73,14 +77,16 @@ namespace BlackDawn.DOTS
             _skillMineBlastExplosionTagLookup = SystemAPI.GetComponentLookup<SkillMineBlastExplosionTag>(true);
             _monsterDebufferAttributeLookup = SystemAPI.GetComponentLookup<MonsterDebuffAttribute>(true);
             _skillPoisonRainATagLookup = SystemAPI.GetComponentLookup<SkillPoisonRainATag>(true);
+            _skillThunderGripTagLookup =SystemAPI.GetComponentLookup<SkillThunderGripTag>(true);
+            _preDefineHeroSkillThunderGripTagLookup =SystemAPI.GetComponentLookup<PreDefineHeroSkillThunderGripTag>(true);
 
         }
         public void OnUpdate(ref SystemState state)
         {
-             m_transform.Update(ref state);
+            m_transform.Update(ref state);
             _monsterDefenseAttrLookup.Update(ref state);
             _monsterControlledEffectAttrLookup.Update(ref state);
-            _monsterLossPoolAttrLookip.Update(ref state);
+            _monsterLossPoolAttrLookup.Update(ref state);
             _heroAttrLookup.Update(ref state);
             _monsterDebufferAttributeLookup.Update(ref state);
 
@@ -97,7 +103,9 @@ namespace BlackDawn.DOTS
             _skillMineBlastExplosionTagLookup.Update(ref state);
             //毒雨 二阶段增伤标签
             _skillPoisonRainATagLookup.Update(ref state);
-            
+            //雷霆之握，技能标签,预定义标签
+            _skillThunderGripTagLookup.Update(ref state);
+            _preDefineHeroSkillThunderGripTagLookup.Update(ref state);
 
             var deltaTime = SystemAPI.Time.DeltaTime;
             if (arcaneCircleLinkenBuffer.IsCreated)
@@ -106,12 +114,36 @@ namespace BlackDawn.DOTS
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             //获取收集世界单例
             var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
+            //获取法阵碰撞对
             var arcanelCorcleHitsArray = detectionSystem.arcaneCircleHitMonsterArray;
+            //获取元素共鸣碰撞对
             var elementResonanceHitArray = detectionSystem.combinedElementResonanceArray;
             //获取毒爆地雷碰撞对
             var mineBlastExplosionHitMonsterArray = detectionSystem.mineBlastExplosionHitMonsterArray;
             //获取毒雨碰撞对
             var poisonRainAHitMonterArray = detectionSystem.posionRainAHitMonsterArray;
+            //获取雷霆之握碰撞对,进行一个标记，采取预标记策略，考虑到变化阶段的问题，这里还是在多线程里计算
+            var thunderGripHitMonsterArray = detectionSystem.thunderGripHitMonsterArray;
+            // if(thunderGripHitMonsterArray.Length>0)
+            // DevDebug.LogError("雷霆之握碰撞对长度" + thunderGripHitMonsterArray.Length);
+            //雷霆之握技能处理,由侦测系统开关控制
+            if(detectionSystem.enableSpecialSkillThunderGrip)
+            state.Dependency = new ApplySpecialSkillThunderGripDamageJob
+            {
+                ECB = ecb.AsParallelWriter(),
+                DefenseAttrLookup = _monsterDefenseAttrLookup,
+                DebuffAttrLookup = _monsterDebufferAttributeLookup,
+                SkillTagLookup = _skillThunderGripTagLookup,
+                TransformLookup =m_transform,
+                SkillDamageCalLookup = _skillsDamageCalParLookup,
+                PreDefineHeroSkillThunderGripTagLookup =_preDefineHeroSkillThunderGripTagLookup,
+                HitArray = thunderGripHitMonsterArray
+            }.ScheduleParallel(thunderGripHitMonsterArray.Length, 64, state.Dependency);
+
+
+
+
+
 
             if (false)
             {
@@ -162,9 +194,9 @@ namespace BlackDawn.DOTS
                 {
                     DefenseAttrLookup = _monsterDefenseAttrLookup,
                     ECB = ecb.AsParallelWriter(),
-                    FlightPropDamageCalParLookip = _flightPropDamageCalParLookup,
+                    FlightPropDamageCalParLookup = _flightPropDamageCalParLookup,
                     SkillDamageCalParLookup = _skillsDamageCalParLookup,
-                    LossPoolAttrLookup = _monsterLossPoolAttrLookip,
+                    LossPoolAttrLookup = _monsterLossPoolAttrLookup,
                     HitArray = elementResonanceHitArray,
                     LinkedLookup = _linkedEntityGroupLookup,
                     RecordElementResonanceBufferLookup = _hitElementResonanceRecordBufferLookup,
@@ -186,7 +218,7 @@ namespace BlackDawn.DOTS
                     SkillTagLookup = _skillMineBlastExplosionTagLookup,
                     HitArray = mineBlastExplosionHitMonsterArray,
                     DeltaTime = deltaTime,
-                    DebufferAttrLoopup = _monsterDebufferAttributeLookup,
+                    DebufferAttrLookup = _monsterDebufferAttributeLookup,
 
                 }.Schedule(mineBlastExplosionHitMonsterArray.Length, 64, state.Dependency);
 
@@ -219,6 +251,12 @@ namespace BlackDawn.DOTS
         }
 
 
+
+
+
+
+
+
     }
 
     /// <summary>
@@ -232,15 +270,6 @@ namespace BlackDawn.DOTS
         [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
         [ReadOnly] public BufferLookup<SkillArcaneCircleSecondBufferTag> SkillArcaneCirelBufferLookup;
         [ReadOnly] public NativeArray<TriggerPairData> HitArray;//这里收集的是第二种 添加了特定标签之后的碰撞队
-                                                                // [ReadOnly] public ComponentLookup<HeroAttributeCmpt> HeroAttrLookup;
-                                                                //攻击记录buffer,道具的buffer是加在飞行道具身上
-                                                                // [ReadOnly] public BufferLookup<HitRecord> RecordBufferLookup;
-                                                                //技能位置信息
-                                                                // [ReadOnly] public ComponentLookup<LocalTransform> Transform;
-                                                                //debuffer 效果
-                                                                // [ReadOnly] public ComponentLookup<MonsterDebuffAttribute> DebufferAttrLookup;
-                                                                //buffer累加
-                                                                // [ReadOnly] public BufferLookup<MonsterDotDamageBuffer> DotDamageBufferLookup;
 
         public void Execute(int i)
         {
@@ -323,7 +352,7 @@ namespace BlackDawn.DOTS
         public EntityCommandBuffer.ParallelWriter ECB;
         [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
         [ReadOnly] public ComponentLookup<SkillsDamageCalPar> SkillDamageCalParLookup;
-        [ReadOnly] public ComponentLookup<FlightPropDamageCalPar> FlightPropDamageCalParLookip;
+        [ReadOnly] public ComponentLookup<FlightPropDamageCalPar> FlightPropDamageCalParLookup;
         [ReadOnly] public ComponentLookup<MonsterLossPoolAttribute> LossPoolAttrLookup;
         [ReadOnly] public BufferLookup<HitElementResonanceRecord> RecordElementResonanceBufferLookup;
         [ReadOnly] public BufferLookup<LinkedEntityGroup> LinkedLookup;
@@ -366,7 +395,7 @@ namespace BlackDawn.DOTS
 
             // 取 skill/flight 属性、统一混合处理（SIMD友好关键）
             bool isSkill = SkillDamageCalParLookup.HasComponent(damage);
-            bool isFlight = FlightPropDamageCalParLookip.HasComponent(damage);
+            bool isFlight = FlightPropDamageCalParLookup.HasComponent(damage);
 
             float frost = 0, fire = 0, lightning = 0, poison = 0, shadow = 0;
 
@@ -381,7 +410,7 @@ namespace BlackDawn.DOTS
             }
             else if (isFlight)
             {
-                var flight = FlightPropDamageCalParLookip[damage];
+                var flight = FlightPropDamageCalParLookup[damage];
                 frost = flight.frostDamage;
                 fire = flight.fireDamage;
                 lightning = flight.lightningDamage;
@@ -425,7 +454,7 @@ namespace BlackDawn.DOTS
     {
         public EntityCommandBuffer.ParallelWriter ECB;
         [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
-        [ReadOnly] public ComponentLookup<MonsterDebuffAttribute> DebufferAttrLoopup;
+        [ReadOnly] public ComponentLookup<MonsterDebuffAttribute> DebufferAttrLookup;
         [ReadOnly] public ComponentLookup<SkillMineBlastExplosionTag> SkillTagLookup;
         [ReadOnly] public NativeArray<TriggerPairData> HitArray;//收集毒伤地雷碰撞对
         public float DeltaTime;
@@ -444,7 +473,7 @@ namespace BlackDawn.DOTS
             }
 
             var d = DefenseAttrLookup[target];
-            var db = DebufferAttrLoopup[target];
+            var db = DebufferAttrLookup[target];
             var st = SkillTagLookup[skill];
             //DevDebug.Log("进入计算");
 
@@ -476,9 +505,9 @@ namespace BlackDawn.DOTS
 
 
     }
-   
-    
-    
+
+
+
     /// <summary>
     /// 毒雨A阶段，伤害加深
     /// </summary>
@@ -508,18 +537,69 @@ namespace BlackDawn.DOTS
             var db = DebuffAttrLookup[target];
             var st = SkillTagLookup[skill];
 
-
-
-            db.damageAmplification -= DeltaTime*(st.level+1);
-
-
-
+            db.damageAmplification -= DeltaTime * (st.level + 1);
 
             //写回计算数据
             ECB.SetComponent(i, target, db);
         }
+    }
+
+    /// <summary>
+    /// 雷霆之握技能伤害计算
+    /// </summary>
+    struct ApplySpecialSkillThunderGripDamageJob : IJobFor
+    {
+
+        public EntityCommandBuffer.ParallelWriter ECB;
+        [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
+        [ReadOnly] public ComponentLookup<MonsterDebuffAttribute> DebuffAttrLookup;
+        [ReadOnly] public ComponentLookup<SkillsDamageCalPar> SkillDamageCalLookup;
+        [ReadOnly] public ComponentLookup<SkillThunderGripTag> SkillTagLookup;
+        [ReadOnly] public ComponentLookup<LocalTransform> TransformLookup;
+        //传入预定义标签进行单次判断
+        [ReadOnly] public ComponentLookup<PreDefineHeroSkillThunderGripTag> PreDefineHeroSkillThunderGripTagLookup;
+        [ReadOnly] public NativeArray<TriggerPairData> HitArray;//收集雷霆之握碰撞对
+
+        public void Execute(int i)
+        {
+
+            var pair = HitArray[i];
+            Entity skill = pair.EntityA;
+            Entity target = pair.EntityB;
+
+            // 检查目标是否有 PreDefineHeroSkillThunderGripTag
+            if (PreDefineHeroSkillThunderGripTagLookup.HasComponent(target) && PreDefineHeroSkillThunderGripTagLookup.IsComponentEnabled(target))
+
+                return;
 
 
+            var debuff = DebuffAttrLookup[target];
+            var skillTag = SkillTagLookup[skill];
+            var skillDamageCal = SkillDamageCalLookup[skill];
+            var preDefineSkillTag = PreDefineHeroSkillThunderGripTagLookup[target];
+            var transform = TransformLookup[target];
+            var heroTransform = TransformLookup[skillDamageCal.heroRef];
 
+            // 英雄正面方向
+            float3 heroForward = math.mul(heroTransform.Rotation, new float3(0, 0, 1));
+            // 目标点为英雄位置前方一定距离（如5米）
+            float3 targetPos = heroTransform.Position + heroForward * 5f;
+            debuff.thunderPosition = targetPos;
+            //重置叠加时间
+            debuff.thunderGripEndTimer = 0;
+
+
+            ECB.SetComponentEnabled<PreDefineHeroSkillThunderGripTag>(i, target, true);
+
+            if (skillTag.enableSecondA)
+            {
+                debuff.damageAmplification -= (0.2f + skillTag.level * 0.01f);
+            }
+       
+
+            ECB.SetComponent(i, target, debuff);
+
+
+        }
     }
 }

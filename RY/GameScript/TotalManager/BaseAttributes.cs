@@ -892,6 +892,9 @@ namespace BlackDawn
         public float totalDotDamage;
         /// <summary>DOT 的累加记时器</summary>
         public float dotTimer;
+        //---将部分技能的控制缓存，交给debuff组件来处理
+        public float3 thunderPosition; //雷霆之握的目标位置
+        public float thunderGripEndTimer;//雷霆之握timer
     }
 
     /// <summary>

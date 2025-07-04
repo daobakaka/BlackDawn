@@ -578,7 +578,7 @@ namespace BlackDawn
 
                     }
                     break;
-                //暗影洪流，瞬时,持续，引导
+                //暗影洪流，瞬时,持续，引导15
                 case HeroSkillID.ShadowTide:
                     switch (psionicType)
                     {
@@ -747,8 +747,81 @@ namespace BlackDawn
                     }
 
                     break;
+                //雷霆之握：瞬时 20    
+                case HeroSkillID.ThunderGrip:
+
+                    //开启特殊碰撞对确认系统,后期可以根据装载代码来进行处理
+                       var detectionSystemHandle = World.DefaultGameObjectInjectionWorld.Unmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
+                        ref var detectionSystem = ref World.DefaultGameObjectInjectionWorld.Unmanaged.GetUnsafeSystemRef<DetectionSystem>(detectionSystemHandle);
+                        detectionSystem.enableSpecialSkillThunderGrip=true;
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+                            var entityThunderGrip = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ThunderGrip, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            _entityManager.AddComponentData(entityThunderGrip, new SkillThunderGripTag() { tagSurvivalTime = 0.3f });
+                            //获得昏迷值
+                            var skillDamageCalTG = _entityManager.GetComponentData<SkillsDamageCalPar>(entityThunderGrip);
+                            skillDamageCalTG.tempStun = 301;
+                            _entityManager.SetComponentData(entityThunderGrip, skillDamageCalTG);
+
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                     
+                            var entityThunderGripA = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ThunderGrip, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            _entityManager.AddComponentData(entityThunderGripA, new SkillThunderGripTag() { tagSurvivalTime = 0.3f ,enableSecondA = true});
+                            ////获得昏迷值
+                            var skillDamageCalTGA = _entityManager.GetComponentData<SkillsDamageCalPar>(entityThunderGripA);
+                            skillDamageCalTGA.tempStun = 301;
+                            _entityManager.SetComponentData(entityThunderGripA, skillDamageCalTGA);
+
+                            break;
+                     //爆发雷霆得参数通过 配置表进行更改，附加2倍的DOT伤害
+                        case HeroSkillPsionicType.PsionicB:
+
+                          var entityThunderGripB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ThunderGrip, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            _entityManager.AddComponentData(entityThunderGripB, new SkillThunderGripTag() { tagSurvivalTime = 0.3f });
+                            //获得昏迷值，获得冻结值
+                            var skillDamageCalTGB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityThunderGripB);
+                            skillDamageCalTGB.tempStun = 301;
+                            skillDamageCalTGB.tempFreeze = 301;
+                            skillDamageCalTGB.frostDotDamage += 2 * skillDamageCalTGB.instantPhysicalDamage;
+                            skillDamageCalTGB.fireDotDamage += 2 * skillDamageCalTGB.instantPhysicalDamage;
+                            skillDamageCalTGB.shadowDotDamage += 2 * skillDamageCalTGB.instantPhysicalDamage;
+                            skillDamageCalTGB.lightningDotDamage += 2 * skillDamageCalTGB.instantPhysicalDamage;
+                            skillDamageCalTGB.poisonDotDamage += 2 * skillDamageCalTGB.instantPhysicalDamage;
+                            skillDamageCalTGB.bleedDotDamage += 2 * skillDamageCalTGB.instantPhysicalDamage;
+                            _entityManager.SetComponentData(entityThunderGripB, skillDamageCalTGB);
+                            break;
+
+                        case HeroSkillPsionicType.PsionicAB:
+
+                             var entityThunderGripAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ThunderGrip, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            _entityManager.AddComponentData(entityThunderGripAB, new SkillThunderGripTag() { tagSurvivalTime = 0.3f });
+                            //获得昏迷值，获得冻结值
+                            var skillDamageCalTGAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityThunderGripAB);
+                            skillDamageCalTGAB.tempStun = 301;
+                            skillDamageCalTGAB.tempFreeze = 301;
+                            skillDamageCalTGAB.frostDotDamage += 2 * skillDamageCalTGAB.instantPhysicalDamage;
+                            skillDamageCalTGAB.fireDotDamage += 2 * skillDamageCalTGAB.instantPhysicalDamage;
+                            skillDamageCalTGAB.shadowDotDamage += 2 * skillDamageCalTGAB.instantPhysicalDamage;
+                            skillDamageCalTGAB.lightningDotDamage += 2 * skillDamageCalTGAB.instantPhysicalDamage;
+                            skillDamageCalTGAB.poisonDotDamage += 2 * skillDamageCalTGAB.instantPhysicalDamage;
+                            skillDamageCalTGAB.bleedDotDamage += 2 * skillDamageCalTGAB.instantPhysicalDamage;
+                            _entityManager.SetComponentData(entityThunderGripAB, skillDamageCalTGAB);
+                            break;
+
+
+
+                            break;
+
+
+
+                    }
+
+
+                break;    
                 //寒霜新星, 瞬时 22    
-                 case HeroSkillID.FrostNova:
+                case HeroSkillID.FrostNova:
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:

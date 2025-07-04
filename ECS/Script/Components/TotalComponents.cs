@@ -181,7 +181,22 @@ namespace BlackDawn.DOTS
     public struct AtHybrid : IComponentData { };
     #endregion
 
+    #region 英雄技能施加在怪物身上的标签
+    /// <summary>
+    /// 雷霆之握标签,预加载失活状态
+    /// </summary>
+    public struct PreDefineHeroSkillThunderGripTag : IComponentData, IEnableableComponent
+    {
+          
+    }
 
+
+
+
+
+
+        
+    #endregion
 
 
 

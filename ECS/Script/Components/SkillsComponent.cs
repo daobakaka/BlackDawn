@@ -570,13 +570,36 @@ namespace BlackDawn.DOTS
         public int level;
     }
 
-/// <summary>
-/// 寒冰波技能标签，包含形变参数和二阶技能参数
-/// </summary>
+    /// <summary>
+    /// 寒冰波技能标签，包含形变参数和二阶技能参数
+    /// </summary>
     public struct SkillFrostNovaBTag : IComponentData
     {
         public float tagSurvivalTime;
         public int level;
     }
+
+    /// <summary>
+    /// 雷霆之握 技能标签
+    /// </summary>
+    public struct SkillThunderGripTag : IComponentData
+    {
+        public float tagSurvivalTime;
+        //形变参数
+        public float scaleChangePar;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        public bool enableSecondC;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+        //开始第二阶段
+        public bool startSecondA;
+        //等级
+        public int level;
+        
+     
+
+    }
+
 }
 
