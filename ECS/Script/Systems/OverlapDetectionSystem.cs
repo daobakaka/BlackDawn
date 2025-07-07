@@ -1,3 +1,4 @@
+using System.Linq;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -23,24 +24,33 @@ namespace BlackDawn.DOTS
         private NativeQueue<TriggerPairData> _detectionOverlapMonster;
         private NativeQueue<TriggerPairData> _skillOverTimeOverlapMonster;
         private NativeQueue<TriggerPairData> _skillBurstOverlapMonster;
+        private NativeQueue<TriggerPairData> _skillTrackingOverlapMonster;
         // 对外只读数组
         public NativeArray<TriggerPairData> detectionOverlapMonsterArray;
         public NativeArray<TriggerPairData> skillOverTimeOverlapMonsterArray;
         public NativeArray<TriggerPairData> skillBurstOverlapMonsterArray;
+        public NativeArray<TriggerPairData> skillTrackingOverlapMonsterArray;
 
         // 查询句柄
         private EntityQuery _overlapOverTimeQuery;
         private EntityQuery _overlapBurstQuery;
+        private EntityQuery _overlapTrackingQuery;
+
         private ComponentLookup<Detection_DefaultCmpt> _detectionTagLookup;
         private ComponentLookup<LiveMonster> _monsterTagLookup;
         private ComponentLookup<SkillsOverTimeDamageCalPar> _skillOverTimeTagLookup;
         private ComponentLookup<SkillsBurstDamageCalPar> _skillBurstTagLookup;
+        private ComponentLookup<SkillsTrackingCalPar> _skillTrackingTagLookup;
+
+
+        private BufferLookup<TrackingRecord> _trackingBufferLookup;
+
         private ComponentLookup<LocalTransform> _transformLookup;
         private BufferLookup<NearbyHit> _hitBufferLookup;
         private ComponentLookup<OverlapOverTimeQueryCenter> _overlapOverTimeQueryCenterLookup;
         private ComponentLookup<LocalToWorld> _localToWorldLookup;
 
-       
+
 
 
 
@@ -53,26 +63,31 @@ namespace BlackDawn.DOTS
             _detectionOverlapMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _skillOverTimeOverlapMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _skillBurstOverlapMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
+            _skillTrackingOverlapMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
 
 
             detectionOverlapMonsterArray = default;
             skillOverTimeOverlapMonsterArray = default;
             skillBurstOverlapMonsterArray = default;
+            skillTrackingOverlapMonsterArray = default;
 
             _overlapOverTimeQuery = state.GetEntityQuery(ComponentType.ReadOnly<OverlapOverTimeQueryCenter>());
             _overlapBurstQuery = state.GetEntityQuery(ComponentType.ReadOnly<OverlapBurstQueryCenter>());
+            _overlapTrackingQuery = state.GetEntityQuery(ComponentType.ReadOnly<OverlapTrackingQueryCenter>());
 
-            // 这里假设你有 PlayerTag、MonsterTag、SkillTag
+            // 有 PlayerTag、MonsterTag、SkillTag
             _detectionTagLookup = state.GetComponentLookup<Detection_DefaultCmpt>(true);
             _monsterTagLookup = state.GetComponentLookup<LiveMonster>(true);
             _skillOverTimeTagLookup = state.GetComponentLookup<SkillsOverTimeDamageCalPar>(true);
             _skillBurstTagLookup = state.GetComponentLookup<SkillsBurstDamageCalPar>(true);
-
+            _skillTrackingTagLookup = state.GetComponentLookup<SkillsTrackingCalPar>(true);
 
             _transformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true);
             _hitBufferLookup = SystemAPI.GetBufferLookup<NearbyHit>(false);
+            _trackingBufferLookup = SystemAPI.GetBufferLookup<TrackingRecord>(false);
             _overlapOverTimeQueryCenterLookup = SystemAPI.GetComponentLookup<OverlapOverTimeQueryCenter>(false);
             _localToWorldLookup = SystemAPI.GetComponentLookup<LocalToWorld>(true);
+
         }
 
 
@@ -81,6 +96,7 @@ namespace BlackDawn.DOTS
         {
             if (skillOverTimeOverlapMonsterArray.IsCreated) skillOverTimeOverlapMonsterArray.Dispose();
             if (skillBurstOverlapMonsterArray.IsCreated) skillBurstOverlapMonsterArray.Dispose();
+            if (skillTrackingOverlapMonsterArray.IsCreated) skillTrackingOverlapMonsterArray.Dispose();
         }
 
         [BurstCompile]
@@ -91,17 +107,21 @@ namespace BlackDawn.DOTS
             DisposeOverLapArrays();
             _skillOverTimeOverlapMonster.Clear();
             _skillBurstOverlapMonster.Clear();
+            _skillTrackingOverlapMonster.Clear();
 
             // 每帧同步Lookup，防止失效
             _detectionTagLookup.Update(ref state);
             _monsterTagLookup.Update(ref state);
             _skillOverTimeTagLookup.Update(ref state);
             _skillBurstTagLookup.Update(ref state);
+            _skillTrackingTagLookup.Update(ref state);
             _transformLookup.Update(ref state);
             _hitBufferLookup.Update(ref state);
+            _trackingBufferLookup.Update(ref state);
             _overlapOverTimeQueryCenterLookup.Update(ref state);
             _localToWorldLookup.Update(ref state);
-
+            //侦察系统采用 物理模系统初始化ECB 便于跨帧检测
+            var ecb = SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
             var physicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld;
 
@@ -111,28 +131,32 @@ namespace BlackDawn.DOTS
             var entitiesBurst = _overlapBurstQuery.ToEntityArray(state.WorldUpdateAllocator);
             var centersBurst = _overlapBurstQuery.ToComponentDataArray<OverlapBurstQueryCenter>(state.WorldUpdateAllocator);
 
+
+            var entitiesTracking = _overlapTrackingQuery.ToEntityArray(state.WorldUpdateAllocator);
+            var centersTracking = _overlapTrackingQuery.ToComponentDataArray<OverlapTrackingQueryCenter>(state.WorldUpdateAllocator);
+
             Entity detectionEntiy = Entity.Null;
             Entity heroEntity = Entity.Null;
             if (SystemAPI.HasSingleton<Detection_DefaultCmpt>())
-             detectionEntiy = SystemAPI.GetSingletonEntity<Detection_DefaultCmpt>();
+                detectionEntiy = SystemAPI.GetSingletonEntity<Detection_DefaultCmpt>();
             if (SystemAPI.HasSingleton<HeroEntityMasterTag>())
-              heroEntity = SystemAPI.GetSingletonEntity<HeroEntityMasterTag>();
+                heroEntity = SystemAPI.GetSingletonEntity<HeroEntityMasterTag>();
 
 
             // 1:通用持续性技能的检测
-            state.Dependency= new SkillOverTimeOverlapDetectionJob
+            state.Dependency = new SkillOverTimeOverlapDetectionJob
             {
                 PhysicsWorld = physicsWorld,
                 Entities = entitiesOverTime,
                 Centers = centersOverTime,
                 MonsterTagLookup = _monsterTagLookup,
                 SkillTagLookup = _skillOverTimeTagLookup,
-                LocalToWorldLookup=_localToWorldLookup,
-                
+                LocalToWorldLookup = _localToWorldLookup,
+
                 SkillOverlapMonsterQueue = _skillOverTimeOverlapMonster.AsParallelWriter(),
             }.ScheduleParallel(entitiesOverTime.Length, 1, state.Dependency);
             state.Dependency.Complete();
-
+            //2.通用爆发性技能碰撞检测
             state.Dependency = new SkillBurstOverlapDetectionJob
             {
                 PhysicsWorld = physicsWorld,
@@ -145,10 +169,34 @@ namespace BlackDawn.DOTS
             }.ScheduleParallel(entitiesBurst.Length, 1, state.Dependency);
             state.Dependency.Complete();
 
+            //3.通用追踪型技能碰撞检测，收集碰撞对，但不计算伤害，用于寻踪,这里8个一个批次
+            //这里暂时不收集对列，不涉及伤害计算， 应该直接走buffer系统来进行目标确定
+            //对于技能体，是否需要改变目标的回调，还需要通过碰撞事件触发
+            state.Dependency = new SkillTrackingOverlapDetectionJob
 
+            {
+                PhysicsWorld = physicsWorld,
+                Entities = entitiesTracking,
+                Centers = centersTracking,
+                ECB = ecb.AsParallelWriter(),
+                TrackingRecordBufferLookup = _trackingBufferLookup,
+                Transform = _transformLookup,
+                MonsterTagLookup = _monsterTagLookup,
+                SkillTagLookup = _skillTrackingTagLookup,
+                LocalToWorldLookup = _localToWorldLookup,
+                SkillOverlapMonsterQueue = _skillTrackingOverlapMonster.AsParallelWriter(),
+            }.ScheduleParallel(entitiesTracking.Length, 1, state.Dependency);
+            //连锁吞噬的特殊技能回调，使用同一个ecb 这里也需要阻塞？
+            state.Dependency.Complete();
+            //3-1 依赖追踪范围检测的job 处理，这里使用不同job进行处理
+            // state.Dependency = new TrackingBufferDealJob
+            // {
+            //     Time = (float)SystemAPI.Time.ElapsedTime,
+            //     DeltaTime = SystemAPI.Time.DeltaTime,
+                
+            // }.ScheduleParallel(state.Dependency);
 
-
-            // 2. 单独的侦测器的buffer检测，走单一的调度
+            // 4. 单独的侦测器的buffer检测，走单一的调度
             state.Dependency = new DetectionBufferWriteJob
             {
                 PhysicsWorld = physicsWorld,
@@ -162,23 +210,25 @@ namespace BlackDawn.DOTS
             }.Schedule();
 
 
-            // 2. 并行筛选：遍历每个实体的 buffer，选最近的目标并清空 buffer，不需要被依赖
-            state.Dependency = new ApplyNearestJob 
-            {DetectionTagLookup=_detectionTagLookup,
-            OverlapQueryLookup = _overlapOverTimeQueryCenterLookup,
-            Detector =detectionEntiy,                 
+            // 4-1. 并行筛选：遍历每个实体的 buffer，选最近的目标并清空 buffer，不需要被依赖
+            state.Dependency = new ApplyNearestJob
+            {
+                DetectionTagLookup = _detectionTagLookup,
+                OverlapQueryLookup = _overlapOverTimeQueryCenterLookup,
+                Detector = detectionEntiy,
             }
             .ScheduleParallel(state.Dependency);
 
             // JOB后：队列转数组，对外暴露
             skillOverTimeOverlapMonsterArray = _skillOverTimeOverlapMonster.ToArray(Allocator.Persistent);
             skillBurstOverlapMonsterArray = _skillBurstOverlapMonster.ToArray(Allocator.Persistent);
+            skillTrackingOverlapMonsterArray = _skillTrackingOverlapMonster.ToArray(Allocator.Persistent);
             //if (skillOverlapMonsterArray.Length > 0)
             //    DevDebug.Log("检测到的数量" + skillOverlapMonsterArray.Length);
 
 
-            //if (skillBurstOverlapMonsterArray.Length > 0)
-            //    DevDebug.Log("检测到的数量" + skillBurstOverlapMonsterArray.Length);
+            // if (skillTrackingOverlapMonsterArray.Length > 0)
+            //    DevDebug.Log("检测到的数量" + skillTrackingOverlapMonsterArray.Length);
         }
 
         public void OnDestroy(ref SystemState state)
@@ -186,9 +236,10 @@ namespace BlackDawn.DOTS
             _detectionOverlapMonster.Dispose();
             _skillOverTimeOverlapMonster.Dispose();
             _skillBurstOverlapMonster.Dispose();
+            _skillTrackingOverlapMonster.Dispose();
 
             DisposeOverLapArrays();
-           
+
         }
 
     }
@@ -275,8 +326,8 @@ namespace BlackDawn.DOTS
 
                         float3 rotatedOffset = math.mul(rotationQuat, offset);
                         float3 actualBoxCenter = center + rotatedOffset;
-                                              
-                      
+
+
                         PhysicsWorld.OverlapBox(
                             actualBoxCenter,
                             rotationQuat,
@@ -284,7 +335,7 @@ namespace BlackDawn.DOTS
                             ref hitsBox,
                             filter
                         );
-                    
+
                         for (int j = 0; j < hitsBox.Length; j++)
                         {
                             var targetEntity = PhysicsWorld.Bodies[hitsBox[j].RigidBodyIndex].Entity;
@@ -304,7 +355,7 @@ namespace BlackDawn.DOTS
                         break;
                     }
 
-                    }
+            }
         }
 
         /// <summary>
@@ -314,7 +365,7 @@ namespace BlackDawn.DOTS
         /// <param name="halfExtents"></param>
         /// <param name="yRotationInRadians"></param>
         /// <returns></returns>
-       private static Aabb GetRotatedBoxApproximateAABB(float3 center, float3 halfExtents, float yRotationInRadians)
+        private static Aabb GetRotatedBoxApproximateAABB(float3 center, float3 halfExtents, float yRotationInRadians)
         {
             // 计算旋转后的包围盒范围
             float cos = math.abs(math.cos(yRotationInRadians));
@@ -352,7 +403,7 @@ namespace BlackDawn.DOTS
 
         public void Execute(int index)
         {
-          //  DevDebug.Log("进入收集");
+            //  DevDebug.Log("进入收集");
             var entity = Entities[index];
             var shape = Centers[index].shape;
             var center = Centers[index].center;
@@ -393,7 +444,7 @@ namespace BlackDawn.DOTS
 
                         for (int j = 0; j < hits.Length; j++)
                         {
-                          //  DevDebug.Log("进入最终筛选");
+                            //  DevDebug.Log("进入最终筛选");
                             var targetEntity = PhysicsWorld.Bodies[hits[j].RigidBodyIndex].Entity;
                             if (targetEntity == entity) continue;
 
@@ -402,7 +453,7 @@ namespace BlackDawn.DOTS
 
                             if (isSkill && isTargetMonster)
                             {
-                              //  DevDebug.Log("加入队列");
+                                //  DevDebug.Log("加入队列");
                                 SkillOverlapMonsterQueue.Enqueue(new TriggerPairData { EntityA = entity, EntityB = targetEntity });
                             }
                         }
@@ -481,7 +532,162 @@ namespace BlackDawn.DOTS
 
     }
 
+    /// <summary>
+    /// 寻址技能 相关检测处理的专用jobs
+    /// </summary>
+    [BurstCompile]
+    struct SkillTrackingOverlapDetectionJob : IJobFor
+    {
+        public EntityCommandBuffer.ParallelWriter ECB;
+        [ReadOnly] public PhysicsWorld PhysicsWorld;
+        [ReadOnly] public NativeArray<Entity> Entities;
+        [ReadOnly] public NativeArray<OverlapTrackingQueryCenter> Centers;
+        [ReadOnly] public ComponentLookup<SkillsTrackingCalPar> SkillTagLookup;
+        [ReadOnly] public ComponentLookup<LiveMonster> MonsterTagLookup;
+        [ReadOnly] public ComponentLookup<LocalToWorld> LocalToWorldLookup; // ✅ 新增世界变换组件
+        [ReadOnly] public ComponentLookup<LocalTransform> Transform;//位置变换
+        [ReadOnly] public BufferLookup<TrackingRecord> TrackingRecordBufferLookup;//追踪buffer查询
+        //通用队列
+        public NativeQueue<TriggerPairData>.ParallelWriter SkillOverlapMonsterQueue;
+        //后面通过 技能读取类的条件判断，引入新的队列，以筛选新的标识？
 
+        public void Execute(int index)
+
+        {
+            // DevDebug.Log("进入收集");
+            var entity = Entities[index];
+            var shape = Centers[index].shape;
+            var center = Centers[index].center;
+            var offset = Centers[index].offset;
+            var radius = Centers[index].radius;
+            var box = Centers[index].box;
+            var filter = Centers[index].filter;
+            var rotation = Centers[index].rotaion;
+            //定义buffer变量
+            var buffer = TrackingRecordBufferLookup[entity];
+
+
+            // ✅ 获取 LocalToWorld 变换（用于将 offset 从本地变为世界空间）
+            var ltw = LocalToWorldLookup[entity];
+            var worldOffset = math.transform(ltw.Value, offset);
+            var actualCenter = center + worldOffset;
+
+            switch (shape)
+            {
+                case OverLapShape.Sphere:
+                    {
+                         //DevDebug.Log("进入筛选");
+
+
+                        // ✅ 将旋转 float4 转 quaternion
+                        quaternion rotationQuat = new quaternion(rotation);
+
+                        // ✅ 使用 rotation * offset 模拟碰撞体偏移
+                        float3 rotatedOffset = math.mul(rotationQuat, offset);
+
+                        // ✅ 实体世界中心 + 旋转后的偏移，得到球心
+                        float3 actuallCirclCenter = LocalToWorldLookup[entity].Position + rotatedOffset;
+                        var hits = new NativeList<DistanceHit>(Allocator.Temp);
+                        var input = new PointDistanceInput
+                        {
+                            Position = actuallCirclCenter,
+                            MaxDistance = radius,
+                            Filter = filter
+                        };
+                        PhysicsWorld.CalculateDistance(input, ref hits);
+
+                        for (int j = 0; j < hits.Length; j++)
+                        {
+                            //  DevDebug.Log("进入最终筛选");
+                            var targetEntity = PhysicsWorld.Bodies[hits[j].RigidBodyIndex].Entity;
+                            if (targetEntity == entity) continue;
+
+                            bool isSkill = SkillTagLookup.HasComponent(entity);
+                            bool isTargetMonster = MonsterTagLookup.HasComponent(targetEntity);
+
+                            if (isSkill && isTargetMonster)
+                            {
+                                 // DevDebug.Log("加入队列");
+                                 SkillOverlapMonsterQueue.Enqueue(new TriggerPairData { EntityA = entity, EntityB = targetEntity });
+                                //- 在此处调用符合要求的方法， 直接将目标的位置 和 entity 的引用，添加到buffer中
+
+                                float3 targetPos = Transform[targetEntity].Position;
+                                //这里并行写入 貌似不能控制长度-待考察,不能控制buffer 的添加，只能控制队列
+                                                                 
+                                    AddToTrackingBuffer(entity, targetEntity, targetPos,index,ECB);
+                                
+
+                            }
+                        }
+
+                        hits.Dispose();
+                        break;
+                    }
+
+                case OverLapShape.Box:
+                    {
+                        var hitsBox = new NativeList<DistanceHit>(Allocator.Temp);
+                        float3 halfExtents = box * 0.5f;
+
+                        quaternion rotationQuat = new quaternion(rotation);
+
+                        float3 rotatedOffset = math.mul(rotationQuat, offset);
+                        float3 actualBoxCenter = center + rotatedOffset;
+
+
+                        PhysicsWorld.OverlapBox(
+                            actualBoxCenter,
+                            rotationQuat,
+                            halfExtents,
+                            ref hitsBox,
+                            filter
+                        );
+
+                        for (int j = 0; j < hitsBox.Length; j++)
+                        {
+                            var targetEntity = PhysicsWorld.Bodies[hitsBox[j].RigidBodyIndex].Entity;
+                            if (targetEntity == entity) continue;
+
+                            if (SkillTagLookup.HasComponent(entity) && MonsterTagLookup.HasComponent(targetEntity))
+                            {
+                                // SkillOverlapMonsterQueue.Enqueue(new TriggerPairData
+                                // {
+                                //     EntityA = entity,
+                                //     EntityB = targetEntity
+                                // });
+                                float3 targetPos = Transform[targetEntity].Position;
+
+                                if (buffer.Length < buffer.Capacity)
+
+                                {
+                                      AddToTrackingBuffer(entity, targetEntity, targetPos,index,ECB);
+                                }
+
+                            }
+                        }
+
+                        hitsBox.Dispose();
+                        break;
+                    }
+
+            }
+        }
+        private static void AddToTrackingBuffer(
+           Entity skillEntity,
+           Entity targetEntity,
+           float3 targetPosition,
+           int softKey,
+           EntityCommandBuffer.ParallelWriter ECB )
+        {
+
+            ECB.AppendToBuffer(softKey,skillEntity,new TrackingRecord
+            {
+                refTarget = targetEntity,
+                postion = targetPosition
+            });
+
+        }
+    }
 
     /// <summary>
     /// 侦测器检测,默认球形
@@ -523,9 +729,9 @@ namespace BlackDawn.DOTS
                 var other = PhysicsWorld.Bodies[hits[j].RigidBodyIndex].Entity;
                 if (other == Detector) continue;
 
-               // if (!MonsterTagLookup.HasComponent(other)) continue;
+                // if (!MonsterTagLookup.HasComponent(other)) continue;
                 if (!MonsterTagLookup.IsComponentEnabled(other)) continue;
-              //  if (!TransformTagLookup.HasComponent(other) || !TransformTagLookup.HasComponent(Detector)) continue;
+                //  if (!TransformTagLookup.HasComponent(other) || !TransformTagLookup.HasComponent(Detector)) continue;
 
                 float d = math.distancesq(
                     TransformTagLookup[Detector].Position,
@@ -537,7 +743,7 @@ namespace BlackDawn.DOTS
                 if (HitBufferLookup.HasBuffer(bufferTarget))
                 {
                     var buf = HitBufferLookup[bufferTarget];
-                    if (buf.Length < buf.Capacity)
+                    if (buf.Length < buf.Capacity)///这里单线程才有用？多线程会竞态
                         buf.Add(new NearbyHit { other = other, sqrDist = d });
                 }
             }
@@ -553,8 +759,8 @@ namespace BlackDawn.DOTS
         [ReadOnly] public ComponentLookup<Detection_DefaultCmpt> DetectionTagLookup;
         [ReadOnly] public Entity Detector;
         [NativeDisableParallelForRestriction]
-         public ComponentLookup<OverlapOverTimeQueryCenter> OverlapQueryLookup;
-        public void Execute(ref HeroAttackTarget det,in LocalTransform  transform ,HeroEntityMasterTag  masterTag, DynamicBuffer<NearbyHit> hits)
+        public ComponentLookup<OverlapOverTimeQueryCenter> OverlapQueryLookup;
+        public void Execute(ref HeroAttackTarget det, in LocalTransform transform, HeroEntityMasterTag masterTag, DynamicBuffer<NearbyHit> hits)
         {
 
             var detection_DefaultCmpt = DetectionTagLookup[Detector];
@@ -595,5 +801,7 @@ namespace BlackDawn.DOTS
             hits.Clear();
         }
     }
+
+
 
 }

@@ -71,6 +71,19 @@ namespace BlackDawn.DOTS
         public float4 rotaion;
         public CollisionFilter filter; // 每个Overlap可自定义过滤规则
     }
+    /// <summary>
+    /// 主动追踪型技能 查询（连锁吞噬）
+    /// </summary>
+    public struct OverlapTrackingQueryCenter : IComponentData
+    {
+        public OverLapShape shape;
+        public float3 box;
+        public float3 center;
+        public float radius;
+        public float3 offset;
+        public float4 rotaion;
+        public CollisionFilter filter; // 每个Overlap可自定义过滤规则
+    }
 
     /// <summary>
     /// 主动范围查询Buffer
@@ -181,7 +194,7 @@ namespace BlackDawn.DOTS
     public struct AtHybrid : IComponentData { };
     #endregion
 
-    #region 英雄技能施加在怪物身上的标签
+    #region 英雄技能 预施加 在怪物身上的标签
     /// <summary>
     /// 雷霆之握标签,预加载失活状态
     /// </summary>

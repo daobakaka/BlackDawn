@@ -541,7 +541,7 @@ namespace BlackDawn.DOTS
             ECB.SetComponent(sortKey, linkedEntity[2].Value, damageText);
 
             // 5) 清空 buffer，为下一帧重用
-            accBuf.Clear();
+           // accBuf.Clear();
 
            // DevDebug.Log("已累加并清空自己的buffer");
 

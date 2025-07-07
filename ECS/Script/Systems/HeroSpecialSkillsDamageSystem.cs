@@ -22,9 +22,9 @@ namespace BlackDawn.DOTS
     /// 特殊技能执行， 如法阵虹吸 效果
     /// </summary>
     [RequireMatchingQueriesForUpdate]
-   // [BurstCompile]
+    // [BurstCompile]
     [UpdateInGroup(typeof(ActionSystemGroup))]
-    [UpdateAfter(typeof(HeroSkillsDamageOverTimeSystem))]
+    [UpdateBefore(typeof(HeroSkillsDamageSystem))]//-- 注意这里在技能伤害计算系统之前运行， 确保出伤害数字，好像还是未渲染出来？
     public partial struct HeroSpecialSkillsDamageSystem : ISystem
     {
         ComponentLookup<LocalTransform> m_transform;
@@ -35,12 +35,15 @@ namespace BlackDawn.DOTS
         private ComponentLookup<HeroAttributeCmpt> _heroAttrLookup;
         private BufferLookup<HitElementResonanceRecord> _hitElementResonanceRecordBufferLookup;
         private BufferLookup<LinkedEntityGroup> _linkedEntityGroupLookup;
+        private BufferLookup<MonsterDotDamageBuffer> _monsterDotDamafeBufferLookup;
         private ComponentLookup<FlightPropDamageCalPar> _flightPropDamageCalParLookup;
         private ComponentLookup<SkillsDamageCalPar> _skillsDamageCalParLookup;
         private ComponentLookup<SkillMineBlastExplosionTag> _skillMineBlastExplosionTagLookup;
         private ComponentLookup<SkillPoisonRainATag> _skillPoisonRainATagLookup;
         private ComponentLookup<SkillThunderGripTag> _skillThunderGripTagLookup;
+        private ComponentLookup<SkillChainDevourTag> _skillChainDevourTagLookup;
         private ComponentLookup<PreDefineHeroSkillThunderGripTag> _preDefineHeroSkillThunderGripTagLookup;
+        private ComponentLookup<SkillsTrackingCalPar> _skillsTrackingCalParLookup;//寻址类技能通用计算标签
         /// <summary>
         /// 法阵特殊技能造成的伤害表现为DOT伤害
         /// </summary>
@@ -72,13 +75,16 @@ namespace BlackDawn.DOTS
             _skillArcaneCircleTagLookup = SystemAPI.GetComponentLookup<SkillArcaneCircleTag>(true);
             _hitElementResonanceRecordBufferLookup = SystemAPI.GetBufferLookup<HitElementResonanceRecord>(true);
             _linkedEntityGroupLookup = SystemAPI.GetBufferLookup<LinkedEntityGroup>(true);
+            _monsterDotDamafeBufferLookup = SystemAPI.GetBufferLookup<MonsterDotDamageBuffer>(true);
             _flightPropDamageCalParLookup = SystemAPI.GetComponentLookup<FlightPropDamageCalPar>(true);
             _skillsDamageCalParLookup = SystemAPI.GetComponentLookup<SkillsDamageCalPar>(true);
             _skillMineBlastExplosionTagLookup = SystemAPI.GetComponentLookup<SkillMineBlastExplosionTag>(true);
             _monsterDebufferAttributeLookup = SystemAPI.GetComponentLookup<MonsterDebuffAttribute>(true);
             _skillPoisonRainATagLookup = SystemAPI.GetComponentLookup<SkillPoisonRainATag>(true);
-            _skillThunderGripTagLookup =SystemAPI.GetComponentLookup<SkillThunderGripTag>(true);
-            _preDefineHeroSkillThunderGripTagLookup =SystemAPI.GetComponentLookup<PreDefineHeroSkillThunderGripTag>(true);
+            _skillThunderGripTagLookup = SystemAPI.GetComponentLookup<SkillThunderGripTag>(true);
+            _preDefineHeroSkillThunderGripTagLookup = SystemAPI.GetComponentLookup<PreDefineHeroSkillThunderGripTag>(true);
+            _skillChainDevourTagLookup = SystemAPI.GetComponentLookup<SkillChainDevourTag>(true);
+            _skillsTrackingCalParLookup = SystemAPI.GetComponentLookup<SkillsTrackingCalPar>(true);
 
         }
         public void OnUpdate(ref SystemState state)
@@ -89,6 +95,7 @@ namespace BlackDawn.DOTS
             _monsterLossPoolAttrLookup.Update(ref state);
             _heroAttrLookup.Update(ref state);
             _monsterDebufferAttributeLookup.Update(ref state);
+            _monsterDotDamafeBufferLookup.Update(ref state);
 
             _skillArcaneCircleTagLookup.Update(ref state);
             _skillArcaneCircleSecondBufferLookup.Update(ref state);
@@ -106,6 +113,9 @@ namespace BlackDawn.DOTS
             //雷霆之握，技能标签,预定义标签
             _skillThunderGripTagLookup.Update(ref state);
             _preDefineHeroSkillThunderGripTagLookup.Update(ref state);
+            //连锁吞噬 技能标签，通用寻址类技能标签
+            _skillChainDevourTagLookup.Update(ref state);
+            _skillsTrackingCalParLookup.Update(ref state);
 
             var deltaTime = SystemAPI.Time.DeltaTime;
             if (arcaneCircleLinkenBuffer.IsCreated)
@@ -124,24 +134,46 @@ namespace BlackDawn.DOTS
             var poisonRainAHitMonterArray = detectionSystem.posionRainAHitMonsterArray;
             //获取雷霆之握碰撞对,进行一个标记，采取预标记策略，考虑到变化阶段的问题，这里还是在多线程里计算
             var thunderGripHitMonsterArray = detectionSystem.thunderGripHitMonsterArray;
+            //获取连锁吞噬碰撞对
+            var chainDevourHitMonsterArray = detectionSystem.chainDevourHitMonsterArray;
             // if(thunderGripHitMonsterArray.Length>0)
             // DevDebug.LogError("雷霆之握碰撞对长度" + thunderGripHitMonsterArray.Length);
             //雷霆之握技能处理,由侦测系统开关控制
-            if(detectionSystem.enableSpecialSkillThunderGrip)
-            state.Dependency = new ApplySpecialSkillThunderGripDamageJob
-            {
-                ECB = ecb.AsParallelWriter(),
-                DefenseAttrLookup = _monsterDefenseAttrLookup,
-                DebuffAttrLookup = _monsterDebufferAttributeLookup,
-                SkillTagLookup = _skillThunderGripTagLookup,
-                TransformLookup =m_transform,
-                SkillDamageCalLookup = _skillsDamageCalParLookup,
-                PreDefineHeroSkillThunderGripTagLookup =_preDefineHeroSkillThunderGripTagLookup,
-                HitArray = thunderGripHitMonsterArray
-            }.ScheduleParallel(thunderGripHitMonsterArray.Length, 64, state.Dependency);
+            if (detectionSystem.enableSpecialSkillThunderGrip)
+                state.Dependency = new ApplySpecialSkillThunderGripDamageJob
+                {
+                    ECB = ecb.AsParallelWriter(),
+                    DefenseAttrLookup = _monsterDefenseAttrLookup,
+                    DebuffAttrLookup = _monsterDebufferAttributeLookup,
+                    SkillTagLookup = _skillThunderGripTagLookup,
+                    TransformLookup = m_transform,
+                    SkillDamageCalLookup = _skillsDamageCalParLookup,
+                    PreDefineHeroSkillThunderGripTagLookup = _preDefineHeroSkillThunderGripTagLookup,
+                    HitArray = thunderGripHitMonsterArray
+                }.ScheduleParallel(thunderGripHitMonsterArray.Length, 64, state.Dependency);
 
 
-
+            //连锁吞噬技能处理，由侦测系统开关控制
+            if (detectionSystem.enableSpecialSkillChainDevour&&chainDevourHitMonsterArray.Length>0)
+                state.Dependency = new ApplySpecialSkillChainDevourDamageJob
+                {
+                    ECB = ecb.AsParallelWriter(),
+                    DefenseAttrLookup = _monsterDefenseAttrLookup,
+                    DebuffAttrLookup = _monsterDebufferAttributeLookup,
+                    LossPoolAttrLookup = _monsterLossPoolAttrLookup,
+                    DotDamageBufferLookup = _monsterDotDamafeBufferLookup,
+                    SkillTagLookup = _skillChainDevourTagLookup,
+                    TransformLookup = m_transform,
+                    SkillDamageCalLookup = _skillsDamageCalParLookup,
+                    SkillsTrackingCalParLookup = _skillsTrackingCalParLookup,
+                    HitArray = chainDevourHitMonsterArray
+                }
+                .ScheduleParallel(chainDevourHitMonsterArray.Length, 64, state.Dependency);
+            //Schedule(chainDevourHitMonsterArray.Length, state.Dependency);
+               
+                // if (chainDevourHitMonsterArray.Length > 0)
+                // DevDebug.Log("chian长度" + chainDevourHitMonsterArray.Length);
+               //.ScheduleParallel(chainDevourHitMonsterArray.Length, 64, state.Dependency);
 
 
 
@@ -595,11 +627,104 @@ namespace BlackDawn.DOTS
             {
                 debuff.damageAmplification -= (0.2f + skillTag.level * 0.01f);
             }
-       
+
 
             ECB.SetComponent(i, target, debuff);
 
 
         }
     }
+/// <summary>
+/// 连锁吞噬回调计算
+/// </summary>
+    struct ApplySpecialSkillChainDevourDamageJob : IJobFor
+    {
+        public EntityCommandBuffer.ParallelWriter ECB;
+        [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
+        [ReadOnly] public ComponentLookup<MonsterLossPoolAttribute> LossPoolAttrLookup;
+        [ReadOnly] public ComponentLookup<MonsterDebuffAttribute> DebuffAttrLookup;
+        [ReadOnly] public ComponentLookup<SkillsDamageCalPar> SkillDamageCalLookup;
+        [ReadOnly] public ComponentLookup<SkillChainDevourTag> SkillTagLookup;
+        [ReadOnly] public ComponentLookup<LocalTransform> TransformLookup;
+        [ReadOnly] public BufferLookup<MonsterDotDamageBuffer> DotDamageBufferLookup;
+        //传入预定义标签进行单次判断
+        [ReadOnly] public ComponentLookup<SkillsTrackingCalPar> SkillsTrackingCalParLookup;//寻踪类技能专用标签
+        [ReadOnly] public NativeArray<TriggerPairData> HitArray;//收集连锁吞噬碰撞对，这里因此涉及到多个，似乎无法有效控制监测器大小，需要降低道具飞行速度，降低监测范围，以适应开发需求
+
+        public void Execute(int index)
+        {
+
+            var pair = HitArray[index];
+            Entity skill = pair.EntityA;
+            Entity target = pair.EntityB;
+
+            // 检查目标是否有 
+            if (!SkillsTrackingCalParLookup.HasComponent(skill))
+
+                return;
+
+
+            var debuff = DebuffAttrLookup[target];
+            var skillTag = SkillTagLookup[skill];
+            var skillDamageCal = SkillDamageCalLookup[skill];
+            var trackingCalParSkillTag = SkillsTrackingCalParLookup[skill];
+            //dot的buffer情况，用于遍历
+            var dotBuffer = DotDamageBufferLookup[target];
+            //池 用于关闭渲染dot特效
+            var monsterPool = LossPoolAttrLookup[target];
+            if (!trackingCalParSkillTag.enbaleChangeTarget)
+            {//碰撞到之后回调确认,同时碰撞次数-1,时间约束器归0，可以重新计算碰撞
+                trackingCalParSkillTag.enbaleChangeTarget = true;
+                trackingCalParSkillTag.runCount -= 1;
+                trackingCalParSkillTag.timer = 0;
+                //写回回调,回调确认之后，这里放到 overlapDetectionSystem 进行处理 
+                ECB.SetComponent(index, skill, trackingCalParSkillTag);
+
+                skillDamageCal.damageChangePar += 0.2f;
+
+                //写回伤害变化，碰撞一次增伤20%
+                ECB.SetComponent(index, skill, skillDamageCal);
+            }
+            //开启第二阶段连锁吞噬处理，这里几乎不需要处理多个组件碰撞的聚合问题
+            //这里通过标签控制进行单次计算
+            if (skillTag.enableSecondB && !debuff.toClearDotBuffer)
+            {
+
+                float devourDamage = 0;
+                for (int i = 0; i < dotBuffer.Length; i++)
+                {
+
+                    devourDamage += dotBuffer[i].dotDamage;
+
+                }
+
+                //直减还是添加到累计buffer里面？--暂时用累计buffer的方式--这个系统是运行在 通用伤害参数计算系统之后
+                //后面伤害飘字的显示，可能会优化为使用广告牌预制体的方式生成
+                //这里是直接累加到buffer里面通用表达
+                devourDamage *= (10 + trackingCalParSkillTag.originalCount);
+                //吞噬伤害不计入池化值，写回吞噬，伤害，apeend 伤害系统去降低血量-- 原本的末位减1逻辑是否应更改，目前增加到首位第二开始
+                //或者干脆取消直接写入，统一在通用类中采用buffer写入
+                var dd = new HeroSkillPropAccumulateData();
+                dd.damage = devourDamage;
+                // DevDebug.LogError("吞噬伤害"+devourDamage);
+                ECB.AppendToBuffer<HeroSkillPropAccumulateData>(index, target, dd);
+
+                //写回清除指令
+                debuff.toClearDotBuffer = true;
+                ECB.SetComponent(index, target, debuff);
+                //写回pool 特效处理，《这里可以添加吞噬效果》,1、关闭现有的池化效果 2、后续开启吞噬效果,这里是管用的
+                //但是目前伤害的触发 很难观察
+                monsterPool.fireActive = 0;
+                monsterPool.frostActive = 0;
+                monsterPool.lightningActive = 0;
+                monsterPool.shadowActive = 0;
+                monsterPool.poisonActive = 0;
+                monsterPool.bleedActive = 0;
+                ECB.SetComponent(index, target, monsterPool);
+
+            }
+         
+        }
+    }
+
 }

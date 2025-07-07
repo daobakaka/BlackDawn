@@ -672,13 +672,22 @@ namespace BlackDawn
             float potentialDotDamage = skillAttr.baseDamage * dotBaseMul + dotExtra;
 
             //这里增加英雄技能造成dot伤害的概率
-            skillsDamageCalPar.frostDotDamage = Random.value <= atkAttr.dotProcChance.frostChance+skillAttr.dotSkillProcChance.frostChance ? potentialDotDamage : 0f;
-            skillsDamageCalPar.lightningDotDamage = Random.value <= atkAttr.dotProcChance.lightningChance+skillAttr.dotSkillProcChance.lightningChance ? potentialDotDamage : 0f;
-            skillsDamageCalPar.poisonDotDamage = Random.value <= atkAttr.dotProcChance.poisonChance +skillAttr.dotSkillProcChance.poisonChance? potentialDotDamage : 0f;
-            skillsDamageCalPar.shadowDotDamage = Random.value <= atkAttr.dotProcChance.shadowChance + skillAttr.dotSkillProcChance.shadowChance ? potentialDotDamage : 0f;
-            skillsDamageCalPar.fireDotDamage = Random.value <= atkAttr.dotProcChance.fireChance + skillAttr.dotSkillProcChance.fireChance ? potentialDotDamage : 0f;
-            skillsDamageCalPar.bleedDotDamage = Random.value <= atkAttr.dotProcChance.bleedChance + skillAttr.dotSkillProcChance.bleedChance ? potentialDotDamage: 0f;
+            // skillsDamageCalPar.frostDotDamage = Random.value <= atkAttr.dotProcChance.frostChance+skillAttr.dotSkillProcChance.frostChance ? potentialDotDamage : 0f;
+            // skillsDamageCalPar.lightningDotDamage = Random.value <= atkAttr.dotProcChance.lightningChance+skillAttr.dotSkillProcChance.lightningChance ? potentialDotDamage : 0f;
+            // skillsDamageCalPar.poisonDotDamage = Random.value <= atkAttr.dotProcChance.poisonChance +skillAttr.dotSkillProcChance.poisonChance? potentialDotDamage : 0f;
+            // skillsDamageCalPar.shadowDotDamage = Random.value <= atkAttr.dotProcChance.shadowChance + skillAttr.dotSkillProcChance.shadowChance ? potentialDotDamage : 0f;
+            // skillsDamageCalPar.fireDotDamage = Random.value <= atkAttr.dotProcChance.fireChance + skillAttr.dotSkillProcChance.fireChance ? potentialDotDamage : 0f;
+            // skillsDamageCalPar.bleedDotDamage = Random.value <= atkAttr.dotProcChance.bleedChance + skillAttr.dotSkillProcChance.bleedChance ? potentialDotDamage: 0f;
 
+            //这里增加一个用于技能分离触发的测试版本
+            skillsDamageCalPar.frostDotDamage = Random.value <= skillAttr.dotSkillProcChance.frostChance ? potentialDotDamage : 0f;
+            skillsDamageCalPar.lightningDotDamage = Random.value <= skillAttr.dotSkillProcChance.lightningChance ? potentialDotDamage : 0f;
+            skillsDamageCalPar.poisonDotDamage = Random.value <= skillAttr.dotSkillProcChance.poisonChance? potentialDotDamage : 0f;
+            skillsDamageCalPar.shadowDotDamage = Random.value <= skillAttr.dotSkillProcChance.shadowChance ? potentialDotDamage : 0f;
+            skillsDamageCalPar.fireDotDamage = Random.value <= skillAttr.dotSkillProcChance.fireChance ? potentialDotDamage : 0f;
+            skillsDamageCalPar.bleedDotDamage = Random.value <= skillAttr.dotSkillProcChance.bleedChance ? potentialDotDamage: 0f;
+            
+           
             //这里计算完了英雄自己属性的伤害触发， 后面的DOT和控制状态判断，可由怪物自身触发
 
             //增加 伤害变化参数,默认为1

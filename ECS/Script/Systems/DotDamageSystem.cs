@@ -16,6 +16,7 @@ namespace BlackDawn.DOTS
     [BurstCompile]
     public partial struct DotDamageSystem : ISystem
     {
+        public bool EnbaleChainDecourSkillSecondB;
         private ComponentLookup<MonsterTempDotDamageText> _monsterTempDotDamage;
 
         void OnCreate(ref SystemState state)
@@ -36,7 +37,11 @@ namespace BlackDawn.DOTS
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
 
-            //DevDebug.LogError("更新DOT 伤害计算");
+            //连锁吞噬的dot处理逻辑,由技能释放类开启
+
+            if (EnbaleChainDecourSkillSecondB)
+            state.Dependency = new DealChainDevourDotDamageJob {DeltaTime=timer }.ScheduleParallel(state.Dependency);
+
 
             state.Dependency = new DealDotDamageJob
             {
@@ -62,7 +67,40 @@ namespace BlackDawn.DOTS
 
         }
     }
+    /// <summary>
+    ///连锁吞噬B阶段处理逻辑，跑在通用处理逻辑前面
+    /// </summary>
 
+    [BurstCompile]
+    partial struct DealChainDevourDotDamageJob : IJobEntity
+    {     
+        public float DeltaTime;
+
+        public void Execute(Entity entity,EnabledRefRO<LiveMonster> liveMonster,[ChunkIndexInQuery] int index, ref MonsterDebuffAttribute monsterDebuff
+
+          , DynamicBuffer<MonsterDotDamageBuffer> monsterDotDamageBuffers)
+        {
+
+            //这里处理连锁吞噬的逻辑    
+            if (monsterDebuff.toClearDotBuffer)
+            {
+                monsterDotDamageBuffers.Clear();
+                monsterDebuff.Devourtimer += DeltaTime;
+                if (monsterDebuff.Devourtimer >= 1)
+                {
+                    monsterDebuff.toClearDotBuffer = false;
+                    monsterDebuff.Devourtimer = 0;
+                }
+            }
+
+
+
+        }
+    }
+
+    /// <summary>
+    /// 通用DOT 处理逻辑
+    /// </summary>
     [BurstCompile]
     partial struct DealDotDamageJob : IJobEntity
     {
@@ -72,20 +110,21 @@ namespace BlackDawn.DOTS
         public EntityCommandBuffer.ParallelWriter ECB;
         public float DeltaTime;
 
-        public void Execute(Entity entity, [ChunkIndexInQuery] int index, ref MonsterDebuffAttribute monsterDebuff, ref MonsterDefenseAttribute monsterDefense
+        public void Execute(Entity entity,EnabledRefRO<LiveMonster> liveMonster, [ChunkIndexInQuery] int index, ref MonsterDebuffAttribute monsterDebuff, ref MonsterDefenseAttribute monsterDefense
 
           , DynamicBuffer<MonsterDotDamageBuffer> monsterDotDamageBuffers, DynamicBuffer<LinkedEntityGroup> linkedEntityGroups)
         {
-           // DevDebug.LogError("进入DOT 伤害计算");
+       
+            // DevDebug.LogError("进入DOT 伤害计算");
             //显示掩码写法,替代if的条件判断，取消jump的汇编跳转指令
             float hasHit = math.select(0f, 1f, monsterDotDamageBuffers.Length > 0);
             //怪物活着
             float live = math.select(0f, 1f, monsterDefense.hp > 0);
             //隐式三目运算写法
-           // float hasHit = hits.Length > 0 ? 1f : 0f;
+            // float hasHit = hits.Length > 0 ? 1f : 0f;
             // 1) 每秒触发一次计时器
             monsterDebuff.dotTimer += DeltaTime;
-            float triggerMask = math.step(1f, monsterDebuff.dotTimer)*hasHit* live; // =1 when dotTimer>=1
+            float triggerMask = math.step(1f, monsterDebuff.dotTimer) * hasHit * live; // =1 when dotTimer>=1
             monsterDebuff.dotTimer -= triggerMask * 1f;                // 减去1秒或0
 
             // 2) 汇总所有 dotDamage 并移除已过期条目（SwapBack 风格）
@@ -98,7 +137,7 @@ namespace BlackDawn.DOTS
                 d.survivalTime -= DeltaTime;
 
                 //这种大概率判断属于分支预测友好型，不需要进行SIMD优化
-                if (d.survivalTime >0)
+                if (d.survivalTime > 0)
                 {
                     // 未过期，写回更新后的记录
                     monsterDotDamageBuffers[i] = d;
@@ -126,11 +165,8 @@ namespace BlackDawn.DOTS
                 triggerMask > 0f
             );
 
-            //// 4) 写回 monsterDebuff（dotTimer 保持最新）
-            //ECB.SetComponent(index, entity, monsterDebuff);
-            ////5） 写回 生命变化
-            //ECB.SetComponent(index, entity, monsterDefense);
-
         }
     }
+
+
 }

@@ -895,6 +895,10 @@ namespace BlackDawn
         //---将部分技能的控制缓存，交给debuff组件来处理
         public float3 thunderPosition; //雷霆之握的目标位置
         public float thunderGripEndTimer;//雷霆之握timer
+        //饥渴吞噬的buffer以及特效处理
+        public bool toClearDotBuffer;
+        public float Devourtimer;
+        
     }
 
     /// <summary>

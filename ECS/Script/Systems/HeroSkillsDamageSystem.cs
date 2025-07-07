@@ -56,8 +56,6 @@ namespace BlackDawn.DOTS
             _monsterTempDotDamageTextLookup = SystemAPI.GetComponentLookup<MonsterTempDotDamageText>(false);
             _monsterDebuffAttrLookup = SystemAPI.GetComponentLookup<MonsterDebuffAttribute>(true);
             _monsterDotDamageBufferLookup = SystemAPI.GetBufferLookup<MonsterDotDamageBuffer>(true);
-
-
             _detectionSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
 
         }
@@ -530,8 +528,10 @@ new ProfilerMarker("SkillDamageJob.Execute");
             }
 
             // 1) 聚合
-            var sum = new FlightPropAccumulateData();
-            for (int i = 0; i < accBuf.Length - 1; i++)
+            //var sum = new FlightPropAccumulateData();//标注疑惑点！！！这里的聚合结构体 是否需要设置为技能累计BUFF？是不是类别转化错误
+                                                       //这里应该是用这个结构体来进行临时计算，并不写回                     
+            var sum = new HeroSkillPropAccumulateData();
+            for (int i = 1; i < accBuf.Length ; i++) //这里更改为集合增加 ，不加第一条，因为本来就有完整的buffer
             {
                 var d = accBuf[i];
                 sum.damage += d.damage;
@@ -573,7 +573,7 @@ new ProfilerMarker("SkillDamageJob.Execute");
 
             ECB.SetComponent(sortKey, linkedEntity[2].Value, damageText);
             // 5) 清空 buffer，为下一帧重用
-            accBuf.Clear();
+           // accBuf.Clear();
 
             // DevDebug.Log("已累加并清空自己的buffer");
 

@@ -120,3 +120,5 @@ BuffHandlerAspect/BuffHandlerUtility:¶àÏß³ÌÖÐµÄ»ù´¡ÊôÐÔºÍ¶¯Ì¬»º´æÇøbuffÖÐµÄ»ù±¾Ê
 
 6.30   ³õ²½Íê³É¼¼ÄÜ °µÓ°ºéÁ÷Éè¼Æ£¬ ¶þ½×¶ÎÐ§¹û·Ç³£Õ¨ÁÑ£¬µ«³öÏÖÒ»Ð©ÐÔÄÜÆ¿¾±£¬´ý·ÖÎö£¬¿ÉÄÜºÍbuffer À©ÈÝÓÐ¹Ø£¬ÒòÎª¸²¸ÇÃæÌ«´ó£¬Æä´ÎÁ½¸ö¼ì²âÏµÍ³¸Ð¾õÒ²ÖØµþÁË£¿ ÔÙÕß ÌØÊâ¼¼ÄÜÏµÍ³ÏûºÄÒ²ºÜ´ó£¬¸Ð¾õÒ²ÓÐÖØµþ£¿¿ÉÄÜÐèÉè¼ÆÐÂµÄ±¬·¢Ë²·¢¼¼ÄÜÏµÍ³
 
+7.7 Ôö¼Ó¼¼ÄÜ À×öªÖ®ÎÕ Á¬ËøÍÌÊÉµÄÉè¼Æ£¬ Ä¿Ç°Á¬ËøÍÌÊÉµÄÉËº¦äÖÈ¾»òÕß¼ÆËãÓÐµãÎÊÌâ£¬ºóÆÚÔÙ¼ì²é£¬»ò¸Ä±äÉËº¦Æ®×ÓµÄÉú³É·½Ê½
+

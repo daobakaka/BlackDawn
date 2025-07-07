@@ -79,9 +79,14 @@ namespace BlackDawn
 
         public void RelasesHeroSkill(HeroSkillID iD, HeroSkillPsionicType psionicType = HeroSkillPsionicType.Basic)
         {
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
+            var ecb = new EntityCommandBuffer(Allocator.Temp);            
+            var detectionSystemHandle = World.DefaultGameObjectInjectionWorld.Unmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
+            ref var detectionSystem = ref World.DefaultGameObjectInjectionWorld.Unmanaged.GetUnsafeSystemRef<DetectionSystem>(detectionSystemHandle);
+
+            var dotDamageSystemHandle = World.DefaultGameObjectInjectionWorld.Unmanaged.GetExistingUnmanagedSystem<DotDamageSystem>();
+            ref var dotDamageSystem = ref World.DefaultGameObjectInjectionWorld.Unmanaged.GetUnsafeSystemRef<DotDamageSystem>(dotDamageSystemHandle);
             switch (iD)
-                
+
             {
                 //脉冲，瞬时
                 case HeroSkillID.Pulse:
@@ -132,11 +137,11 @@ namespace BlackDawn
                         case HeroSkillPsionicType.Basic:
                             WeaponEnchantmentSkillDarkEnergy(5);
                             break;
-                          //增加两次充能，随着技能等级成长，增加充能次数
+                        //增加两次充能，随着技能等级成长，增加充能次数
                         case HeroSkillPsionicType.PsionicA:
                             WeaponEnchantmentSkillDarkEnergy(7);
                             break;
-                            //暗影吞噬的技能，这里应该增加一个新标签
+                        //暗影吞噬的技能，这里应该增加一个新标签
                         case HeroSkillPsionicType.PsionicB:
                             WeaponEnchantmentSkillDarkEnergy(5);
                             break;
@@ -153,31 +158,31 @@ namespace BlackDawn
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
-                            var entityIce = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_IceFire, _transform.position, Hero.instance.transform.rotation, 1, new float3(0,0.3f,0), 0, 1, false, false);
+                            var entityIce = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_IceFire, _transform.position, Hero.instance.transform.rotation, 1, new float3(0, 0.3f, 0), 0, 1, false, false);
                             //添加技能专用标签用于检测等运动等    
-                            _entityManager.AddComponentData(entityIce, new SkillIceFireTag() { tagSurvivalTime =20, speed = 3,radius=5 ,currentAngle=1.72f});
+                            _entityManager.AddComponentData(entityIce, new SkillIceFireTag() { tagSurvivalTime = 20, speed = 3, radius = 5, currentAngle = 1.72f });
                             var entityFire = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_IceFireFire, _transform.position, Hero.instance.transform.rotation, 1, new float3(0, 0.3f, 0), 0, 1, false, false);
                             //添加技能专用标签用于检测等运动等    
                             _entityManager.AddComponentData(entityFire, new SkillIceFireTag() { tagSurvivalTime = 20, speed = 3, radius = 5, currentAngle = -1.72f });
                             break;
-                            //二阶冰火技能增加伤害、半径、体积、速度、持续时间
+                        //二阶冰火技能增加伤害、半径、体积、速度、持续时间
                         case HeroSkillPsionicType.PsionicA:
                             var entityIce1 = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_IceFire, _transform.position, Hero.instance.transform.rotation, 1.3f, new float3(0, 0.5f, 0), 0, 1.5f, false, false);
                             //添加技能专用标签用于检测等运动等    
-                            _entityManager.AddComponentData(entityIce1, new SkillIceFireTag() { tagSurvivalTime = 25, speed = 4, radius = 7, currentAngle = 1.72f ,originalScale=2.6f});
+                            _entityManager.AddComponentData(entityIce1, new SkillIceFireTag() { tagSurvivalTime = 25, speed = 4, radius = 7, currentAngle = 1.72f, originalScale = 2.6f });
                             var entityFire1 = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_IceFireFire, _transform.position, Hero.instance.transform.rotation, 1.3f, new float3(0, 0.5f, 0), 0, 1.3f, false, false);
                             //添加技能专用标签用于检测等运动等    
-                            _entityManager.AddComponentData(entityFire1, new SkillIceFireTag() { tagSurvivalTime = 25, speed = 4, radius = 7, currentAngle = -1.72f , originalScale = 2.6f });
+                            _entityManager.AddComponentData(entityFire1, new SkillIceFireTag() { tagSurvivalTime = 25, speed = 4, radius = 7, currentAngle = -1.72f, originalScale = 2.6f });
                             break;
                         case HeroSkillPsionicType.PsionicB:
                             var entityIce2 = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_IceFire, _transform.position, Hero.instance.transform.rotation, 1, new float3(0, 0.3f, 0), 0, 1, false, false);
                             //添加技能专用标签用于检测等运动等    
-                            _entityManager.AddComponentData(entityIce2, new SkillIceFireTag() { tagSurvivalTime = 25, speed = 4, radius = 7, currentAngle = 1.72f ,enableSecond=true,scaleChangePar =1,skillDamageChangeParTag=1, originalScale = 2f });
+                            _entityManager.AddComponentData(entityIce2, new SkillIceFireTag() { tagSurvivalTime = 25, speed = 4, radius = 7, currentAngle = 1.72f, enableSecond = true, scaleChangePar = 1, skillDamageChangeParTag = 1, originalScale = 2f });
                             _entityManager.AddComponentData(entityIce2, new SkillIceFireSecondExplosionRequestTag { });
                             _entityManager.SetComponentEnabled<SkillIceFireSecondExplosionRequestTag>(entityIce2, false);
                             var entityFire2 = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_IceFireFire, _transform.position, Hero.instance.transform.rotation, 1, new float3(0, 0.3f, 0), 0, 1, false, false);
                             //添加技能专用标签用于检测等运动等    
-                            _entityManager.AddComponentData(entityFire2, new SkillIceFireTag() { tagSurvivalTime = 25, speed = 4, radius = 7, currentAngle = -1.72f,enableSecond=true,scaleChangePar = 1, skillDamageChangeParTag = 1, originalScale = 2f });
+                            _entityManager.AddComponentData(entityFire2, new SkillIceFireTag() { tagSurvivalTime = 25, speed = 4, radius = 7, currentAngle = -1.72f, enableSecond = true, scaleChangePar = 1, skillDamageChangeParTag = 1, originalScale = 2f });
                             _entityManager.AddComponentData(entityFire2, new SkillIceFireSecondExplosionRequestTag { });
                             _entityManager.SetComponentEnabled<SkillIceFireSecondExplosionRequestTag>(entityFire2, false);
                             break;
@@ -185,7 +190,7 @@ namespace BlackDawn
 
                             var entityIce3 = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_IceFire, _transform.position, Hero.instance.transform.rotation, 0.3f, new float3(0, 1.3f, 0), 0, 1.5f, false, false);
                             //添加技能专用标签用于检测等运动等    
-                            _entityManager.AddComponentData(entityIce3, new SkillIceFireTag() { tagSurvivalTime = 30, speed = 6f, radius = 9, currentAngle = -1.72f ,enableSecond = true, scaleChangePar = 1, skillDamageChangeParTag = 1 , originalScale = 2.6f });
+                            _entityManager.AddComponentData(entityIce3, new SkillIceFireTag() { tagSurvivalTime = 30, speed = 6f, radius = 9, currentAngle = -1.72f, enableSecond = true, scaleChangePar = 1, skillDamageChangeParTag = 1, originalScale = 2.6f });
                             _entityManager.AddComponentData(entityIce3, new SkillIceFireSecondExplosionRequestTag { });
                             _entityManager.SetComponentEnabled<SkillIceFireSecondExplosionRequestTag>(entityIce3, false);
                             var entityFire3 = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_IceFireFire, _transform.position, Hero.instance.transform.rotation, 0.3f, new float3(0, 1.3f, 0), 0, 1.5f, false, false);
@@ -196,22 +201,22 @@ namespace BlackDawn
                             break;
                     }
                     break;
-               //落雷，瞬时
+                //落雷，瞬时
                 case HeroSkillID.ThunderStrike:
 
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
-                            
+
                             //释放初级落雷技能,测试跟随性落雷
-                             DamageSkillsFlightPropConsecutiveCasting<SkillThunderStrikeTag>(_skillPrefabs.HeroSkill_ThunderStrike,new SkillThunderStrikeTag() {tagSurvivalTime=0.5f},12,1, _transform.position, 
-                                 Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false,false);                      
+                            DamageSkillsFlightPropConsecutiveCasting<SkillThunderStrikeTag>(_skillPrefabs.HeroSkill_ThunderStrike, new SkillThunderStrikeTag() { tagSurvivalTime = 0.5f }, 12, 1, _transform.position,
+                                Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false, false);
 
                             break;
                         case HeroSkillPsionicType.PsionicA:
                             //释放初级落雷技能,这里的行为可以配置,跟随英雄数量+1
-                           DamageSkillsFlightPropConsecutiveCasting<SkillThunderStrikeTag>(_skillPrefabs.HeroSkill_ThunderStrike, new SkillThunderStrikeTag() { tagSurvivalTime = 0.5f }, 16, 1, _transform.position,
-                                Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false, true);
+                            DamageSkillsFlightPropConsecutiveCasting<SkillThunderStrikeTag>(_skillPrefabs.HeroSkill_ThunderStrike, new SkillThunderStrikeTag() { tagSurvivalTime = 0.5f }, 16, 1, _transform.position,
+                                 Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false, true);
 
                             break;
 
@@ -227,8 +232,8 @@ namespace BlackDawn
                             //释放初级落雷技能,这里的行为可以配置
                             DamageSkillsFlightPropConsecutiveCasting<SkillThunderStrikeTag>(_skillPrefabs.HeroSkill_ThunderStrike, new SkillThunderStrikeTag() { tagSurvivalTime = 1f }, 16, 0.5f, _transform.position,
                                  Hero.instance.transform.rotation, 1.3f, float3.zero, float3.zero, 1, false, false, true);
-                 
- 
+
+
                             break;
 
                     }
@@ -244,15 +249,15 @@ namespace BlackDawn
 
                             //基础能量大于20 放置法阵，可否自由关闭？
                             bool hasArcaneCircle = _arcaneCircleQuery.CalculateEntityCount() > 0;
-                            
+
                             //这里获取世界中的事实entity
                             var realAttr = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
                             if (!hasArcaneCircle)
                             {
                                 if (realAttr.defenseAttribute.energy >= 20)
                                 {
-                                   //开启则降低10点能量持续3秒
-                                    realAttr.defenseAttribute.energy -= 20; 
+                                    //开启则降低10点能量持续3秒
+                                    realAttr.defenseAttribute.energy -= 20;
                                     _entityManager.SetComponentData(_heroEntity, realAttr);
                                     var entityArcaneCircle = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ArcaneCircle, _transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                                     _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleTag() { tagSurvivalTime = 3 });
@@ -264,7 +269,7 @@ namespace BlackDawn
                                 var arcaneCircleEntity = _arcaneCircleQuery.GetSingletonRW<SkillArcaneCircleTag>();
 
                                 arcaneCircleEntity.ValueRW.closed = true;
-                            
+
                             }
                             break;
                         case HeroSkillPsionicType.PsionicA:
@@ -283,11 +288,11 @@ namespace BlackDawn
                                     realAttrA.defenseAttribute.energy -= 20;
                                     _entityManager.SetComponentData(_heroEntity, realAttrA);
                                     var entityArcaneCircle = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ArcaneCircle, _transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                                    _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleTag() { tagSurvivalTime = 3 ,enableSecondA=true});
+                                    _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleTag() { tagSurvivalTime = 3, enableSecondA = true });
                                     _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleSecondTag());//添加标识，用于收集碰撞对
                                     _entityManager.AddBuffer<SkillArcaneCircleSecondBufferTag>(entityArcaneCircle);//添加技能专属buffer标签，用于构建虹吸效果的基础数据
-                                    //添加链接效果渲染标签
-                                  //  ecb.AddComponent(_entityManager.GetBuffer<LinkedEntityGroup>(_heroEntity)[1].Value, new HeroEffectsLinked());
+                                                                                                                   //添加链接效果渲染标签
+                                                                                                                   //  ecb.AddComponent(_entityManager.GetBuffer<LinkedEntityGroup>(_heroEntity)[1].Value, new HeroEffectsLinked());
                                 }
                             }
                             else
@@ -296,7 +301,7 @@ namespace BlackDawn
                                 var arcaneCircleEntity = _arcaneCircleQuery.GetSingletonRW<SkillArcaneCircleTag>();
                                 arcaneCircleEntity.ValueRW.closed = true;
                                 //关闭法阵时，需要设置链接为0
-                               // ecb.SetComponentEnabled<HeroEffectsLinked>(_entityManager.GetBuffer<LinkedEntityGroup>(_heroEntity)[1].Value, false);
+                                // ecb.SetComponentEnabled<HeroEffectsLinked>(_entityManager.GetBuffer<LinkedEntityGroup>(_heroEntity)[1].Value, false);
                             }
 
                             break;
@@ -318,7 +323,7 @@ namespace BlackDawn
                                     _entityManager.SetComponentData(_heroEntity, realAttrB);
                                     //体积加大50%
                                     var entityArcaneCircle = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ArcaneCircle, _transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1.5f, false, false);
-                                    _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleTag() { tagSurvivalTime = 3,enableSecondB=true });
+                                    _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleTag() { tagSurvivalTime = 3, enableSecondB = true });
                                 }
                             }
                             else
@@ -329,7 +334,7 @@ namespace BlackDawn
 
                             }
 
-                                break;
+                            break;
 
                         case HeroSkillPsionicType.PsionicAB:
 
@@ -345,10 +350,10 @@ namespace BlackDawn
                                     realAttrAB.defenseAttribute.energy -= 20;
                                     _entityManager.SetComponentData(_heroEntity, realAttrAB);
                                     var entityArcaneCircle = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ArcaneCircle, _transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1.5f, false, false);
-                                    _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleTag() { tagSurvivalTime = 3, enableSecondA = true,enableSecondB=true });
+                                    _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleTag() { tagSurvivalTime = 3, enableSecondA = true, enableSecondB = true });
                                     _entityManager.AddComponentData(entityArcaneCircle, new SkillArcaneCircleSecondTag());//添加标识，用于收集碰撞对
                                     _entityManager.AddBuffer<SkillArcaneCircleSecondBufferTag>(entityArcaneCircle);//添加技能专属buffer标签，用于构建虹吸效果的基础数据
-                         
+
                                 }
                             }
                             else
@@ -357,7 +362,7 @@ namespace BlackDawn
                                 var arcaneCircleEntity = _arcaneCircleQuery.GetSingletonRW<SkillArcaneCircleTag>();
                                 arcaneCircleEntity.ValueRW.closed = true;
                                 //关闭法阵时，需要设置链接为0
-                             //   ecb.SetComponentEnabled<HeroEffectsLinked>(_entityManager.GetBuffer<LinkedEntityGroup>(_heroEntity)[1].Value, false);
+                                //   ecb.SetComponentEnabled<HeroEffectsLinked>(_entityManager.GetBuffer<LinkedEntityGroup>(_heroEntity)[1].Value, false);
                             }
 
 
@@ -376,17 +381,17 @@ namespace BlackDawn
                             break;
                         //增加分裂功能
                         case HeroSkillPsionicType.PsionicA:
-                            WeaponEnchantmentSkillFrost( true,5,5);
+                            WeaponEnchantmentSkillFrost(true, 5, 5);
                             break;
                         //增加碎片次数,不能分裂，但是可以冻结
                         case HeroSkillPsionicType.PsionicB:
-                            WeaponEnchantmentSkillFrost(false,5,2);
+                            WeaponEnchantmentSkillFrost(false, 5, 2);
                             Hero.instance.skillAttackPar.tempFreeze = 101;
                             Hero.instance.skillAttackPar.enableSpecialEffect = true;
                             break;
                         //分裂和碎片都增加
                         case HeroSkillPsionicType.PsionicAB:
-                            WeaponEnchantmentSkillFrost(true, 15, 17,0.1f);
+                            WeaponEnchantmentSkillFrost(true, 15, 17, 0.1f);
                             Hero.instance.skillAttackPar.tempFreeze = 101;
                             Hero.instance.skillAttackPar.enableSpecialEffect = true;
                             break;
@@ -396,14 +401,15 @@ namespace BlackDawn
                 //元素共鸣,持续？，非技能标签，不会造成伤害,可以读取等级展示伤害
                 case HeroSkillID.ElementResonance:
                     switch (psionicType)
-                    { case HeroSkillPsionicType.Basic:
+                    {
+                        case HeroSkillPsionicType.Basic:
 
                             var entityElementResonance = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_ElementResonance, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityElementResonance, new SkillElementResonanceTag() { tagSurvivalTime = 8 });
                             break;
                         case HeroSkillPsionicType.PsionicA:
                             var entityElementResonanceA = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_ElementResonance, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                            _entityManager.AddComponentData(entityElementResonanceA, new SkillElementResonanceTag() { tagSurvivalTime = 8,enableSecondA=true,secondDamagePar=1 });
+                            _entityManager.AddComponentData(entityElementResonanceA, new SkillElementResonanceTag() { tagSurvivalTime = 8, enableSecondA = true, secondDamagePar = 1 });
                             break;
                         case HeroSkillPsionicType.PsionicB:
                             var entityElementResonanceB = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_ElementResonance, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
@@ -412,7 +418,7 @@ namespace BlackDawn
 
                         case HeroSkillPsionicType.PsionicAB:
                             var entityElementResonanceAB = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_ElementResonance, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                            _entityManager.AddComponentData(entityElementResonanceAB, new SkillElementResonanceTag() { tagSurvivalTime = 8, enableSecondA = true, secondDamagePar = 2,enableSecondB=true,thridDamagePar=2 });
+                            _entityManager.AddComponentData(entityElementResonanceAB, new SkillElementResonanceTag() { tagSurvivalTime = 8, enableSecondA = true, secondDamagePar = 2, enableSecondB = true, thridDamagePar = 2 });
                             break;
 
                     }
@@ -433,7 +439,7 @@ namespace BlackDawn
                             _entityManager.AddComponentData(entityElectroCage, new SkillElectroCageTag() { tagSurvivalTime = 4 });
                             break;
 
-                            //开启二阶段，增伤100%
+                        //开启二阶段，增伤100%
                         case HeroSkillPsionicType.PsionicA:
 
                             var entityElectroCageA = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ElectroCage, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
@@ -442,9 +448,9 @@ namespace BlackDawn
                             skillParA.tempRoot = 101;
                             skillParA.tempStun = 101;
                             _entityManager.SetComponentData(entityElectroCageA, skillParA);
-                            _entityManager.AddComponentData(entityElectroCageA, new SkillElectroCageTag() { tagSurvivalTime = 4,enableSecondA =true,skillDamageChangeParTag=2,intervalTimer=0.2f });
+                            _entityManager.AddComponentData(entityElectroCageA, new SkillElectroCageTag() { tagSurvivalTime = 4, enableSecondA = true, skillDamageChangeParTag = 2, intervalTimer = 0.2f });
                             break;
-                            //开启第三阶段，静电传导
+                        //开启第三阶段，静电传导
                         case HeroSkillPsionicType.PsionicB:
 
                             var entityElectroCageB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ElectroCage, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
@@ -453,7 +459,7 @@ namespace BlackDawn
                             skillParB.tempRoot = 101;
                             skillParB.tempStun = 101;
                             _entityManager.SetComponentData(entityElectroCageB, skillParB);
-                            _entityManager.AddComponentData(entityElectroCageB, new SkillElectroCageTag() { tagSurvivalTime = 4,enableSecondB=true });
+                            _entityManager.AddComponentData(entityElectroCageB, new SkillElectroCageTag() { tagSurvivalTime = 4, enableSecondB = true });
                             break;
 
                         //开启二阶段，增伤100%,开启静电传导标识
@@ -465,7 +471,7 @@ namespace BlackDawn
                             skillParAB.tempRoot = 101;
                             skillParAB.tempStun = 101;
                             _entityManager.SetComponentData(entityElectroCageAB, skillParAB);
-                            _entityManager.AddComponentData(entityElectroCageAB, new SkillElectroCageTag() { tagSurvivalTime = 4, enableSecondA = true,enableSecondB=true, skillDamageChangeParTag = 2, intervalTimer = 0.2f });
+                            _entityManager.AddComponentData(entityElectroCageAB, new SkillElectroCageTag() { tagSurvivalTime = 4, enableSecondA = true, enableSecondB = true, skillDamageChangeParTag = 2, intervalTimer = 0.2f });
                             break;
 
 
@@ -481,8 +487,8 @@ namespace BlackDawn
 
                             for (int i = 0; i < 3; i++)
                             {
-                                var entityMineBlast = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10*i,0,0), float3.zero, 1, false, false);
-                                _entityManager.AddComponentData(entityMineBlast, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2 ,skillDamageChangeParTag=3});
+                                var entityMineBlast = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10 * i, 0, 0), float3.zero, 1, false, false);
+                                _entityManager.AddComponentData(entityMineBlast, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
                                 _entityManager.AddComponentData(entityMineBlast, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1 });
                             }
                             break;
@@ -491,7 +497,7 @@ namespace BlackDawn
                             {
                                 var entityMineBlastA = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10 * i, 0, 0), float3.zero, 1, false, false);
                                 _entityManager.AddComponentData(entityMineBlastA, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
-                                _entityManager.AddComponentData(entityMineBlastA, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, skillDamageChangeParTag = 1.5f, enableSecondA = true, tagSurvivalTimeSecond = 5,scaleChangePar=4 });
+                                _entityManager.AddComponentData(entityMineBlastA, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, skillDamageChangeParTag = 1.5f, enableSecondA = true, tagSurvivalTimeSecond = 5, scaleChangePar = 4 });
                             }
                             break;
                         case HeroSkillPsionicType.PsionicB:
@@ -502,20 +508,20 @@ namespace BlackDawn
                                 _entityManager.AddComponentData(entityMineBlastB, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, enableSecondB = true });
                             }
                             break;
-                            //十字地雷
+                        //十字地雷
                         case HeroSkillPsionicType.PsionicC:
                             for (int i = 0; i < 3; i++)
                             {
                                 var entityMineBlastC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10 * i, 0, 0), float3.zero, 1, false, false);
                                 _entityManager.AddComponentData(entityMineBlastC, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
-                                _entityManager.AddComponentData(entityMineBlastC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, enableSecondC = true,level=1 });
+                                _entityManager.AddComponentData(entityMineBlastC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, enableSecondC = true, level = 1 });
                             }
                             for (int i = 0; i < 2; i++)
                             {
                                 var par = 1 - 2 * i;
-                                var entityMineBlastC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10 , 0, 10 * par), float3.zero, 1, false, false);
+                                var entityMineBlastC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10, 0, 10 * par), float3.zero, 1, false, false);
                                 _entityManager.AddComponentData(entityMineBlastC, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
-                                _entityManager.AddComponentData(entityMineBlastC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, enableSecondC = true,level=1 });
+                                _entityManager.AddComponentData(entityMineBlastC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, enableSecondC = true, level = 1 });
                             }
                             break;
                         case HeroSkillPsionicType.PsionicAB:
@@ -524,7 +530,7 @@ namespace BlackDawn
                             {
                                 var entityMineBlastAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10 * i, 0, 0), float3.zero, 1, false, false);
                                 _entityManager.AddComponentData(entityMineBlastAB, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
-                                _entityManager.AddComponentData(entityMineBlastAB, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, skillDamageChangeParTag = 1.5f, enableSecondA = true, tagSurvivalTimeSecond = 5, scaleChangePar = 4 ,enableSecondB=true});
+                                _entityManager.AddComponentData(entityMineBlastAB, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, skillDamageChangeParTag = 1.5f, enableSecondA = true, tagSurvivalTimeSecond = 5, scaleChangePar = 4, enableSecondB = true });
                             }
 
                             break;
@@ -559,20 +565,20 @@ namespace BlackDawn
                                 _entityManager.AddComponentData(entityMineBlastBC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, enableSecondB = true, enableSecondC = true, level = 1 });
                             }
                             break;
-                            //终极三灵能效果
+                        //终极三灵能效果
                         case HeroSkillPsionicType.PsionicABC:
                             for (int i = 0; i < 3; i++)
                             {
                                 var entityMineBlastABC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10 * i, 0, 0), float3.zero, 1, false, false);
                                 _entityManager.AddComponentData(entityMineBlastABC, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
-                                _entityManager.AddComponentData(entityMineBlastABC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, skillDamageChangeParTag = 1.5f, enableSecondA = true, enableSecondB=true,tagSurvivalTimeSecond = 5, scaleChangePar = 4, enableSecondC = true, level = 1 });
+                                _entityManager.AddComponentData(entityMineBlastABC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, skillDamageChangeParTag = 1.5f, enableSecondA = true, enableSecondB = true, tagSurvivalTimeSecond = 5, scaleChangePar = 4, enableSecondC = true, level = 1 });
                             }
                             for (int i = 0; i < 2; i++)
                             {
                                 var par = 1 - 2 * i;
                                 var entityMineBlastABC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_MineBlast, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(10, 0, 10 * par), float3.zero, 1, false, false);
                                 _entityManager.AddComponentData(entityMineBlastABC, new SkillMineBlastTag() { tagSurvivalTime = 20, scaleChangePar = 2, skillDamageChangeParTag = 3 });
-                                _entityManager.AddComponentData(entityMineBlastABC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, skillDamageChangeParTag = 1.5f, enableSecondA = true,enableSecondB=true, tagSurvivalTimeSecond = 5, scaleChangePar = 4, enableSecondC = true, level = 1 });
+                                _entityManager.AddComponentData(entityMineBlastABC, new SkillMineBlastExplosionTag() { tagSurvivalTime = 1, skillDamageChangeParTag = 1.5f, enableSecondA = true, enableSecondB = true, tagSurvivalTimeSecond = 5, scaleChangePar = 4, enableSecondC = true, level = 1 });
                             }
                             break;
 
@@ -603,7 +609,7 @@ namespace BlackDawn
                                         CollidesWith = 1u << 6,
                                         GroupIndex = 0
                                     };
-                                    var overlap = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position,radius=1, filter = filter, offset = new float3(0, 0, 15), box = new float3(6, 6,40 ), shape = OverLapShape.Box };
+                                    var overlap = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position, radius = 1, filter = filter, offset = new float3(0, 0, 15), box = new float3(6, 6, 40), shape = OverLapShape.Box };
                                     var entityShadowTide = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_ShadowTide, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                                     _entityManager.AddComponentData(entityShadowTide, new SkillShadowTideTag { tagSurvivalTime = 10, level = 1 });
                                     var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityShadowTide);
@@ -642,7 +648,7 @@ namespace BlackDawn
                                     };
                                     var overlapA = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position, radius = 1, filter = filter, offset = new float3(0, 0, 15), box = new float3(3, 3, 40), shape = OverLapShape.Box };
                                     var entityShadowTideA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_ShadowTideA, overlapA, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                                    _entityManager.AddComponentData(entityShadowTideA, new SkillShadowTideTag { tagSurvivalTime = 3, level = 1 ,skillDamageChangeParTag=2});
+                                    _entityManager.AddComponentData(entityShadowTideA, new SkillShadowTideTag { tagSurvivalTime = 3, level = 1, skillDamageChangeParTag = 2 });
                                     var skillParA = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityShadowTideA);
                                     //添加引力特效
                                     skillParA.enablePull = true;
@@ -685,7 +691,7 @@ namespace BlackDawn
                                     };
                                     var overlapB = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position, radius = 1, filter = filter, offset = new float3(0, 0, 15), box = new float3(3, 3, 40), shape = OverLapShape.Box };
                                     var entityShadowTideB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_ShadowTide, overlapB, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                                    _entityManager.AddComponentData(entityShadowTideB, new SkillShadowTideTag { tagSurvivalTime =3, level = 1, skillDamageChangeParTag = 1,enableSecondB=true });
+                                    _entityManager.AddComponentData(entityShadowTideB, new SkillShadowTideTag { tagSurvivalTime = 3, level = 1, skillDamageChangeParTag = 1, enableSecondB = true });
                                     var skillParB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityShadowTideB);
                                     _entityManager.SetComponentData(entityShadowTideB, skillParB);
                                 }
@@ -725,7 +731,7 @@ namespace BlackDawn
                                     };
                                     var overlapAB = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position, radius = 1, filter = filter, offset = new float3(0, 0, 15), box = new float3(3, 3, 40), shape = OverLapShape.Box };
                                     var entityShadowTideAB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_ShadowTideA, overlapAB, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                                    _entityManager.AddComponentData(entityShadowTideAB, new SkillShadowTideTag { tagSurvivalTime = 3, level = 1, skillDamageChangeParTag = 2 ,enableSecondB=true});
+                                    _entityManager.AddComponentData(entityShadowTideAB, new SkillShadowTideTag { tagSurvivalTime = 3, level = 1, skillDamageChangeParTag = 2, enableSecondB = true });
                                     var skillParAB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityShadowTideAB);
                                     //添加引力特效
                                     skillParAB.enablePull = true;
@@ -747,13 +753,123 @@ namespace BlackDawn
                     }
 
                     break;
+                //连锁吞噬 ：瞬时 19
+                case HeroSkillID.ChainDevour:
+                    //开启连锁吞噬碰撞，
+                    detectionSystem.enableSpecialSkillChainDevour = true;
+                    DevDebug.LogError("是否开启连锁吞噬" + detectionSystem.enableSpecialSkillChainDevour);
+
+                    switch (psionicType)
+                    {
+
+                        case HeroSkillPsionicType.Basic:
+                            var filter = new CollisionFilter
+                            {
+                                //属于道具层
+                                BelongsTo = 1u << 10,
+                                //检测敌人
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlap = new OverlapTrackingQueryCenter { center = Hero.instance.transform.position, radius = 5, filter = filter, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                            //这里添加寻踪类技能专属标签
+                            var entityChainDevour = DamageSkillsTrackingProp(_skillPrefabs.HeroSkill_ChainDevour, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            _entityManager.AddComponentData(entityChainDevour, new SkillChainDevourTag() { tagSurvivalTime = 10f, speed = 20 });
+
+                            //可能的参数设置
+                            var skillDamageChainDevour = _entityManager.GetComponentData<SkillsDamageCalPar>(entityChainDevour);
+                            _entityManager.SetComponentData(entityChainDevour, skillDamageChainDevour);
+                            //寻址技能参数变化配置
+                            var skillsTrackingCalPar = _entityManager.GetComponentData<SkillsTrackingCalPar>(entityChainDevour);
+                            _entityManager.SetComponentData(entityChainDevour, skillsTrackingCalPar);
+
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+
+                            var filterA = new CollisionFilter
+                            {
+                                //属于道具层
+                                BelongsTo = 1u << 10,
+                                //检测敌人
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlapA = new OverlapTrackingQueryCenter { center = Hero.instance.transform.position, radius = 5, filter = filterA, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                            //这里添加寻踪类技能专属标签
+                            var entityChainDevourA = DamageSkillsTrackingProp(_skillPrefabs.HeroSkill_ChainDevour, overlapA, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            _entityManager.AddComponentData(entityChainDevourA, new SkillChainDevourTag() { tagSurvivalTime = 10f, speed = 20 });
+                            var tagA = _entityManager.GetComponentData<SkillChainDevourTag>(entityChainDevourA);
+                            //可能的参数设置
+                            var skillDamageChainDevourA = _entityManager.GetComponentData<SkillsDamageCalPar>(entityChainDevourA);
+                            _entityManager.SetComponentData(entityChainDevourA, skillDamageChainDevourA);
+                            //寻址技能参数变化配置,A阶变化技能添加碰撞次数
+                            var skillsTrackingCalParA = _entityManager.GetComponentData<SkillsTrackingCalPar>(entityChainDevourA);
+                            skillsTrackingCalParA.runCount += (tagA.level + 3);
+
+                            _entityManager.SetComponentData(entityChainDevourA, skillsTrackingCalParA);
+
+
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                          //dotDamageSystem 里面关于连锁吞噬效果的处理（含内置1秒CD）
+                            dotDamageSystem.EnbaleChainDecourSkillSecondB = true;
+                            var filterB = new CollisionFilter
+                            {
+                                //属于道具层
+                                BelongsTo = 1u << 10,
+                                //检测敌人
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlapB = new OverlapTrackingQueryCenter { center = Hero.instance.transform.position, radius = 5, filter = filterB, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                            //这里添加寻踪类技能专属标签
+                            var entityChainDevourB = DamageSkillsTrackingProp(_skillPrefabs.HeroSkill_ChainDevour, overlapB, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            _entityManager.AddComponentData(entityChainDevourB, new SkillChainDevourTag() { tagSurvivalTime = 10f, speed = 20 ,enableSecondB=true});
+
+                            //可能的参数设置
+                            var skillDamageChainDevourB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityChainDevourB);
+                            _entityManager.SetComponentData(entityChainDevourB, skillDamageChainDevourB);
+                            //寻址技能参数变化配置
+                            var skillsTrackingCalParB = _entityManager.GetComponentData<SkillsTrackingCalPar>(entityChainDevourB);
+                            _entityManager.SetComponentData(entityChainDevourB, skillsTrackingCalParB);
+
+
+
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+                         var filterAB = new CollisionFilter
+                            {
+                                //属于道具层
+                                BelongsTo = 1u << 10,
+                                //检测敌人
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlapAB = new OverlapTrackingQueryCenter { center = Hero.instance.transform.position, radius = 5, filter = filterAB, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                            //这里添加寻踪类技能专属标签
+                            var entityChainDevourAB = DamageSkillsTrackingProp(_skillPrefabs.HeroSkill_ChainDevour, overlapAB, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            _entityManager.AddComponentData(entityChainDevourAB, new SkillChainDevourTag() { tagSurvivalTime = 10f, speed = 20,enableSecondB=true });
+                            var tagAB = _entityManager.GetComponentData<SkillChainDevourTag>(entityChainDevourAB);
+                            //可能的参数设置
+                            var skillDamageChainDevourAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityChainDevourAB);
+                            _entityManager.SetComponentData(entityChainDevourAB, skillDamageChainDevourAB);
+                            //寻址技能参数变化配置,A阶变化技能添加碰撞次数
+                            var skillsTrackingCalParAB = _entityManager.GetComponentData<SkillsTrackingCalPar>(entityChainDevourAB);
+                            skillsTrackingCalParAB.runCount += (tagAB.level + 3);
+
+                            _entityManager.SetComponentData(entityChainDevourAB, skillsTrackingCalParAB);
+
+                            break;
+
+                    }
+                    break;
+
                 //雷霆之握：瞬时 20    
                 case HeroSkillID.ThunderGrip:
 
                     //开启特殊碰撞对确认系统,后期可以根据装载代码来进行处理
-                       var detectionSystemHandle = World.DefaultGameObjectInjectionWorld.Unmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
-                        ref var detectionSystem = ref World.DefaultGameObjectInjectionWorld.Unmanaged.GetUnsafeSystemRef<DetectionSystem>(detectionSystemHandle);
-                        detectionSystem.enableSpecialSkillThunderGrip=true;
+
+                    detectionSystem.enableSpecialSkillThunderGrip = true;
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
@@ -766,19 +882,19 @@ namespace BlackDawn
 
                             break;
                         case HeroSkillPsionicType.PsionicA:
-                     
+
                             var entityThunderGripA = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ThunderGrip, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
-                            _entityManager.AddComponentData(entityThunderGripA, new SkillThunderGripTag() { tagSurvivalTime = 0.3f ,enableSecondA = true});
+                            _entityManager.AddComponentData(entityThunderGripA, new SkillThunderGripTag() { tagSurvivalTime = 0.3f, enableSecondA = true });
                             ////获得昏迷值
                             var skillDamageCalTGA = _entityManager.GetComponentData<SkillsDamageCalPar>(entityThunderGripA);
                             skillDamageCalTGA.tempStun = 301;
                             _entityManager.SetComponentData(entityThunderGripA, skillDamageCalTGA);
 
                             break;
-                     //爆发雷霆得参数通过 配置表进行更改，附加2倍的DOT伤害
+                        //爆发雷霆得参数通过 配置表进行更改，附加2倍的DOT伤害
                         case HeroSkillPsionicType.PsionicB:
 
-                          var entityThunderGripB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ThunderGrip, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            var entityThunderGripB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ThunderGrip, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
                             _entityManager.AddComponentData(entityThunderGripB, new SkillThunderGripTag() { tagSurvivalTime = 0.3f });
                             //获得昏迷值，获得冻结值
                             var skillDamageCalTGB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityThunderGripB);
@@ -795,7 +911,7 @@ namespace BlackDawn
 
                         case HeroSkillPsionicType.PsionicAB:
 
-                             var entityThunderGripAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ThunderGrip, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            var entityThunderGripAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ThunderGrip, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
                             _entityManager.AddComponentData(entityThunderGripAB, new SkillThunderGripTag() { tagSurvivalTime = 0.3f });
                             //获得昏迷值，获得冻结值
                             var skillDamageCalTGAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityThunderGripAB);
@@ -812,14 +928,14 @@ namespace BlackDawn
 
 
 
-                            break;
+
 
 
 
                     }
 
 
-                break;    
+                    break;
                 //寒霜新星, 瞬时 22    
                 case HeroSkillID.FrostNova:
                     switch (psionicType)
@@ -848,15 +964,15 @@ namespace BlackDawn
                             _entityManager.AddComponentData(entityFrostNovaB, new SkillFrostNovaTag() { tagSurvivalTime = 3, enableSecondB = true });
 
                             break;
-                            //开启第二阶段增加体积值，增加冻结值，获取控制标签
+                        //开启第二阶段增加体积值，增加冻结值，获取控制标签
                         case HeroSkillPsionicType.PsionicAB:
                             var entityFrostNovaAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_FrostNova, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.3f, new float3(0, 0.0f, 0), 0, 1, false, false);
-                            _entityManager.AddComponentData(entityFrostNovaAB, new SkillFrostNovaTag() { tagSurvivalTime = 3 ,enableSecondB=true});
+                            _entityManager.AddComponentData(entityFrostNovaAB, new SkillFrostNovaTag() { tagSurvivalTime = 3, enableSecondB = true });
                             //获得冻结值，成长20
                             var skillDamageCalAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityFrostNovaAB);
                             skillDamageCalAB.tempFreeze = 301;
                             _entityManager.SetComponentData(entityFrostNovaAB, skillDamageCalAB);
-               
+
                             break;
                     }
                     break;
@@ -872,10 +988,10 @@ namespace BlackDawn
                                 GroupIndex = 0
                             };
                             var overlap = new OverlapOverTimeQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filter, offset = new float3(0, 0, 0) };
-                            var entityPoisonRain= DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, overlap,Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                            _entityManager.AddComponentData(entityPoisonRain, new SkillPoisonRainTag { tagSurvivalTime = 15 ,level=1});
+                            var entityPoisonRain = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, overlap, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityPoisonRain, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                             var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRain);
-                            skillPar.tempSlow = 30;                            
+                            skillPar.tempSlow = 30;
                             _entityManager.SetComponentData(entityPoisonRain, skillPar);
                             break;
                         case HeroSkillPsionicType.PsionicA:
@@ -886,15 +1002,15 @@ namespace BlackDawn
                                 GroupIndex = 0
                             };
                             var overlapA = new OverlapOverTimeQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filterA, offset = new float3(0, 0, 0) };
-                            var entityPoisonRainA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapA ,Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                            _entityManager.AddComponentData(entityPoisonRainA, new SkillPoisonRainTag { tagSurvivalTime = 15 ,level=1});
+                            var entityPoisonRainA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, overlapA, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityPoisonRainA, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                             var skillParA = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainA);
                             skillParA.tempSlow = 30;
                             _entityManager.SetComponentData(entityPoisonRainA, skillParA);
                             //添加A阶段标签，用于收集判断，非buffer的处理结构？或用于持续性计算
                             _entityManager.AddComponentData(entityPoisonRainA, new SkillPoisonRainATag { level = 1 });
                             break;
-                            //进行 B技能触发，火焰效果
+                        //进行 B技能触发，火焰效果
                         case HeroSkillPsionicType.PsionicB:
                             var filterB = new CollisionFilter
                             {
@@ -902,8 +1018,8 @@ namespace BlackDawn
                                 CollidesWith = 1u << 6,
                                 GroupIndex = 0
                             };
-                            var overlapB = new OverlapOverTimeQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filterB,offset=new float3(0,0,0) };
-                            var entityPoisonRainB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var overlapB = new OverlapOverTimeQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filterB, offset = new float3(0, 0, 0) };
+                            var entityPoisonRainB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, overlapB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                             int level = 3;
                             var skillParB = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityPoisonRainB);
@@ -911,14 +1027,14 @@ namespace BlackDawn
                             //添加昏迷值
                             skillParB.tempStun = 200;
                             //添加火焰参数
-                            skillParB.fireDamage += skillParB.poisonDamage*(1+level*0.2f);
-                            skillParB.fireDotDamage += skillParB.poisonDotDamage* (1 + level * 0.2f); 
+                            skillParB.fireDamage += skillParB.poisonDamage * (1 + level * 0.2f);
+                            skillParB.fireDotDamage += skillParB.poisonDotDamage * (1 + level * 0.2f);
                             _entityManager.SetComponentData(entityPoisonRainB, skillParB);
 
                             //--火焰雨,仅仅增加一个效果，无实际计算
-                            var entityPoisonRainBFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB,new OverlapOverTimeQueryCenter(), Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entityPoisonRainBFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, new OverlapOverTimeQueryCenter(), Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainBFire, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
-                         
+
                             break;
                         //进行 B技能触发，混合终极效果
                         case HeroSkillPsionicType.PsionicAB:
@@ -929,7 +1045,7 @@ namespace BlackDawn
                                 GroupIndex = 0
                             };
                             var overlapAB = new OverlapOverTimeQueryCenter { center = Hero.instance.skillTargetPositon, radius = 30, filter = filterAB, offset = new float3(0, 0, 0) };
-                            var entityPoisonRainAB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain,overlapAB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entityPoisonRainAB = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_PoisonRain, overlapAB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainAB, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
                             //添加A阶段标签，用于收集判断，非buffer的处理结构？或用于持续性计算
                             _entityManager.AddComponentData(entityPoisonRainAB, new SkillPoisonRainATag { level = 1 });
@@ -944,9 +1060,9 @@ namespace BlackDawn
                             _entityManager.SetComponentData(entityPoisonRainAB, skillParAB);
 
                             //--火焰雨,仅仅增加一个效果，无实际计算
-                            var entityPoisonRainABFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, new OverlapOverTimeQueryCenter(),Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entityPoisonRainABFire = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_PoisonRainB, new OverlapOverTimeQueryCenter(), Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entityPoisonRainABFire, new SkillPoisonRainTag { tagSurvivalTime = 15, level = 1 });
-                        
+
                             break;
 
                     }
@@ -1051,7 +1167,7 @@ namespace BlackDawn
          float3 rotationOffsetEuler = default,  // 传入度数
          float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
         {
-            DevDebug.Log("释放伤害型飞行技能");
+            DevDebug.Log("释放持续性技能");
 
             // 1) 实例化
             var entity = _entityManager.Instantiate(prefab);
@@ -1102,7 +1218,91 @@ namespace BlackDawn
             return entity;
         }
 
+/// <summary>
+/// 释放 寻踪类技能
+/// </summary>
+/// <param name="prefab"></param>
+/// <param name="queryCenter"></param>
+/// <param name="posion"></param>
+/// <param name="quaternion"></param>
+/// <param name="damageChangePar"></param>
+/// <param name="positionOffset"></param>
+/// <param name="rotationOffsetEuler"></param>
+/// <param name="scaleFactor"></param>
+/// <param name="enablePull"></param>
+/// <param name="enableExplosion"></param>
+/// <returns></returns>
+           public Entity DamageSkillsTrackingProp(
+         Entity prefab,
+         OverlapTrackingQueryCenter queryCenter,
+         float3 posion,
+         quaternion quaternion,
+         float damageChangePar = 1,//默认伤害参数为1
+         float3 positionOffset = default,
+         float3 rotationOffsetEuler = default,  // 传入度数
+         float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
+        {
+            DevDebug.Log("释放寻址类技能");
 
+            // 1) 实例化
+            var entity = _entityManager.Instantiate(prefab);
+
+            // 2) 取出可变的 LocalTransform
+            var transform = _entityManager.GetComponentData<LocalTransform>(entity);
+
+
+            // 3) 从英雄获取基础位置/旋转/缩放
+            float3 heroPos = posion;
+            quaternion heroRot = quaternion;
+            float baseScale = transform.Scale; // 保留预制体的原始 scale
+
+            // 4) 计算欧拉偏移的四元数
+            //    math.radians 将度数转为弧度
+            quaternion eulerOffsetQuat = quaternion.EulerXYZ(
+                math.radians(rotationOffsetEuler)
+            );
+
+            // 5) 叠加偏移
+            transform.Position = heroPos
+                                + math.mul(heroRot, positionOffset);
+            //计算整合旋转
+            var combineRotation = math.mul(heroRot, eulerOffsetQuat);
+            //叠加本体旋转
+            transform.Rotation = math.mul(transform.Rotation, combineRotation);
+            transform.Scale = baseScale * scaleFactor * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange);
+
+            // 6) 写回组件
+            _entityManager.SetComponentData(entity, transform);
+
+            // 7) 添加持续伤害参数
+            _entityManager.AddComponentData(entity, Hero.instance.skillsDamageCalPar);
+
+
+
+            var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entity);
+
+            skillPar.enablePull = enablePull;
+            skillPar.enableExplosion = enableExplosion;
+            skillPar.damageChangePar = damageChangePar;
+            _entityManager.SetComponentData(entity, skillPar);
+
+
+            //8)添加Trackingoverlap检测
+            if(queryCenter.radius!=0)
+            _entityManager.AddComponentData(entity, queryCenter);
+
+            // 8-1) 添加瞬时技能碰撞缓冲区
+            var hits = _entityManager.AddBuffer<HitRecord>(entity);
+            //9）添加寻踪技能的专属标签,默认寻址次数为5,初始方向为传入的原始旋转方向
+            _entityManager.AddComponentData(entity,new SkillsTrackingCalPar() { runCount =5,currentDir=math.mul(quaternion, new float3(0f, 0f, 1f))});
+
+            //10)添加寻址技能的专属buffer
+            _entityManager.AddBuffer<TrackingRecord>(entity);
+
+            _entityManager.AddBuffer<HitElementResonanceRecord>(entity);
+
+            return entity;
+        }
 
         /// <summary>
         /// 无伤害类型增益 技能道具，如元素共鸣体
@@ -1117,7 +1317,7 @@ namespace BlackDawn
         /// <param name="enablePull"></param>
         /// <param name="enableExplosion"></param>
         /// <returns></returns>
-        public Entity DamageSkillsFlightPropNoneDamage(
+       public Entity DamageSkillsFlightPropNoneDamage(
        Entity prefab,
        float3 posion,
        quaternion quaternion,

@@ -295,6 +295,8 @@ namespace BlackDawn.DOTS
             SkillMonoElectroCage(ref state, ecb, prefab);
             //暗影洪流B阶段，瞬时伤害特效控制
             SkillMonoMineBlastB(ref state);
+            //连锁吞噬
+            SkillMonoChainDevour(ref state, ecb);
             //雷霆之握
             SkillMonoThunderGrip(ref state, ecb);
 
@@ -677,7 +679,39 @@ namespace BlackDawn.DOTS
 
         }
 
+        /// <summary>
+        /// 连锁吞噬，瞬时技能标签 寻址技能通用标签 连锁吞噬 专用标签
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="ecb"></param>
+        void SkillMonoChainDevour(ref SystemState state, EntityCommandBuffer ecb)
+        {
+            foreach (var (transform, skillDamageCal,trackingSkillTag, SkillTag,overlapTracking,entity)
+              in SystemAPI.Query<RefRW<LocalTransform>,RefRW<SkillsDamageCalPar>, RefRW<SkillsTrackingCalPar>, RefRW<SkillChainDevourTag>,RefRW<OverlapTrackingQueryCenter>>().WithEntityAccess())
+            {
+                SkillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
+                overlapTracking.ValueRW.center = transform.ValueRO.Position;
+                // float3 forward = math.mul(transform.ValueRO.Rotation, new float3(0f, 0f, 1f));
+                //这里由初始化值进行赋值
+                float3 forward = trackingSkillTag.ValueRO.currentDir;
+                transform.ValueRW.Position += SkillTag.ValueRO.speed * forward * SystemAPI.Time.DeltaTime;
+                //主线程控制时间？等于true情况下为1秒钟的间隔，可以针对不同的技能标签进行分离控制
+                if (trackingSkillTag.ValueRW.enbaleChangeTarget == true)
+                {
+                    trackingSkillTag.ValueRW.timer += SystemAPI.Time.DeltaTime;
 
+                    if (trackingSkillTag.ValueRW.timer > 0.2f)
+                        trackingSkillTag.ValueRW.enbaleChangeTarget = false;
+                }
+                
+
+                if (SkillTag.ValueRW.tagSurvivalTime <= 0)
+                    skillDamageCal.ValueRW.destory = true;
+
+            }
+
+
+        }
 
         /// <summary>
         /// 英雄技能ECS 释放系统(静电牢笼B变种)

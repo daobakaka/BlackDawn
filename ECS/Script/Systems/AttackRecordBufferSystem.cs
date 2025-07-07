@@ -1,6 +1,9 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
+using Unity.Mathematics;
+using Unity.Transforms;
 ///专门用于处理 碰撞体的伤害锁定
 namespace BlackDawn.DOTS
 {
@@ -24,22 +27,30 @@ namespace BlackDawn.DOTS
         public void OnUpdate(ref SystemState state)
         {
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
-            var ecbP= ecb.AsParallelWriter();
+            var ecbP = ecb.AsParallelWriter();
             var timer = SystemAPI.Time.DeltaTime;
 
             state.Dependency = new HitRecordBufferDealJob
             {
                 DeltaTime = timer,
-               // ECB= ecbP,
+                // ECB= ecbP,
             }.ScheduleParallel(state.Dependency);
 
-          //  state.Dependency.Complete();
 
             //用于记录怪物与英雄的基础攻击的记录器
             state.Dependency = new HeroHitRecordBufferDealJob
             {
 
-                DeltaTime=timer,
+                DeltaTime = timer,
+
+            }.ScheduleParallel(state.Dependency);
+
+
+            //用于记录通用寻址技能的处理器
+            state.Dependency = new TrackingBufferDealJob
+            {
+                Time = (float)SystemAPI.Time.ElapsedTime,
+                DeltaTime = SystemAPI.Time.DeltaTime,
 
             }.ScheduleParallel(state.Dependency);
 
@@ -59,9 +70,13 @@ namespace BlackDawn.DOTS
                 DeltaTime = timer,
 
             }.ScheduleParallel(state.Dependency);
+            
+            //清空聚合buffer,取消在原本的通用伤害计算类的清空，便于后续的如连锁吞噬类的效果计算
+            state.Dependency = new AccumulateDataBufferClear { }.ScheduleParallel(state.Dependency);
 
+            //清空怪物的两种聚合buffer,放到最后
             //最后阻塞
-           // state.Dependency.Complete();
+            // state.Dependency.Complete();
 
         }
 
@@ -72,6 +87,7 @@ namespace BlackDawn.DOTS
         }
     }
 
+
     /// <summary>
     /// 用于计算帧伤害锁定拟定1秒，1秒内多次碰撞只能计算1次伤害
     /// </summary>
@@ -79,14 +95,14 @@ namespace BlackDawn.DOTS
     [BurstCompile]
     partial struct HitRecordBufferDealJob : IJobEntity
     {
-       // public EntityCommandBuffer.ParallelWriter ECB;
+        // public EntityCommandBuffer.ParallelWriter ECB;
         public float DeltaTime;
-        void Execute(Entity entity, ref DynamicBuffer<HitRecord> hitRecord,[EntityIndexInQuery] int sortKey)
+        void Execute(Entity entity, ref DynamicBuffer<HitRecord> hitRecord, [EntityIndexInQuery] int sortKey)
         {
 
-            for (int i = 0; i< hitRecord.Length; i++)
-            { 
-                var record= hitRecord[i];
+            for (int i = 0; i < hitRecord.Length; i++)
+            {
+                var record = hitRecord[i];
                 record.timer += DeltaTime;
 
                 if (record.timer > 1f)
@@ -100,10 +116,13 @@ namespace BlackDawn.DOTS
                     hitRecord[i] = record;
                 }
             }
-                            
+
         }
-        
+
     }
+
+
+
 
     /// <summary>
     /// 用于计算帧伤害锁定拟定0.5秒，0.5秒内多次碰撞只能计算1次伤害
@@ -197,6 +216,58 @@ namespace BlackDawn.DOTS
             }
 
         }
+    }
+
+
+
+    /// <summary>
+    /// 用于计算 寻址技能的相关参数-- 这里的回调由特殊技能系统开启
+    /// </summary>
+    [BurstCompile]
+    partial struct TrackingBufferDealJob : IJobEntity
+    {
+        // public EntityCommandBuffer.ParallelWriter ECB;
+        [ReadOnly] public float Time;
+        public float DeltaTime;
+        void Execute(Entity entity, in LocalTransform transform, ref DynamicBuffer<TrackingRecord> hitRecord, ref SkillsTrackingCalPar trackingCalPar, [EntityIndexInQuery] int sortKey)
+        {
+            //添加约束条件
+            if (trackingCalPar.enbaleChangeTarget == true && trackingCalPar.runCount > 0 && trackingCalPar.timer >= 0f && trackingCalPar.timer < DeltaTime)
+            {
+                int count = math.min(10, hitRecord.Length);
+                if (count == 0)
+                    return;
+                uint seed = (uint)(Time) + (uint)sortKey;
+                var rand = new Unity.Mathematics.Random(seed);
+                int randIndex = rand.NextInt(0, count);
+                var rec = hitRecord[randIndex];
+                float3 targetDir = math.normalize(rec.postion - transform.Position);
+                trackingCalPar.currentDir = targetDir;
+                trackingCalPar.targetRef = rec.refTarget;
+
+            }
+            //每帧清空，防止无序扩张               
+            hitRecord.Clear();
+        }
+
+    }
+
+        /// <summary>
+    /// 聚合buffer清空
+    /// </summary>
+    [BurstCompile]
+    partial struct AccumulateDataBufferClear : IJobEntity
+    {
+
+
+        void Execute(Entity entity, ref DynamicBuffer<FlightPropAccumulateData> flightRecord, ref DynamicBuffer<HeroSkillPropAccumulateData> skillRecord)
+        {
+
+            flightRecord.Clear();
+            skillRecord.Clear();
+
+         }
+
     }
 
 }

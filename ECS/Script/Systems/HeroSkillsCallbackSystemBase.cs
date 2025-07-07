@@ -118,6 +118,22 @@ namespace BlackDawn.DOTS
 
             }).WithoutBurst().Run();
 
+
+            Entities
+            .WithName("DrawTrackingOverlapCollider")
+            .ForEach((in OverlapTrackingQueryCenter overlap,in LocalToWorld localToWorld) =>
+            {
+
+               if (overlap.shape == OverLapShape.Sphere)
+                   DebugDrawSphere(overlap.center, overlap.offset, overlap.rotaion,overlap.radius, Color.yellow, 0.02f);
+               else if (overlap.shape == OverLapShape.Box)
+               {
+                   quaternion rot = new quaternion(overlap.rotaion); // 四元数
+                   DebugDrawBox(overlap.center, overlap.offset, overlap.box, rot, Color.green, 0.02f);
+               }
+
+            }).WithoutBurst().Run();
+
             // **遍历所有打了请求标记的实体**,这里需要为方法传入ECB，这样可以在foreach里面同一帧使用
             //这是针对粒子特效的方法
             if (false)

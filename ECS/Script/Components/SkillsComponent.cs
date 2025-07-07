@@ -232,6 +232,29 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
+    /// 寻踪类技能标签
+    /// </summary>
+    public struct SkillsTrackingCalPar : IComponentData
+    {
+
+        public Entity targetRef;
+        public float3 currentDir; // 当前方向
+
+        public bool enbaleChangeTarget;//这里用于碰撞之后的回调，只有在回调允许的时候，才能添加buffer和进行相关计算
+        //寻迹象次数
+        public int runCount;
+        //原始储备次数
+        public int originalCount;
+        /// <summary>
+        /// 事件记录器， 目标切换频率
+        /// </summary>
+        public float timer;
+
+    }
+
+
+
+    /// <summary>
     /// 可关闭标签脉冲标签,初始化一个时间，用于存活判断,可以使用标签来定义 速度  二阶 存活时间
     /// </summary>
     public struct SkillPulseTag : IComponentData, IEnableableComponent
@@ -596,8 +619,20 @@ namespace BlackDawn.DOTS
         public bool startSecondA;
         //等级
         public int level;
-        
-     
+
+    }
+    /// <summary>
+    /// 技能连锁吞噬
+    /// </summary>
+    public struct SkillChainDevourTag : IComponentData
+    {
+        public float tagSurvivalTime;
+        public float speed;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        public float skillDamageChangeParTag;
+        //等级
+        public int level;
 
     }
 

@@ -159,6 +159,17 @@ namespace BlackDawn.DOTS
         public Entity other;
         public float sqrDist;
     }
+    /// <summary>
+    /// 寻踪类技能buffer 更改原则,暂时只储存 dir 即可
+    /// </summary>
+    [Serializable]
+    [InternalBufferCapacity(10)]
+    public struct TrackingRecord : IBufferElementData
+    {
+        public Entity refTarget;
+        public float3 postion;
+
+    }
 
 
     /// <summary>
