@@ -3367,3 +3367,104 @@ public class DamageTextMono : MonoBehaviour
 
         }
     }
+
+    //--- 回调技能类 废弃
+    
+            // **遍历所有打了请求标记的实体**,这里需要为方法传入ECB，这样可以在foreach里面同一帧使用
+            //这是针对粒子特效的方法
+            if (false)
+                Entities
+                    .WithName("SkillPulseSceondExplosionCallback") //程序底层打签名，用于标记
+                    .WithAll<SkillPulseSecondExplosionRequestTag>() //匹配ABC 所有组件,默认匹配没有被disnable的组件
+                                                                    //in 只读，需要放到ref 后面
+                    .ForEach((Entity e, ref SkillsDamageCalPar damageCalPar, ref SkillPulseTag pulseTag, in LocalTransform t) =>
+                    {
+                        // 调用 Mono 层的爆炸逻辑，继续设连锁阶段
+                        var entity = _heroSkills.DamageSkillsExplosionProp(
+                           ecb,
+                           _prefabs.ParticleEffect_DefaultEffexts, //爆炸特效                        
+                           t.Position,
+                           t.Rotation,
+                           1,
+                           0, 0, pulseTag.scaleChangePar, false, true
+                       );
+                        ecb.AddComponent(entity, new SkillPulseTag() { tagSurvivalTime = 2, scaleChangePar = pulseTag.scaleChangePar });//为二阶段技能生成存活标签,这里传入形变参数,持续两秒
+                                                                                                                                        //这种方式不会形成结构改变               
+                        ecb.SetComponentEnabled<SkillPulseSecondExplosionRequestTag>(e, false);
+                        //销毁，此时已经生成了二阶段技能，二阶段技能没有标签，返回到第一阶段进行销毁
+                        ecb.DestroyEntity(e);
+                    })
+                    .WithoutBurst()   // 必须关闭 Burst，才能调用任何 UnityEngine/Mono 代码
+                    .Run();
+
+
+//-- 技能闪电链 
+
+        void SkillCallBack_LightningChain(float timer, EntityCommandBuffer ecb, ScenePrefabsSingleton prefab)
+        {
+
+            Entities
+           .WithName("SkillLightningChain")
+           .ForEach((Entity entity, VisualEffect vfx,
+               ref SkillLightningChainTag skillTag,
+               ref OverlapTrackingQueryCenter overlapTracking,
+               ref SkillsDamageCalPar damageCalPar,
+               ref SkillsTrackingCalPar trackingCalPar,
+               ref LocalTransform transform,
+               ref DynamicBuffer<TrackingRecord> hitRecord) =>
+           {
+
+               skillTag.tagSurvivalTime -= timer;
+               if (skillTag.tagSurvivalTime <= 0)
+                   damageCalPar.destory = true;
+               if (!skillTag.initialized)
+               {
+                 skillTag.initialized = true;
+                 vfx.SetVector3("Pos1", _transformLookup[_heroEntity].Position+new float3(0,1,0));
+                 vfx.SetVector3("Pos2", skillTag.targetPostion + new float3(0, 1, 5));
+                vfx.SetVector3("Pos3", skillTag.targetPostion + new float3(0, 1, 10));
+                vfx.SetVector3("Pos4", skillTag.targetPostion + new float3(0, 1, 15));    
+               }
+
+               if (!skillTag.bufferChecked)
+
+               {
+                   int count = math.min(10, hitRecord.Length);
+                   if (count < 5)
+                       return;
+                   uint seed = (uint)(SystemAPI.Time.ElapsedTime) + (uint)entity.Index;
+                   var rand = new Unity.Mathematics.Random(seed);
+                   
+                   int randIndex2 = rand.NextInt(0, count);
+                   int randIndex3 = rand.NextInt(0, count);
+                   int randIndex4 = rand.NextInt(0, count);
+                    DevDebug.LogError("count"+count+"rand2"+randIndex2+"rand3"+randIndex3+"rand4"+randIndex4);
+                   var rec2 = hitRecord[randIndex2];
+                   var rec3 = hitRecord[randIndex3];
+                   var rec4 = hitRecord[randIndex4];
+
+                   trackingCalPar.pos2Ref = rec2.refTarget;
+                   trackingCalPar.pos2 = rec2.postion;
+
+                   trackingCalPar.pos3Ref = rec3.refTarget;
+                   trackingCalPar.pos3 = rec3.postion;
+
+                   trackingCalPar.pos4Ref = rec4.refTarget;
+                   trackingCalPar.pos4 = rec4.postion;
+                   //这里为空检测判断
+                   if (trackingCalPar.pos2Ref != Entity.Null)
+                   {
+                       vfx.SetVector3("Pos2", trackingCalPar.pos2 + new float3(0, 1, 0));
+                       vfx.SetVector3("Pos3", trackingCalPar.pos3 + new float3(0, 1, 0));
+                       vfx.SetVector3("Pos4", trackingCalPar.pos4 + new float3(0, 1, 0));
+                       DevDebug.LogError("进入有目标");
+                   }
+                   skillTag.bufferChecked = true;
+
+
+               }
+              // hitRecord.Clear();
+                
+           }).WithoutBurst().Run();
+
+        }

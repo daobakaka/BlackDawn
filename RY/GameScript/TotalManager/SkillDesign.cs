@@ -101,7 +101,7 @@ namespace BlackDawn
 
         FrostTrail,        // 冰霜路径：创造一条持续6秒的冰霜路径，友军移速+30%，敌军移速-30%  
                            // 释放方式：Buff；伤害类型：冰霜
-
+        //闪电链 30
         LightningChain,    // 闪电链：释放一道闪电链，跳跃5次，每次伤害递减20%  
                            // 释放方式：Release/Bounce；伤害类型：闪电
 
@@ -217,6 +217,8 @@ namespace BlackDawn
         ShadowTideA,
         ShadowTideB,
         FrostNovaB,
+        LightningChainRendering,
+        LightningChainCollder,
 
     }
     /// <summary>

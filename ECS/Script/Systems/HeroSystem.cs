@@ -13,6 +13,7 @@ using ProjectDawn.ContinuumCrowds;
 using Unity.Physics;
 using Unity.Collections;
 //英雄系统为渲染前的最后一个系统
+//英雄系统处理英雄自身的状态外，额外处理相关的 飞行道具、技能道具的销毁
 namespace BlackDawn.DOTS
 {
     [BurstCompile]
@@ -39,7 +40,7 @@ namespace BlackDawn.DOTS
             m_localToWorld = state.GetComponentLookup<LocalToWorld>(true);
             m_detection_DefaultCmpt = state.GetComponentLookup<Detection_DefaultCmpt>(true);
 
-           
+
 
         }
         /// <summary>
@@ -93,6 +94,7 @@ namespace BlackDawn.DOTS
 
             //英雄系统， 对所有怪
             var ecb = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            var ecbTemp = new EntityCommandBuffer(Allocator.Temp);
 
             //销毁 所有 基础飞行道具，英雄技能等
             foreach (var (directFlightProp, flightPro, entity) in SystemAPI.Query<RefRW<DirectFlightPropCmpt>, RefRW<FlightPropDamageCalPar>>().WithEntityAccess())
@@ -138,20 +140,31 @@ namespace BlackDawn.DOTS
 
             }
 
+            // 侦测型技能销毁 --闪电链！！这里会引起侦察系统报错，暂时不知为什么     
+
+            // foreach (var (skillTrackingCal, entity) in SystemAPI.Query<RefRO<SkillsTrackingCalPar>>().WithEntityAccess())
+            // {
+            //     if (skillTrackingCal.ValueRO.destory == true)
+            //         ecbTemp.DestroyEntity(entity);
+
+            // }
+
+
             //处理英雄自身的增益恢复效果
             foreach (var (transform, heroAttr, stateNoImmunity) in SystemAPI.Query<RefRW<HeroEntityMasterTag>, RefRW<HeroAttributeCmpt>, RefRW<HeroIntgratedNoImmunityState>>())
 
             {
                 //精力恢复,这里要添加原始精力
-                heroAttr.ValueRW.defenseAttribute.energy += (heroAttr.ValueRW.gainAttribute.energyRegen+10) * timer;
+                heroAttr.ValueRW.defenseAttribute.energy += (heroAttr.ValueRW.gainAttribute.energyRegen + 10) * timer;
 
                 heroAttr.ValueRW.defenseAttribute.hp += heroAttr.ValueRW.gainAttribute.hpRegen * timer;
 
             }
             //技能法阵的英雄自身伤害、DOT减免、控制抵消的判定
-            HeroSkillArcanelCorcleDeal(ref state,ecb, arcanelCorcleHitsArray.Length, timer);
+            HeroSkillArcanelCorcleDeal(ref state, ecb, arcanelCorcleHitsArray.Length, timer);
 
-
+            ecbTemp.Playback(state.EntityManager);
+            ecbTemp.Dispose();
 
             // if (!SystemAPI.HasSingleton<ProjectDawn.Navigation.Sample.Crowd.Spawner>())
             //     return;
@@ -161,11 +174,11 @@ namespace BlackDawn.DOTS
         /// 分开写，法阵技能的状态处理，增加分层逻辑
         /// </summary>
         /// <param name="state"></param>
-        void HeroSkillArcanelCorcleDeal(ref SystemState state,EntityCommandBuffer ecb ,int length, float timer)
+        void HeroSkillArcanelCorcleDeal(ref SystemState state, EntityCommandBuffer ecb, int length, float timer)
         {
 
 
-            foreach (var (transform, heroAttr, stateNoImmunity,linkedGroup) in SystemAPI.Query<RefRW<HeroEntityMasterTag>, RefRW<HeroAttributeCmpt>, RefRW<HeroIntgratedNoImmunityState>,DynamicBuffer<LinkedEntityGroup>>())
+            foreach (var (transform, heroAttr, stateNoImmunity, linkedGroup) in SystemAPI.Query<RefRW<HeroEntityMasterTag>, RefRW<HeroAttributeCmpt>, RefRW<HeroIntgratedNoImmunityState>, DynamicBuffer<LinkedEntityGroup>>())
             {
 
                 //拿取碰撞对，英雄处于碰撞对中，则按照帧掉血？应该也可以

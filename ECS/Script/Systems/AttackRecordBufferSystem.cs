@@ -46,13 +46,20 @@ namespace BlackDawn.DOTS
             }.ScheduleParallel(state.Dependency);
 
 
-            //用于记录通用寻址技能的处理器
-            state.Dependency = new TrackingBufferDealJob
+            //用于记录连锁吞噬寻址技能的处理JOB
+            state.Dependency = new TrackingBufferChainDevourDealJob
             {
                 Time = (float)SystemAPI.Time.ElapsedTime,
                 DeltaTime = SystemAPI.Time.DeltaTime,
 
             }.ScheduleParallel(state.Dependency);
+            //用于记录闪电链寻址技能的处理JOB
+            // state.Dependency = new TrackingBufferLightningChainDealJob
+            // {
+            //     Time = (float)SystemAPI.Time.ElapsedTime,
+            //     DeltaTime = SystemAPI.Time.DeltaTime,
+
+            // }.ScheduleParallel(state.Dependency);
 
             //state.Dependency.Complete();
             //计算元素共鸣的 buffer
@@ -221,15 +228,15 @@ namespace BlackDawn.DOTS
 
 
     /// <summary>
-    /// 用于计算 寻址技能的相关参数-- 这里的回调由特殊技能系统开启
+    /// 用于计算 寻址技能的相关参数-- 这里的回调由特殊技能系统开启,连锁吞噬的buffer 处理
     /// </summary>
     [BurstCompile]
-    partial struct TrackingBufferDealJob : IJobEntity
+    partial struct TrackingBufferChainDevourDealJob : IJobEntity
     {
         // public EntityCommandBuffer.ParallelWriter ECB;
         [ReadOnly] public float Time;
         public float DeltaTime;
-        void Execute(Entity entity, in LocalTransform transform, ref DynamicBuffer<TrackingRecord> hitRecord, ref SkillsTrackingCalPar trackingCalPar, [EntityIndexInQuery] int sortKey)
+        void Execute(Entity entity, in LocalTransform transform,in SkillChainDevourTag skilltag ,ref DynamicBuffer<TrackingRecord> hitRecord, ref SkillsTrackingCalPar trackingCalPar, [EntityIndexInQuery] int sortKey)
         {
             //添加约束条件
             if (trackingCalPar.enbaleChangeTarget == true && trackingCalPar.runCount > 0 && trackingCalPar.timer >= 0f && trackingCalPar.timer < DeltaTime)
@@ -246,11 +253,55 @@ namespace BlackDawn.DOTS
                 trackingCalPar.targetRef = rec.refTarget;
 
             }
-            //每帧清空，防止无序扩张               
+            //每帧清空，防止无序扩张，此时记录的信息 已经通过trackingCalPar写回主线程了 所以可以清除             
             hitRecord.Clear();
         }
 
     }
+
+    /// <summary>
+    /// 用于计算 寻址技能的相关参数-- 这里的回调由特殊技能系统开启,闪电链的buffer 处理--- 目前放在主线程中了
+    /// </summary>
+    [BurstCompile]
+    partial struct TrackingBufferLightningChainDealJob : IJobEntity
+    {
+        // public EntityCommandBuffer.ParallelWriter ECB;
+        [ReadOnly] public float Time;
+        public float DeltaTime;
+        void Execute(Entity entity, in LocalTransform transform,ref SkillLightningChainTag skilltag ,ref DynamicBuffer<TrackingRecord> hitRecord, ref SkillsTrackingCalPar trackingCalPar, [EntityIndexInQuery] int sortKey)
+        {
+            // DevDebug.LogError("进入闪电链buffer处理");
+            if (!skilltag.bufferChecked)
+            {
+              // DevDebug.LogError($"进入闪电链buffer处理 真实进入, Entity:{entity.Index}, Version:{entity.Version}");
+                int count = math.min(10, hitRecord.Length);
+                if (count == 0)
+                    return;
+                uint seed = (uint)(Time) + (uint)sortKey;
+                var rand = new Unity.Mathematics.Random(seed);
+
+                int randIndex2 = rand.NextInt(0, count);
+                int randIndex3 = rand.NextInt(0, count);
+                int randIndex4 = rand.NextInt(0, count);
+
+                var rec2 = hitRecord[randIndex2];
+                var rec3 = hitRecord[randIndex3];
+                var rec4 = hitRecord[randIndex4];
+
+                trackingCalPar.pos2Ref = rec2.refTarget;
+                trackingCalPar.pos3Ref = rec3.refTarget;
+                trackingCalPar.pos4Ref = rec4.refTarget;
+     
+                skilltag.bufferChecked = true;
+            }
+
+            //每帧清空，防止无序扩张，此时记录的信息 已经通过trackingCalPar写回主线程了 所以可以清除             
+            hitRecord.Clear();
+        }
+
+    }
+
+
 
         /// <summary>
     /// 聚合buffer清空

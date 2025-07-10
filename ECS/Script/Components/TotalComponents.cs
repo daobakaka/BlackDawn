@@ -83,6 +83,8 @@ namespace BlackDawn.DOTS
         public float3 offset;
         public float4 rotaion;
         public CollisionFilter filter; // 每个Overlap可自定义过滤规则
+        //定义单次采集
+        public bool oneTimeCollection;
     }
 
     /// <summary>

@@ -122,6 +122,8 @@ namespace BlackDawn.DOTS
             _localToWorldLookup.Update(ref state);
             //侦察系统采用 物理模系统初始化ECB 便于跨帧检测
             var ecb = SystemAPI.GetSingleton<BeginFixedStepSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+ 
+                    
 
             var physicsWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld;
 
@@ -141,6 +143,16 @@ namespace BlackDawn.DOTS
                 detectionEntiy = SystemAPI.GetSingletonEntity<Detection_DefaultCmpt>();
             if (SystemAPI.HasSingleton<HeroEntityMasterTag>())
                 heroEntity = SystemAPI.GetSingletonEntity<HeroEntityMasterTag>();
+
+            // 侦测型技能销毁 --闪电链！！这里会引起侦察系统报错，暂时不知为什么，目前认为 快照Ijobfor 要使用同样的ecb或者之前的ECB写入才不会报错！！
+            //临时ECB 写回 也不行， 必须是ECB 周期之前的ECB ，与脚本的运行顺序似乎无关     
+            foreach (var (skillTrackingCal, entity) in SystemAPI.Query<RefRO<SkillsTrackingCalPar>>().WithEntityAccess())
+            {
+                if (skillTrackingCal.ValueRO.destory == true)
+                    ecb.DestroyEntity(entity);
+
+            }
+     
 
 
             // 1:通用持续性技能的检测
@@ -172,6 +184,7 @@ namespace BlackDawn.DOTS
             //3.通用追踪型技能碰撞检测，收集碰撞对，但不计算伤害，用于寻踪,这里8个一个批次
             //这里暂时不收集对列，不涉及伤害计算， 应该直接走buffer系统来进行目标确定
             //对于技能体，是否需要改变目标的回调，还需要通过碰撞事件触发
+
             state.Dependency = new SkillTrackingOverlapDetectionJob
 
             {
@@ -193,7 +206,7 @@ namespace BlackDawn.DOTS
             // {
             //     Time = (float)SystemAPI.Time.ElapsedTime,
             //     DeltaTime = SystemAPI.Time.DeltaTime,
-                
+
             // }.ScheduleParallel(state.Dependency);
 
             // 4. 单独的侦测器的buffer检测，走单一的调度
@@ -226,9 +239,10 @@ namespace BlackDawn.DOTS
             //if (skillOverlapMonsterArray.Length > 0)
             //    DevDebug.Log("检测到的数量" + skillOverlapMonsterArray.Length);
 
-
             // if (skillTrackingOverlapMonsterArray.Length > 0)
             //    DevDebug.Log("检测到的数量" + skillTrackingOverlapMonsterArray.Length);
+            
+
         }
 
         public void OnDestroy(ref SystemState state)
@@ -565,6 +579,7 @@ namespace BlackDawn.DOTS
             var rotation = Centers[index].rotaion;
             //定义buffer变量
             var buffer = TrackingRecordBufferLookup[entity];
+            var skillTrackingCal = SkillTagLookup[entity];
 
 
             // ✅ 获取 LocalToWorld 变换（用于将 offset 从本地变为世界空间）
@@ -607,13 +622,15 @@ namespace BlackDawn.DOTS
 
                             if (isSkill && isTargetMonster)
                             {
-                                 // DevDebug.Log("加入队列");
+                                  //DevDebug.Log("加入队列");
                                  SkillOverlapMonsterQueue.Enqueue(new TriggerPairData { EntityA = entity, EntityB = targetEntity });
                                 //- 在此处调用符合要求的方法， 直接将目标的位置 和 entity 的引用，添加到buffer中
 
                                 float3 targetPos = Transform[targetEntity].Position;
-                                //这里并行写入 貌似不能控制长度-待考察,不能控制buffer 的添加，只能控制队列
-                                                                 
+                                //这里并行写入 貌似不能控制长度-待考察,不能控制buffer 的添加，只能控制队列，这里是添加到各自的buffer
+                                
+                                    if (!skillTrackingCal.destory&&TrackingRecordBufferLookup.HasBuffer(entity))
+                                                    
                                     AddToTrackingBuffer(entity, targetEntity, targetPos,index,ECB);
                                 
 
@@ -660,6 +677,7 @@ namespace BlackDawn.DOTS
                                 if (buffer.Length < buffer.Capacity)
 
                                 {
+                                        if (!skillTrackingCal.destory)
                                       AddToTrackingBuffer(entity, targetEntity, targetPos,index,ECB);
                                 }
 

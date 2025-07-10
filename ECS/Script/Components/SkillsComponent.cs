@@ -236,10 +236,9 @@ namespace BlackDawn.DOTS
     /// </summary>
     public struct SkillsTrackingCalPar : IComponentData
     {
-
+        //基于 连锁吞噬的通用处理    
         public Entity targetRef;
         public float3 currentDir; // 当前方向
-
         public bool enbaleChangeTarget;//这里用于碰撞之后的回调，只有在回调允许的时候，才能添加buffer和进行相关计算
         //寻迹象次数
         public int runCount;
@@ -250,6 +249,24 @@ namespace BlackDawn.DOTS
         /// </summary>
         public float timer;
 
+        /// <summary>
+        /// 寻址类技能销毁标识
+        /// </summary>
+        public bool destory;
+
+        //--基于 闪电链的特殊处理,处理三个折射点的数值
+        public Entity pos2Ref;
+
+        public Entity pos3Ref;
+
+        public Entity pos4Ref;
+        public Entity pos5Ref;
+
+        public Entity pos6Ref;
+
+        public Entity pos7Ref;
+        public Entity pos8Ref;
+ 
     }
 
 
@@ -594,7 +611,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// 寒冰波技能标签，包含形变参数和二阶技能参数
+    /// 寒霜新星第二阶段技能标签，包含形变参数和二阶技能参数
     /// </summary>
     public struct SkillFrostNovaBTag : IComponentData
     {
@@ -633,6 +650,84 @@ namespace BlackDawn.DOTS
         public float skillDamageChangeParTag;
         //等级
         public int level;
+
+    }
+
+    /// <summary>
+    /// 闪电链
+    /// </summary>
+    public struct SkillLightningChainTag : IComponentData
+    {
+        public float tagSurvivalTime;
+
+        public float laterTagSurvivalTime;
+        public float speed;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        public float skillDamageChangeParTag;
+        //等级
+        public int level;
+        //初始化的
+        public bool initialized;
+        //多线程中是否检查buffer 的
+        public bool bufferChecked;
+        //目标位置，闪电链侦擦器位置
+        public float3 targetPostion;
+
+        //闪电链 引用
+        public LightningChainColliderRef colliderRef;
+
+    }
+    /// <summary>
+    /// 用于渲染闪电链的标签
+    /// </summary>
+    public struct SkillLightningChainRenderTag : IComponentData
+    {
+
+        public float tagSurvivalTime;
+        public bool initialized;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        //渲染链接引用，动态改变球体位置
+        public LightningChainColliderRef colliderRef;
+
+    }
+    /// <summary>
+    /// 用于渲染闪电链的二阶电弧
+    /// </summary>
+        public struct SkillLightningChainRenderBTag : IComponentData
+    {
+
+        public float tagSurvivalTime;
+        public bool initialized;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        //渲染链接引用，动态改变球体位置
+        public LightningChainColliderRef colliderRef;
+
+    }
+    /// <summary>
+    /// 闪电链 电球碰撞器 碰撞体标签初始失活
+    /// </summary>
+    public struct skillLightningChianColliderTag : IComponentData, IEnableableComponent
+    {
+
+        public float tagSurvivalTime;
+
+    }
+
+    [Serializable]
+    public struct LightningChainColliderRef
+    {
+        public Entity collider1;
+        public Entity collider2;
+        public Entity collider3;
+        public Entity collider4;
+        public Entity collider5;
+        public Entity collider6;
+        public Entity collider7;
+        public Entity collider8;
+                   
 
     }
 

@@ -52,6 +52,8 @@ namespace BlackDawn.DOTS
         {
             //外部控制更新
             state.RequireForUpdate<EnableHeroSkillsDamageBurstSystemTag>();
+
+            
             _liveMonster = SystemAPI.GetComponentLookup<LiveMonster>(true);
             _monsterDefenseAttrLookup = SystemAPI.GetComponentLookup<MonsterDefenseAttribute>(true);
             _monsterLossPoolAttrLookip = SystemAPI.GetComponentLookup<MonsterLossPoolAttribute>(true);

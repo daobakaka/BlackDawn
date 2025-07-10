@@ -6,6 +6,7 @@ using Unity.Entities.UniversalDelegates;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.VFX;
 using static BlackDawn.HeroAttributes;
@@ -32,6 +33,8 @@ namespace BlackDawn.DOTS
         private Entity _heroEntity;
         //直接引用mono的单例位置，会卡顿
         private ComponentLookup<LocalTransform> _transformLookup;
+
+        private float3 _heroPositon;
         
         //英雄属性
         private ComponentLookup<HeroAttributeCmpt> _heroAttribute;
@@ -71,6 +74,7 @@ namespace BlackDawn.DOTS
             _transformLookup.Update(this);
             //hero属性更新
             _heroAttribute.Update(this);
+            _heroPositon = _transformLookup[_heroEntity].Position;
 
             //获取英雄属性
             var heroPar = _heroAttribute[_heroEntity];
@@ -87,7 +91,59 @@ namespace BlackDawn.DOTS
             //获取侦测系统的  碰撞对
             var mineBlastArray = detctionSystem.mineBlastHitMonsterArray;
 
-            //测试性绘制
+
+
+            //自定义绘制
+            CustomOverlapDarw();
+            //技能脉冲
+            SkillCallback_Pulse(timer, ecb);
+            //技能冰火
+            Skill_iceFire(timer, ecb);
+            //技能法阵
+            Skill_ArcaneCircle(timer, ecb, arcaneCircleLinkedArray);
+            //技能毒爆地雷 14
+            Skill_MineBlast(timer, ecb, mineBlastArray);
+
+            //技能 暗影洪流,引导，跟随，旋转
+            SkillCallBack_ShadowTide(timer, ecb, heroPar);
+            //技能 冰霜新星
+            SkillCallBack_FrostNova(timer, ecb, _prefabs);
+            
+
+            
+            //技能闪电链 30
+            SkillCallBack_LightningChain(timer, ecb, _prefabs);
+            //技能毒雨 32
+            SkillCallBack_PoisonRain(timer);
+
+
+            // 播放并清理
+            //ecb.Playback(base.EntityManager);
+            //ecb.Dispose();
+
+
+        }
+
+
+
+
+        protected override void OnDestroy()
+        {
+
+
+            //法阵buffer的效果 ，需要在外面清除
+            if (_arcaneCirclegraphicsBuffer != null)
+            {
+                _arcaneCirclegraphicsBuffer.Dispose();
+            }
+        }
+        /// <summary>
+        /// 自定义重叠碰撞体绘制
+        /// </summary>
+        void CustomOverlapDarw()
+        { 
+
+             //测试性绘制
             Entities
            .WithName("DrawOverlapCollider")
            .ForEach((in OverlapOverTimeQueryCenter overlap,in LocalToWorld localToWorld) =>
@@ -134,35 +190,15 @@ namespace BlackDawn.DOTS
 
             }).WithoutBurst().Run();
 
-            // **遍历所有打了请求标记的实体**,这里需要为方法传入ECB，这样可以在foreach里面同一帧使用
-            //这是针对粒子特效的方法
-            if (false)
-                Entities
-                    .WithName("SkillPulseSceondExplosionCallback") //程序底层打签名，用于标记
-                    .WithAll<SkillPulseSecondExplosionRequestTag>() //匹配ABC 所有组件,默认匹配没有被disnable的组件
-                                                                    //in 只读，需要放到ref 后面
-                    .ForEach((Entity e, ref SkillsDamageCalPar damageCalPar, ref SkillPulseTag pulseTag, in LocalTransform t) =>
-                    {
-                        // 调用 Mono 层的爆炸逻辑，继续设连锁阶段
-                        var entity = _heroSkills.DamageSkillsExplosionProp(
-                           ecb,
-                           _prefabs.ParticleEffect_DefaultEffexts, //爆炸特效                        
-                           t.Position,
-                           t.Rotation,
-                           1,
-                           0, 0, pulseTag.scaleChangePar, false, true
-                       );
-                        ecb.AddComponent(entity, new SkillPulseTag() { tagSurvivalTime = 2, scaleChangePar = pulseTag.scaleChangePar });//为二阶段技能生成存活标签,这里传入形变参数,持续两秒
-                                                                                                                                        //这种方式不会形成结构改变               
-                        ecb.SetComponentEnabled<SkillPulseSecondExplosionRequestTag>(e, false);
-                        //销毁，此时已经生成了二阶段技能，二阶段技能没有标签，返回到第一阶段进行销毁
-                        ecb.DestroyEntity(e);
-                    })
-                    .WithoutBurst()   // 必须关闭 Burst，才能调用任何 UnityEngine/Mono 代码
-                    .Run();
+
+        }
 
 
-            //脉冲处理
+
+        //技能脉冲 回调阶段
+        void SkillCallback_Pulse(float timer,EntityCommandBuffer ecb)
+        { 
+                   //脉冲处理
             Entities
                 .WithName("SkillPulseSceondVFXExplosionCallback") //这里直接标记脉冲的VFX回调标识
                 .WithAll<SkillPulseSecondExplosionRequestTag>() //匹配ABC 所有组件,默认匹配没有被disnable的组件
@@ -186,7 +222,13 @@ namespace BlackDawn.DOTS
                 .WithoutBurst()   // 必须关闭 Burst，才能调用任何 UnityEngine/Mono 代码
                 .Run();
 
-            //冰火球处理
+
+        }
+
+        //技能 冰火 回调阶段
+        void Skill_iceFire(float timer, EntityCommandBuffer ecb)
+        {
+              //冰火球处理
             Entities
                 .WithName("SkillIceFireSceondVFXExplosionCallback") //这里直接标记冰火球的VFX回调标识
                 .WithAll<SkillIceFireSecondExplosionRequestTag>() //匹配ABC 所有组件,默认匹配没有被disnable的组件
@@ -245,7 +287,13 @@ namespace BlackDawn.DOTS
                 .WithoutBurst().Run();
 
 
-            //法阵buffer的效果 ，需要在外面清除,目前暂时使用这种方式，感觉其他方式有BUG,特比是关于buffer的清除比麻烦
+        }
+
+
+        //技能 法阵
+        void Skill_ArcaneCircle(float timer, EntityCommandBuffer ecb,NativeArray<float3> arcaneCircleLinkedArray)
+        {   
+               //法阵buffer的效果 ，需要在外面清除,目前暂时使用这种方式，感觉其他方式有BUG,特比是关于buffer的清除比麻烦
             if (_arcaneCirclegraphicsBuffer != null)
             {
                 _arcaneCirclegraphicsBuffer.Dispose();
@@ -297,8 +345,13 @@ namespace BlackDawn.DOTS
                 })
                 .WithoutBurst().Run();
 
+            
+        }
 
-
+        //技能毒爆地雷
+        void Skill_MineBlast(float timer,EntityCommandBuffer ecb,NativeArray<TriggerPairData> mineBlastArray)
+        {
+            
             //毒爆地雷一级阶段处理
             Entities
                 .WithName("SkillMineBlast")
@@ -402,7 +455,14 @@ namespace BlackDawn.DOTS
 
                 })
                 .WithoutBurst().Run();
+            
+            
+        }
 
+        //技能 毒雨
+        void SkillCallBack_PoisonRain(float timer)
+        { 
+            
             //技能毒雨
             Entities
            .WithName("SkillOverTimePoisonRain")
@@ -426,30 +486,6 @@ namespace BlackDawn.DOTS
            }).WithoutBurst().Run();
 
 
-            //技能 暗影洪流,引导，跟随，旋转
-            SkillCallBack_ShadowTide(timer, ecb, heroPar);
-            //技能 冰霜新星
-            SkillCallBack_FrostNova(timer, ecb, _prefabs);
-
-            // 播放并清理
-            //ecb.Playback(base.EntityManager);
-            //ecb.Dispose();
-
-
-        }
-
-
-
-
-        protected override void OnDestroy()
-        {
-
-
-            //法阵buffer的效果 ，需要在外面清除
-            if (_arcaneCirclegraphicsBuffer != null)
-            {
-                _arcaneCirclegraphicsBuffer.Dispose();
-            }
         }
 
         //技能 暗影洪流,引导，跟随，旋转
@@ -624,6 +660,221 @@ namespace BlackDawn.DOTS
 
 }
 
+        //技能  闪电链,这里 应该是先投掷检测球， 根据检测球的检测结果，输出闪电链 即可
+        void SkillCallBack_LightningChain(float timer, EntityCommandBuffer ecb, ScenePrefabsSingleton prefab)
+        {
+
+            Entities
+           .WithName("SkillLightningChainDeteciton")
+           .ForEach((Entity entity,
+               ref SkillLightningChainTag skillTag,
+               ref OverlapTrackingQueryCenter overlapTracking,
+               ref SkillsTrackingCalPar trackingCalPar,
+               ref LocalTransform transform,
+               ref DynamicBuffer<TrackingRecord> hitRecord) =>
+           {
+
+               skillTag.tagSurvivalTime -= timer;
+               if (skillTag.tagSurvivalTime <= 0)
+                   trackingCalPar.destory = true;
+               //第一帧判断检测          
+               if (!skillTag.bufferChecked)
+
+               {
+                   int count = math.min(20, hitRecord.Length);
+                   if (count < 5)
+                       return;
+                   uint seed = (uint)(SystemAPI.Time.ElapsedTime) + (uint)entity.Index;
+                   var rand = new Unity.Mathematics.Random(seed);
+
+                   trackingCalPar.pos2Ref = hitRecord[rand.NextInt(0, count)].refTarget;
+                   trackingCalPar.pos3Ref = hitRecord[rand.NextInt(0, count)].refTarget;
+                   trackingCalPar.pos4Ref = hitRecord[rand.NextInt(0, count)].refTarget;
+                   //允许第二阶段释放第二段电弧
+                   if (skillTag.enableSecondB)
+                   {
+                       trackingCalPar.pos5Ref = hitRecord[rand.NextInt(0, count)].refTarget;
+                       trackingCalPar.pos6Ref = hitRecord[rand.NextInt(0, count)].refTarget;
+                       trackingCalPar.pos7Ref = hitRecord[rand.NextInt(0, count)].refTarget;
+                       trackingCalPar.pos8Ref = hitRecord[rand.NextInt(0, count)].refTarget;
+                   }
+
+                   //这里为空检测判断
+
+                   skillTag.bufferChecked = true;
+               }
+               //第二帧判断 初始化，检测到了再初始化，并且失活
+               if (!skillTag.initialized && skillTag.bufferChecked)//生成闪电链的渲染，并且赋予位置
+               {
+                   skillTag.initialized = true;
+                   var renderVFXEntity = ecb.Instantiate(prefab.HeroSkillAssistive_LightningChainRendering);
+
+                   //这里应该为闪电链的相关参数赋值
+                   ecb.AddComponent(renderVFXEntity, trackingCalPar);
+                   ecb.AddComponent(renderVFXEntity, new SkillLightningChainRenderTag() { tagSurvivalTime = skillTag.laterTagSurvivalTime, colliderRef = skillTag.colliderRef, enableSecondA = skillTag.enableSecondA, enableSecondB = skillTag.enableSecondB });
+
+                   //开启第二阶段新增加4个节点
+                   if (skillTag.enableSecondB)
+                   {
+
+                       var renderVFXEntityB = ecb.Instantiate(prefab.HeroSkillAssistive_LightningChainRendering);
+
+                       //这里应该为闪电链的相关参数赋值
+                       ecb.AddComponent(renderVFXEntityB, trackingCalPar);
+                       ecb.AddComponent(renderVFXEntityB, new SkillLightningChainRenderBTag() { tagSurvivalTime = skillTag.laterTagSurvivalTime, colliderRef = skillTag.colliderRef, enableSecondA = skillTag.enableSecondA, enableSecondB = skillTag.enableSecondB });
+
+                   }
+
+                   trackingCalPar.destory = true;
+
+               }
+               hitRecord.Clear();
+
+           }).WithoutBurst().Run();
+
+           //渲染闪电链
+         Entities
+        .WithName("SkillLightningChainRender")
+        .ForEach((Entity entity, VisualEffect vfx,
+            ref SkillLightningChainRenderTag skillTag,
+            ref SkillsTrackingCalPar trackingCalPar,
+            ref LocalTransform transform) =>
+        {
+            skillTag.tagSurvivalTime -= timer;
+            if (skillTag.tagSurvivalTime <= 0)
+                trackingCalPar.destory = true;
+            if (!skillTag.initialized)
+            {
+                if (!skillTag.enableSecondA)
+                    skillTag.initialized = true;
+
+                // ==== 计算目标位置 ====
+                float3 pos2 = _heroPositon + new float3(0, 0, 5);
+                float3 pos3 = _heroPositon + new float3(0, 0, 10);
+                float3 pos4 = _heroPositon + new float3(0, 0, 15);
+
+                if (_transformLookup.HasComponent(trackingCalPar.pos2Ref))
+                    pos2 = _transformLookup[trackingCalPar.pos2Ref].Position;
+                if (_transformLookup.HasComponent(trackingCalPar.pos3Ref))
+                    pos3 = _transformLookup[trackingCalPar.pos3Ref].Position;
+                if (_transformLookup.HasComponent(trackingCalPar.pos4Ref))
+                    pos4 = _transformLookup[trackingCalPar.pos4Ref].Position;
+
+                // ==== 更新Collider ====
+                if (_transformLookup.HasComponent(skillTag.colliderRef.collider1))
+                {
+                    var tra2 = _transformLookup[skillTag.colliderRef.collider1];
+                    tra2.Position = pos2;
+                    ecb.SetComponent<LocalTransform>(skillTag.colliderRef.collider1, tra2);
+                    ecb.SetComponentEnabled<skillLightningChianColliderTag>(skillTag.colliderRef.collider1, true);
+                }
+                if (_transformLookup.HasComponent(skillTag.colliderRef.collider2))
+                {
+                    var tra3 = _transformLookup[skillTag.colliderRef.collider2];
+                    tra3.Position = pos3;
+                    ecb.SetComponent<LocalTransform>(skillTag.colliderRef.collider2, tra3);
+                    ecb.SetComponentEnabled<skillLightningChianColliderTag>(skillTag.colliderRef.collider2, true);
+                }
+                if (_transformLookup.HasComponent(skillTag.colliderRef.collider3))
+                {
+                    var tra4 = _transformLookup[skillTag.colliderRef.collider3];
+                    tra4.Position = pos4;
+                    ecb.SetComponent<LocalTransform>(skillTag.colliderRef.collider3, tra4);
+                    ecb.SetComponentEnabled<skillLightningChianColliderTag>(skillTag.colliderRef.collider3, true);
+                }
+
+                // ==== VFX 位置 ====
+                vfx.SetVector3("Pos1", _heroPositon);
+                vfx.SetVector3("Pos2", pos2);
+                vfx.SetVector3("Pos3", pos3);
+                vfx.SetVector3("Pos4", pos4);
+            }
+        }).WithoutBurst().Run();
+
+            //B阶段，增加渲染数量
+        Entities
+        .WithName("SkillLightningChainRenderB")
+        .ForEach((Entity entity, VisualEffect vfx,
+            ref SkillLightningChainRenderBTag skillTag,
+            ref SkillsTrackingCalPar trackingCalPar,
+            ref LocalTransform transform) =>
+        {
+            skillTag.tagSurvivalTime -= timer;
+            if (skillTag.tagSurvivalTime <= 0)
+                trackingCalPar.destory = true;
+            if (!skillTag.initialized)
+            {
+                if (!skillTag.enableSecondA)
+                    skillTag.initialized = true;
+
+                float3 pos4 = _heroPositon + new float3(0, 0, 20);
+                float3 pos5 = _heroPositon + new float3(0, 0, 25);
+                float3 pos6 = _heroPositon + new float3(0, 0, 30);
+                float3 pos7 = _heroPositon + new float3(0, 0, 35);
+
+                if (_transformLookup.HasComponent(trackingCalPar.pos4Ref))
+                    pos4 = _transformLookup[trackingCalPar.pos4Ref].Position;
+                if (_transformLookup.HasComponent(trackingCalPar.pos5Ref))
+                    pos5 = _transformLookup[trackingCalPar.pos5Ref].Position;
+                if (_transformLookup.HasComponent(trackingCalPar.pos6Ref))
+                    pos6 = _transformLookup[trackingCalPar.pos6Ref].Position;
+                if (_transformLookup.HasComponent(trackingCalPar.pos7Ref))
+                    pos7 = _transformLookup[trackingCalPar.pos7Ref].Position;
+
+                // ==== 更新Collider ====
+                if (_transformLookup.HasComponent(skillTag.colliderRef.collider4))
+                {
+                    var tra4 = _transformLookup[skillTag.colliderRef.collider4];
+                    tra4.Position = pos4;
+                    ecb.SetComponent<LocalTransform>(skillTag.colliderRef.collider4, tra4);
+                    ecb.SetComponentEnabled<skillLightningChianColliderTag>(skillTag.colliderRef.collider4, true);
+                }
+                if (_transformLookup.HasComponent(skillTag.colliderRef.collider5))
+                {
+                    var tra5 = _transformLookup[skillTag.colliderRef.collider5];
+                    tra5.Position = pos5;
+                    ecb.SetComponent<LocalTransform>(skillTag.colliderRef.collider5, tra5);
+                    ecb.SetComponentEnabled<skillLightningChianColliderTag>(skillTag.colliderRef.collider5, true);
+                }
+                if (_transformLookup.HasComponent(skillTag.colliderRef.collider6))
+                {
+                    var tra6 = _transformLookup[skillTag.colliderRef.collider6];
+                    tra6.Position = pos6;
+                    ecb.SetComponent<LocalTransform>(skillTag.colliderRef.collider6, tra6);
+                    ecb.SetComponentEnabled<skillLightningChianColliderTag>(skillTag.colliderRef.collider6, true);
+                }
+                if (_transformLookup.HasComponent(skillTag.colliderRef.collider7))
+                {
+                    var tra7 = _transformLookup[skillTag.colliderRef.collider7];
+                    tra7.Position = pos7;
+                    ecb.SetComponent<LocalTransform>(skillTag.colliderRef.collider7, tra7);
+                    ecb.SetComponentEnabled<skillLightningChianColliderTag>(skillTag.colliderRef.collider7, true);
+                }
+
+                // ==== VFX 位置 ====
+                vfx.SetVector3("Pos1", pos4);
+                vfx.SetVector3("Pos2", pos5);
+                vfx.SetVector3("Pos3", pos6);
+                vfx.SetVector3("Pos4", pos7);
+            }
+        }).WithoutBurst().Run();
+
+           
+
+            Entities
+            .WithName("SkillLightningChinaCollider")            
+            .ForEach((Entity entiy, ref skillLightningChianColliderTag skillTag,ref SkillsDamageCalPar skillDamageCal) =>
+
+            {
+                skillTag.tagSurvivalTime -= timer;
+                if (skillTag.tagSurvivalTime <= 0)
+                    skillDamageCal.destory = true;
+
+            }).WithoutBurst().Run();
+
+
+
+        }
 
 
         void DebugDrawSphere(float3 entityPosition, float3 offset, quaternion rotation, float radius, Color color, float duration)

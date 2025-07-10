@@ -80,8 +80,8 @@ namespace BlackDawn
         protected internal override void OnUpdate(IFsm<Hero> fsm, float elapseSeconds, float realElapseSeconds)
         {
             //攻击
-         //  fsm.Owner.HeroAttack(0.1f,1000,360);
-            fsm.Owner.HeroAttackBurst();
+         // fsm.Owner.HeroAttack(0.1f,1000,360);
+           // fsm.Owner.HeroAttackBurst();
 
             //移动
             var transform = fsm.Owner.transform;

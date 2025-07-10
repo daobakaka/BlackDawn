@@ -24,7 +24,7 @@ namespace BlackDawn
         //技能位置
         Transform _transform;
         //英雄属性,这里的属性，基本只能用于只读，执行过程中，应该采用查询属性
-       [ReadOnly] HeroAttributeCmpt _heroAttributeCmptOriginal;
+        [ReadOnly] HeroAttributeCmpt _heroAttributeCmptOriginal;
         CoroutineController _coroutineController;
 
         Entity _heroEntity;
@@ -54,7 +54,7 @@ namespace BlackDawn
             _heroAttributeCmptOriginal = Hero.instance.attributeCmpt;
 
             //获取全局协程控制器
-            _coroutineController =Hero.instance.coroutineController;
+            _coroutineController = Hero.instance.coroutineController;
 
 
             //获取英雄entity
@@ -65,7 +65,7 @@ namespace BlackDawn
             _shadowTideQuery = _entityManager.CreateEntityQuery(typeof(SkillShadowTideTag));
             //实时英雄组件查询
             _heroRealTimeAttr = _entityManager.CreateEntityQuery(typeof(HeroAttributeCmpt), typeof(HeroEntityMasterTag));
-           
+
 
         }
 
@@ -79,7 +79,7 @@ namespace BlackDawn
 
         public void RelasesHeroSkill(HeroSkillID iD, HeroSkillPsionicType psionicType = HeroSkillPsionicType.Basic)
         {
-            var ecb = new EntityCommandBuffer(Allocator.Temp);            
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
             var detectionSystemHandle = World.DefaultGameObjectInjectionWorld.Unmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
             ref var detectionSystem = ref World.DefaultGameObjectInjectionWorld.Unmanaged.GetUnsafeSystemRef<DetectionSystem>(detectionSystemHandle);
 
@@ -757,7 +757,7 @@ namespace BlackDawn
                 case HeroSkillID.ChainDevour:
                     //开启连锁吞噬碰撞，
                     detectionSystem.enableSpecialSkillChainDevour = true;
-                    DevDebug.LogError("是否开启连锁吞噬" + detectionSystem.enableSpecialSkillChainDevour);
+                    //DevDebug.LogError("是否开启连锁吞噬" + detectionSystem.enableSpecialSkillChainDevour);
 
                     switch (psionicType)
                     {
@@ -811,7 +811,7 @@ namespace BlackDawn
 
                             break;
                         case HeroSkillPsionicType.PsionicB:
-                          //dotDamageSystem 里面关于连锁吞噬效果的处理（含内置1秒CD）
+                            //dotDamageSystem 里面关于连锁吞噬效果的处理（含内置1秒CD）
                             dotDamageSystem.EnbaleChainDecourSkillSecondB = true;
                             var filterB = new CollisionFilter
                             {
@@ -824,7 +824,7 @@ namespace BlackDawn
                             var overlapB = new OverlapTrackingQueryCenter { center = Hero.instance.transform.position, radius = 5, filter = filterB, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
                             //这里添加寻踪类技能专属标签
                             var entityChainDevourB = DamageSkillsTrackingProp(_skillPrefabs.HeroSkill_ChainDevour, overlapB, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
-                            _entityManager.AddComponentData(entityChainDevourB, new SkillChainDevourTag() { tagSurvivalTime = 10f, speed = 20 ,enableSecondB=true});
+                            _entityManager.AddComponentData(entityChainDevourB, new SkillChainDevourTag() { tagSurvivalTime = 10f, speed = 20, enableSecondB = true });
 
                             //可能的参数设置
                             var skillDamageChainDevourB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityChainDevourB);
@@ -837,7 +837,7 @@ namespace BlackDawn
 
                             break;
                         case HeroSkillPsionicType.PsionicAB:
-                         var filterAB = new CollisionFilter
+                            var filterAB = new CollisionFilter
                             {
                                 //属于道具层
                                 BelongsTo = 1u << 10,
@@ -848,7 +848,7 @@ namespace BlackDawn
                             var overlapAB = new OverlapTrackingQueryCenter { center = Hero.instance.transform.position, radius = 5, filter = filterAB, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
                             //这里添加寻踪类技能专属标签
                             var entityChainDevourAB = DamageSkillsTrackingProp(_skillPrefabs.HeroSkill_ChainDevour, overlapAB, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
-                            _entityManager.AddComponentData(entityChainDevourAB, new SkillChainDevourTag() { tagSurvivalTime = 10f, speed = 20,enableSecondB=true });
+                            _entityManager.AddComponentData(entityChainDevourAB, new SkillChainDevourTag() { tagSurvivalTime = 10f, speed = 20, enableSecondB = true });
                             var tagAB = _entityManager.GetComponentData<SkillChainDevourTag>(entityChainDevourAB);
                             //可能的参数设置
                             var skillDamageChainDevourAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityChainDevourAB);
@@ -976,7 +976,206 @@ namespace BlackDawn
                             break;
                     }
                     break;
-                //毒雨,持续,技能附带的控制参数， 可以通过配置表进行配置
+                //闪电链 30， 瞬时寻址
+                case HeroSkillID.LightningChain:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+                            var filter = new CollisionFilter
+                            {
+                                //属于道具层
+                                BelongsTo = 1u << 10,
+                                //检测敌人
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlap = new OverlapTrackingQueryCenter { center = Hero.instance.skillTargetPositon, radius = 10, filter = filter, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                            //这里添加寻踪类技能专属标签
+                            var entityLightningChain = DamageSkillsTrackingPropNoneDamage(_skillPrefabs.HeroSkill_LightningChain, overlap, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 3.0f, 0), 0, 1, false, false);
+                            //添加通用侦察器
+                            _entityManager.AddComponentData(entityLightningChain, new SkillLightningChainTag() { tagSurvivalTime = 0.5f, laterTagSurvivalTime=1f,speed = 20, targetPostion = Hero.instance.skillTargetPositon });
+                            //寻址技能参数变化配置
+                            var skillsTrackingCalPar = _entityManager.GetComponentData<SkillsTrackingCalPar>(entityLightningChain);
+                            skillsTrackingCalPar.runCount = 3;//默认弹射三次， 生成 skillsDamageCalPar的 伤害碰撞检测体，透明，用于闪电链的定点检测
+                            _entityManager.SetComponentData(entityLightningChain, skillsTrackingCalPar);
+
+
+                            for (int i = 0; i < skillsTrackingCalPar.runCount; i++)
+                            {
+                                //默认放在原始 siglotenPrefab 的位置
+                                var lightningChainColliderEntity = _entityManager.Instantiate(_skillPrefabs.HeroSkillAssistive_LightningChainCollider);
+                                _entityManager.AddComponentData(lightningChainColliderEntity, Hero.instance.skillsDamageCalPar);
+                                var trs = _entityManager.GetComponentData<LocalTransform>(lightningChainColliderEntity);
+                                trs.Position.y = -100;
+                                _entityManager.SetComponentData(lightningChainColliderEntity, trs);
+
+                                var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(lightningChainColliderEntity);
+                                skillPar.enablePull = false;
+                                skillPar.enableExplosion = false;
+                                skillPar.damageChangePar -= skillsTrackingCalPar.runCount * 0.1f; //原始伤害递减10% 
+                                //写回伤害递减  
+                                _entityManager.SetComponentData(lightningChainColliderEntity, skillPar);
+                                //添加碰撞记录
+                                var hits = _entityManager.AddBuffer<HitRecord>(lightningChainColliderEntity);
+                                _entityManager.AddBuffer<HitElementResonanceRecord>(lightningChainColliderEntity);
+
+                                var skillLightningChianTag = _entityManager.GetComponentData<SkillLightningChainTag>(entityLightningChain);
+                                var refSkillTag = SetLightningChainCollider(skillLightningChianTag, i, lightningChainColliderEntity);
+                                _entityManager.SetComponentData(entityLightningChain, refSkillTag);
+                                //添加碰撞器控制标识
+                                _entityManager.AddComponentData(lightningChainColliderEntity, new skillLightningChianColliderTag() { tagSurvivalTime = 1 });
+                                _entityManager.SetComponentEnabled<skillLightningChianColliderTag>(lightningChainColliderEntity, false);
+                               
+                            }
+
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                         var filterA = new CollisionFilter
+                            {
+                                //属于道具层
+                                BelongsTo = 1u << 10,
+                                //检测敌人
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlapA = new OverlapTrackingQueryCenter { center = Hero.instance.skillTargetPositon, radius = 10, filter = filterA, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                            //这里添加寻踪类技能专属标签
+                            var entityLightningChainA = DamageSkillsTrackingPropNoneDamage(_skillPrefabs.HeroSkill_LightningChain, overlapA, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 3.0f, 0), 0, 1, false, false);
+                            //添加通用侦察器
+                            _entityManager.AddComponentData(entityLightningChainA, new SkillLightningChainTag() { tagSurvivalTime = 0.5f,laterTagSurvivalTime=3f, speed = 20, targetPostion = Hero.instance.skillTargetPositon,enableSecondA=true });
+                            //寻址技能参数变化配置
+                            var skillsTrackingCalParA = _entityManager.GetComponentData<SkillsTrackingCalPar>(entityLightningChainA);
+                            skillsTrackingCalPar.runCount = 3;//默认弹射三次， 生成 skillsDamageCalPar的 伤害碰撞检测体，透明，用于闪电链的定点检测
+                            _entityManager.SetComponentData(entityLightningChainA, skillsTrackingCalParA);
+
+
+                            for (int i = 0; i < skillsTrackingCalPar.runCount; i++)
+                            {
+                                //默认放在原始 siglotenPrefab 的位置
+                                var lightningChainColliderEntity = _entityManager.Instantiate(_skillPrefabs.HeroSkillAssistive_LightningChainCollider);
+                                _entityManager.AddComponentData(lightningChainColliderEntity, Hero.instance.skillsDamageCalPar);
+                                var trs = _entityManager.GetComponentData<LocalTransform>(lightningChainColliderEntity);
+                                trs.Position.y = -100;
+                                _entityManager.SetComponentData(lightningChainColliderEntity, trs);
+
+                                var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(lightningChainColliderEntity);
+                                skillPar.enablePull = false;
+                                skillPar.enableExplosion = false;
+                                skillPar.damageChangePar -= skillsTrackingCalPar.runCount * 0.1f; //原始伤害递减10% 
+                                //写回伤害递减  
+                                _entityManager.SetComponentData(lightningChainColliderEntity, skillPar);
+                                //添加碰撞记录
+                                var hits = _entityManager.AddBuffer<HitRecord>(lightningChainColliderEntity);
+                                _entityManager.AddBuffer<HitElementResonanceRecord>(lightningChainColliderEntity);
+
+                                var skillLightningChianTag = _entityManager.GetComponentData<SkillLightningChainTag>(entityLightningChainA);
+                                var refSkillTag = SetLightningChainCollider(skillLightningChianTag, i, lightningChainColliderEntity);
+                                _entityManager.SetComponentData(entityLightningChainA, refSkillTag);
+                                //添加碰撞器控制标识
+                                _entityManager.AddComponentData(lightningChainColliderEntity, new skillLightningChianColliderTag() { tagSurvivalTime = 3 });
+                                _entityManager.SetComponentEnabled<skillLightningChianColliderTag>(lightningChainColliderEntity, false);
+                               
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                              var filterB = new CollisionFilter
+                            {
+                                //属于道具层
+                                BelongsTo = 1u << 10,
+                                //检测敌人
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlapB = new OverlapTrackingQueryCenter { center = Hero.instance.skillTargetPositon, radius = 10, filter = filterB, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                            //这里添加寻踪类技能专属标签
+                            var entityLightningChainB = DamageSkillsTrackingPropNoneDamage(_skillPrefabs.HeroSkill_LightningChain, overlapB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 3.0f, 0), 0, 1, false, false);
+                            //添加通用侦察器
+                            _entityManager.AddComponentData(entityLightningChainB, new SkillLightningChainTag() { tagSurvivalTime = 0.5f,laterTagSurvivalTime=1f, speed = 20, targetPostion = Hero.instance.skillTargetPositon,enableSecondB=true });
+                            //寻址技能参数变化配置
+                            var skillsTrackingCalParB = _entityManager.GetComponentData<SkillsTrackingCalPar>(entityLightningChainB);
+                            skillsTrackingCalPar.runCount = 3;//默认弹射三次， 生成 skillsDamageCalPar的 伤害碰撞检测体，透明，用于闪电链的定点检测
+                            _entityManager.SetComponentData(entityLightningChainB, skillsTrackingCalParB);
+                            for (int i = 0; i < skillsTrackingCalPar.runCount; i++)
+                            {
+                                //默认放在原始 siglotenPrefab 的位置
+                                var lightningChainColliderEntity = _entityManager.Instantiate(_skillPrefabs.HeroSkillAssistive_LightningChainCollider);
+                                _entityManager.AddComponentData(lightningChainColliderEntity, Hero.instance.skillsDamageCalPar);
+                                var trs = _entityManager.GetComponentData<LocalTransform>(lightningChainColliderEntity);
+                                trs.Position.y = -100;
+                                trs.Scale = 1.5f;//增大导电体范围
+                                _entityManager.SetComponentData(lightningChainColliderEntity, trs);
+
+                                var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(lightningChainColliderEntity);
+                                skillPar.enablePull = false;
+                                skillPar.enableExplosion = false;
+                                skillPar.damageChangePar -= skillsTrackingCalPar.runCount * 0.1f; //原始伤害递减10% 
+                                //写回伤害递减  
+                                _entityManager.SetComponentData(lightningChainColliderEntity, skillPar);
+                                //添加碰撞记录
+                                var hits = _entityManager.AddBuffer<HitRecord>(lightningChainColliderEntity);
+                                _entityManager.AddBuffer<HitElementResonanceRecord>(lightningChainColliderEntity);
+
+                                var skillLightningChianTag = _entityManager.GetComponentData<SkillLightningChainTag>(entityLightningChainB);
+                                var refSkillTag = SetLightningChainCollider(skillLightningChianTag, i, lightningChainColliderEntity);
+                                _entityManager.SetComponentData(entityLightningChainB, refSkillTag);
+                                //添加碰撞器控制标识
+                                _entityManager.AddComponentData(lightningChainColliderEntity, new skillLightningChianColliderTag() { tagSurvivalTime = 1 });
+                                _entityManager.SetComponentEnabled<skillLightningChianColliderTag>(lightningChainColliderEntity, false);
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+                               var filterAB = new CollisionFilter
+                            {
+                                //属于道具层
+                                BelongsTo = 1u << 10,
+                                //检测敌人
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlapAB = new OverlapTrackingQueryCenter { center = Hero.instance.skillTargetPositon, radius = 10, filter = filterAB, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                            //这里添加寻踪类技能专属标签
+                            var entityLightningChainAB = DamageSkillsTrackingPropNoneDamage(_skillPrefabs.HeroSkill_LightningChain, overlapAB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 3.0f, 0), 0, 1, false, false);
+                            //添加通用侦察器
+                            _entityManager.AddComponentData(entityLightningChainAB, new SkillLightningChainTag() { tagSurvivalTime = 0.5f,laterTagSurvivalTime=3f, speed = 20, targetPostion = Hero.instance.skillTargetPositon,enableSecondA=true ,enableSecondB=true});
+                            //寻址技能参数变化配置
+                            var skillsTrackingCalParAB = _entityManager.GetComponentData<SkillsTrackingCalPar>(entityLightningChainAB);
+                            skillsTrackingCalPar.runCount = 7;//默认弹射三次， 生成 skillsDamageCalPar的 伤害碰撞检测体，透明，用于闪电链的定点检测
+                            _entityManager.SetComponentData(entityLightningChainAB, skillsTrackingCalParAB);
+                            for (int i = 0; i < skillsTrackingCalPar.runCount; i++)
+                            {
+                                //默认放在原始 siglotenPrefab 的位置
+                                var lightningChainColliderEntity = _entityManager.Instantiate(_skillPrefabs.HeroSkillAssistive_LightningChainCollider);
+                                _entityManager.AddComponentData(lightningChainColliderEntity, Hero.instance.skillsDamageCalPar);
+                                var trs = _entityManager.GetComponentData<LocalTransform>(lightningChainColliderEntity);
+                                trs.Position.y = -100;
+                                trs.Scale = 1.5f;
+                                _entityManager.SetComponentData(lightningChainColliderEntity, trs);
+
+                                var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(lightningChainColliderEntity);
+                                skillPar.enablePull = false;
+                                skillPar.enableExplosion = false;
+                                skillPar.damageChangePar -= skillsTrackingCalPar.runCount * 0.1f; //原始伤害递减10% 
+                                //写回伤害递减  
+                                _entityManager.SetComponentData(lightningChainColliderEntity, skillPar);
+                                //添加碰撞记录
+                                var hits = _entityManager.AddBuffer<HitRecord>(lightningChainColliderEntity);
+                                _entityManager.AddBuffer<HitElementResonanceRecord>(lightningChainColliderEntity);
+
+                                var skillLightningChianTag = _entityManager.GetComponentData<SkillLightningChainTag>(entityLightningChainAB);
+                                var refSkillTag = SetLightningChainCollider(skillLightningChianTag, i, lightningChainColliderEntity);
+                                _entityManager.SetComponentData(entityLightningChainAB, refSkillTag);
+                                //添加碰撞器控制标识
+                                _entityManager.AddComponentData(lightningChainColliderEntity, new skillLightningChianColliderTag() { tagSurvivalTime = 3 });
+                                _entityManager.SetComponentEnabled<skillLightningChianColliderTag>(lightningChainColliderEntity, false);
+                            }
+                            break;
+
+
+                    }
+                    break;
+
+
+                //毒雨 32 ,持续,技能附带的控制参数， 可以通过配置表进行配置
                 case HeroSkillID.PoisonRain:
                     switch (psionicType)
                     {
@@ -1073,7 +1272,7 @@ namespace BlackDawn
             ;
             ecb.Playback(_entityManager);
             ecb.Dispose();
-               
+
         }
         /// <summary>
         /// 实例化并初始化一个伤害型飞行技能实体（Pulse,PulseB）-
@@ -1087,14 +1286,14 @@ namespace BlackDawn
         /// <param name="enableExplosion">是否开启斥力/爆炸效果，默认 <c>fasle</c>。</param>
         /// <param name="enableSecond">是否开启二阶段 <c>fasle</c>。</param>
         /// <returns>返回新实例化的实体。</returns>
-      public  Entity DamageSkillsFlightProp(
-          Entity prefab,
-          float3 posion,
-          quaternion quaternion,
-          float damageChangePar =1,//默认伤害参数为1
-          float3 positionOffset = default,
-          float3 rotationOffsetEuler = default,  // 传入度数
-          float scaleFactor = 1f,bool enablePull =false,bool enableExplosion =false)
+        public Entity DamageSkillsFlightProp(
+            Entity prefab,
+            float3 posion,
+            quaternion quaternion,
+            float damageChangePar = 1,//默认伤害参数为1
+            float3 positionOffset = default,
+            float3 rotationOffsetEuler = default,  // 传入度数
+            float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
         {
             DevDebug.Log("释放伤害型飞行技能");
 
@@ -1103,8 +1302,8 @@ namespace BlackDawn
 
             // 2) 取出可变的 LocalTransform
             var transform = _entityManager.GetComponentData<LocalTransform>(entity);
-            
-    
+
+
             // 3) 从英雄获取基础位置/旋转/缩放
             float3 heroPos = posion;
             quaternion heroRot = quaternion;
@@ -1123,19 +1322,19 @@ namespace BlackDawn
             var combineRotation = math.mul(heroRot, eulerOffsetQuat);
             //叠加本体旋转
             transform.Rotation = math.mul(transform.Rotation, combineRotation);
-            transform.Scale = baseScale * scaleFactor*(1+ _heroAttributeCmptOriginal.gainAttribute.skillRange);
+            transform.Scale = baseScale * scaleFactor * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange);
 
             // 6) 写回组件
             _entityManager.SetComponentData(entity, transform);
 
             // 7) 添加伤害参数
             _entityManager.AddComponentData(entity, Hero.instance.skillsDamageCalPar);
-       
+
             var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entity);
-           
-                skillPar.enablePull = enablePull;           
-                skillPar.enableExplosion = enableExplosion;
-                skillPar.damageChangePar= damageChangePar;         
+
+            skillPar.enablePull = enablePull;
+            skillPar.enableExplosion = enableExplosion;
+            skillPar.damageChangePar = damageChangePar;
             _entityManager.SetComponentData(entity, skillPar);
 
             // 8) 添加碰撞记录缓冲区
@@ -1203,8 +1402,8 @@ namespace BlackDawn
             _entityManager.AddComponentData(entity, Hero.instance.skillsOverTimeDamageCalPar);
 
             //8)添加持续性伤害overlap检测
-            if(queryCenter.radius!=0)
-            _entityManager.AddComponentData(entity, queryCenter);
+            if (queryCenter.radius != 0)
+                _entityManager.AddComponentData(entity, queryCenter);
 
             var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entity);
 
@@ -1218,29 +1417,29 @@ namespace BlackDawn
             return entity;
         }
 
-/// <summary>
-/// 释放 寻踪类技能
-/// </summary>
-/// <param name="prefab"></param>
-/// <param name="queryCenter"></param>
-/// <param name="posion"></param>
-/// <param name="quaternion"></param>
-/// <param name="damageChangePar"></param>
-/// <param name="positionOffset"></param>
-/// <param name="rotationOffsetEuler"></param>
-/// <param name="scaleFactor"></param>
-/// <param name="enablePull"></param>
-/// <param name="enableExplosion"></param>
-/// <returns></returns>
-           public Entity DamageSkillsTrackingProp(
-         Entity prefab,
-         OverlapTrackingQueryCenter queryCenter,
-         float3 posion,
-         quaternion quaternion,
-         float damageChangePar = 1,//默认伤害参数为1
-         float3 positionOffset = default,
-         float3 rotationOffsetEuler = default,  // 传入度数
-         float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
+        /// <summary>
+        /// 释放 寻踪类技能
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <param name="queryCenter"></param>
+        /// <param name="posion"></param>
+        /// <param name="quaternion"></param>
+        /// <param name="damageChangePar"></param>
+        /// <param name="positionOffset"></param>
+        /// <param name="rotationOffsetEuler"></param>
+        /// <param name="scaleFactor"></param>
+        /// <param name="enablePull"></param>
+        /// <param name="enableExplosion"></param>
+        /// <returns></returns>
+        public Entity DamageSkillsTrackingProp(
+      Entity prefab,
+      OverlapTrackingQueryCenter queryCenter,
+      float3 posion,
+      quaternion quaternion,
+      float damageChangePar = 1,//默认伤害参数为1
+      float3 positionOffset = default,
+      float3 rotationOffsetEuler = default,  // 传入度数
+      float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
         {
             DevDebug.Log("释放寻址类技能");
 
@@ -1288,18 +1487,88 @@ namespace BlackDawn
 
 
             //8)添加Trackingoverlap检测
-            if(queryCenter.radius!=0)
-            _entityManager.AddComponentData(entity, queryCenter);
+            if (queryCenter.radius != 0)
+                _entityManager.AddComponentData(entity, queryCenter);
 
             // 8-1) 添加瞬时技能碰撞缓冲区
             var hits = _entityManager.AddBuffer<HitRecord>(entity);
             //9）添加寻踪技能的专属标签,默认寻址次数为5,初始方向为传入的原始旋转方向
-            _entityManager.AddComponentData(entity,new SkillsTrackingCalPar() { runCount =5,currentDir=math.mul(quaternion, new float3(0f, 0f, 1f))});
+            _entityManager.AddComponentData(entity, new SkillsTrackingCalPar() { runCount = 5, currentDir = math.mul(quaternion, new float3(0f, 0f, 1f)) });
 
             //10)添加寻址技能的专属buffer
             _entityManager.AddBuffer<TrackingRecord>(entity);
 
             _entityManager.AddBuffer<HitElementResonanceRecord>(entity);
+
+            return entity;
+        }
+
+        /// <summary>
+        /// 无伤害的 寻址类技能
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <param name="queryCenter"></param>
+        /// <param name="posion"></param>
+        /// <param name="quaternion"></param>
+        /// <param name="damageChangePar"></param>
+        /// <param name="positionOffset"></param>
+        /// <param name="rotationOffsetEuler"></param>
+        /// <param name="scaleFactor"></param>
+        /// <param name="enablePull"></param>
+        /// <param name="enableExplosion"></param>
+        /// <returns></returns>
+        public Entity DamageSkillsTrackingPropNoneDamage(
+        Entity prefab,
+        OverlapTrackingQueryCenter queryCenter,
+        float3 posion,
+        quaternion quaternion,
+        float damageChangePar = 1,//默认伤害参数为1
+        float3 positionOffset = default,
+        float3 rotationOffsetEuler = default,  // 传入度数
+        float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
+        {
+            DevDebug.Log("释放无伤害的寻址类技能侦测器");
+
+            // 1) 实例化
+            var entity = _entityManager.Instantiate(prefab);
+
+            // 2) 取出可变的 LocalTransform
+            var transform = _entityManager.GetComponentData<LocalTransform>(entity);
+
+
+            // 3) 从英雄获取基础位置/旋转/缩放
+            float3 heroPos = posion;
+            quaternion heroRot = quaternion;
+            float baseScale = transform.Scale; // 保留预制体的原始 scale
+
+            // 4) 计算欧拉偏移的四元数
+            //    math.radians 将度数转为弧度
+            quaternion eulerOffsetQuat = quaternion.EulerXYZ(
+                math.radians(rotationOffsetEuler)
+            );
+
+            // 5) 叠加偏移
+            transform.Position = heroPos
+                                + math.mul(heroRot, positionOffset);
+            //计算整合旋转
+            var combineRotation = math.mul(heroRot, eulerOffsetQuat);
+            //叠加本体旋转
+            transform.Rotation = math.mul(transform.Rotation, combineRotation);
+            transform.Scale = baseScale * scaleFactor * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange);
+
+            // 6) 写回组件
+            _entityManager.SetComponentData(entity, transform);
+
+            //8)添加Trackingoverlap检测
+            if (queryCenter.radius != 0)
+                _entityManager.AddComponentData(entity, queryCenter);
+
+            //9）添加寻踪技能的专属标签,默认寻址次数为5,初始方向为传入的原始旋转方向
+            _entityManager.AddComponentData(entity, new SkillsTrackingCalPar() { runCount = 5, currentDir = math.mul(quaternion, new float3(0f, 0f, 1f)) });
+
+            //10)添加寻址技能的专属buffer
+            _entityManager.AddBuffer<TrackingRecord>(entity);
+
 
             return entity;
         }
@@ -1317,14 +1586,14 @@ namespace BlackDawn
         /// <param name="enablePull"></param>
         /// <param name="enableExplosion"></param>
         /// <returns></returns>
-       public Entity DamageSkillsFlightPropNoneDamage(
-       Entity prefab,
-       float3 posion,
-       quaternion quaternion,
-       float damageChangePar = 1,//默认伤害参数为1
-       float3 positionOffset = default,
-       float3 rotationOffsetEuler = default,  // 传入度数
-       float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
+        public Entity DamageSkillsFlightPropNoneDamage(
+        Entity prefab,
+        float3 posion,
+        quaternion quaternion,
+        float damageChangePar = 1,//默认伤害参数为1
+        float3 positionOffset = default,
+        float3 rotationOffsetEuler = default,  // 传入度数
+        float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
         {
             DevDebug.Log("释放伤害型飞行技能");
 
@@ -1401,7 +1670,7 @@ namespace BlackDawn
             {
                 Position = position + math.mul(rotation, positionOffset),
                 Rotation = math.mul(rotation, offsetQuat),
-                Scale = baseScale * scaleFactor*(1 + _heroAttributeCmptOriginal.gainAttribute.skillRange)
+                Scale = baseScale * scaleFactor * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange)
             };
 
             // 4) 写回
@@ -1419,7 +1688,7 @@ namespace BlackDawn
 
 
             return entity;
-     
+
         }
 
 
@@ -1450,7 +1719,7 @@ namespace BlackDawn
                 Position = position + math.mul(rotation, positionOffset),
                 Rotation = math.mul(rotation, offsetQuat),
                 //这里由技能范围决定技能的影响因子
-                Scale = baseScale * scaleFactor*(1 + _heroAttributeCmptOriginal.gainAttribute.skillRange)
+                Scale = baseScale * scaleFactor * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange)
             };
 
             // 4) 写入新实体
@@ -1466,7 +1735,7 @@ namespace BlackDawn
 
             // 6) 添加碰撞记录缓冲区
             var hits = ecb.AddBuffer<HitRecord>(entity);
-           ecb.AddBuffer<HitElementResonanceRecord>(entity);
+            ecb.AddBuffer<HitElementResonanceRecord>(entity);
 
             //写回
             return entity;
@@ -1477,31 +1746,31 @@ namespace BlackDawn
         /// 武器附魔类技能,附魔，暗能，并补充附魔时间，附魔类技能的特效？
         /// </summary>
         public void WeaponEnchantmentSkillDarkEnergy(int darkEnergyCount)
-        { 
-                
+        {
+
             Hero.instance.skillAttackPar.darkEnergyCapacity = darkEnergyCount;
 
-                Hero.instance.skillAttackPar.darkEnergyEnhantmentTimer = 15;
+            Hero.instance.skillAttackPar.darkEnergyEnhantmentTimer = 15;
 
-                                  
+
         }
 
         /// <summary>
         /// 武器附魔类技能， 寒冰
         /// </summary>
-        public void WeaponEnchantmentSkillFrost( bool enableFrostScenod = false,int frostSplittingCount =5, int frostShardCount =5,float skillDamageChangePar=0.1f)
+        public void WeaponEnchantmentSkillFrost(bool enableFrostScenod = false, int frostSplittingCount = 5, int frostShardCount = 5, float skillDamageChangePar = 0.1f)
         {
 
             Hero.instance.skillAttackPar.frostCapacity = 1;
-                Hero.instance.skillAttackPar.frostEnchantmentTimer = 15;
+            Hero.instance.skillAttackPar.frostEnchantmentTimer = 15;
             if (enableFrostScenod)
             {
                 Hero.instance.skillAttackPar.enableFrostSecond = true;
-                Hero.instance.skillAttackPar.frostSplittingCount =frostSplittingCount;
-                Hero.instance.skillAttackPar.frostShardCount =frostShardCount;
+                Hero.instance.skillAttackPar.frostSplittingCount = frostSplittingCount;
+                Hero.instance.skillAttackPar.frostShardCount = frostShardCount;
                 Hero.instance.skillAttackPar.frostSkillChangePar = skillDamageChangePar;
             }
-       
+
         }
 
         #region 带连续释放的触发携程类的技能
@@ -1532,16 +1801,17 @@ namespace BlackDawn
     float damageChangePar = 0,//默认伤害参数为0
     float3 positionOffset = default,
     float3 rotationOffsetEuler = default,  // 传入度数
-    float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false,bool fllow =false ) where T :unmanaged,IComponentData
+    float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false, bool fllow = false) where T : unmanaged, IComponentData
 
 
         {
 
             var _rollCoroutineId = _coroutineController.StartRoutine(
-                    ThunderStrikeSkill<T>(prefab,componentData, castCount, interval, posion,quaternion,damageChangePar,positionOffset,rotationOffsetEuler
-                    ,scaleFactor,enablePull,enableExplosion,fllow),
+                    ThunderStrikeSkill<T>(prefab, componentData, castCount, interval, posion, quaternion, damageChangePar, positionOffset, rotationOffsetEuler
+                    , scaleFactor, enablePull, enableExplosion, fllow),
                     tag: "ThunderStrikeSkill",
-                    onComplete: () => {
+                    onComplete: () =>
+                    {
                         DevDebug.Log("持续型连续技能释放完成");
                     }
                 );
@@ -1565,7 +1835,7 @@ namespace BlackDawn
         /// <param name="enablePull"></param>
         /// <param name="enableExplosion"></param>
         /// <returns></returns>
-        IEnumerator  ThunderStrikeSkill<T>( Entity prefab,
+        IEnumerator ThunderStrikeSkill<T>(Entity prefab,
          T componentData,
          int castCount,//释放总次数
          float interval,//间隔
@@ -1574,7 +1844,7 @@ namespace BlackDawn
         float damageChangePar = 0,//默认伤害参数为1
         float3 positionOffset = default,
         float3 rotationOffsetEuler = default,  // 传入度数
-        float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false ,bool fllow=false)where T : unmanaged, IComponentData
+        float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false, bool fllow = false) where T : unmanaged, IComponentData
         {
 
 
@@ -1588,8 +1858,8 @@ namespace BlackDawn
 
 
                 // 3) 从英雄获取基础位置/旋转/缩放
-              
-                float3 heroPos = posion;                                  
+
+                float3 heroPos = posion;
                 quaternion heroRot = quaternion;
 
 
@@ -1597,7 +1867,7 @@ namespace BlackDawn
                 if (fllow)
                 {
                     heroPos = Hero.instance.transform.position;
-                    heroRot =Hero.instance.transform.rotation;
+                    heroRot = Hero.instance.transform.rotation;
                 }
                 float baseScale = transform.Scale; // 保留预制体的原始 scale
 
@@ -1608,8 +1878,8 @@ namespace BlackDawn
                 );
 
                 //4-1) 范围位置随机化
-                float2 randomInCircle = UnityEngine.Random.insideUnitCircle * 10f*(1+ _heroAttributeCmptOriginal.gainAttribute.skillRange);
-                heroPos += new float3(randomInCircle.x, 0,randomInCircle.y);//随机范围内进行相关的参数处理这里是400平方米
+                float2 randomInCircle = UnityEngine.Random.insideUnitCircle * 10f * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange);
+                heroPos += new float3(randomInCircle.x, 0, randomInCircle.y);//随机范围内进行相关的参数处理这里是400平方米
 
                 // 5) 叠加偏移
                 transform.Position = heroPos
@@ -1631,8 +1901,8 @@ namespace BlackDawn
                 skillPar.enablePull = enablePull;
                 skillPar.enableExplosion = enableExplosion;
                 skillPar.damageChangePar = damageChangePar;
-              //  skillPar.lightningDotDamage += 1;//这样就能持续感电
-                
+                //  skillPar.lightningDotDamage += 1;//这样就能持续感电
+
                 _entityManager.SetComponentData(entity, skillPar);
 
                 // 8) 添加碰撞记录缓冲区
@@ -1642,16 +1912,51 @@ namespace BlackDawn
                 //携程内直接添加技能标签
                 _entityManager.AddComponentData<T>(entity, componentData);
 
-               // DevDebug.Log("第  " + i + " 次释放技能");
+                // DevDebug.Log("第  " + i + " 次释放技能");
                 yield return new WaitForSeconds(interval);
             }
-        
-        
+
+
         }
 
 
 
         #endregion
 
+        #region 辅助方法区域
+        /// <summary>
+        /// 设置闪电链的碰撞体索引
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="index"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private SkillLightningChainTag SetLightningChainCollider(
+    SkillLightningChainTag tag, int index, Entity value)
+        {
+
+            switch (index)
+            {
+                case 0: tag.colliderRef.collider1 = value; break;
+                case 1: tag.colliderRef.collider2 = value; break;
+                case 2: tag.colliderRef.collider3 = value; break;
+                case 3: tag.colliderRef.collider4 = value; break;
+                case 4: tag.colliderRef.collider5 = value; break;
+                case 5: tag.colliderRef.collider6 = value; break;
+                case 6: tag.colliderRef.collider7 = value; break;
+                case 7: tag.colliderRef.collider8 = value; break;
+                // case 8: tag.colliderRef.collider9 = value; break;
+                // case 9: tag.colliderRef.collider10 = value; break;
+                // case 10: tag.colliderRef.collider11 = value; break;
+                // case 11: tag.colliderRef.collider12 = value; break;
+                // case 12: tag.colliderRef.collider13 = value; break;
+                // case 13: tag.colliderRef.collider14 = value; break;
+                // case 14: tag.colliderRef.collider15 = value; break;
+
+            }
+            return tag;
+        }
+
+        #endregion
     }
 }

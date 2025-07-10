@@ -9,6 +9,7 @@ using Unity.Physics;
 using UnityEngine;
 using Unity.VisualScripting;
 //用于管理技能的生命周期及状态
+//可以进行burstCompile 的无引用技能
 namespace BlackDawn.DOTS
 {
     /// <summary>
@@ -18,7 +19,7 @@ namespace BlackDawn.DOTS
     [BurstCompile]
     [RequireMatchingQueriesForUpdate]
     [UpdateInGroup(typeof(MainThreadSystemGroup))]
-    public partial struct HeroSkillsMonoSystem : ISystem,ISystemStartStop
+    public partial struct HeroSkillsMonoSystem : ISystem, ISystemStartStop
     {
         //侦测系统缓存
         private SystemHandle _detectionSystemHandle;
@@ -43,10 +44,10 @@ namespace BlackDawn.DOTS
             _transform = state.GetComponentLookup<LocalTransform>(true);
             _monsterLossPoolAttrLookup = state.GetComponentLookup<MonsterLossPoolAttribute>(false);
             _heroAttribute = state.GetComponentLookup<HeroAttributeCmpt>(true);
-            _entityManager = state.EntityManager; 
-            _detectionSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<DetectionSystem>();           
-       
-         // _hitBuffer = state.GetBufferLookup<HitRecord>(true);   
+            _entityManager = state.EntityManager;
+            _detectionSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
+
+            // _hitBuffer = state.GetBufferLookup<HitRecord>(true);   
 
         }
 
@@ -54,7 +55,7 @@ namespace BlackDawn.DOTS
         {
             _heroEntity = SystemAPI.GetSingletonEntity<HeroEntityMasterTag>();
             _heroAttributeCmptOriginal = Hero.instance.attributeCmpt;
-    
+
 
             DevDebug.Log("重启SkillMono系统");
         }
@@ -181,7 +182,6 @@ namespace BlackDawn.DOTS
             }
 
             //冰火技能处理旋转
-
             foreach (var (skillTag, skillCal, transform, collider, entity)
             in SystemAPI.Query<RefRW<SkillIceFireTag>, RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
             {
@@ -308,11 +308,11 @@ namespace BlackDawn.DOTS
         }
 
 
-         public   void OnDestroy(ref SystemState state) { }
+        public void OnDestroy(ref SystemState state) { }
 
         public void OnStopRunning(ref SystemState state)
         {
-          
+
         }
 
         /// <summary>
@@ -327,9 +327,9 @@ namespace BlackDawn.DOTS
             //一阶性状控制
             foreach (var (skillTag, skillCal, transform, collider, entity)
               in SystemAPI.Query<RefRW<SkillFrostTag>, RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
-             {
+            {
                 // 1. 缓存发射时的原点和开始时间（只在第一次执行时写入）
-                if (skillTag.ValueRO.tagSurvivalTime==10)
+                if (skillTag.ValueRO.tagSurvivalTime == 10)
                 {
                     skillTag.ValueRW.originalPosition = transform.ValueRO.Position;
                 }
@@ -337,7 +337,7 @@ namespace BlackDawn.DOTS
                 skillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
                 // 3. 读取 origin、t
                 float3 origin = skillTag.ValueRO.originalPosition;
-                float t = 10-skillTag.ValueRO.tagSurvivalTime;
+                float t = 10 - skillTag.ValueRO.tagSurvivalTime;
 
                 // 5. 用 speed 直接作为线速度，半径 r = speed * t
                 float r = skillTag.ValueRO.speed * t;
@@ -362,10 +362,10 @@ namespace BlackDawn.DOTS
 
                 //开启第二阶段，寒冰碎片能力
                 if (skillTag.ValueRO.enableSecond)
-                {                 
-                //生成 不同数量寒冰碎片
-                if(skillCal.ValueRW.hit ==true&& skillTag.ValueRW.hitCount>0)
-                    {                        
+                {
+                    //生成 不同数量寒冰碎片
+                    if (skillCal.ValueRW.hit == true && skillTag.ValueRW.hitCount > 0)
+                    {
                         skillCal.ValueRW.hit = false;
                         var prefab = SystemAPI.GetSingleton<ScenePrefabsSingleton>();
 
@@ -376,7 +376,7 @@ namespace BlackDawn.DOTS
                         for (int i = 0; i < skillTag.ValueRO.shrapnelCount; i++)
                         {
 
-                           var fragIce= ecb.Instantiate(prefab.HeroSkillAssistive_Frost);
+                            var fragIce = ecb.Instantiate(prefab.HeroSkillAssistive_Frost);
 
                             var trs = transform.ValueRW;
                             trs.Scale = 1;
@@ -385,14 +385,14 @@ namespace BlackDawn.DOTS
 
                             // 3. 生成绕 Y 轴的四元数，并赋给 trs.Rotation
                             trs.Rotation = quaternion.EulerXYZ(0f, angleRad, 0f);
-                            ecb.AddComponent(fragIce, trs);                           
+                            ecb.AddComponent(fragIce, trs);
                             //添加寒冰碎片的标签,赋予伤害标签的伤害值
-                            ecb.AddComponent(fragIce , new SkillFrostShrapneTag() { speed =20,tagSurvivalTime =1});
+                            ecb.AddComponent(fragIce, new SkillFrostShrapneTag() { speed = 20, tagSurvivalTime = 1 });
                             var newCal = skillCal.ValueRW;
                             // 2. 修改字段，寒冰碎片继承20%冻结值
                             newCal.damageChangePar = skillTag.ValueRO.skillDamageChangeParTag;
-                            if(skillTag.ValueRO.enableSpecialEffect)
-                            newCal.tempFreeze = 20;
+                            if (skillTag.ValueRO.enableSpecialEffect)
+                                newCal.tempFreeze = 20;
 
                             // 3. 把改好的组件整包给实体  
                             ecb.AddComponent(fragIce, newCal);
@@ -425,7 +425,7 @@ namespace BlackDawn.DOTS
                 if (skillTag.ValueRO.tagSurvivalTime <= 0)
                 {
 
-                   // ecb.DestroyEntity(entity);
+                    // ecb.DestroyEntity(entity);
                     skillCal.ValueRW.destory = true;
                 }
 
@@ -446,15 +446,15 @@ namespace BlackDawn.DOTS
         void SkillMonoElementResonance(ref SystemState state, EntityCommandBuffer ecb)
         {
 
-            foreach (var (skillTag,skillCal,transform, collider, entity)
-            in SystemAPI.Query<RefRW<SkillElementResonanceTag>, RefRW<SkillsDamageCalPar>,RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
+            foreach (var (skillTag, skillCal, transform, collider, entity)
+            in SystemAPI.Query<RefRW<SkillElementResonanceTag>, RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
             {
 
                 skillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
 
                 if (skillTag.ValueRW.tagSurvivalTime <= 0)
-                   // ecb.DestroyEntity(entity);
-                skillCal.ValueRW.destory = true;
+                    // ecb.DestroyEntity(entity);
+                    skillCal.ValueRW.destory = true;
 
             }
 
@@ -466,12 +466,12 @@ namespace BlackDawn.DOTS
         /// </summary>
         /// <param name="state"></param>
         /// <param name="ecb"></param>
-        void SkillMonoElectroCage(ref SystemState state, EntityCommandBuffer ecb,ScenePrefabsSingleton prefabs)
+        void SkillMonoElectroCage(ref SystemState state, EntityCommandBuffer ecb, ScenePrefabsSingleton prefabs)
         {
             var rng = new Unity.Mathematics.Random((uint)UnityEngine.Random.Range(1, int.MaxValue));
 
-            foreach (var (skillTag,damagePar ,transform, collider, entity)
-            in SystemAPI.Query<RefRW<SkillElectroCageTag>,RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
+            foreach (var (skillTag, damagePar, transform, collider, entity)
+            in SystemAPI.Query<RefRW<SkillElectroCageTag>, RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>, RefRW<PhysicsCollider>>().WithEntityAccess())
             {
 
                 skillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
@@ -492,7 +492,7 @@ namespace BlackDawn.DOTS
                     {
                         skillTag.ValueRW.timerA = 0;
 
-                      //  1.实例化新牢笼电弧
+                        //  1.实例化新牢笼电弧
                         var arcEntity = ecb.Instantiate(prefabs.HeroSkillAssistive_ElectroCage_Lightning);
 
                         // 2. LocalTransform 随机偏移 XZ ±10
@@ -533,25 +533,25 @@ namespace BlackDawn.DOTS
 
                         var random = rng.NextFloat(0, 1);
                         //概率每次降低20%
-                        if (random <=( 0.5-skillTag.ValueRO.StackCount*0.05f))
+                        if (random <= (0.5 - skillTag.ValueRO.StackCount * 0.05f))
                         {
                             float3 Offset = rng.NextFloat3(-15f, 15f);
                             //增加一次传导次数
                             skillTag.ValueRW.StackCount += 1;
                             float3 newPosition = transform.ValueRO.Position + new float3(Offset.x, 0, Offset.z);
 
-                          var entityElectroCage =  DamageSkillsECSRelaseProp(ecb, prefabs.HeroSkill_ElectroCage, damagePar.ValueRO, newPosition, quaternion.identity);
+                            var entityElectroCage = DamageSkillsECSRelaseProp(ecb, prefabs.HeroSkill_ElectroCage, damagePar.ValueRO, newPosition, quaternion.identity);
                             int nextStackCount = skillTag.ValueRO.StackCount + 1;
                             if (skillTag.ValueRO.enableSecondA)
                             {
-                                ecb.AddComponent(entityElectroCage, new SkillElectroCageTag() { tagSurvivalTime = 4, enableSecondA = true, enableSecondB = true, skillDamageChangeParTag = 2, intervalTimer = 0.2f ,StackCount=nextStackCount});
+                                ecb.AddComponent(entityElectroCage, new SkillElectroCageTag() { tagSurvivalTime = 4, enableSecondA = true, enableSecondB = true, skillDamageChangeParTag = 2, intervalTimer = 0.2f, StackCount = nextStackCount });
                             }
                             else
                             {
-                                ecb.AddComponent(entityElectroCage, new SkillElectroCageTag() { tagSurvivalTime = 4, enableSecondB = true,StackCount=nextStackCount});
+                                ecb.AddComponent(entityElectroCage, new SkillElectroCageTag() { tagSurvivalTime = 4, enableSecondB = true, StackCount = nextStackCount });
 
                             }
-                        
+
                         }
 
 
@@ -567,8 +567,8 @@ namespace BlackDawn.DOTS
 
 
             //雷暴消除逻辑
-            foreach (var (skillTag,skillCal,entity)
-          in SystemAPI.Query<RefRW<SkillElectroCageScoendTag>,RefRW<SkillsDamageCalPar>>().WithEntityAccess())
+            foreach (var (skillTag, skillCal, entity)
+          in SystemAPI.Query<RefRW<SkillElectroCageScoendTag>, RefRW<SkillsDamageCalPar>>().WithEntityAccess())
             {
 
                 skillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
@@ -576,9 +576,9 @@ namespace BlackDawn.DOTS
                 {
                     skillCal.ValueRW.destory = true;
                     //ecb.DestroyEntity(entity);
-                    
+
                     continue;
-                
+
                 }
 
             }
@@ -601,8 +601,8 @@ namespace BlackDawn.DOTS
 
                 if (skillTag.ValueRW.tagSurvivalTime <= 0)
                     skillCal.ValueRW.destory = true;
-                    
-                               
+
+
             }
 
 
@@ -614,7 +614,7 @@ namespace BlackDawn.DOTS
         /// </summary>
         /// <param name="state"></param>
         /// <param name="ecb"></param>
-        void SkillShadowTideBMono(ref SystemState state, EntityCommandBuffer ecb,float3 heroPosition)
+        void SkillShadowTideBMono(ref SystemState state, EntityCommandBuffer ecb, float3 heroPosition)
         {
 
 
@@ -630,7 +630,7 @@ namespace BlackDawn.DOTS
         {
 
             //遍历雷霆之握技能
-            foreach (var (skillTag, skillCal, transform,entity)
+            foreach (var (skillTag, skillCal, transform, entity)
                 in SystemAPI.Query<RefRW<SkillThunderGripTag>, RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>>().WithEntityAccess())
             {
                 // 1) 更新存活时间
@@ -646,8 +646,8 @@ namespace BlackDawn.DOTS
             }
 
             //雷霆之握控制怪物移动
-            foreach (var (liveMonster, transform ,debuff,preDefineSkillTag, entity)
-                in SystemAPI.Query<RefRW<LiveMonster>, RefRW<LocalTransform>,RefRW<MonsterDebuffAttribute>,RefRW<PreDefineHeroSkillThunderGripTag>>().WithEntityAccess())
+            foreach (var (liveMonster, transform, debuff, preDefineSkillTag, entity)
+                in SystemAPI.Query<RefRW<LiveMonster>, RefRW<LocalTransform>, RefRW<MonsterDebuffAttribute>, RefRW<PreDefineHeroSkillThunderGripTag>>().WithEntityAccess())
             {
 
                 debuff.ValueRW.thunderGripEndTimer += SystemAPI.Time.DeltaTime;
@@ -660,9 +660,9 @@ namespace BlackDawn.DOTS
 
                 if (distSq < 10f) // 距离目标点足够近就禁用标签
                 {
-                    if(debuff.ValueRW.thunderGripEndTimer>=0.3f)
-                    ecb.SetComponentEnabled<PreDefineHeroSkillThunderGripTag>(entity, false);
-                
+                    if (debuff.ValueRW.thunderGripEndTimer >= 0.3f)
+                        ecb.SetComponentEnabled<PreDefineHeroSkillThunderGripTag>(entity, false);
+
                 }
                 else
                 {
@@ -686,8 +686,8 @@ namespace BlackDawn.DOTS
         /// <param name="ecb"></param>
         void SkillMonoChainDevour(ref SystemState state, EntityCommandBuffer ecb)
         {
-            foreach (var (transform, skillDamageCal,trackingSkillTag, SkillTag,overlapTracking,entity)
-              in SystemAPI.Query<RefRW<LocalTransform>,RefRW<SkillsDamageCalPar>, RefRW<SkillsTrackingCalPar>, RefRW<SkillChainDevourTag>,RefRW<OverlapTrackingQueryCenter>>().WithEntityAccess())
+            foreach (var (transform, skillDamageCal, trackingSkillTag, SkillTag, overlapTracking, entity)
+              in SystemAPI.Query<RefRW<LocalTransform>, RefRW<SkillsDamageCalPar>, RefRW<SkillsTrackingCalPar>, RefRW<SkillChainDevourTag>, RefRW<OverlapTrackingQueryCenter>>().WithEntityAccess())
             {
                 SkillTag.ValueRW.tagSurvivalTime -= SystemAPI.Time.DeltaTime;
                 overlapTracking.ValueRW.center = transform.ValueRO.Position;
@@ -695,15 +695,15 @@ namespace BlackDawn.DOTS
                 //这里由初始化值进行赋值
                 float3 forward = trackingSkillTag.ValueRO.currentDir;
                 transform.ValueRW.Position += SkillTag.ValueRO.speed * forward * SystemAPI.Time.DeltaTime;
-                //主线程控制时间？等于true情况下为1秒钟的间隔，可以针对不同的技能标签进行分离控制
-                if (trackingSkillTag.ValueRW.enbaleChangeTarget == true)
+                //主线程控制时间？等于true情况下为0.1秒钟的间隔，可以针对不同的技能标签进行分离控制,三帧
+                if (trackingSkillTag.ValueRW.enbaleChangeTarget == true && trackingSkillTag.ValueRO.runCount > 0)
                 {
                     trackingSkillTag.ValueRW.timer += SystemAPI.Time.DeltaTime;
 
-                    if (trackingSkillTag.ValueRW.timer > 0.2f)
+                    if (trackingSkillTag.ValueRW.timer > 0.05f)
                         trackingSkillTag.ValueRW.enbaleChangeTarget = false;
                 }
-                
+
 
                 if (SkillTag.ValueRW.tagSurvivalTime <= 0)
                     skillDamageCal.ValueRW.destory = true;
