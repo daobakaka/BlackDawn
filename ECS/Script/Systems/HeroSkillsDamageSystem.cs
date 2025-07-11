@@ -266,16 +266,17 @@ new ProfilerMarker("SkillDamageJob.Execute");
                 //由技能标签的加载决定牵引状态,通常可以获得道具或者技能可以获得临时或者永久牵引或者爆炸值
                 //牵引或者爆炸有1秒间隔，因为有buffer的间隔，所以这里判断并不能和执行
                 //牵引或者爆炸是直接执行，不由累加进行触发
+                //添加技能的临时 牵引和爆炸值
                 if (d.enablePull)
                 {
-                    c.pull = h.controlAbilityAttribute.pull;
+                    c.pull = h.controlAbilityAttribute.pull + d.tempPull;
                     c.pullCenter = Transform[skill].Position;
 
                 }
                 //爆炸
                 if (d.enableExplosion)
                 {
-                    c.explosion = h.controlAbilityAttribute.explosion;
+                    c.explosion = h.controlAbilityAttribute.explosion+d.tempExplosion;
                     c.explosionCenter = Transform[skill].Position;
                     //牵引或者爆炸有两秒间隔，因为有buffer的间隔，所以这里判断并不能和执行            
                 }
@@ -535,7 +536,7 @@ new ProfilerMarker("SkillDamageJob.Execute");
             {
                 var d = accBuf[i];
                 sum.damage += d.damage;
-                sum.dotDamage += sum.dotDamage;
+                sum.dotDamage += d.dotDamage;
                 sum.firePool += d.firePool;
                 sum.frostPool += d.frostPool;
                 sum.lightningPool += d.lightningPool;

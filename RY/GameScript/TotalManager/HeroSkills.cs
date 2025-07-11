@@ -8,6 +8,8 @@ using Unity.Mathematics;
 using Random = Unity.Mathematics.Random;
 using Unity.Collections;
 using Unity.Physics;
+using TMPro;
+using System.Collections.Generic;
 
 
 
@@ -993,7 +995,7 @@ namespace BlackDawn
                             //这里添加寻踪类技能专属标签
                             var entityLightningChain = DamageSkillsTrackingPropNoneDamage(_skillPrefabs.HeroSkill_LightningChain, overlap, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 3.0f, 0), 0, 1, false, false);
                             //添加通用侦察器
-                            _entityManager.AddComponentData(entityLightningChain, new SkillLightningChainTag() { tagSurvivalTime = 0.5f, laterTagSurvivalTime=1f,speed = 20, targetPostion = Hero.instance.skillTargetPositon });
+                            _entityManager.AddComponentData(entityLightningChain, new SkillLightningChainTag() { tagSurvivalTime = 0.5f, laterTagSurvivalTime = 1f, speed = 20, targetPostion = Hero.instance.skillTargetPositon });
                             //寻址技能参数变化配置
                             var skillsTrackingCalPar = _entityManager.GetComponentData<SkillsTrackingCalPar>(entityLightningChain);
                             skillsTrackingCalPar.runCount = 3;//默认弹射三次， 生成 skillsDamageCalPar的 伤害碰撞检测体，透明，用于闪电链的定点检测
@@ -1025,12 +1027,12 @@ namespace BlackDawn
                                 //添加碰撞器控制标识
                                 _entityManager.AddComponentData(lightningChainColliderEntity, new skillLightningChianColliderTag() { tagSurvivalTime = 1 });
                                 _entityManager.SetComponentEnabled<skillLightningChianColliderTag>(lightningChainColliderEntity, false);
-                               
+
                             }
 
                             break;
                         case HeroSkillPsionicType.PsionicA:
-                         var filterA = new CollisionFilter
+                            var filterA = new CollisionFilter
                             {
                                 //属于道具层
                                 BelongsTo = 1u << 10,
@@ -1042,7 +1044,7 @@ namespace BlackDawn
                             //这里添加寻踪类技能专属标签
                             var entityLightningChainA = DamageSkillsTrackingPropNoneDamage(_skillPrefabs.HeroSkill_LightningChain, overlapA, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 3.0f, 0), 0, 1, false, false);
                             //添加通用侦察器
-                            _entityManager.AddComponentData(entityLightningChainA, new SkillLightningChainTag() { tagSurvivalTime = 0.5f,laterTagSurvivalTime=3f, speed = 20, targetPostion = Hero.instance.skillTargetPositon,enableSecondA=true });
+                            _entityManager.AddComponentData(entityLightningChainA, new SkillLightningChainTag() { tagSurvivalTime = 0.5f, laterTagSurvivalTime = 3f, speed = 20, targetPostion = Hero.instance.skillTargetPositon, enableSecondA = true });
                             //寻址技能参数变化配置
                             var skillsTrackingCalParA = _entityManager.GetComponentData<SkillsTrackingCalPar>(entityLightningChainA);
                             skillsTrackingCalPar.runCount = 3;//默认弹射三次， 生成 skillsDamageCalPar的 伤害碰撞检测体，透明，用于闪电链的定点检测
@@ -1061,7 +1063,7 @@ namespace BlackDawn
                                 var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(lightningChainColliderEntity);
                                 skillPar.enablePull = false;
                                 skillPar.enableExplosion = false;
-                                skillPar.damageChangePar -= skillsTrackingCalPar.runCount * 0.1f; //原始伤害递减10% 
+                                skillPar.damageChangePar -= (skillsTrackingCalPar.runCount * 0.1f * 1.3f); //原始伤害递减10% ,增加伤害30%，随等级提升
                                 //写回伤害递减  
                                 _entityManager.SetComponentData(lightningChainColliderEntity, skillPar);
                                 //添加碰撞记录
@@ -1074,11 +1076,11 @@ namespace BlackDawn
                                 //添加碰撞器控制标识
                                 _entityManager.AddComponentData(lightningChainColliderEntity, new skillLightningChianColliderTag() { tagSurvivalTime = 3 });
                                 _entityManager.SetComponentEnabled<skillLightningChianColliderTag>(lightningChainColliderEntity, false);
-                               
+
                             }
                             break;
                         case HeroSkillPsionicType.PsionicB:
-                              var filterB = new CollisionFilter
+                            var filterB = new CollisionFilter
                             {
                                 //属于道具层
                                 BelongsTo = 1u << 10,
@@ -1090,7 +1092,7 @@ namespace BlackDawn
                             //这里添加寻踪类技能专属标签
                             var entityLightningChainB = DamageSkillsTrackingPropNoneDamage(_skillPrefabs.HeroSkill_LightningChain, overlapB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 3.0f, 0), 0, 1, false, false);
                             //添加通用侦察器
-                            _entityManager.AddComponentData(entityLightningChainB, new SkillLightningChainTag() { tagSurvivalTime = 0.5f,laterTagSurvivalTime=1f, speed = 20, targetPostion = Hero.instance.skillTargetPositon,enableSecondB=true });
+                            _entityManager.AddComponentData(entityLightningChainB, new SkillLightningChainTag() { tagSurvivalTime = 0.5f, laterTagSurvivalTime = 1f, speed = 20, targetPostion = Hero.instance.skillTargetPositon, enableSecondB = true });
                             //寻址技能参数变化配置
                             var skillsTrackingCalParB = _entityManager.GetComponentData<SkillsTrackingCalPar>(entityLightningChainB);
                             skillsTrackingCalPar.runCount = 3;//默认弹射三次， 生成 skillsDamageCalPar的 伤害碰撞检测体，透明，用于闪电链的定点检测
@@ -1102,13 +1104,13 @@ namespace BlackDawn
                                 _entityManager.AddComponentData(lightningChainColliderEntity, Hero.instance.skillsDamageCalPar);
                                 var trs = _entityManager.GetComponentData<LocalTransform>(lightningChainColliderEntity);
                                 trs.Position.y = -100;
-                                trs.Scale = 1.5f;//增大导电体范围
+                                trs.Scale = 1.5f;//增大导电体范围，随等级提升
                                 _entityManager.SetComponentData(lightningChainColliderEntity, trs);
 
                                 var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(lightningChainColliderEntity);
                                 skillPar.enablePull = false;
                                 skillPar.enableExplosion = false;
-                                skillPar.damageChangePar -= skillsTrackingCalPar.runCount * 0.1f; //原始伤害递减10% 
+                                skillPar.damageChangePar -= (skillsTrackingCalPar.runCount * 0.1f * 1.3f); //原始伤害递减10% ,增加伤害30%，随等级提升    
                                 //写回伤害递减  
                                 _entityManager.SetComponentData(lightningChainColliderEntity, skillPar);
                                 //添加碰撞记录
@@ -1124,7 +1126,7 @@ namespace BlackDawn
                             }
                             break;
                         case HeroSkillPsionicType.PsionicAB:
-                               var filterAB = new CollisionFilter
+                            var filterAB = new CollisionFilter
                             {
                                 //属于道具层
                                 BelongsTo = 1u << 10,
@@ -1136,7 +1138,7 @@ namespace BlackDawn
                             //这里添加寻踪类技能专属标签
                             var entityLightningChainAB = DamageSkillsTrackingPropNoneDamage(_skillPrefabs.HeroSkill_LightningChain, overlapAB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 3.0f, 0), 0, 1, false, false);
                             //添加通用侦察器
-                            _entityManager.AddComponentData(entityLightningChainAB, new SkillLightningChainTag() { tagSurvivalTime = 0.5f,laterTagSurvivalTime=3f, speed = 20, targetPostion = Hero.instance.skillTargetPositon,enableSecondA=true ,enableSecondB=true});
+                            _entityManager.AddComponentData(entityLightningChainAB, new SkillLightningChainTag() { tagSurvivalTime = 0.5f, laterTagSurvivalTime = 3f, speed = 20, targetPostion = Hero.instance.skillTargetPositon, enableSecondA = true, enableSecondB = true });
                             //寻址技能参数变化配置
                             var skillsTrackingCalParAB = _entityManager.GetComponentData<SkillsTrackingCalPar>(entityLightningChainAB);
                             skillsTrackingCalPar.runCount = 7;//默认弹射三次， 生成 skillsDamageCalPar的 伤害碰撞检测体，透明，用于闪电链的定点检测
@@ -1154,7 +1156,7 @@ namespace BlackDawn
                                 var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(lightningChainColliderEntity);
                                 skillPar.enablePull = false;
                                 skillPar.enableExplosion = false;
-                                skillPar.damageChangePar -= skillsTrackingCalPar.runCount * 0.1f; //原始伤害递减10% 
+                                skillPar.damageChangePar -= (skillsTrackingCalPar.runCount * 0.1f * 1.6f); //原始伤害递减10% ,增加伤害30%，分别随等级提升        
                                 //写回伤害递减  
                                 _entityManager.SetComponentData(lightningChainColliderEntity, skillPar);
                                 //添加碰撞记录
@@ -1267,7 +1269,106 @@ namespace BlackDawn
                     }
 
                     break;
+                //元素爆发33 瞬发,爆发， 这里走元素爆发类技能
+                case HeroSkillID.ElementBurst:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
 
+                            var filter = new CollisionFilter
+                            {
+                                //属于道具层
+                                BelongsTo = 1u << 10,
+                                //检测敌人
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlap = new OverlapBurstQueryCenter { center = Hero.instance.skillTargetPositon, radius = 8, filter = filter, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                            var elementBurstEntity = DamageSkillsBrustProp(_skillPrefabs.HeroSkill_ElementBurst, overlap, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation,
+                            1, float3.zero, float3.zero, 1, false, true);
+                            var skillBurstDamageCal = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(elementBurstEntity);
+                            skillBurstDamageCal.tempExplosion = 200;
+                            _entityManager.SetComponentData(elementBurstEntity, skillBurstDamageCal);
+                            //设置总体存活时间， 设置爆炸时间
+                            _entityManager.AddComponentData(elementBurstEntity, new SkillElementBurstTag() { tagSurvivalTime = 1.5f, startBurstTime = 0.5f });
+                            //元素伤害由配置文件阶段读取并且配置
+
+                            break;
+                        //减少范围 降低伤害，可以享受范围值的加成
+                        case HeroSkillPsionicType.PsionicA:
+
+                            var filterA = new CollisionFilter
+                            {
+                                //属于道具层
+                                BelongsTo = 1u << 10,
+                                //检测敌人
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            //检测体积 范围随等级成长
+                            var overlapA = new OverlapBurstQueryCenter { center = Hero.instance.skillTargetPositon, radius = 4, filter = filterA, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                            //特效体积 范围随等级成长
+                            var elementBurstEntityA = DamageSkillsBrustProp(_skillPrefabs.HeroSkill_ElementBurst, overlapA, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation,
+                            1, float3.zero, float3.zero, 0.5f, false, true);
+                            var skillBurstDamageCalA = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(elementBurstEntityA);
+                            skillBurstDamageCalA.tempExplosion = 200;
+                            skillBurstDamageCalA.damageChangePar += 5;//随等级成长
+                            _entityManager.SetComponentData(elementBurstEntityA, skillBurstDamageCalA);
+                            //设置总体存活时间， 设置爆炸时间
+                            _entityManager.AddComponentData(elementBurstEntityA, new SkillElementBurstTag() { tagSurvivalTime = 1.5f, startBurstTime = 0.5f });
+
+
+                            break;
+                        //元素爆发第二阶段
+                        case HeroSkillPsionicType.PsionicB:
+                            var filterB = new CollisionFilter
+                            {
+                                //属于道具层
+                                BelongsTo = 1u << 10,
+                                //检测敌人
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            //检测体积 范围随等级成长
+                            var overlapB = new OverlapBurstQueryCenter { center = Hero.instance.skillTargetPositon, radius = 8, filter = filterB, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                            //特效体积 范围随等级成长
+                            var elementBurstEntityB = DamageSkillsBrustProp(_skillPrefabs.HeroSkill_ElementBurst, overlapB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation,
+                            1, float3.zero, float3.zero, 1f, false, true);
+                            var skillBurstDamageCalB = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(elementBurstEntityB);
+                            skillBurstDamageCalB.tempExplosion = 200;
+                            var skillBurstDamageCalBProcess = DealDamageOfElementBurstB(skillBurstDamageCalB,true);
+                            _entityManager.SetComponentData(elementBurstEntityB, skillBurstDamageCalBProcess);
+                            //设置总体存活时间， 设置爆炸时间
+                            _entityManager.AddComponentData(elementBurstEntityB, new SkillElementBurstTag() { tagSurvivalTime = 1.5f, startBurstTime = 0.5f, enableSecondB = true });
+                            break;
+                        //元素爆发混合阶段
+                        case HeroSkillPsionicType.PsionicAB:
+                            var filterAB = new CollisionFilter
+                            {
+                                //属于道具层
+                                BelongsTo = 1u << 10,
+                                //检测敌人
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            //检测体积 范围随等级成长
+                            var overlapAB = new OverlapBurstQueryCenter { center = Hero.instance.skillTargetPositon, radius = 4, filter = filterAB, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                            //特效体积 范围随等级成长
+                            var elementBurstEntityAB = DamageSkillsBrustProp(_skillPrefabs.HeroSkill_ElementBurst, overlapAB, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation,
+                            1, float3.zero, float3.zero, 0.5f, false, true);
+                            var skillBurstDamageCalAB = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(elementBurstEntityAB);
+                            skillBurstDamageCalAB.tempExplosion = 200;
+                            var skillBurstDamageCalABProcess = DealDamageOfElementBurstB(skillBurstDamageCalAB,true);
+                            _entityManager.SetComponentData(elementBurstEntityAB, skillBurstDamageCalABProcess);
+                            skillBurstDamageCalAB.damageChangePar += 5;//随等级成长
+                            _entityManager.SetComponentData(elementBurstEntityAB, skillBurstDamageCalAB);
+                            //设置总体存活时间， 设置爆炸时间，开启池化标识
+                            _entityManager.AddComponentData(elementBurstEntityAB, new SkillElementBurstTag() { tagSurvivalTime = 1.5f, startBurstTime = 0.5f, enableSecondB = true });
+
+                            break;
+                    }
+
+                    break;
             }
             ;
             ecb.Playback(_entityManager);
@@ -1413,6 +1514,83 @@ namespace BlackDawn
             _entityManager.SetComponentData(entity, skillPar);
 
             _entityManager.AddBuffer<HitElementResonanceRecord>(entity);
+
+            return entity;
+        }
+        /// <summary>
+        /// 爆发类技能 暗影洪流第二阶段 、 元素爆发
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <param name="queryCenter"></param>
+        /// <param name="posion"></param>
+        /// <param name="quaternion"></param>
+        /// <param name="damageChangePar"></param>
+        /// <param name="positionOffset"></param>
+        /// <param name="rotationOffsetEuler"></param>
+        /// <param name="scaleFactor"></param>
+        /// <param name="enablePull"></param>
+        /// <param name="enableExplosion"></param>
+        /// <returns></returns>
+        public Entity DamageSkillsBrustProp(
+       Entity prefab,
+       OverlapBurstQueryCenter queryCenter,
+       float3 posion,
+       quaternion quaternion,
+       float damageChangePar = 1,//默认伤害参数为1
+       float3 positionOffset = default,
+       float3 rotationOffsetEuler = default,  // 传入度数
+       float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
+        {
+            DevDebug.Log("释放爆发性技能");
+
+            // 1) 实例化
+            var entity = _entityManager.Instantiate(prefab);
+
+            // 2) 取出可变的 LocalTransform
+            var transform = _entityManager.GetComponentData<LocalTransform>(entity);
+
+
+            // 3) 从英雄获取基础位置/旋转/缩放
+            float3 heroPos = posion;
+            quaternion heroRot = quaternion;
+            float baseScale = transform.Scale; // 保留预制体的原始 scale
+
+            // 4) 计算欧拉偏移的四元数
+            //    math.radians 将度数转为弧度
+            quaternion eulerOffsetQuat = quaternion.EulerXYZ(
+                math.radians(rotationOffsetEuler)
+            );
+
+            // 5) 叠加偏移
+            transform.Position = heroPos
+                                + math.mul(heroRot, positionOffset);
+            //计算整合旋转
+            var combineRotation = math.mul(heroRot, eulerOffsetQuat);
+            //叠加本体旋转
+            transform.Rotation = math.mul(transform.Rotation, combineRotation);
+            transform.Scale = baseScale * scaleFactor * (1 + _heroAttributeCmptOriginal.gainAttribute.skillRange);
+
+            // 6) 写回组件
+            _entityManager.SetComponentData(entity, transform);
+            //
+
+
+
+            // 7) 添加爆发技能伤害参数
+            _entityManager.AddComponentData(entity, Hero.instance.skillsBurstDamageCalPar);
+
+            //8)添加爆发性伤害overlap检测
+            if (queryCenter.radius != 0)
+                _entityManager.AddComponentData(entity, queryCenter);
+
+            var skillPar = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(entity);
+
+            skillPar.enablePull = enablePull;
+            skillPar.enableExplosion = enableExplosion;
+            skillPar.damageChangePar = damageChangePar;
+            _entityManager.SetComponentData(entity, skillPar);
+            //爆发类技能无元素共鸣
+            // _entityManager.AddBuffer<HitElementResonanceRecord>(entity);
 
             return entity;
         }
@@ -1693,7 +1871,7 @@ namespace BlackDawn
 
 
         /// ECB 版本 用于 回调BASE系统，在外部调用的引用,用于粒子系统或者专用的用于销毁再初始化的系统的处理
-        public Entity DamageSkillsExplosionProp(
+        public Entity DamageSkillsCallBackExplosionProp(
             EntityCommandBuffer ecb,
             Entity prefab,
             float3 position,
@@ -1945,16 +2123,103 @@ namespace BlackDawn
                 case 5: tag.colliderRef.collider6 = value; break;
                 case 6: tag.colliderRef.collider7 = value; break;
                 case 7: tag.colliderRef.collider8 = value; break;
-                // case 8: tag.colliderRef.collider9 = value; break;
-                // case 9: tag.colliderRef.collider10 = value; break;
-                // case 10: tag.colliderRef.collider11 = value; break;
-                // case 11: tag.colliderRef.collider12 = value; break;
-                // case 12: tag.colliderRef.collider13 = value; break;
-                // case 13: tag.colliderRef.collider14 = value; break;
-                // case 14: tag.colliderRef.collider15 = value; break;
+                    // case 8: tag.colliderRef.collider9 = value; break;
+                    // case 9: tag.colliderRef.collider10 = value; break;
+                    // case 10: tag.colliderRef.collider11 = value; break;
+                    // case 11: tag.colliderRef.collider12 = value; break;
+                    // case 12: tag.colliderRef.collider13 = value; break;
+                    // case 13: tag.colliderRef.collider14 = value; break;
+                    // case 14: tag.colliderRef.collider15 = value; break;
 
             }
             return tag;
+        }
+        /// <summary>
+        ///爆发类技能是独立计算还是快照转移？
+        /// 
+        /// </summary>
+        /// <param name="skillsDamageCalPar"></param>
+        /// <returns></returns>
+        private SkillsBurstDamageCalPar SetSkillsBurstDamageCalPar(SkillsDamageCalPar skillsDamageCalPar)
+        {
+            var skillBurstDamageCalPar = new SkillsBurstDamageCalPar();
+
+
+            return skillBurstDamageCalPar;
+        }
+
+        /// <summary>
+        /// 处理爆发类技能 元素, 增加另外两种的全量DOT 伤害
+        /// 这里！！  注意一个隐形BUG IjobFor 的快照机制，有时候IJOBFOR 拿到的是取出更新前的参数
+        /// </summary>
+        /// <param name="skillsBurstDamageCalPar"></param>
+        /// <returns></returns>
+        private SkillsBurstDamageCalPar DealDamageOfElementBurstB(SkillsBurstDamageCalPar skillsBurstDamageCalPar,bool enableChange=true)
+        {
+            if (!enableChange)
+                return skillsBurstDamageCalPar;
+
+                        // 1. 整合所有 dot（物理+元素5种），总共6种
+                float[] dots = new float[]
+                {
+                    skillsBurstDamageCalPar.bleedDotDamage,   // 0 物理
+                    skillsBurstDamageCalPar.fireDotDamage,    // 1
+                    skillsBurstDamageCalPar.frostDotDamage,   // 2
+                    skillsBurstDamageCalPar.lightningDotDamage, // 3
+                    skillsBurstDamageCalPar.shadowDotDamage,  // 4
+                    skillsBurstDamageCalPar.poisonDotDamage   // 5
+                };
+
+                // 2. 找到首个非0 dot为主爆发类型
+                int mainIdx = -1;
+                for (int i = 0; i < dots.Length; i++)
+                {
+                    if (dots[i] > 0)
+                    {
+                        mainIdx = i;
+                        break;
+                    }
+                }
+
+                if (mainIdx == -1)
+                {
+                    // 全部为0，全部清零返回
+                    skillsBurstDamageCalPar.bleedDotDamage = 0;
+                    skillsBurstDamageCalPar.fireDotDamage = 0;
+                    skillsBurstDamageCalPar.frostDotDamage = 0;
+                    skillsBurstDamageCalPar.lightningDotDamage = 0;
+                    skillsBurstDamageCalPar.shadowDotDamage = 0;
+                    skillsBurstDamageCalPar.poisonDotDamage = 0;
+                    return skillsBurstDamageCalPar;
+                }
+
+                // 3. 随机选2种其余类型
+                List<int> otherIdx = new List<int>() { 0, 1, 2, 3, 4, 5 };
+                otherIdx.Remove(mainIdx);
+                int randA = otherIdx[UnityEngine.Random.Range(0, otherIdx.Count)];
+                otherIdx.Remove(randA);
+                int randB = otherIdx[UnityEngine.Random.Range(0, otherIdx.Count)];
+
+                // 4. 三项赋值，基本元素伤害再加上本来的瞬时物理伤害
+                float val = dots[mainIdx]+skillsBurstDamageCalPar.instantPhysicalDamage;
+                for (int i = 0; i < dots.Length; i++)
+                {
+                    float setVal = (i == mainIdx || i == randA || i == randB) ? val : 0f;
+                    switch (i)
+                    {
+                        case 0: skillsBurstDamageCalPar.bleedDotDamage = setVal; break;
+                        case 1: skillsBurstDamageCalPar.fireDotDamage = setVal; break;
+                        case 2: skillsBurstDamageCalPar.frostDotDamage = setVal; break;
+                        case 3: skillsBurstDamageCalPar.lightningDotDamage = setVal; break;
+                        case 4: skillsBurstDamageCalPar.shadowDotDamage = setVal; break;
+                        case 5: skillsBurstDamageCalPar.poisonDotDamage = setVal; break;
+                    }
+                }
+                return skillsBurstDamageCalPar;
+
+
+                    
+
         }
 
         #endregion

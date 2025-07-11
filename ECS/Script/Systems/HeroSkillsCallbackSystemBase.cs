@@ -108,14 +108,15 @@ namespace BlackDawn.DOTS
             SkillCallBack_ShadowTide(timer, ecb, heroPar);
             //技能 冰霜新星
             SkillCallBack_FrostNova(timer, ecb, _prefabs);
-            
 
-            
+
+
             //技能闪电链 30
             SkillCallBack_LightningChain(timer, ecb, _prefabs);
             //技能毒雨 32
             SkillCallBack_PoisonRain(timer);
-
+            //元素爆发 33
+            SkillCallBack_ElementBurst(timer, ecb);
 
             // 播放并清理
             //ecb.Playback(base.EntityManager);
@@ -484,6 +485,36 @@ namespace BlackDawn.DOTS
 
 
            }).WithoutBurst().Run();
+
+
+        }
+
+        //技能 元素爆发
+        void SkillCallBack_ElementBurst(float timer, EntityCommandBuffer ecb)
+        {
+            Entities
+            .WithName("SkillElementBurst")
+            .ForEach((Entity entity, VisualEffect vfx, ref SkillElementBurstTag skillTag,ref OverlapBurstQueryCenter overlap, ref SkillsBurstDamageCalPar skillDamageCal, ref LocalTransform transform)=>
+            {
+                skillTag.tagSurvivalTime -= timer;
+                skillDamageCal.burstTime += timer;
+                if (skillTag.tagSurvivalTime <= 0)
+                    skillDamageCal.destory = true;
+                //更新碰撞体中心位置
+                overlap.center = transform.Position;
+                //单次判断缩小半径重叠区域
+                if (skillTag.tagSurvivalTime < 1f && skillTag.tagSurvivalTime >= 1f - timer)
+                {
+
+                    overlap.radius = 0.01f;
+                }
+
+                
+
+            }).WithoutBurst().Run();   
+
+
+
 
 
         }

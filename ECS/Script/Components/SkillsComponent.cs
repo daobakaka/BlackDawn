@@ -76,6 +76,11 @@ namespace BlackDawn.DOTS
         ///技能特殊的牵引和爆炸属性标签
         public bool enablePull;
         public bool enableExplosion;
+        
+        //临时吸引值
+        public float tempPull;
+        //临时爆炸值
+        public float tempExplosion;
 
     }
 
@@ -153,6 +158,10 @@ namespace BlackDawn.DOTS
         ///技能特殊的牵引和爆炸属性标签
         public bool enablePull;
         public bool enableExplosion;
+                //临时吸引值
+        public float tempPull;
+        //临时爆炸值
+        public float tempExplosion;
 
     }
 
@@ -208,6 +217,14 @@ namespace BlackDawn.DOTS
         public float tempRoot;
         public float tempSlow;
 
+
+        
+        public bool critTriggered;
+        public bool vulTriggered;
+        public bool supTriggered;
+        public bool dotCritTriggered;
+        public bool elemCritTriggered;
+
         /// <summary>用于技能变化的整体伤害参，这里看到是在池化中进行计算的，也应该在技能表现中增加，默认值为1</summary>
         public float damageChangePar;
 
@@ -225,6 +242,10 @@ namespace BlackDawn.DOTS
         public bool enablePull;
         public bool enableExplosion;
 
+        //临时引力值
+        public float tempPull;
+        //临时爆炸值
+        public float tempExplosion;
 
         ///！！爆发时间
         public float burstTime;
@@ -728,6 +749,23 @@ namespace BlackDawn.DOTS
         public Entity collider7;
         public Entity collider8;
                    
+
+    }
+
+        /// <summary>
+        /// 元素爆发标签
+        /// </summary>
+        public struct SkillElementBurstTag : IComponentData
+    {
+        public float tagSurvivalTime;
+
+        public float startBurstTime;
+        public float speed;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        public float skillDamageChangeParTag;
+        //等级
+        public int level;
 
     }
 

@@ -34,6 +34,7 @@ namespace BlackDawn
         [HideInInspector] public FlightPropDamageCalPar flightProDamageCalPar;//飞行道具伤害参数
         [HideInInspector] public SkillsDamageCalPar skillsDamageCalPar;//英雄技能伤害参数
         [HideInInspector] public SkillsOverTimeDamageCalPar skillsOverTimeDamageCalPar;//英雄持续性技能，降低buffer压力
+        [HideInInspector] public SkillsBurstDamageCalPar skillsBurstDamageCalPar;//英雄爆发类技能伤害计算    
         [HideInInspector] public IInputOperate inputOperate; //按键输入类
         [HideInInspector] public bool enableOperate = true;
         [HideInInspector] public EventBusManager eventBusManager; //事件总线管理
@@ -191,6 +192,8 @@ namespace BlackDawn
             CalculateBaseFlightPropDamage();
             //技能伤害计算
             CalculateBaseSkillDamage();
+            //爆发类技能伤害计算
+            CalculateBurstSkillDamage();
             //持续性技能伤害计算
             CalculateBaseOverTimeSkillDamage();
             //技能攻速变化？可以一直受攻击状态或者buffer的加成影响
@@ -697,7 +700,117 @@ namespace BlackDawn
             //传入 skillDamage 的伤害类型
             skillsDamageCalPar.damageTriggerType = CalculateDamageTriggerType(critTriggered, vulTriggered, supTriggered, dotCritTriggered, elemCritTriggered);
         }
+        /// <summary>
+        /// 爆发技能伤害计算
+        /// </summary>
+          public void CalculateBurstSkillDamage()
+        {
 
+
+            skillsBurstDamageCalPar.heroRef = heroEntity;
+            // 1. 取出当前的攻击属性
+            var atkAttr = attributeCmpt.attackAttribute;
+            var skillAttr = attributeCmpt.skillDamageAttribute;
+
+            // 2. 随机判定各触发状态
+            bool critTriggered = Random.value <= atkAttr.physicalCritChance;
+            bool vulTriggered = Random.value <= atkAttr.vulnerabilityChance;
+            bool supTriggered = Random.value <= atkAttr.suppressionChance;
+            bool dotCritTriggered = Random.value <= atkAttr.dotCritChance;//Dot暴击
+            bool elemCritTriggered = Random.value <= atkAttr.elementalCritChance;  // 元素暴击判定
+
+            skillsBurstDamageCalPar.critTriggered = critTriggered;
+            skillsBurstDamageCalPar.vulTriggered = vulTriggered;
+            skillsBurstDamageCalPar.supTriggered = supTriggered;
+            skillsBurstDamageCalPar.elemCritTriggered = elemCritTriggered;
+            skillsBurstDamageCalPar.dotCritTriggered = dotCritTriggered;
+
+            // 3. 各倍率：伤害加成永远生效，其他触发则加成，否则为1
+            float baseMul = 1f + atkAttr.damage;
+            // 物理暴击
+            float critMul = critTriggered ? 1f + atkAttr.critDamage : 1f;
+            // 易伤
+            float vulMul = vulTriggered ? 1f + atkAttr.vulnerabilityDamage : 1f;
+            // 压制
+            float supMul = supTriggered ? 1f + atkAttr.suppressionDamage : 1f;
+            // dot暴击
+            float dotCritMul = dotCritTriggered ? 1f + atkAttr.dotCritDamage : 1f;
+            // 元素暴击
+            float elemCritMul = elemCritTriggered ? 1f + atkAttr.elementalCritDamage : 1f;
+            float extra = atkAttr.extraDamage;
+
+            // 4. 计算瞬时物理伤害（含暴击）
+            skillsBurstDamageCalPar.instantPhysicalDamage =
+                skillAttr.baseDamage
+              * baseMul
+              * critMul
+              * vulMul
+              * supMul*skillAttr.physicalFactor
+              + extra;
+
+            // 5. 计算各元素瞬时伤害（不使用物理暴击，使用元素暴击判定）
+            //    按公式：atk * (1 + damage + elementDamage) * vulMul * supMul * elemCritMul + extra
+            //这里的技能元素伤害需要+1 ，因为技能是基于基础伤害直接造成元素或者物理伤害，可以直接加成，并且要乘以加成因子，技能后面会有受某项属性加成的影响
+            float commonMul = baseMul * vulMul * supMul * elemCritMul;
+            skillsBurstDamageCalPar.frostDamage =
+               skillAttr.baseDamage
+              * (1+atkAttr.elementalDamage.frostDamage)
+              * commonMul*skillAttr.frostFactor
+              + extra;
+            skillsBurstDamageCalPar.lightningDamage =
+               skillAttr.baseDamage
+              * (1+atkAttr.elementalDamage.lightningDamage)
+              * commonMul*skillAttr.lightningFactor
+              + extra;
+            skillsBurstDamageCalPar.poisonDamage =
+               skillAttr.baseDamage
+             * (1+atkAttr.elementalDamage.poisonDamage)
+             * commonMul*skillAttr.poisonFactor
+             + extra;
+            skillsBurstDamageCalPar.shadowDamage =
+                skillAttr.baseDamage
+              * (1+atkAttr.elementalDamage.shadowDamage)
+              * commonMul*skillAttr.shadowFactor
+              + extra;
+            skillsBurstDamageCalPar.fireDamage =
+                skillAttr.baseDamage
+              * (1+atkAttr.elementalDamage.fireDamage)
+              * commonMul*skillAttr.fireFactor
+              + extra;
+
+            // 6. 计算持续性DOT伤害（对所有类型相同公式）,不造成压制
+            //    按公式：atk * (1 + damage) * dotCritMul + extra + dotDamage
+            // 6. 计算持续性DOT伤害
+            float dotBaseMul = baseMul * dotCritMul * vulMul;
+            float dotExtra = extra + atkAttr.dotDamage;
+            float potentialDotDamage = skillAttr.baseDamage * dotBaseMul + dotExtra;
+
+            //这里增加英雄技能造成dot伤害的概率
+            // skillsDamageCalPar.frostDotDamage = Random.value <= atkAttr.dotProcChance.frostChance+skillAttr.dotSkillProcChance.frostChance ? potentialDotDamage : 0f;
+            // skillsDamageCalPar.lightningDotDamage = Random.value <= atkAttr.dotProcChance.lightningChance+skillAttr.dotSkillProcChance.lightningChance ? potentialDotDamage : 0f;
+            // skillsDamageCalPar.poisonDotDamage = Random.value <= atkAttr.dotProcChance.poisonChance +skillAttr.dotSkillProcChance.poisonChance? potentialDotDamage : 0f;
+            // skillsDamageCalPar.shadowDotDamage = Random.value <= atkAttr.dotProcChance.shadowChance + skillAttr.dotSkillProcChance.shadowChance ? potentialDotDamage : 0f;
+            // skillsDamageCalPar.fireDotDamage = Random.value <= atkAttr.dotProcChance.fireChance + skillAttr.dotSkillProcChance.fireChance ? potentialDotDamage : 0f;
+            // skillsDamageCalPar.bleedDotDamage = Random.value <= atkAttr.dotProcChance.bleedChance + skillAttr.dotSkillProcChance.bleedChance ? potentialDotDamage: 0f;
+
+            //这里增加一个用于技能分离触发的测试版本
+            skillsBurstDamageCalPar.frostDotDamage = Random.value <= skillAttr.dotSkillProcChance.frostChance ? potentialDotDamage : 0f;
+            skillsBurstDamageCalPar.lightningDotDamage = Random.value <= skillAttr.dotSkillProcChance.lightningChance ? potentialDotDamage : 0f;
+            skillsBurstDamageCalPar.poisonDotDamage = Random.value <= skillAttr.dotSkillProcChance.poisonChance? potentialDotDamage : 0f;
+            skillsBurstDamageCalPar.shadowDotDamage = Random.value <= skillAttr.dotSkillProcChance.shadowChance ? potentialDotDamage : 0f;
+            skillsBurstDamageCalPar.fireDotDamage = Random.value <= skillAttr.dotSkillProcChance.fireChance ? potentialDotDamage : 0f;
+            skillsBurstDamageCalPar.bleedDotDamage = Random.value <= skillAttr.dotSkillProcChance.bleedChance ? potentialDotDamage: 0f;
+            
+           
+            //这里计算完了英雄自己属性的伤害触发， 后面的DOT和控制状态判断，可由怪物自身触发
+
+            //增加 伤害变化参数,默认为1
+            skillsBurstDamageCalPar.damageChangePar = 1;
+            //默认并行数量最高100
+            skillsBurstDamageCalPar.ParallelCount = 100;
+            //传入 skillDamage 的伤害类型
+            skillsBurstDamageCalPar.damageTriggerType = CalculateDamageTriggerType(critTriggered, vulTriggered, supTriggered, dotCritTriggered, elemCritTriggered);
+        }
 
 
         /// <summary>

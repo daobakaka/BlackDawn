@@ -110,7 +110,7 @@ namespace BlackDawn
        //毒雨 -技能名称更改    
         PoisonRain,           // 毒雾陷阱：降下一片毒雨，造成毒素伤害 
                            // 释放方式：Release/Summon；伤害类型：毒素
-
+        //元素爆发 33
         ElementBurst,      // 元素爆发：根据当前武器元素类型释放对应范围爆炸  
                            // 释放方式：Release/Explosion；伤害类型：全元素
 

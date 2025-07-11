@@ -25,9 +25,12 @@ namespace BlackDawn.DOTS
     [BurstCompile]
     public partial struct HeroSkillsDamageBurstSystem : ISystem
     {
+        //外部控制job 元素爆发第二阶段的job开启   
+        public bool enableHeroSkillElementBurstB;
+     
         private ComponentLookup<LiveMonster> _liveMonster;
         private ComponentLookup<MonsterDefenseAttribute> _monsterDefenseAttrLookup;
-        private ComponentLookup<MonsterLossPoolAttribute> _monsterLossPoolAttrLookip;
+        private ComponentLookup<MonsterLossPoolAttribute> _monsterLossPoolAttrLookup;
         private ComponentLookup<MonsterControlledEffectAttribute> _monsterControlledEffectAttrLookup;
         private ComponentLookup<HeroAttributeCmpt> _heroAttrLookup;
         private ComponentLookup<SkillsBurstDamageCalPar> _skillBurstDamage;
@@ -40,6 +43,8 @@ namespace BlackDawn.DOTS
         private ComponentLookup<MonsterDebuffAttribute> _monsterDebuffAttrLookup;
         //dot组件查询
         private BufferLookup<MonsterDotDamageBuffer> _monsterDotDamageBufferLookup;
+        //元素爆发技能标签查询
+        private ComponentLookup<SkillElementBurstTag> _skillElementBurstLookup;
         //侦测系统缓存
         private SystemHandle _detectionSystemHandle;
         //持续性overLap检测系统缓存
@@ -53,10 +58,10 @@ namespace BlackDawn.DOTS
             //外部控制更新
             state.RequireForUpdate<EnableHeroSkillsDamageBurstSystemTag>();
 
-            
+
             _liveMonster = SystemAPI.GetComponentLookup<LiveMonster>(true);
             _monsterDefenseAttrLookup = SystemAPI.GetComponentLookup<MonsterDefenseAttribute>(true);
-            _monsterLossPoolAttrLookip = SystemAPI.GetComponentLookup<MonsterLossPoolAttribute>(true);
+            _monsterLossPoolAttrLookup = SystemAPI.GetComponentLookup<MonsterLossPoolAttribute>(true);
             _monsterControlledEffectAttrLookup = SystemAPI.GetComponentLookup<MonsterControlledEffectAttribute>(true);
             _heroAttrLookup = SystemAPI.GetComponentLookup<HeroAttributeCmpt>(true);
             _hitRecordBufferLookup = SystemAPI.GetBufferLookup<HitRecord>(true);
@@ -67,6 +72,7 @@ namespace BlackDawn.DOTS
             _monsterTempDotDamageTextLookup = SystemAPI.GetComponentLookup<MonsterTempDotDamageText>(false);
             _monsterDebuffAttrLookup = SystemAPI.GetComponentLookup<MonsterDebuffAttribute>(true);
             _monsterDotDamageBufferLookup = SystemAPI.GetBufferLookup<MonsterDotDamageBuffer>(true);
+            _skillElementBurstLookup = SystemAPI.GetComponentLookup<SkillElementBurstTag>(true);
 
 
             _detectionSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
@@ -81,7 +87,7 @@ namespace BlackDawn.DOTS
             _monsterDefenseAttrLookup.Update(ref state);
             _liveMonster.Update(ref state);
             _monsterControlledEffectAttrLookup.Update(ref state);
-            _monsterLossPoolAttrLookip.Update(ref state);
+            _monsterLossPoolAttrLookup.Update(ref state);
             _heroAttrLookup.Update(ref state);
             _hitRecordBufferLookup.Update(ref state);
             _skillBurstDamage.Update(ref state);
@@ -91,6 +97,7 @@ namespace BlackDawn.DOTS
             _monsterTempDotDamageTextLookup.Update(ref state);
             _monsterDebuffAttrLookup.Update(ref state);
             _monsterDotDamageBufferLookup.Update(ref state);
+            _skillElementBurstLookup.Update(ref state);
 
             //获取收集世界单例
             var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
@@ -111,7 +118,8 @@ namespace BlackDawn.DOTS
                 ECB = ecbWriter,
                 DamageParLookup = _skillBurstDamage,
                 DefenseAttrLookup = _monsterDefenseAttrLookup,
-                LossPoolAttrLookup = _monsterLossPoolAttrLookip,
+                LossPoolAttrLookup = _monsterLossPoolAttrLookup,
+                ElementBurstLookup =_skillElementBurstLookup,
                 ControlledEffectAttrLookup = _monsterControlledEffectAttrLookup,
                 LinkedLookup = _linkedLookup,
                 HitArray = hitsBurstArray,
@@ -123,6 +131,21 @@ namespace BlackDawn.DOTS
                 DotDamageBufferLookup = _monsterDotDamageBufferLookup,
                 DeltaTime = deltaTime,
             }.ScheduleParallel(hitsBurstArray.Length, 64, state.Dependency);
+            
+            //元素爆发第二阶段 池化逻辑，这种写入方式貌似会有覆盖现象
+            if (enableHeroSkillElementBurstB)//由技能释放系统外部开启job控制
+                state.Dependency = new ApplySkillDamageBurst_ElementBurstBJob
+                {
+                    ECB = ecbWriter,
+                    DamageParLookup = _skillBurstDamage,
+                    ElementBurstLookup = _skillElementBurstLookup,
+                    HitArray = hitsBurstArray,
+                    DeltaTime = deltaTime,
+                    Transform = _transform,
+                    LossPoolAttrLookup = _monsterLossPoolAttrLookup,
+
+                }.ScheduleParallel(hitsBurstArray.Length, 64, state.Dependency);
+
             //state.Dependency.Complete();
 
         }
@@ -140,6 +163,7 @@ namespace BlackDawn.DOTS
     {
         public EntityCommandBuffer.ParallelWriter ECB;
         [ReadOnly] public ComponentLookup<SkillsBurstDamageCalPar> DamageParLookup;
+        [ReadOnly] public ComponentLookup<SkillElementBurstTag> ElementBurstLookup;
         [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
         [ReadOnly] public ComponentLookup<MonsterControlledEffectAttribute> ControlledEffectAttrLookup;
         [ReadOnly] public ComponentLookup<MonsterLossPoolAttribute> LossPoolAttrLookup;
@@ -179,18 +203,18 @@ new ProfilerMarker("SkillBurstDamageJob.Execute");
                 var d = DamageParLookup[skill];
 
 
-               // DevDebug.Log("进入");
-                    
-                //超过1帧直接退回， 进行单次伤害计算
-                if (d.burstTime>DeltaTime)
+                // DevDebug.Log("进入");
+
+                //超过1帧直接退回， 进行单次伤害计算,这里burstTIme 要在主线程里更新
+                if (d.burstTime > DeltaTime)
                 {
-                   // DevDebug.Log("返回");
+                    // DevDebug.Log("返回");
                     return;
                 }
                 else
                 {
 
-                   // DevDebug.Log("计算");
+                    // DevDebug.Log("计算");
                     var a = DefenseAttrLookup[target];
                     var c = ControlledEffectAttrLookup[target];
                     var l = LossPoolAttrLookup[target];
@@ -204,6 +228,7 @@ new ProfilerMarker("SkillBurstDamageJob.Execute");
                     var tempText = TempDamageText[textRenderEntity];
                     var tempDotText = TempDotDamageText[textDotRenderEntity];
                     var rnd = new Unity.Mathematics.Random(a.rngState);
+                    var e = ElementBurstLookup[skill];
 
 
                     // 3) 闪避判定-这里应该展现闪避字体
@@ -252,14 +277,14 @@ new ProfilerMarker("SkillBurstDamageJob.Execute");
                     //牵引或者爆炸是直接执行，不由累加进行触发
                     if (d.enablePull)
                     {
-                        c.pull = h.controlAbilityAttribute.pull;
+                        c.pull = h.controlAbilityAttribute.pull + d.tempPull;
                         c.pullCenter = Transform[skill].Position;
 
                     }
                     //爆炸
                     if (d.enableExplosion)
                     {
-                        c.explosion = h.controlAbilityAttribute.explosion;
+                        c.explosion = h.controlAbilityAttribute.explosion + d.tempExplosion;
                         c.explosionCenter = Transform[skill].Position;
                         //牵引或者爆炸有两秒间隔，因为有buffer的间隔，所以这里判断并不能和执行            
                     }
@@ -333,22 +358,52 @@ new ProfilerMarker("SkillBurstDamageJob.Execute");
                     //池化反应也要乘对应的伤害change参数,10% 伤害对应200点池化值，且不受任何减免影响
                     float Gain(float raw, float dot) => math.min(((raw + dot) * (d.damageChangePar) / origHp) * 100f * mult, cap);
                     var addFirePool = Gain(d.fireDamage, d.fireDotDamage);
-                    var addFrostPool = Gain(d.frostDamage, d.fireDotDamage);
+                    var addFrostPool = Gain(d.frostDamage, d.frostDotDamage);
                     var addLightningPool = Gain(d.lightningDamage, d.lightningDotDamage);
-                    var addPosionPool = Gain(d.poisonDamage, d.poisonDotDamage);
+                    var addPoisonPool = Gain(d.poisonDamage, d.poisonDotDamage);
                     var addShadowPool = Gain(d.shadowDamage, d.shadowDotDamage);
                     var addBleedPool = Gain(d.instantPhysicalDamage, d.bleedDotDamage) * 0.25f;
 
 
-                    l.firePool = math.min(l.firePool + addFrostPool, cap);
-                    l.frostPool = math.min(l.frostPool + addFirePool, cap);
+                    l.firePool = math.min(l.firePool + addFirePool, cap);
+                    l.frostPool = math.min(l.frostPool + addFrostPool, cap);
                     l.lightningPool = math.min(l.lightningPool + addLightningPool, cap);
-                    l.poisonPool = math.min(l.poisonPool + addPosionPool, cap);
+                    l.poisonPool = math.min(l.poisonPool + addPoisonPool, cap);
                     l.shadowPool = math.min(l.shadowPool + addShadowPool, cap);
                     //流血池只使用25%物理伤害计算
-                    l.bleedPool = math.min(l.bleedPool + addBleedPool, cap) * 0.25f;
+                   l.bleedPool = math.min(l.bleedPool + addBleedPool, cap);
 
+                    //5-1）防止写回覆盖这里增加 元素爆发的第二阶段池化逻辑！！！，不能以通用ECB 写回同一个组件，否则会发生叠加？
+                    //这里直接覆盖
 
+                      if (e.enableSecondB)
+                    {
+
+                        // 掩码判定（damage > 0f 则为1，否则为0）
+                        float fireMask = math.step(1e-6f, d.fireDotDamage);
+                        float frostMask = math.step(1e-6f, d.frostDotDamage);
+                        float lightningMask = math.step(1e-6f, d.lightningDotDamage);
+                        float poisonMask = math.step(1e-6f, d.poisonDotDamage);
+                        float shadowMask = math.step(1e-6f, d.shadowDotDamage);
+                        float bleedMask = math.step(1e-6f, d.bleedDotDamage);
+
+                        // 每种元素的池化增量（你可以自定义增长公式，比如基础100+等级*10，也可以按伤害比例加）
+                        addFirePool = fireMask * (100f + e.level * 10f);
+                        addFrostPool= frostMask * (100f + e.level * 10f);
+                        addLightningPool  = lightningMask * (100f + e.level * 10f);
+                        addPoisonPool = poisonMask * (100f + e.level * 10f);
+                        addShadowPool = shadowMask * (100f + e.level * 10f);
+                        addBleedPool = bleedMask * (100f + e.level * 10);
+
+                        // 原有池化值 + 增量，并钳制到cap
+                        l.firePool = math.min(l.firePool + addFirePool, cap);
+                        l.frostPool = math.min(l.frostPool + addFrostPool, cap);
+                        l.lightningPool = math.min(l.lightningPool + addLightningPool, cap);
+                        l.poisonPool = math.min(l.poisonPool + addPoisonPool, cap);
+                        l.shadowPool = math.min(l.shadowPool + addShadowPool, cap);
+                        l.bleedPool = math.min(l.bleedPool + addBleedPool, cap);
+
+                    }
 
                     // 6) 格挡判定（仅对瞬时）,随机减免20%-80%伤害
                     var tempBlock = false;
@@ -397,7 +452,7 @@ new ProfilerMarker("SkillBurstDamageJob.Execute");
                     dd.firePool = addFirePool;
                     dd.frostPool = addFrostPool;
                     dd.lightningPool = addLightningPool;
-                    dd.poisonPool = addPosionPool;
+                    dd.poisonPool = addPoisonPool;
                     dd.shadowPool = addShadowPool;
                     dd.bleedPool = addBleedPool;
 
@@ -472,5 +527,82 @@ new ProfilerMarker("SkillBurstDamageJob.Execute");
     }
 
 
+    struct ApplySkillDamageBurst_ElementBurstBJob : IJobFor
+    {
+        public EntityCommandBuffer.ParallelWriter ECB;
+        [ReadOnly] public ComponentLookup<SkillsBurstDamageCalPar> DamageParLookup;
+        [ReadOnly] public ComponentLookup<SkillElementBurstTag> ElementBurstLookup;
+        [ReadOnly] public ComponentLookup<MonsterLossPoolAttribute> LossPoolAttrLookup;
+        [ReadOnly] public NativeArray<TriggerPairData> HitArray;
+        [ReadOnly] public ComponentLookup<LocalTransform> Transform;
+        [ReadOnly] public float DeltaTime;
 
+
+        static readonly ProfilerMarker mPBE_Execute =
+new ProfilerMarker("SkillBurstDamage_ElementBurstBJob.Execute");
+
+        public void Execute(int i)
+        {
+            using (mPBE_Execute.Auto())
+            {
+                var pair = HitArray[i];
+                Entity skill = pair.EntityA;
+                Entity target = pair.EntityB;
+
+                // 2) 读取组件 & 随机数
+                var d = DamageParLookup[skill];
+
+                //超过1帧直接退回， 进行单次伤害计算,这里burstTIme 要在主线程里更新
+                if (d.burstTime > DeltaTime)
+                {
+                    // DevDebug.Log("返回");
+                    return;
+                }
+                else
+                {
+
+
+                    var e = ElementBurstLookup[skill];
+                    var l = LossPoolAttrLookup[target]; 
+
+                    if (e.enableSecondB)
+                    {
+                        // 钳制上限
+                        const float cap = 200f;
+                        // 掩码判定（damage > 0f 则为1，否则为0）
+                        float fireMask = math.step(1e-6f, d.fireDotDamage);
+                        float frostMask = math.step(1e-6f, d.frostDotDamage);
+                        float lightningMask = math.step(1e-6f, d.lightningDotDamage);
+                        float poisonMask = math.step(1e-6f, d.poisonDotDamage);
+                        float shadowMask = math.step(1e-6f, d.shadowDotDamage);
+                        float bleedMask = math.step(1e-6f, d.bleedDotDamage);
+
+                        // 每种元素的池化增量（你可以自定义增长公式，比如基础100+等级*10，也可以按伤害比例加）
+                        float firePoolAdd = fireMask * (100f + e.level * 10f);
+                        float frostPoolAdd = frostMask * (100f + e.level * 10f);
+                        float lightningPoolAdd = lightningMask * (100f + e.level * 10f);
+                        float poisonPoolAdd = poisonMask * (100f + e.level * 10f);
+                        float shadowPoolAdd = shadowMask * (100f + e.level * 10f);
+                        float bleedMaskAdd = bleedMask * (100f + e.level * 10);
+
+                        // 原有池化值 + 增量，并钳制到cap
+                        l.firePool = math.min(l.firePool + firePoolAdd, cap);
+                        l.frostPool = math.min(l.frostPool + frostPoolAdd, cap);
+                        l.lightningPool = math.min(l.lightningPool + lightningPoolAdd, cap);
+                        l.poisonPool = math.min(l.poisonPool + poisonPoolAdd, cap);
+                        l.shadowPool = math.min(l.shadowPool + shadowPoolAdd, cap);
+                        l.bleedPool = math.min(l.bleedPool + bleedMaskAdd, cap);
+
+                    }
+
+                    // 记得写回
+                    ECB.SetComponent(i, target, l);
+
+                }
+            }
+
+
+        }
+
+    }
 }
