@@ -79,7 +79,7 @@ namespace BlackDawn.DOTS
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-
+             state.Dependency.Complete();
             _monsterLossPoolattrLookup.Update(ref state);
             _monsterDefenseAttrLookup.Update(ref state);
             _monsterTempDamageTextLookup.Update(ref state);
@@ -90,13 +90,12 @@ namespace BlackDawn.DOTS
             float dt = SystemAPI.Time.DeltaTime;
             // var ecb = new EntityCommandBuffer(Allocator.TempJob);
             //渲染动态ECB,等同于end，写回必须在系统运行顺序之后进行才可以
-            var ecb = SystemAPI.GetSingleton<BeginInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            var ecb = SystemAPI.GetSingleton<CustomStartUpdatePresentationECBSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             //自定以穿插系统组， 在end之前
-            var ecb1 = SystemAPI.GetSingleton<CustomMiddleInitializationECBSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
-            var ecb2 = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            var ecb1 = SystemAPI.GetSingleton<CustomMiddleUpdatePresentationECBSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            var ecb2 = SystemAPI.GetSingleton<CustomEndUpdatePresentationECBSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             var currentTime = SystemAPI.Time.ElapsedTime;
             //等待action主线程跑完
-        
 
             //var _ecb = _ecbSystem.CreateCommandBuffer();    
             // —— 3) 构造一个 Query，它一定包含 Parent、RenderParameterAspect，

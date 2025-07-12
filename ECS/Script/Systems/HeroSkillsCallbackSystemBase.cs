@@ -108,8 +108,8 @@ namespace BlackDawn.DOTS
             SkillCallBack_ShadowTide(timer, ecb, heroPar);
             //技能 冰霜新星
             SkillCallBack_FrostNova(timer, ecb, _prefabs);
-
-
+            //通用护盾技能 1- 元素护盾
+            SkillCallBack_ShieldDeal();
 
             //技能闪电链 30
             SkillCallBack_LightningChain(timer, ecb, _prefabs);
@@ -459,6 +459,9 @@ namespace BlackDawn.DOTS
             
             
         }
+
+
+
 
         //技能 毒雨
         void SkillCallBack_PoisonRain(float timer)
@@ -906,8 +909,83 @@ namespace BlackDawn.DOTS
 
 
         }
+        /// <summary>
+        ///  处理英雄护盾系统-可以设计为通用技能,目前是以动态计算的方式进行，其实可以通过拷贝值进行单次计算即可
+        /// 后期考虑英雄防御值的动态变化，这里采取事实计算的模式
+        /// </summary>
+        void SkillCallBack_ShieldDeal()
+        { 
+             Entities
+            .WithName("HeroSkillShieldDeal")
+            .ForEach((
+                ref HeroEntityMasterTag masterTag,
+                ref HeroAttributeCmpt heroAttr,
+                ref HeroIntgratedNoImmunityState stateNoImmunity,
+                ref SkillElementShieldTag_Hero skillElementShieldTag
+                ) =>
+            {
+                if (!skillElementShieldTag.active)
+                {
+                    skillElementShieldTag.damageReduction = 0;
+                    skillElementShieldTag.damageAmplification = 0;
+                    heroAttr.attackAttribute.heroDynamicalAttack.tempMasterDamagePar = 1;
+                }
+                else
+                {
+                    skillElementShieldTag.damageReduction = 0.2f + 0.01f * skillElementShieldTag.level;
+
+                    // 元素护盾失效条件
+                    if (heroAttr.defenseAttribute.energy < 0.001f)
+                    {
+                        skillElementShieldTag.active = false;
+                        _heroSkills.SkillSetActiveElementShield(false);
+                        return;
+                        
+                    }
+
+                    // 1. 元素护盾减伤（基于抗性，每种不超过 5% + 升级加成）
+                    if (skillElementShieldTag.enableSecondA)
+                    {
+                        var resist = heroAttr.defenseAttribute.resistances;
+                        var lvl = skillElementShieldTag.level;
+                        float maxResistBonus = 0.05f + 0.01f * lvl;
+                        float frostDR = math.min(resist.frost * 0.2f / 1f * 0.01f, maxResistBonus);
+                        float lightningDR = math.min(resist.lightning * 0.2f / 1f * 0.01f, maxResistBonus);
+                        float poisonDR = math.min(resist.poison * 0.2f / 1f * 0.01f, maxResistBonus);
+                        float shadowDR = math.min(resist.shadow * 0.2f / 1f * 0.01f, maxResistBonus);
+                        float fireDR = math.min(resist.fire * 0.2f / 1f * 0.01f, maxResistBonus);
+                        float totalReduction = 0.2f + 0.01f * lvl + frostDR + lightningDR + poisonDR + shadowDR + fireDR;
+                        skillElementShieldTag.damageReduction = totalReduction;
+                    }
+
+                    // 2. 元素护盾期间伤害提升
+                    if (skillElementShieldTag.enableSecondB)
+                    {
+                        var elementDmg = heroAttr.attackAttribute.elementalDamage;
+                        var lvl = skillElementShieldTag.level;
+                        float maxAmp = 0.10f + 0.005f * lvl;
+                        float ampFromElement = (
+                            elementDmg.frostDamage +
+                            elementDmg.lightningDamage +
+                            elementDmg.poisonDamage +
+                            elementDmg.shadowDamage +
+                            elementDmg.fireDamage
+                        ) * 0.1f * 0.01f;
+                        float totalAmp = math.min(0.20f + ampFromElement, maxAmp);
+
+                        skillElementShieldTag.damageAmplification = totalAmp;
+                        heroAttr.attackAttribute.heroDynamicalAttack.tempMasterDamagePar = 1 + totalAmp;
+                    }
+                }
+            })
+            .WithoutBurst().Run();
 
 
+
+
+
+
+        }
         void DebugDrawSphere(float3 entityPosition, float3 offset, quaternion rotation, float radius, Color color, float duration)
         {
             // ✅ 偏移应用旋转

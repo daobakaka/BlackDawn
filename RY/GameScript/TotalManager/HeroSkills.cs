@@ -34,6 +34,8 @@ namespace BlackDawn
         EntityQuery _arcaneCircleQuery;
         //暗影洪流，引导唯一
         EntityQuery _shadowTideQuery;
+        //元素护盾 ，唯一 加载到英雄身上，这里可以通过英雄entity 直接拿取
+        EntityQuery _ElementShieldQuery;
 
         //动态英雄结构查询模块
         EntityQuery _heroRealTimeAttr;
@@ -978,6 +980,103 @@ namespace BlackDawn
                             break;
                     }
                     break;
+                //元素护盾 25 保护/唯一，保护技能25号元素可以仅添加渲染即可
+                case HeroSkillID.ElementShield:
+                    var skillElementShieldCmp = _entityManager.GetComponentData<SkillElementShieldTag_Hero>(_heroEntity);
+                    var runTimeHeroCmp = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+                            if (!skillElementShieldCmp.active)
+                            {
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                    skillElementShieldCmp.active = true;
+                                    _entityManager.SetComponentData(_heroEntity, skillElementShieldCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                    SkillSetActiveElementShield(true);
+                                }
+                            }
+                            else
+                            {
+
+                                skillElementShieldCmp.active = false;
+                                _entityManager.SetComponentData(_heroEntity, skillElementShieldCmp);
+                                  SkillSetActiveElementShield(false);
+                        }
+
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                          if (!skillElementShieldCmp.active)
+                            {
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                    skillElementShieldCmp.active = true;
+                                    skillElementShieldCmp.enableSecondA = true;
+                                    _entityManager.SetComponentData(_heroEntity, skillElementShieldCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                    SkillSetActiveElementShield(true);
+                                }
+                            }
+                            else
+                            {
+
+                                skillElementShieldCmp.active = false;
+                                _entityManager.SetComponentData(_heroEntity, skillElementShieldCmp);
+                                  SkillSetActiveElementShield(false);
+                        }
+
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                         if (!skillElementShieldCmp.active)
+                            {
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                    skillElementShieldCmp.active = true;
+                                    skillElementShieldCmp.enableSecondB = true;
+                                    _entityManager.SetComponentData(_heroEntity, skillElementShieldCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                    SkillSetActiveElementShield(true);
+                                }
+                            }
+                            else
+                            {
+
+                                skillElementShieldCmp.active = false;
+                                _entityManager.SetComponentData(_heroEntity, skillElementShieldCmp);
+                                  SkillSetActiveElementShield(false);
+                        }
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+                         if (!skillElementShieldCmp.active)
+                            {
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                    skillElementShieldCmp.active = true;
+                                    skillElementShieldCmp.enableSecondA = true;
+                                    skillElementShieldCmp.enableSecondB = true;
+                                    _entityManager.SetComponentData(_heroEntity, skillElementShieldCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                    SkillSetActiveElementShield(true);
+                                }
+                            }
+                            else
+                            {
+
+                                skillElementShieldCmp.active = false;
+                                _entityManager.SetComponentData(_heroEntity, skillElementShieldCmp);
+                                  SkillSetActiveElementShield(false);
+                        }
+                            break;
+
+
+                    }
+                    break;
+
                 //闪电链 30， 瞬时寻址
                 case HeroSkillID.LightningChain:
                     switch (psionicType)
@@ -1336,7 +1435,7 @@ namespace BlackDawn
                             1, float3.zero, float3.zero, 1f, false, true);
                             var skillBurstDamageCalB = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(elementBurstEntityB);
                             skillBurstDamageCalB.tempExplosion = 200;
-                            var skillBurstDamageCalBProcess = DealDamageOfElementBurstB(skillBurstDamageCalB,true);
+                            var skillBurstDamageCalBProcess = DealDamageOfElementBurstB(skillBurstDamageCalB, true);
                             _entityManager.SetComponentData(elementBurstEntityB, skillBurstDamageCalBProcess);
                             //设置总体存活时间， 设置爆炸时间
                             _entityManager.AddComponentData(elementBurstEntityB, new SkillElementBurstTag() { tagSurvivalTime = 1.5f, startBurstTime = 0.5f, enableSecondB = true });
@@ -1358,10 +1457,9 @@ namespace BlackDawn
                             1, float3.zero, float3.zero, 0.5f, false, true);
                             var skillBurstDamageCalAB = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(elementBurstEntityAB);
                             skillBurstDamageCalAB.tempExplosion = 200;
-                            var skillBurstDamageCalABProcess = DealDamageOfElementBurstB(skillBurstDamageCalAB,true);
+                            skillBurstDamageCalAB.damageChangePar += 5;
+                            var skillBurstDamageCalABProcess = DealDamageOfElementBurstB(skillBurstDamageCalAB, true);
                             _entityManager.SetComponentData(elementBurstEntityAB, skillBurstDamageCalABProcess);
-                            skillBurstDamageCalAB.damageChangePar += 5;//随等级成长
-                            _entityManager.SetComponentData(elementBurstEntityAB, skillBurstDamageCalAB);
                             //设置总体存活时间， 设置爆炸时间，开启池化标识
                             _entityManager.AddComponentData(elementBurstEntityAB, new SkillElementBurstTag() { tagSurvivalTime = 1.5f, startBurstTime = 0.5f, enableSecondB = true });
 
@@ -2154,72 +2252,80 @@ namespace BlackDawn
         /// </summary>
         /// <param name="skillsBurstDamageCalPar"></param>
         /// <returns></returns>
-        private SkillsBurstDamageCalPar DealDamageOfElementBurstB(SkillsBurstDamageCalPar skillsBurstDamageCalPar,bool enableChange=true)
+        private SkillsBurstDamageCalPar DealDamageOfElementBurstB(SkillsBurstDamageCalPar skillsBurstDamageCalPar, bool enableChange = true)
         {
             if (!enableChange)
                 return skillsBurstDamageCalPar;
 
-                        // 1. 整合所有 dot（物理+元素5种），总共6种
-                float[] dots = new float[]
-                {
+            // 1. 整合所有 dot（物理+元素5种），总共6种
+            float[] dots = new float[]
+            {
                     skillsBurstDamageCalPar.bleedDotDamage,   // 0 物理
                     skillsBurstDamageCalPar.fireDotDamage,    // 1
                     skillsBurstDamageCalPar.frostDotDamage,   // 2
                     skillsBurstDamageCalPar.lightningDotDamage, // 3
                     skillsBurstDamageCalPar.shadowDotDamage,  // 4
                     skillsBurstDamageCalPar.poisonDotDamage   // 5
-                };
+            };
 
-                // 2. 找到首个非0 dot为主爆发类型
-                int mainIdx = -1;
-                for (int i = 0; i < dots.Length; i++)
+            // 2. 找到首个非0 dot为主爆发类型
+            int mainIdx = -1;
+            for (int i = 0; i < dots.Length; i++)
+            {
+                if (dots[i] > 0)
                 {
-                    if (dots[i] > 0)
-                    {
-                        mainIdx = i;
-                        break;
-                    }
+                    mainIdx = i;
+                    break;
                 }
+            }
 
-                if (mainIdx == -1)
-                {
-                    // 全部为0，全部清零返回
-                    skillsBurstDamageCalPar.bleedDotDamage = 0;
-                    skillsBurstDamageCalPar.fireDotDamage = 0;
-                    skillsBurstDamageCalPar.frostDotDamage = 0;
-                    skillsBurstDamageCalPar.lightningDotDamage = 0;
-                    skillsBurstDamageCalPar.shadowDotDamage = 0;
-                    skillsBurstDamageCalPar.poisonDotDamage = 0;
-                    return skillsBurstDamageCalPar;
-                }
-
-                // 3. 随机选2种其余类型
-                List<int> otherIdx = new List<int>() { 0, 1, 2, 3, 4, 5 };
-                otherIdx.Remove(mainIdx);
-                int randA = otherIdx[UnityEngine.Random.Range(0, otherIdx.Count)];
-                otherIdx.Remove(randA);
-                int randB = otherIdx[UnityEngine.Random.Range(0, otherIdx.Count)];
-
-                // 4. 三项赋值，基本元素伤害再加上本来的瞬时物理伤害
-                float val = dots[mainIdx]+skillsBurstDamageCalPar.instantPhysicalDamage;
-                for (int i = 0; i < dots.Length; i++)
-                {
-                    float setVal = (i == mainIdx || i == randA || i == randB) ? val : 0f;
-                    switch (i)
-                    {
-                        case 0: skillsBurstDamageCalPar.bleedDotDamage = setVal; break;
-                        case 1: skillsBurstDamageCalPar.fireDotDamage = setVal; break;
-                        case 2: skillsBurstDamageCalPar.frostDotDamage = setVal; break;
-                        case 3: skillsBurstDamageCalPar.lightningDotDamage = setVal; break;
-                        case 4: skillsBurstDamageCalPar.shadowDotDamage = setVal; break;
-                        case 5: skillsBurstDamageCalPar.poisonDotDamage = setVal; break;
-                    }
-                }
+            if (mainIdx == -1)
+            {
+                // 全部为0，全部清零返回
+                skillsBurstDamageCalPar.bleedDotDamage = 0;
+                skillsBurstDamageCalPar.fireDotDamage = 0;
+                skillsBurstDamageCalPar.frostDotDamage = 0;
+                skillsBurstDamageCalPar.lightningDotDamage = 0;
+                skillsBurstDamageCalPar.shadowDotDamage = 0;
+                skillsBurstDamageCalPar.poisonDotDamage = 0;
                 return skillsBurstDamageCalPar;
+            }
+
+            // 3. 随机选2种其余类型
+            List<int> otherIdx = new List<int>() { 0, 1, 2, 3, 4, 5 };
+            otherIdx.Remove(mainIdx);
+            int randA = otherIdx[UnityEngine.Random.Range(0, otherIdx.Count)];
+            otherIdx.Remove(randA);
+            int randB = otherIdx[UnityEngine.Random.Range(0, otherIdx.Count)];
+
+            // 4. 三项赋值，基本元素伤害再加上本来的瞬时物理伤害
+            float val = dots[mainIdx] + skillsBurstDamageCalPar.instantPhysicalDamage;
+            for (int i = 0; i < dots.Length; i++)
+            {
+                float setVal = (i == mainIdx || i == randA || i == randB) ? val : 0f;
+                switch (i)
+                {
+                    case 0: skillsBurstDamageCalPar.bleedDotDamage = setVal; break;
+                    case 1: skillsBurstDamageCalPar.fireDotDamage = setVal; break;
+                    case 2: skillsBurstDamageCalPar.frostDotDamage = setVal; break;
+                    case 3: skillsBurstDamageCalPar.lightningDotDamage = setVal; break;
+                    case 4: skillsBurstDamageCalPar.shadowDotDamage = setVal; break;
+                    case 5: skillsBurstDamageCalPar.poisonDotDamage = setVal; break;
+                }
+            }
+            return skillsBurstDamageCalPar;
 
 
-                    
 
+
+        }
+
+        //元素护盾技能设置,outer
+        public void SkillSetActiveElementShield(bool active)
+        {           
+
+            Hero.instance.skillTransforms[3].gameObject.SetActive(active);
+           
         }
 
         #endregion

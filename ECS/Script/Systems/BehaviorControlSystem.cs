@@ -61,7 +61,7 @@ namespace BlackDawn
     {
 
         public float Time;
-        public void Execute(Entity entity, EnabledRefRO<LiveMonster> live,ref MonsterDefenseAttribute defenseAttribute,ref MonsterControlledEffectAttribute controlledEffectAttribute, ref MonsterLossPoolAttribute lossPoolAttribute,
+        public void Execute(Entity entity, EnabledRefRO<LiveMonster> live,ref MonsterDefenseAttribute defenseAttribute,ref MonsterControlledEffectAttribute controlledEffectAttribute, in MonsterLossPoolAttribute lossPoolAttribute,
          ref AgentBody agentBody,ref AgentLocomotion agentLocomotion,
          ref AnimationControllerData animation, ref DynamicBuffer<GpuEcsAnimatorEventBufferElement> eventBuffer,
          ref LocalTransform transform, GpuEcsAnimatorAspect animatorAspect, [ChunkIndexInQuery] int index)

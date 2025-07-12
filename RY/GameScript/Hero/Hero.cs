@@ -49,8 +49,10 @@ namespace BlackDawn
         [HideInInspector] public EntityCommandBuffer entityCommandBuffer;
         //英雄主动技能引用
         [HideInInspector] public HeroSkills heroSkills;
-        //1左手中指延伸 2右手中指
+        //1左手中指延伸 2右手中指 3.元素护盾 4. 冰霜护盾
         public Transform[] skillTransforms;
+
+        
 
 
         //英雄实例

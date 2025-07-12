@@ -76,7 +76,7 @@ namespace BlackDawn.DOTS
         ///技能特殊的牵引和爆炸属性标签
         public bool enablePull;
         public bool enableExplosion;
-        
+
         //临时吸引值
         public float tempPull;
         //临时爆炸值
@@ -158,7 +158,7 @@ namespace BlackDawn.DOTS
         ///技能特殊的牵引和爆炸属性标签
         public bool enablePull;
         public bool enableExplosion;
-                //临时吸引值
+        //临时吸引值
         public float tempPull;
         //临时爆炸值
         public float tempExplosion;
@@ -218,7 +218,7 @@ namespace BlackDawn.DOTS
         public float tempSlow;
 
 
-        
+
         public bool critTriggered;
         public bool vulTriggered;
         public bool supTriggered;
@@ -287,7 +287,7 @@ namespace BlackDawn.DOTS
 
         public Entity pos7Ref;
         public Entity pos8Ref;
- 
+
     }
 
 
@@ -716,7 +716,7 @@ namespace BlackDawn.DOTS
     /// <summary>
     /// 用于渲染闪电链的二阶电弧
     /// </summary>
-        public struct SkillLightningChainRenderBTag : IComponentData
+    public struct SkillLightningChainRenderBTag : IComponentData
     {
 
         public float tagSurvivalTime;
@@ -748,14 +748,14 @@ namespace BlackDawn.DOTS
         public Entity collider6;
         public Entity collider7;
         public Entity collider8;
-                   
+
 
     }
 
-        /// <summary>
-        /// 元素爆发标签
-        /// </summary>
-        public struct SkillElementBurstTag : IComponentData
+    /// <summary>
+    /// 元素爆发标签
+    /// </summary>
+    public struct SkillElementBurstTag : IComponentData
     {
         public float tagSurvivalTime;
 
@@ -765,6 +765,27 @@ namespace BlackDawn.DOTS
         public bool enableSecondB;
         public float skillDamageChangeParTag;
         //等级
+        public int level;
+
+    }
+
+    /// <summary>
+    /// 开始添加到英雄身上,动态更新自身的减伤值和增伤值 --作为英雄内部结构体添加？
+    /// 分散添加， 独立于英雄自身结构体之外
+    /// </summary>
+    public struct SkillElementShieldTag_Hero : IComponentData
+    {
+
+        public bool enableSecondA;
+        public bool enableSecondB;
+
+        public bool active;
+        
+        //伤害减免
+        public float damageReduction;
+        //伤害加深
+        public float damageAmplification;
+
         public int level;
 
     }

@@ -163,6 +163,7 @@ namespace BlackDawn.DOTS
             //技能法阵的英雄自身伤害、DOT减免、控制抵消的判定
             HeroSkillArcanelCorcleDeal(ref state, ecb, arcanelCorcleHitsArray.Length, timer);
 
+
             ecbTemp.Playback(state.EntityManager);
             ecbTemp.Dispose();
 
@@ -255,5 +256,85 @@ namespace BlackDawn.DOTS
             }
 
         }
+
+        /// <summary>
+        /// 处理英雄护盾系统-可以设计为通用技能,目前是以动态计算的方式进行，其实可以通过拷贝值进行单次计算即可
+        /// 后期考虑英雄防御值的动态变化，这里采取事实计算的模式
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="ecb"></param>
+        /// <param name="timer"></param>
+        void HeroSkillShielDeal(ref SystemState state, EntityCommandBuffer ecb, float timer)
+        {
+                    foreach (var (transform, heroAttr, stateNoImmunity, skillElementShieldTag) in SystemAPI.Query<RefRW<HeroEntityMasterTag>, RefRW<HeroAttributeCmpt>,
+                    RefRW<HeroIntgratedNoImmunityState>, RefRW<SkillElementShieldTag_Hero>>())
+
+            {
+
+                if (!skillElementShieldTag.ValueRO.active)
+                {
+
+                    skillElementShieldTag.ValueRW.damageReduction = 0;
+                    skillElementShieldTag.ValueRW.damageAmplification = 0;
+                    heroAttr.ValueRW.attackAttribute.heroDynamicalAttack.tempMasterDamagePar = 1;
+
+                }
+                else
+                {
+                    skillElementShieldTag.ValueRW.damageReduction = 0.2f+0.01f*skillElementShieldTag.ValueRO.level;
+
+                    //这里主线程还要添加监听
+                    if (heroAttr.ValueRO.defenseAttribute.energy < 0.001f)
+                        skillElementShieldTag.ValueRW.active = false;
+
+                    // 1. 元素护盾：开启期间获得额外减伤（基于各自抗性，每种不超过5% + 升级加成）
+                        if (skillElementShieldTag.ValueRO.enableSecondA)
+                        {
+                            var resist = heroAttr.ValueRO.defenseAttribute.resistances;
+                            var lvl = skillElementShieldTag.ValueRO.level;
+
+                            // 每级提升上限
+                            float maxResistBonus = 0.05f + 0.01f * lvl;
+
+                            float frostDR = math.min(resist.frost * 0.2f / 1f * 0.01f, maxResistBonus);
+                            float lightningDR = math.min(resist.lightning * 0.2f / 1f * 0.01f, maxResistBonus);
+                            float poisonDR = math.min(resist.poison * 0.2f / 1f * 0.01f, maxResistBonus);
+                            float shadowDR = math.min(resist.shadow * 0.2f / 1f * 0.01f, maxResistBonus);
+                            float fireDR = math.min(resist.fire * 0.2f / 1f * 0.01f, maxResistBonus);
+
+                            // 总减伤,增加基础减伤20%
+                            float totalReduction = 0.2f + 0.01f * lvl + frostDR + lightningDR + poisonDR + shadowDR + fireDR;
+
+                            skillElementShieldTag.ValueRW.damageReduction = totalReduction;
+
+                        }
+
+
+                    // 2. 元素护盾开启期间造成伤害提升（20%基础+各元素伤害1/10，最高10%+升级0.5%/级）
+                    if (skillElementShieldTag.ValueRO.enableSecondB)
+                    {
+                        var elementDmg = heroAttr.ValueRO.attackAttribute.elementalDamage;
+                        var lvl = skillElementShieldTag.ValueRO.level;
+
+                        // 元素伤害加成上限
+                        float maxAmp = 0.10f + 0.005f * lvl;
+
+                        float ampFromElement = (elementDmg.frostDamage +
+                                                elementDmg.lightningDamage +
+                                                elementDmg.poisonDamage +
+                                                elementDmg.shadowDamage +
+                                                elementDmg.fireDamage) * 0.1f * 0.01f;
+
+                        float totalAmp = math.min(0.20f + ampFromElement, maxAmp);
+
+                        skillElementShieldTag.ValueRW.damageAmplification = totalAmp;
+                        heroAttr.ValueRW.attackAttribute.heroDynamicalAttack.tempMasterDamagePar =(1+ totalAmp);
+                    }
+                }
+
+            }
+
+         }
+   
     }
 }

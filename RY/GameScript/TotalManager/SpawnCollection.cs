@@ -150,11 +150,18 @@ namespace BlackDawn
             var linked = entityManager.GetBuffer<LinkedEntityGroup>(heroEntity);
   
             //链接渲染体， 专门处理英雄的链接渲染特效
-            var childLinkedEffects = linked[1].Value;
-            
+            var childLinkedEffects = linked[1].Value;         
             //添加结构， 失活
             ecb.AddComponent(childLinkedEffects, new HeroEffectsLinked());
             ecb.SetComponentEnabled<HeroEffectsLinked>(childLinkedEffects, false); // 设置为禁用
+
+            //加载动态伤害组件,用于设计技能回调
+           // ecb.AddComponent(heroEntity, new HeroDynamicalAttackAttribute() { });
+
+            //元素护盾预加载组件
+            ecb.AddComponent(heroEntity, new SkillElementShieldTag_Hero() { });
+
+
 
             ecb.Playback(entityManager);
             ecb.Dispose();

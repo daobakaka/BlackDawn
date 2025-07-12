@@ -196,6 +196,8 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
                 var tempText = TempDamageText[textRenderEntity];
                 var tempDotText = TempDotDamageText[textDotRenderEntity];
                 var rnd = new Unity.Mathematics.Random(a.rngState);
+                //补充元素护盾二阶段独立增伤值
+                var elementShieldBAddDamagepar = h.attackAttribute.heroDynamicalAttack.tempMasterDamagePar;
 
 
                 //0)累加命中记数器，这样可以变相的记录秒数
@@ -354,9 +356,9 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
                     // 7) 固定减伤（对瞬时+DOT，0-50%的固定随机减伤，用于控制数字跳动),这里的DOT伤害是计算过暴击和抗性之后,补充上伤害加深的debuffer
                     //这里乘以伤害变化参数
                     var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//固定随机减伤
-                    float finalDamage = (instTotal + dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification) * d.damageChangePar;
+                    float finalDamage = (instTotal + dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification) * d.damageChangePar*elementShieldBAddDamagepar;
                     //这里分离dot伤害
-                    float finalDotDamage = (dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification) * d.damageChangePar;
+                    float finalDotDamage = (dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification) * d.damageChangePar*elementShieldBAddDamagepar;
 
 
                     //（7-1）写回dot伤害的扣血总量,采用同样的buffer累加方式

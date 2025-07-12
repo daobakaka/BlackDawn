@@ -86,7 +86,7 @@ namespace BlackDawn
 
         PlagueSpread,      // 瘟疫蔓延：使目标敌人的毒素效果扩散至附近3个敌人  
                            // 释放方式：Passive；伤害类型：毒素
-
+        //元素护盾 25
         ElementShield,     // 元素护盾：生成一个护盾，按当前元素属性提供不同效果  
                            // 释放方式：Protect；伤害类型：全元素
 

@@ -563,7 +563,7 @@ namespace BlackDawn
     /// 攻击属性
     /// </summary>
     [Serializable]
-    public struct AttackAttribute :IComponentData
+    public struct AttackAttribute : IComponentData
     {
         /// <summary>攻击力</summary>
         public float attackPower;
@@ -615,8 +615,18 @@ namespace BlackDawn
         public float dotCritDamage;
         /// <summary>额外伤害</summary>
         public float extraDamage;
+        //动态伤害结构体
+        public HeroDynamicalAttackAttribute heroDynamicalAttack;
     }
+    // 动态伤害结构体,加在外面
+   [Serializable]
+    public struct HeroDynamicalAttackAttribute : IComponentData
+    {
 
+        public float tempMasterDamagePar;
+
+
+    }
     /// <summary>
     /// 技能伤害结构体  
     /// 包含技能等级、基础伤害、各伤害因子，以及可选的额外攻击属性  
@@ -667,6 +677,7 @@ namespace BlackDawn
         public Psionic psionic3;
         public Psionic psionic4;
     }
+   
     /// 单个加成的键值对  
     /// </summary>
     [Serializable]

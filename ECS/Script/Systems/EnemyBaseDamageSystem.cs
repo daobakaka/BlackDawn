@@ -47,8 +47,20 @@ namespace BlackDawn.DOTS
             _monsterAttack.Update(ref state);
             _heroIntgrateNoImmunityStateLookup.Update(ref state);
 
-            //获取收集世界单例
-            var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
+            //获取元素护盾单例组件,减伤独立计算
+            SkillElementShieldTag_Hero heroShieldReduction;
+            float tempReduciton = 0;
+
+            if (SystemAPI.TryGetSingleton<SkillElementShieldTag_Hero>(out heroShieldReduction))
+            {
+
+             tempReduciton = heroShieldReduction.damageReduction > 0 ? heroShieldReduction.damageReduction : 0;
+
+            }
+        
+
+                //获取收集世界单例
+          var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
            
             var hitsArray = detectionSystem.heroHitMonsterArray;
 
@@ -60,7 +72,8 @@ namespace BlackDawn.DOTS
                 HitArray = hitsArray,
                 MonsterAttrLookup = _monsterAttack,
                 RecordBufferLookup = _recordBufferLookup,
-                IntgratedNoImmunityStateLookup =_heroIntgrateNoImmunityStateLookup
+                IntgratedNoImmunityStateLookup = _heroIntgrateNoImmunityStateLookup,
+                ElementShieldReduction=tempReduciton,
                
             }.ScheduleParallel(hitsArray.Length, 64, state.Dependency);
 
@@ -95,6 +108,8 @@ namespace BlackDawn.DOTS
         [ReadOnly] public NativeArray<TriggerPairData> HitArray;
         [ReadOnly] public ComponentLookup<MonsterAttackAttribute> MonsterAttrLookup;
         [ReadOnly] public BufferLookup<HeroHitRecord> RecordBufferLookup;
+        //元素护盾减伤
+        [ReadOnly] public float ElementShieldReduction;
 
         public void Execute(int i)
         {
@@ -165,19 +180,19 @@ namespace BlackDawn.DOTS
                 a.defenseAttribute.armor,
                 h.armorBreak,
                 h.armorPenetration);
-            instTotal += d.attackPower * (1f - physSub)*inim.physicalDamageNoImmunity;
+            instTotal += d.attackPower * (1f - physSub) * inim.physicalDamageNoImmunity;
 
             var dotPhy = rnd.NextFloat() < d.dotProcChance.bleedChance
                 ? d.attackPower * (1f - physSub) * 0.3f
                 : 0f;
-            dotTotal += dotPhy*inim.dotNoImmunity;
+            dotTotal += dotPhy * inim.dotNoImmunity;
 
             // 火
             float fireSub = CalcElementSub(
                 a.defenseAttribute.resistances.fire,
                 h.elementalBreak,
                 h.elementalPenetration);
-            instTotal += d.elementalDamage.fireDamage * (1f - fireSub)*inim.elementDamageNoImmunity;
+            instTotal += d.elementalDamage.fireDamage * (1f - fireSub) * inim.elementDamageNoImmunity;
 
             var dotFire = rnd.NextFloat() < d.dotProcChance.fireChance
                 ? d.elementalDamage.fireDamage * (1f - fireSub) * 0.3f
@@ -258,10 +273,13 @@ namespace BlackDawn.DOTS
 
             // 7) 固定减伤（对瞬时+DOT）
             var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//固定随机减伤,0-50的固定随机减伤，模拟伤害波动
-            float finalDamage = (instTotal ) * (1f - a.defenseAttribute.damageReduction) * (1 - rd);
-            float finalDotDamage = (dotTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd);
+            float finalDamage = (instTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd)*(1-ElementShieldReduction);
+            float finalDotDamage = (dotTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd)*(1-ElementShieldReduction);
             // 8) 应用扣血 & 写回
+            if(ElementShieldReduction<=0)           
             a.defenseAttribute.hp = math.max(0f, a.defenseAttribute.hp - finalDamage);
+            else
+            a.defenseAttribute.energy =math.max(0f, a.defenseAttribute.energy - finalDamage/20);
 
             //攻击颜色变化状态
             // 9) 受击高亮

@@ -207,6 +207,8 @@ new ProfilerMarker("SkillDamageJob.Execute");
                 var tempText = TempDamageText[textRenderEntity];
                 var tempDotText = TempDotDamageText[textDotRenderEntity];
                 var rnd = new Unity.Mathematics.Random(a.rngState);
+                //补充元素护盾二阶段独立增伤值
+                var elementShieldBAddDamagepar = h.attackAttribute.heroDynamicalAttack.tempMasterDamagePar;
 
 
                 // 只有没记录过，才加进来,这里要注意并行写入限制，使用并行写入方法
@@ -357,8 +359,8 @@ new ProfilerMarker("SkillDamageJob.Execute");
                 var addBleedPool = Gain(d.instantPhysicalDamage, d.bleedDotDamage) * 0.25f;
 
 
-                l.firePool = math.min(l.firePool + addFrostPool, cap);
-                l.frostPool = math.min(l.frostPool + addFirePool, cap);
+                l.firePool = math.min(l.firePool + addFirePool, cap);
+                l.frostPool = math.min(l.frostPool + addFrostPool, cap);
                 l.lightningPool = math.min(l.lightningPool + addLightningPool, cap);
                 l.poisonPool = math.min(l.poisonPool + addPosionPool, cap);
                 l.shadowPool = math.min(l.shadowPool + addShadowPool, cap);
@@ -377,11 +379,12 @@ new ProfilerMarker("SkillDamageJob.Execute");
                 }
 
                 // 7) 固定减伤（对瞬时+DOT，0-50%的固定随机减伤，用于控制数字跳动),这里的DOT伤害是计算过暴击和抗性之后,补充上伤害加深的debuffer
+                //再乘以元素护盾技能二阶段的独立增伤值 elementShieldBAddDamagepar
                 //这里乘以伤害变化参数
                 var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//固定随机减伤
-                float finalDamage = (instTotal + dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification) * d.damageChangePar;
+                float finalDamage = (instTotal + dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification) * d.damageChangePar*elementShieldBAddDamagepar;
                 //这里分离dot伤害
-                float finalDotDamage = (dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification) * d.damageChangePar;
+                float finalDotDamage = (dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification) * d.damageChangePar*elementShieldBAddDamagepar;
 
 
                 //（7-1）写回dot伤害的扣血总量,采用同样的buffer累加方式

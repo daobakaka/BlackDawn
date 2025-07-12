@@ -26,6 +26,9 @@ namespace BlackDawn.DOTS
         public DotDamageAttribute dotDamageAttribute;
         //新增技能伤害结构体
         public SkillDamageAttribute skillDamageAttribute;
+        //新增动态伤害结构体
+        
+    
 
         public HeroAttributeCmpt(HeroAttributeCmpt other)
         {
@@ -38,7 +41,7 @@ namespace BlackDawn.DOTS
             controlAbilityAttribute = other.controlAbilityAttribute;
             controlledEffectAttribute = other.controlledEffectAttribute;
             weaponAttribute = other.weaponAttribute;
-            controlDamageAttribute= other.controlDamageAttribute;
+            controlDamageAttribute = other.controlDamageAttribute;
             dotDamageAttribute = other.dotDamageAttribute;
             skillDamageAttribute = other.skillDamageAttribute;
         }

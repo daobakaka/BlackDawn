@@ -59,24 +59,34 @@ namespace BlackDawn.DOTS
             //获取收集世界单例
             var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
             var hitsArray = detectionSystem.enemyFlightHitHeroArray;
+            SkillElementShieldTag_Hero heroShieldReduction;
+            float tempReduciton = 0;
+
+            if (SystemAPI.TryGetSingleton<SkillElementShieldTag_Hero>(out heroShieldReduction))
+            {
+
+             tempReduciton = heroShieldReduction.damageReduction > 0 ? heroShieldReduction.damageReduction : 0;
+
+            }
 
 
 
           
 
             // 2. 并行应用伤害 & 销毁敌人道具,传入记录buffer，用一个额外的类专门计算buffer的持续时间，初始默认1秒
-           // var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            // var ecb = new EntityCommandBuffer(Allocator.TempJob);
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             var ecbWriter = ecb.AsParallelWriter();
             state.Dependency = new ApplyEnemyPropDamageJob
             {
                 ECB = ecbWriter,
                 DamageParLookup = _damageParLookup,
-                AttrLookup = _heroAttrLookup,      
+                AttrLookup = _heroAttrLookup,
                 HitArray = hitsArray,
                 MonsterAttrLookup = _monsterAttrLookup,
                 RecordBufferLookup = _recordBufferLookup,
                 IntgratedNoImmunityStateLookup = _heroIntgrateNoImmunityStateLookup,
+                ElementShieldReduction=tempReduciton,
             }
             .ScheduleParallel(hitsArray.Length, 64, state.Dependency);
 
@@ -129,6 +139,8 @@ namespace BlackDawn.DOTS
         [ReadOnly] public NativeArray<TriggerPairData> HitArray;
         [ReadOnly] public ComponentLookup<MonsterAttackAttribute> MonsterAttrLookup;
         [ReadOnly] public BufferLookup<HitRecord> RecordBufferLookup;
+    //元素护盾减伤
+        [ReadOnly] public float ElementShieldReduction;
 
         public void Execute(int i)
         {
@@ -137,7 +149,7 @@ namespace BlackDawn.DOTS
             Entity prop = pair.EntityA;
             Entity target = pair.EntityB;
 
-        
+
             if (!DamageParLookup.HasComponent(prop))
             {
                 prop = pair.EntityB;
@@ -146,7 +158,7 @@ namespace BlackDawn.DOTS
             var p = DamageParLookup[prop].monsterRef;
 
 
-           
+
             //判断是否有组件
             if (!MonsterAttrLookup.HasComponent(p)) return;
 
@@ -167,7 +179,7 @@ namespace BlackDawn.DOTS
 
 
             // 2) 读取组件 & 随机数
-            var h =   MonsterAttrLookup[DamageParLookup[prop].monsterRef];
+            var h = MonsterAttrLookup[DamageParLookup[prop].monsterRef];
             var a = AttrLookup[target];
             var d = h;
             var inim = IntgratedNoImmunityStateLookup[target];
@@ -176,29 +188,29 @@ namespace BlackDawn.DOTS
             // 3) 闪避判定
             if (rnd.NextFloat() < a.defenseAttribute.dodge)
             {
-               // DevDebug.Log("随机数"+rnd.NextFloat()+"闪避率"+a.defenseAttribute.dodge);
+                // DevDebug.Log("随机数"+rnd.NextFloat()+"闪避率"+a.defenseAttribute.dodge);
                 a.defenseAttribute.rngState = rnd.state;
                 ECB.SetComponent(i, target, a);
                 return;
             }
-           // DevDebug.Log("执行多线程2");
+            // DevDebug.Log("执行多线程2");
 
             // 4) 计算缩减后的“瞬时伤害”和“DOT伤害”
             float instTotal = 0f, dotTotal = 0f;
-            
-                // 物理子计算
-                float CalcPhysicalSub(float armor, float breakVal, float pen)
-                {
-                    float eff = armor - (breakVal + math.max(0f, 1f - pen) * armor);
-                    return eff / (eff + 100f);
-                }
 
-                // 元素子计算
-                float CalcElementSub(float res, float breakVal, float pen)
-                {
-                    float eff = res - (breakVal + math.max(0f, 1f - pen) * res);
-                    return eff / (eff + 50f);
-                }
+            // 物理子计算
+            float CalcPhysicalSub(float armor, float breakVal, float pen)
+            {
+                float eff = armor - (breakVal + math.max(0f, 1f - pen) * armor);
+                return eff / (eff + 100f);
+            }
+
+            // 元素子计算
+            float CalcElementSub(float res, float breakVal, float pen)
+            {
+                float eff = res - (breakVal + math.max(0f, 1f - pen) * res);
+                return eff / (eff + 50f);
+            }
 
             // 物理
             float physSub = CalcPhysicalSub(
@@ -278,17 +290,17 @@ namespace BlackDawn.DOTS
             //dot dot伤害也能堆叠反应池
 
             float origHp = a.defenseAttribute.originalHp;
-                const float mult = 5f, cap = 200f;
-                float Gain(float raw, float dot) => math.min(((raw + dot) / origHp) * 100f * mult, cap);
+            const float mult = 5f, cap = 200f;
+            float Gain(float raw, float dot) => math.min(((raw + dot) / origHp) * 100f * mult, cap);
 
-                a.lossPoolAttribute.firePool = math.min(a.lossPoolAttribute.firePool + Gain(h.elementalDamage.fireDamage, dotFire), cap);
-                a.lossPoolAttribute.frostPool = math.min(a.lossPoolAttribute.frostPool + Gain(h.elementalDamage.frostDamage, dotFrost), cap);
-                a.lossPoolAttribute.lightningPool = math.min(a.lossPoolAttribute.lightningPool + Gain(h.elementalDamage.lightningDamage, dotFrost), cap);
-                a.lossPoolAttribute.poisonPool = math.min(a.lossPoolAttribute.poisonPool + Gain(h.elementalDamage.poisonDamage, dotPoison), cap);
-                a.lossPoolAttribute.shadowPool = math.min(a.lossPoolAttribute.shadowPool + Gain(h.elementalDamage.shadowDamage, dotShadow), cap);
-                //流血池只使用25%物理伤害计算
-                a.lossPoolAttribute.bleedPool = math.min(a.lossPoolAttribute.bleedPool + Gain(h.attackPower, dotPhy), cap) * 0.25f;
-            
+            a.lossPoolAttribute.firePool = math.min(a.lossPoolAttribute.firePool + Gain(h.elementalDamage.fireDamage, dotFire), cap);
+            a.lossPoolAttribute.frostPool = math.min(a.lossPoolAttribute.frostPool + Gain(h.elementalDamage.frostDamage, dotFrost), cap);
+            a.lossPoolAttribute.lightningPool = math.min(a.lossPoolAttribute.lightningPool + Gain(h.elementalDamage.lightningDamage, dotFrost), cap);
+            a.lossPoolAttribute.poisonPool = math.min(a.lossPoolAttribute.poisonPool + Gain(h.elementalDamage.poisonDamage, dotPoison), cap);
+            a.lossPoolAttribute.shadowPool = math.min(a.lossPoolAttribute.shadowPool + Gain(h.elementalDamage.shadowDamage, dotShadow), cap);
+            //流血池只使用25%物理伤害计算
+            a.lossPoolAttribute.bleedPool = math.min(a.lossPoolAttribute.bleedPool + Gain(h.attackPower, dotPhy), cap) * 0.25f;
+
 
             // 6) 格挡判定（仅对瞬时）,随机减免20%-80%伤害
             if (rnd.NextFloat() < a.defenseAttribute.block)
@@ -299,10 +311,13 @@ namespace BlackDawn.DOTS
 
             // 7) 固定减伤（对瞬时+DOT）
             var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//固定随机减伤,0-50的固定随机减伤，模拟伤害波动
-            float finalDamage = (instTotal + dotTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd);
-
+            float finalDamage = (instTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd)*(1-ElementShieldReduction);
+            float finalDotDamage = (dotTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd)*(1-ElementShieldReduction);
             // 8) 应用扣血 & 写回
+            if(ElementShieldReduction<=0)           
             a.defenseAttribute.hp = math.max(0f, a.defenseAttribute.hp - finalDamage);
+            else
+            a.defenseAttribute.energy =math.max(0f, a.defenseAttribute.energy - finalDamage/100);
 
             //攻击颜色变化状态
             // 9) 受击高亮
@@ -311,7 +326,7 @@ namespace BlackDawn.DOTS
                 //var under = LinkedLookup[target][1].Value;
                 a.lossPoolAttribute.attackTimer = 0.1f;
                 //  ECB.SetComponent(i, under, new UnderAttackColor { Value = new float4(1f, 1f, 1f, 1f) });
-            
+
             }
 
             // 9) 保存新的 RNG 状态
@@ -322,8 +337,8 @@ namespace BlackDawn.DOTS
 
             // —— 10 标记删除，在mono中删除
             var pp = DamageParLookup[prop];
-             pp.destory = true;
-          //  ECB.SetComponent(i, prop, pp);
+            pp.destory = true;
+            //  ECB.SetComponent(i, prop, pp);
 
 
         }
