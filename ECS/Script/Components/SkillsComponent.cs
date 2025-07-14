@@ -770,6 +770,7 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
+    /// 技能元素护盾
     /// 开始添加到英雄身上,动态更新自身的减伤值和增伤值 --作为英雄内部结构体添加？
     /// 分散添加， 独立于英雄自身结构体之外
     /// </summary>
@@ -780,13 +781,51 @@ namespace BlackDawn.DOTS
         public bool enableSecondB;
 
         public bool active;
-        
+
         //伤害减免
         public float damageReduction;
         //伤害加深
         public float damageAmplification;
 
         public int level;
+
+    }
+
+
+    /// <summary>
+    /// 技能冰霜护盾 
+    /// 开始添加到英雄身上,动态更新自身的减伤值和增伤值 --作为英雄内部结构体添加？
+    /// 分散添加， 独立于英雄自身结构体之外
+    /// </summary>
+    public struct SkillFrostShieldTag_Hero : IComponentData
+    {
+        //持续60秒
+        public float tagSurvivalTime;
+        public bool enableSecondA;
+        public bool enableSecondB;
+
+        public bool active;
+
+        public bool relaseSkill;
+
+        public float iceConeDamage;
+
+        //伤害减免
+        public float damageReduction;
+        //伤害加深
+        public float damageAmplification;
+
+        public int level;
+
+    }
+    /// <summary>
+    /// 冰霜护盾A变体生成冰刺技能
+    /// </summary>
+    public struct SkillFrostShieldTagA : IComponentData
+    { 
+        //默认存活时间为特效时间
+         public float tagSurvivalTime;
+
 
     }
 

@@ -275,11 +275,31 @@ namespace BlackDawn.DOTS
             var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//固定随机减伤,0-50的固定随机减伤，模拟伤害波动
             float finalDamage = (instTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd)*(1-ElementShieldReduction);
             float finalDotDamage = (dotTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd)*(1-ElementShieldReduction);
-            // 8) 应用扣血 & 写回
-            if(ElementShieldReduction<=0)           
-            a.defenseAttribute.hp = math.max(0f, a.defenseAttribute.hp - finalDamage);
+           
+           
+            // 8) 应用扣血 & 写回           
+            if (ElementShieldReduction <= 0)
+            {
+                var tempFinalDamage = finalDamage;
+
+                // 1. 优先寒冰屏障
+                float frostBarrierAbsorb = math.min(a.defenseAttribute.frostBarrier, tempFinalDamage);
+                a.defenseAttribute.frostBarrier -= frostBarrierAbsorb;
+                tempFinalDamage -= frostBarrierAbsorb;
+
+                // 2. 其次通用屏障
+                float barrierAbsorb = math.min(a.defenseAttribute.universalBarrier, tempFinalDamage);
+                a.defenseAttribute.universalBarrier -= barrierAbsorb;
+                tempFinalDamage -= barrierAbsorb;
+
+                // 3. 剩余伤害再扣生命
+                if (tempFinalDamage > 0f)
+                    a.defenseAttribute.hp = math.max(0f, a.defenseAttribute.hp - tempFinalDamage);
+            }
             else
-            a.defenseAttribute.energy =math.max(0f, a.defenseAttribute.energy - finalDamage/20);
+            {
+                a.defenseAttribute.energy = math.max(0f, a.defenseAttribute.energy - finalDamage / 20);
+            }
 
             //攻击颜色变化状态
             // 9) 受击高亮

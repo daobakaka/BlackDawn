@@ -228,7 +228,6 @@ new ProfilerMarker("SkillBurstDamageJob.Execute");
                     var tempText = TempDamageText[textRenderEntity];
                     var tempDotText = TempDotDamageText[textDotRenderEntity];
                     var rnd = new Unity.Mathematics.Random(a.rngState);
-                    var e = ElementBurstLookup[skill];
                     //补充元素护盾二阶段独立增伤值
                     var elementShieldBAddDamagepar = h.attackAttribute.heroDynamicalAttack.tempMasterDamagePar;
 
@@ -377,38 +376,42 @@ new ProfilerMarker("SkillBurstDamageJob.Execute");
 
                     //5-1）防止写回覆盖这里增加 元素爆发的第二阶段池化逻辑！！！，不能以通用ECB 写回同一个组件，否则会发生叠加？
                     //这里直接覆盖
-
-                      if (e.enableSecondB)
+                    //进行不同技能的覆盖性判断
+                    if (ElementBurstLookup.HasComponent(skill))
                     {
+                        var e = ElementBurstLookup[skill];
+                        if (e.enableSecondB)
+                        {
 
-                        // 掩码判定（damage > 0f 则为1，否则为0）
-                        float fireMask = math.step(1e-6f, d.fireDotDamage);
-                        float frostMask = math.step(1e-6f, d.frostDotDamage);
-                        float lightningMask = math.step(1e-6f, d.lightningDotDamage);
-                        float poisonMask = math.step(1e-6f, d.poisonDotDamage);
-                        float shadowMask = math.step(1e-6f, d.shadowDotDamage);
-                        float bleedMask = math.step(1e-6f, d.bleedDotDamage);
+                            // 掩码判定（damage > 0f 则为1，否则为0）
+                            float fireMask = math.step(1e-6f, d.fireDotDamage);
+                            float frostMask = math.step(1e-6f, d.frostDotDamage);
+                            float lightningMask = math.step(1e-6f, d.lightningDotDamage);
+                            float poisonMask = math.step(1e-6f, d.poisonDotDamage);
+                            float shadowMask = math.step(1e-6f, d.shadowDotDamage);
+                            float bleedMask = math.step(1e-6f, d.bleedDotDamage);
 
-                        // 每种元素的池化增量（你可以自定义增长公式，比如基础100+等级*10，也可以按伤害比例加）
-                        addFirePool = fireMask * (100f + e.level * 10f);
-                        addFrostPool= frostMask * (100f + e.level * 10f);
-                        addLightningPool  = lightningMask * (100f + e.level * 10f);
-                        addPoisonPool = poisonMask * (100f + e.level * 10f);
-                        addShadowPool = shadowMask * (100f + e.level * 10f);
-                        addBleedPool = bleedMask * (100f + e.level * 10);
+                            // 每种元素的池化增量（你可以自定义增长公式，比如基础100+等级*10，也可以按伤害比例加）
+                            addFirePool = fireMask * (100f + e.level * 10f);
+                            addFrostPool = frostMask * (100f + e.level * 10f);
+                            addLightningPool = lightningMask * (100f + e.level * 10f);
+                            addPoisonPool = poisonMask * (100f + e.level * 10f);
+                            addShadowPool = shadowMask * (100f + e.level * 10f);
+                            addBleedPool = bleedMask * (100f + e.level * 10);
 
-                        // 原有池化值 + 增量，并钳制到cap
-                        l.firePool = math.min(l.firePool + addFirePool, cap);
-                        l.frostPool = math.min(l.frostPool + addFrostPool, cap);
-                        l.lightningPool = math.min(l.lightningPool + addLightningPool, cap);
-                        l.poisonPool = math.min(l.poisonPool + addPoisonPool, cap);
-                        l.shadowPool = math.min(l.shadowPool + addShadowPool, cap);
-                        l.bleedPool = math.min(l.bleedPool + addBleedPool, cap);
+                            // 原有池化值 + 增量，并钳制到cap
+                            l.firePool = math.min(l.firePool + addFirePool, cap);
+                            l.frostPool = math.min(l.frostPool + addFrostPool, cap);
+                            l.lightningPool = math.min(l.lightningPool + addLightningPool, cap);
+                            l.poisonPool = math.min(l.poisonPool + addPoisonPool, cap);
+                            l.shadowPool = math.min(l.shadowPool + addShadowPool, cap);
+                            l.bleedPool = math.min(l.bleedPool + addBleedPool, cap);
 
+                        }
                     }
 
                     // 6) 格挡判定（仅对瞬时）,随机减免20%-80%伤害
-                    var tempBlock = false;
+                        var tempBlock = false;
                     if (rnd.NextFloat() < a.block)
                     {
                         float br = math.lerp(0.2f, 0.8f, rnd.NextFloat());
@@ -419,9 +422,9 @@ new ProfilerMarker("SkillBurstDamageJob.Execute");
                     // 7) 固定减伤（对瞬时+DOT，0-50%的固定随机减伤，用于控制数字跳动),这里的DOT伤害是计算过暴击和抗性之后,补充上伤害加深的debuffer
                     //这里乘以伤害变化参数
                     var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//固定随机减伤
-                    float finalDamage = (instTotal + dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification) * d.damageChangePar*elementShieldBAddDamagepar;
+                    float finalDamage = (instTotal + dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification) * d.damageChangePar*(elementShieldBAddDamagepar);
                     //这里分离dot伤害
-                    float finalDotDamage = (dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification) * d.damageChangePar*elementShieldBAddDamagepar;
+                    float finalDotDamage = (dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification) * d.damageChangePar*(elementShieldBAddDamagepar);
 
 
                     //（7-1）写回dot伤害的扣血总量,采用同样的buffer累加方式

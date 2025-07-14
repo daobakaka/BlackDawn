@@ -123,7 +123,7 @@ namespace BlackDawn.DOTS
             //最开始的全局持续性技能消除
             foreach (var (skillCal, entity) in SystemAPI.Query<RefRO<SkillsOverTimeDamageCalPar>>().WithEntityAccess())
             {
-
+       
                 if (skillCal.ValueRO.destory == true)
 
                     ecb.DestroyEntity(entity);
@@ -131,9 +131,11 @@ namespace BlackDawn.DOTS
             }
 
             //由技能生成的爆发式技能
-            foreach (var (skillCal, entity) in SystemAPI.Query<RefRO<SkillsBurstDamageCalPar>>().WithEntityAccess())
+            foreach (var (skillCal, entity) in SystemAPI.Query<RefRW<SkillsBurstDamageCalPar>>().WithEntityAccess())
             {
 
+                //爆发时间自增
+                skillCal.ValueRW.burstTime += timer;
                 if (skillCal.ValueRO.destory == true)
 
                     ecb.DestroyEntity(entity);

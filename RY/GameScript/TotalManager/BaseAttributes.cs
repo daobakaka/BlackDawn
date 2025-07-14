@@ -447,6 +447,11 @@ namespace BlackDawn
 
         /// <summary>格挡率</summary>
         public float block;
+        /// <summary>屏障</summary>
+        public float universalBarrier;
+
+        ///<summary>寒冰屏障</summary>
+        public float frostBarrier;
 
         /// <summary>RNGState,随机数据状态，为ECS系统生成随机数</summary>
         public uint rngState;

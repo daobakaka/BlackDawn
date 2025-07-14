@@ -89,6 +89,8 @@ namespace BlackDawn
 
             var dotDamageSystemHandle = World.DefaultGameObjectInjectionWorld.Unmanaged.GetExistingUnmanagedSystem<DotDamageSystem>();
             ref var dotDamageSystem = ref World.DefaultGameObjectInjectionWorld.Unmanaged.GetUnsafeSystemRef<DotDamageSystem>(dotDamageSystemHandle);
+
+            var runTimeHeroCmp = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
             switch (iD)
 
             {
@@ -757,6 +759,66 @@ namespace BlackDawn
                     }
 
                     break;
+
+                //冰霜护盾 18
+                case HeroSkillID.FrostShield:
+                 
+                    var skillFrostShieldCmp = _entityManager.GetComponentData<SkillFrostShieldTag_Hero>(_heroEntity);
+                  
+                    switch (psionicType)
+
+                    {
+
+                        case HeroSkillPsionicType.Basic:
+                            
+                           
+                                if (runTimeHeroCmp.defenseAttribute.energy > 100)
+                                {
+                                    //冰霜护盾吸收公式
+                                    runTimeHeroCmp.defenseAttribute.frostBarrier = 3000 + (runTimeHeroCmp.defenseAttribute.energy) * (1 + runTimeHeroCmp.attackAttribute.attackPower / 100) * (1 + runTimeHeroCmp.attackAttribute.elementalDamage.frostDamage);
+                                    runTimeHeroCmp.defenseAttribute.energy = 0;
+                                    skillFrostShieldCmp.active = true;
+                                    skillFrostShieldCmp.relaseSkill = true;
+                                    //初始化护盾存在时间为60秒
+                                    skillFrostShieldCmp.tagSurvivalTime = 60;
+                                    _entityManager.SetComponentData(_heroEntity, skillFrostShieldCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                    SkillSetActiveFrostShield(true);
+                                }
+                          
+
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 100)
+                                {
+                                    //冰霜护盾吸收公式
+                                    runTimeHeroCmp.defenseAttribute.frostBarrier = 3000 + (runTimeHeroCmp.defenseAttribute.energy) * (1 + runTimeHeroCmp.attackAttribute.attackPower / 100) * (1 + runTimeHeroCmp.attackAttribute.elementalDamage.frostDamage);
+                                    runTimeHeroCmp.defenseAttribute.energy = 0;
+                                    skillFrostShieldCmp.active = true;
+                                    //初始化护盾存在时间为60秒
+                                    skillFrostShieldCmp.tagSurvivalTime = 60;
+                                   skillFrostShieldCmp.relaseSkill = true;
+                                    //释放冰刺
+                                    skillFrostShieldCmp.enableSecondA = true;
+                                    //储存阶段冰刺伤害
+                                    skillFrostShieldCmp.iceConeDamage = runTimeHeroCmp.defenseAttribute.frostBarrier;
+                                    //开启A阶段控制标识
+                                   _entityManager.SetComponentData(_heroEntity, skillFrostShieldCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                
+                                    SkillSetActiveFrostShield(true);
+                                }
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+                            break;
+
+                    }
+            
+                    break;
+
+
                 //连锁吞噬 ：瞬时 19
                 case HeroSkillID.ChainDevour:
                     //开启连锁吞噬碰撞，
@@ -983,7 +1045,7 @@ namespace BlackDawn
                 //元素护盾 25 保护/唯一，保护技能25号元素可以仅添加渲染即可
                 case HeroSkillID.ElementShield:
                     var skillElementShieldCmp = _entityManager.GetComponentData<SkillElementShieldTag_Hero>(_heroEntity);
-                    var runTimeHeroCmp = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
+                   
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
@@ -1003,12 +1065,12 @@ namespace BlackDawn
 
                                 skillElementShieldCmp.active = false;
                                 _entityManager.SetComponentData(_heroEntity, skillElementShieldCmp);
-                                  SkillSetActiveElementShield(false);
-                        }
+                                SkillSetActiveElementShield(false);
+                            }
 
                             break;
                         case HeroSkillPsionicType.PsionicA:
-                          if (!skillElementShieldCmp.active)
+                            if (!skillElementShieldCmp.active)
                             {
                                 if (runTimeHeroCmp.defenseAttribute.energy > 20)
                                 {
@@ -1025,12 +1087,12 @@ namespace BlackDawn
 
                                 skillElementShieldCmp.active = false;
                                 _entityManager.SetComponentData(_heroEntity, skillElementShieldCmp);
-                                  SkillSetActiveElementShield(false);
-                        }
+                                SkillSetActiveElementShield(false);
+                            }
 
                             break;
                         case HeroSkillPsionicType.PsionicB:
-                         if (!skillElementShieldCmp.active)
+                            if (!skillElementShieldCmp.active)
                             {
                                 if (runTimeHeroCmp.defenseAttribute.energy > 20)
                                 {
@@ -1047,11 +1109,11 @@ namespace BlackDawn
 
                                 skillElementShieldCmp.active = false;
                                 _entityManager.SetComponentData(_heroEntity, skillElementShieldCmp);
-                                  SkillSetActiveElementShield(false);
-                        }
+                                SkillSetActiveElementShield(false);
+                            }
                             break;
                         case HeroSkillPsionicType.PsionicAB:
-                         if (!skillElementShieldCmp.active)
+                            if (!skillElementShieldCmp.active)
                             {
                                 if (runTimeHeroCmp.defenseAttribute.energy > 20)
                                 {
@@ -1069,8 +1131,8 @@ namespace BlackDawn
 
                                 skillElementShieldCmp.active = false;
                                 _entityManager.SetComponentData(_heroEntity, skillElementShieldCmp);
-                                  SkillSetActiveElementShield(false);
-                        }
+                                SkillSetActiveElementShield(false);
+                            }
                             break;
 
 
@@ -2322,10 +2384,17 @@ namespace BlackDawn
 
         //元素护盾技能设置,outer
         public void SkillSetActiveElementShield(bool active)
-        {           
+        {
 
             Hero.instance.skillTransforms[3].gameObject.SetActive(active);
-           
+
+        }
+        //冰霜护盾技能设置,outer
+          public void SkillSetActiveFrostShield(bool active)
+        {
+
+            Hero.instance.skillTransforms[4].gameObject.SetActive(active);
+
         }
 
         #endregion

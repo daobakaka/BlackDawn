@@ -65,7 +65,7 @@ namespace BlackDawn
 
         FlameCharge,       // 烈焰冲锋：向前冲刺，路径上留下火焰轨迹（持续燃烧3秒）  
                            // 释放方式：Dash；伤害类型：火焰
-
+        //冰霜护盾 18
         FrostShield,       // 冰霜护盾：生成一个吸收300%攻击力的冰盾，破裂时冻结周围敌人2秒  
                            // 释放方式：Protect；伤害类型：冰霜
         //连锁吞噬 19
@@ -219,6 +219,8 @@ namespace BlackDawn
         FrostNovaB,
         LightningChainRendering,
         LightningChainCollder,
+        FrostShieldA,//寒冰护盾
+        
 
     }
     /// <summary>

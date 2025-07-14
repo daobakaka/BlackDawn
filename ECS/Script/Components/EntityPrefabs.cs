@@ -143,6 +143,7 @@ namespace BlackDawn.DOTS
                     HeroSkillAssistive_FrostNovaB = GetSafe(auth.skillAssistivePrefabs, HeroSkillAssistiveID.FrostNovaB),//寒霜新星第二阶段
                     HeroSkillAssistive_LightningChainRendering =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.LightningChainRendering),//闪电链渲染
                     HeroSkillAssistive_LightningChainCollider =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.LightningChainCollder),//闪电链碰撞体
+                    HeroSkillAssistive_FrostShieldA =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.FrostShieldA),//冰霜护盾
 
 
 
@@ -377,6 +378,8 @@ namespace BlackDawn.DOTS
             public Entity HeroSkillAssistive_FrostNovaB;//寒霜新星第二阶段
             public Entity HeroSkillAssistive_LightningChainRendering;//闪电链渲染体
             public Entity HeroSkillAssistive_LightningChainCollider;//闪电链碰撞体
+            public Entity HeroSkillAssistive_FrostShieldA;//冰霜护盾           
+
             // Monster Skills
         public Entity MonsterSkill_DeathPulse;
             // Monster Entities

@@ -109,7 +109,9 @@ namespace BlackDawn.DOTS
             //技能 冰霜新星
             SkillCallBack_FrostNova(timer, ecb, _prefabs);
             //通用护盾技能 1- 元素护盾
-            SkillCallBack_ShieldDeal();
+            SkillCallBack_ElementShieldDeal();
+            //通用-冰霜护盾
+            SkillCallBack_FrostShieldDeal(timer,_prefabs,ecb);
 
             //技能闪电链 30
             SkillCallBack_LightningChain(timer, ecb, _prefabs);
@@ -500,7 +502,6 @@ namespace BlackDawn.DOTS
             .ForEach((Entity entity, VisualEffect vfx, ref SkillElementBurstTag skillTag,ref OverlapBurstQueryCenter overlap, ref SkillsBurstDamageCalPar skillDamageCal, ref LocalTransform transform)=>
             {
                 skillTag.tagSurvivalTime -= timer;
-                skillDamageCal.burstTime += timer;
                 if (skillTag.tagSurvivalTime <= 0)
                     skillDamageCal.destory = true;
                 //更新碰撞体中心位置
@@ -910,13 +911,13 @@ namespace BlackDawn.DOTS
 
         }
         /// <summary>
-        ///  处理英雄护盾系统-可以设计为通用技能,目前是以动态计算的方式进行，其实可以通过拷贝值进行单次计算即可
+        ///  处理英雄元素护盾系统-目前是以动态计算的方式进行，其实可以通过拷贝值进行单次计算即可
         /// 后期考虑英雄防御值的动态变化，这里采取事实计算的模式
         /// </summary>
-        void SkillCallBack_ShieldDeal()
+        void SkillCallBack_ElementShieldDeal()
         { 
              Entities
-            .WithName("HeroSkillShieldDeal")
+            .WithName("HeroSkillElementShieldDeal")
             .ForEach((
                 ref HeroEntityMasterTag masterTag,
                 ref HeroAttributeCmpt heroAttr,
@@ -979,9 +980,82 @@ namespace BlackDawn.DOTS
                 }
             })
             .WithoutBurst().Run();
+        }
+        //冰霜护盾 处理,寒冰持续时间60秒？
+        void SkillCallBack_FrostShieldDeal(float timer, ScenePrefabsSingleton prefab, EntityCommandBuffer ecb)
+        {
+            Entities
+            .WithName("HeroSkillFrostShieldDeal")
+            .ForEach((ref HeroEntityMasterTag masterTag,
+                ref HeroAttributeCmpt heroAttr,
+                ref HeroIntgratedNoImmunityState stateNoImmunity,
+                ref SkillFrostShieldTag_Hero skillFrostShieldTag
+                ) =>
+                {
+                    skillFrostShieldTag.tagSurvivalTime -= timer;
+                    //这里也可以执行单次检测？
+                    if (skillFrostShieldTag.relaseSkill && heroAttr.defenseAttribute.frostBarrier <= 0)
+                    {
+                        //DevDebug.LogError("冰霜护盾关闭");
+                        skillFrostShieldTag.relaseSkill = false;
+                        _heroSkills.SkillSetActiveFrostShield(false);
+                        if (skillFrostShieldTag.enableSecondA)
+                        {
+                            //DevDebug.LogError("释放冰刺");   
+                            skillFrostShieldTag.enableSecondA = false;
+                            var iceCone = ecb.Instantiate(prefab.HeroSkillAssistive_FrostShieldA);
+                            var iceConeTras = _transformLookup[_heroEntity];
+                            iceConeTras.Scale = 3;
+                            ecb.SetComponent(iceCone, iceConeTras);
+                            //单次伤害采用爆发伤害计算
+                            var skillBurstDamageCal = new SkillsBurstDamageCalPar() { };
+                            //赋值冰刺伤害,赋英雄引用，赋冻结值,物理，触发冻伤
+                            skillBurstDamageCal.frostDamage = skillFrostShieldTag.iceConeDamage;
+                            skillBurstDamageCal.instantPhysicalDamage = skillFrostShieldTag.iceConeDamage;
+                            skillBurstDamageCal.frostDotDamage = skillFrostShieldTag.iceConeDamage;
+                            skillBurstDamageCal.damageChangePar = 1;//默认变化参数为1
+                            skillBurstDamageCal.heroRef = _heroEntity;
+                            skillBurstDamageCal.tempFreeze = 300;
+                            ecb.AddComponent(iceCone, skillBurstDamageCal);
+                            var filter = new CollisionFilter
+                            {
+                                //属于道具层
+                                BelongsTo = 1u << 10,
+                                //检测敌人
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlapBurst = new OverlapBurstQueryCenter { center = _transformLookup[_heroEntity].Position, radius = 7, filter = filter, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                            //添加瞬时伤害碰撞体
+                            ecb.AddComponent(iceCone, overlapBurst);
+                            //添加A阶段控制标签
+                            ecb.AddComponent(iceCone, new SkillFrostShieldTagA() { tagSurvivalTime = 3 });
+
+                        }
 
 
+                    }
+                    //通过增量时间量度 进行单次判断
+                    if (skillFrostShieldTag.tagSurvivalTime <= 0 && skillFrostShieldTag.tagSurvivalTime > -timer)
+                    {
+                        _heroSkills.SkillSetActiveFrostShield(false);
+                        heroAttr.defenseAttribute.frostBarrier = 0;
+                    }
 
+                }).WithoutBurst().Run();
+
+            Entities
+            .ForEach((ref SkillFrostShieldTagA skillTag,ref SkillsBurstDamageCalPar skillCalPar,ref OverlapBurstQueryCenter burstQueryCenter)=>
+            {
+
+                skillTag.tagSurvivalTime -= timer;
+                //缩小碰撞避免持续检测
+                if (skillTag.tagSurvivalTime <= 2.5f && skillTag.tagSurvivalTime > 2.5f - timer)
+                    burstQueryCenter.radius = 0.01f;
+                if (skillTag.tagSurvivalTime <= 0)
+                        skillCalPar.destory = true;
+
+            }).WithoutBurst().Run();
 
 
 
