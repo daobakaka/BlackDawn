@@ -822,11 +822,22 @@ namespace BlackDawn.DOTS
     /// 冰霜护盾A变体生成冰刺技能
     /// </summary>
     public struct SkillFrostShieldTagA : IComponentData
-    { 
+    {
         //默认存活时间为特效时间
-         public float tagSurvivalTime;
+        public float tagSurvivalTime;
 
 
+    }
+    /// <summary>
+    /// 进击 保护类技能
+    /// </summary>
+    public struct SkillAdvanceTag_Hero : IComponentData
+    {
+
+        public float tagSurvivalTime;
+        public bool active;
+        public bool enableSecondA;
+        public int level;
     }
 
 }

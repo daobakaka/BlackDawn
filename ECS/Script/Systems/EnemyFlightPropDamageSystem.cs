@@ -311,8 +311,8 @@ namespace BlackDawn.DOTS
 
             // 7) 固定减伤（对瞬时+DOT）
             var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//固定随机减伤,0-50的固定随机减伤，模拟伤害波动
-            float finalDamage = (instTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd)*(1-ElementShieldReduction);
-            float finalDotDamage = (dotTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd)*(1-ElementShieldReduction);
+              float finalDamage = (instTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd)*(1-ElementShieldReduction)*(1-a.defenseAttribute.tempDefense.advanceDamageReduction)*(1-a.defenseAttribute.tempDefense.elmentShieldDamageReduction);
+            float finalDotDamage = (dotTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd)*(1-ElementShieldReduction)*(1-a.defenseAttribute.tempDefense.advanceDamageReduction)*(1-a.defenseAttribute.tempDefense.elmentShieldDamageReduction);
             // 8) 应用扣血 & 写回,添加护盾和寒冰屏障的版本           
             if (ElementShieldReduction <= 0)
             {

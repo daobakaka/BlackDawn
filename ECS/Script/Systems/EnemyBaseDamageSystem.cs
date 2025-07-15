@@ -102,14 +102,15 @@ namespace BlackDawn.DOTS
         public EntityCommandBuffer.ParallelWriter ECB;
         //这里就是计算英雄自身扣血逻辑
         [ReadOnly] public ComponentLookup<HeroAttributeCmpt> AttrLookup;
-        //英雄的相关免疫计算
+        //英雄的相关免疫计算，已经计算过了
         [ReadOnly] public ComponentLookup<HeroIntgratedNoImmunityState> IntgratedNoImmunityStateLookup;
         // [ReadOnly] public BufferLookup<LinkedEntityGroup> LinkedLookup;
         [ReadOnly] public NativeArray<TriggerPairData> HitArray;
         [ReadOnly] public ComponentLookup<MonsterAttackAttribute> MonsterAttrLookup;
         [ReadOnly] public BufferLookup<HeroHitRecord> RecordBufferLookup;
-        //元素护盾减伤
+        //元素护盾减伤 -- 后期进行整体的状态整改
         [ReadOnly] public float ElementShieldReduction;
+        
 
         public void Execute(int i)
         {
@@ -272,11 +273,12 @@ namespace BlackDawn.DOTS
             }
 
             // 7) 固定减伤（对瞬时+DOT）
-            var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//固定随机减伤,0-50的固定随机减伤，模拟伤害波动
-            float finalDamage = (instTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd)*(1-ElementShieldReduction);
-            float finalDotDamage = (dotTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd)*(1-ElementShieldReduction);
-           
-           
+            var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//固定随机减伤,0-50的固定随机减伤，模拟伤害波动,元素护盾减伤或移动
+
+            float finalDamage = (instTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd) * (1 - ElementShieldReduction) * (1 - a.defenseAttribute.tempDefense.advanceDamageReduction) * (1 - a.defenseAttribute.tempDefense.elmentShieldDamageReduction);
+            float finalDotDamage = (dotTotal) * (1f - a.defenseAttribute.damageReduction) * (1 - rd) * (1 - ElementShieldReduction) * (1 - a.defenseAttribute.tempDefense.advanceDamageReduction) * (1 - a.defenseAttribute.tempDefense.elmentShieldDamageReduction);
+
+
             // 8) 应用扣血 & 写回           
             if (ElementShieldReduction <= 0)
             {

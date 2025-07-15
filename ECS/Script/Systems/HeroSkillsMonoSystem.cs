@@ -82,7 +82,7 @@ namespace BlackDawn.DOTS
             quaternion rot = _transform[_heroEntity].Rotation;
             _heroPosition = _transform[_heroEntity].Position;
             //获取英雄属性
-            var heroPar = _heroAttribute[_heroEntity];
+            var  heroPar = _heroAttribute[_heroEntity];
             //获取英雄装载的技能等级
             var level = _heroAttribute[_heroEntity].skillDamageAttribute.skillLevel;
             var prefab = SystemAPI.GetSingleton<ScenePrefabsSingleton>();
@@ -287,6 +287,10 @@ namespace BlackDawn.DOTS
 
             }
 
+
+
+            //进击的Mono效果
+            SkillMonoAdvance(ref state, timer);
             //寒冰的Mono效果
             SkillMonoFrost(ref state, ecb);
             //元素共鸣Mono效果
@@ -315,6 +319,70 @@ namespace BlackDawn.DOTS
 
         }
 
+        /// <summary>
+        /// 技能进击，通过mono中进行传统shader参数进行读取
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="ecb"></param>
+        void SkillMonoAdvance(ref SystemState state,float timer)
+        {
+            foreach (var (skillTag, heroPar, transform, entity)
+             in SystemAPI.Query<RefRW<SkillAdvanceTag_Hero>, RefRW<HeroAttributeCmpt>, RefRW<LocalTransform>>().WithEntityAccess())
+            {
+                //进击技能开启时 的掉能量的状态
+                if (skillTag.ValueRW.active)
+                {
+                    skillTag.ValueRW.tagSurvivalTime -= timer;
+                    //伤害增加30%
+                    heroPar.ValueRW.defenseAttribute.tempDefense.advanceDamageReduction = 0.3f;
+                    //每秒恢复300%元素系数生命值
+                    heroPar.ValueRW.defenseAttribute.hp += (heroPar.ValueRW.attackAttribute.elementalDamage.frostDamage +
+                    heroPar.ValueRW.attackAttribute.elementalDamage.fireDamage +
+                    heroPar.ValueRW.attackAttribute.elementalDamage.poisonDamage +
+                    heroPar.ValueRW.attackAttribute.elementalDamage.lightningDamage +
+                    heroPar.ValueRW.attackAttribute.elementalDamage.shadowDamage) * 3;
+
+                    if (skillTag.ValueRW.tagSurvivalTime <= 0)
+                    {
+                        //每秒降低三点能量
+                        heroPar.ValueRW.defenseAttribute.energy = math.max(0, heroPar.ValueRW.defenseAttribute.energy - 10 * timer);
+
+                        // 能量为0 则关闭进击，恢复伤害减免
+                        if (heroPar.ValueRW.defenseAttribute.energy <= 0)
+                        {
+                            skillTag.ValueRW.active = false;
+                            heroPar.ValueRW.defenseAttribute.tempDefense.advanceDamageReduction = 0;
+                        }
+
+                    }
+                    //开启A阶段后， 增加冷却缩减以及伤害
+                    if (skillTag.ValueRW.enableSecondA)
+                    {
+                        heroPar.ValueRW.gainAttribute.dymicalCooldownReduction.advanceACooldownReduction = 0.3f;
+
+                        heroPar.ValueRW.attackAttribute.heroDynamicalAttack.tempAdvanceDamagePar = 0.2f;
+                    }
+
+
+                }
+                else
+                {
+                    heroPar.ValueRW.defenseAttribute.tempDefense.advanceDamageReduction = 0;
+
+                    if (skillTag.ValueRW.enableSecondA)
+                    {
+                        heroPar.ValueRW.gainAttribute.dymicalCooldownReduction.advanceACooldownReduction = 0.0f;
+
+                        heroPar.ValueRW.attackAttribute.heroDynamicalAttack.tempAdvanceDamagePar = 0.0f;
+                    }
+
+                }
+
+       }
+
+
+
+        }
         /// <summary>
         /// 寒冰
         /// </summary>

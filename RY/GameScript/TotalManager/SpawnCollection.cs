@@ -163,6 +163,9 @@ namespace BlackDawn
 
             //冰霜护盾预加载组件            
             ecb.AddComponent(heroEntity, new SkillFrostShieldTag_Hero() { });
+
+            //进击 预加载组件
+            ecb.AddComponent(heroEntity,new SkillAdvanceTag_Hero(){ });
             
             ecb.Playback(entityManager);
             ecb.Dispose();

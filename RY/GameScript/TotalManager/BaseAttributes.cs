@@ -22,19 +22,19 @@ namespace BlackDawn
     /// <summary>伤害触发类型枚举，用于在文字渲染系统中进行计算</summary>
     public enum DamageTriggerType
     {
-       
+
         // 基础攻击类型
-        NormalAttack ,   // Q键 - 普通攻击（类型0）
+        NormalAttack,   // Q键 - 普通攻击（类型0）
         // 单一效果类型
-        Vulnerable ,     // W键 - 易伤（类型1）
-        CriticalStrike , // E键 - 暴击（类型2）
+        Vulnerable,     // W键 - 易伤（类型1）
+        CriticalStrike, // E键 - 暴击（类型2）
         // 双效果组合
         VulnerableCritical, // R键 - 易伤暴击（类型3）
-        Suppression ,      // T键 - 压制（类型4）
-        SuppressionVulnerable , // Y键 - 压制易伤（类型5）
-        SuppressionCritical ,  // U键 - 压制暴击（类型6）
+        Suppression,      // T键 - 压制（类型4）
+        SuppressionVulnerable, // Y键 - 压制易伤（类型5）
+        SuppressionCritical,  // U键 - 压制暴击（类型6）
         // 三效果组合
-        SuppressionVulnCrit ,    // I键 - 压制易伤暴击（类型7）
+        SuppressionVulnCrit,    // I键 - 压制易伤暴击（类型7）
         DotDamage,//dot伤害
         Miss,//闪避
         Block,//格挡
@@ -380,8 +380,8 @@ namespace BlackDawn
     /// 临时伤害组件，用于伤害字体渲染，升级为可关闭组件，减少查询消耗
     /// </summary>
     [Serializable]
-    public struct MonsterTempDamageText :IComponentData,IEnableableComponent
-    
+    public struct MonsterTempDamageText : IComponentData, IEnableableComponent
+
     {
         //这里只要受到伤害就判断一次重写，然后刷新剩余时间
         public bool underAttack;
@@ -419,7 +419,7 @@ namespace BlackDawn
     /// 防御属性
     /// </summary>
     [Serializable]
-    public struct DefenseAttribute :IComponentData
+    public struct DefenseAttribute : IComponentData
     {
         /// <summary>原始生命值</summary>
         public float originalHp;
@@ -461,6 +461,22 @@ namespace BlackDawn
 
         /// <summary>死亡判定，json无值默认false</summary>
         public bool death;
+        //临时减伤
+        public TempDefenseAttribute  tempDefense;
+    }
+
+
+    /// <summary>
+    /// 临时防预属性，用于英雄的临时减伤计算
+    /// </summary>
+     [Serializable]
+    public struct TempDefenseAttribute 
+    {
+        //进击减伤
+        public float advanceDamageReduction;
+        //元素护盾减伤
+        public float elmentShieldDamageReduction;
+
     }
 
     /// <summary>
@@ -624,11 +640,13 @@ namespace BlackDawn
         public HeroDynamicalAttackAttribute heroDynamicalAttack;
     }
     // 动态伤害结构体,加在外面
-   [Serializable]
+    [Serializable]
     public struct HeroDynamicalAttackAttribute : IComponentData
     {
-
+        //大于1通用累计
         public float tempMasterDamagePar;
+        //小于1形式累计
+        public float tempAdvanceDamagePar;
 
 
     }
@@ -835,6 +853,24 @@ namespace BlackDawn
 
         /// <summary>精力恢复</summary>
         public float energyRegen;
+        
+        /// <summary>冷却缩减</summary>
+        public float  cooldownReduction;
+        /// <summary>动态冷却缩减</summary>
+        public DymicalCooldownReduction dymicalCooldownReduction;
+    }
+
+
+    /// <summary>
+    /// 动态冷却缩减 结构体
+    /// </summary>
+    [Serializable]
+    public struct DymicalCooldownReduction
+    {
+        //进击A阶段提供的冷却缩减
+        public float advanceACooldownReduction;
+
+
     }
     /// <summary>
     /// 各元素抗性削弱

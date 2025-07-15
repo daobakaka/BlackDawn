@@ -152,7 +152,7 @@ namespace BlackDawn.DOTS
             // }
 
 
-            //处理英雄自身的增益恢复效果
+            //处理英雄自身的增益恢复效果- 处理英雄非免疫状态
             foreach (var (transform, heroAttr, stateNoImmunity) in SystemAPI.Query<RefRW<HeroEntityMasterTag>, RefRW<HeroAttributeCmpt>, RefRW<HeroIntgratedNoImmunityState>>())
 
             {
@@ -160,6 +160,28 @@ namespace BlackDawn.DOTS
                 heroAttr.ValueRW.defenseAttribute.energy += (heroAttr.ValueRW.gainAttribute.energyRegen + 10) * timer;
 
                 heroAttr.ValueRW.defenseAttribute.hp += heroAttr.ValueRW.gainAttribute.hpRegen * timer;
+
+                //非免疫状态读取
+                //控制非免疫
+                stateNoImmunity.ValueRW.controlNoImmunityTimer -= timer;
+                stateNoImmunity.ValueRW.controlNoImmunity = stateNoImmunity.ValueRW.controlNoImmunityTimer <= 0 ? 1f : 0f;
+
+                // 内联伤害非免疫
+                stateNoImmunity.ValueRW.inlineDamageNoImmunityTimer -= timer;
+                stateNoImmunity.ValueRW.inlineDamageNoImmunity = stateNoImmunity.ValueRW.inlineDamageNoImmunityTimer <= 0 ? 1f : 0f;
+
+                // dot伤害非免疫
+                stateNoImmunity.ValueRW.dotNoImmunityTimer -= timer;
+                stateNoImmunity.ValueRW.dotNoImmunity = stateNoImmunity.ValueRW.dotNoImmunityTimer <= 0 ? 1f : 0f;
+
+                // 物理伤害非免疫
+                stateNoImmunity.ValueRW.physicalDamageNoImmunityTimer -= timer;
+                stateNoImmunity.ValueRW.physicalDamageNoImmunity = stateNoImmunity.ValueRW.physicalDamageNoImmunityTimer <= 0 ? 1f : 0f;
+
+                // 元素伤害非免疫
+                stateNoImmunity.ValueRW.elementDamageNoImmunityTimer -= timer;
+                stateNoImmunity.ValueRW.elementDamageNoImmunity = stateNoImmunity.ValueRW.elementDamageNoImmunityTimer <= 0 ? 1f : 0f;
+                
 
             }
             //技能法阵的英雄自身伤害、DOT减免、控制抵消的判定

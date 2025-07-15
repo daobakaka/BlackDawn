@@ -94,7 +94,7 @@ namespace BlackDawn
             switch (iD)
 
             {
-                //脉冲，瞬时
+                //脉冲 0，瞬时
                 case HeroSkillID.Pulse:
                     switch (psionicType)
                     {
@@ -136,7 +136,7 @@ namespace BlackDawn
 
                     }
                     break;
-                //暗能，瞬时
+                //暗能1，瞬时
                 case HeroSkillID.DarkEnergy:
                     switch (psionicType)
                     {
@@ -159,7 +159,7 @@ namespace BlackDawn
                     }
 
                     break;
-                //冰火，瞬时？
+                //冰火2，瞬时？
                 case HeroSkillID.IceFire:
                     switch (psionicType)
                     {
@@ -207,7 +207,7 @@ namespace BlackDawn
                             break;
                     }
                     break;
-                //落雷，瞬时
+                //落雷3，瞬时
                 case HeroSkillID.ThunderStrike:
 
                     switch (psionicType)
@@ -246,7 +246,8 @@ namespace BlackDawn
 
 
                     break;
-                //法阵，持续
+   
+                //法阵 4，持续
                 case HeroSkillID.ArcaneCircle:
 
                     switch (psionicType)
@@ -378,7 +379,62 @@ namespace BlackDawn
 
 
                     break;
-                //寒冰，瞬时    
+
+
+                //进击5 保护 辅助
+                case HeroSkillID.Advance:
+                    switch (psionicType)
+                    {
+                      
+                        case HeroSkillPsionicType.Basic:
+                           
+                            var skillAdvance = _entityManager.GetComponentData<SkillAdvanceTag_Hero>(_heroEntity);
+
+                            if (skillAdvance.active)
+                            { skillAdvance.active = false; }
+
+                            else
+                            {
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 20;
+
+                                    //设置初始时间激活
+                                    skillAdvance.tagSurvivalTime = 3f;
+                                    skillAdvance.active = true;
+                                }
+                            }
+                            _entityManager.SetComponentData(_heroEntity, skillAdvance);
+                            _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                            break;
+
+                        case HeroSkillPsionicType.PsionicA:
+
+                            var skillAdvanceA = _entityManager.GetComponentData<SkillAdvanceTag_Hero>(_heroEntity);
+
+                            if (skillAdvanceA.active)
+                            { skillAdvanceA.active = false; }
+                            else
+                            {
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 20;
+
+                                    //设置初始时间激活
+                                    skillAdvanceA.tagSurvivalTime = 3f;
+                                    skillAdvanceA.active = true;
+                                    skillAdvanceA.enableSecondA = true;
+                                }                 
+                            }
+                            _entityManager.SetComponentData(_heroEntity, skillAdvanceA);
+                            _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                            break;
+
+
+                    }
+
+                    break;
+                //寒冰 6，瞬时    
                 case HeroSkillID.Frost:
                     switch (psionicType)
                     {
@@ -404,7 +460,36 @@ namespace BlackDawn
                     }
 
                     break;
-                //元素共鸣,持续？，非技能标签，不会造成伤害,可以读取等级展示伤害
+                //相位 10 ，保护/辅助
+                case HeroSkillID.Phase:
+                    switch (psionicType)
+                    {
+                        //激活直接伤害物理免疫和元素伤害免疫的 两种状态,免疫时间，升级外部读取 临时储存
+                        case HeroSkillPsionicType.Basic:
+                            var heroNoImmunityState=_entityManager.GetComponentData<HeroIntgratedNoImmunityState>(_heroEntity);
+                        
+                            heroNoImmunityState.physicalDamageNoImmunityTimer = 3f;
+                            heroNoImmunityState.elementDamageNoImmunityTimer = 3f;
+                            _entityManager.SetComponentData(_heroEntity, heroNoImmunityState);
+                            if (runTimeHeroCmp.defenseAttribute.energy > 51)
+                            {
+                                    var _rollCoroutineId = _coroutineController.StartRoutine(
+                                    IEPhaseSkill(3, runTimeHeroCmp),
+                                    tag: "PhaseSkill",
+                                    onComplete: () =>
+                                    {
+                                        DevDebug.Log("相位释放完成");
+                                    }
+                                    );
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            break;                       
+                    }
+
+                    break;
+
+                //元素共鸣 11,持续？，非技能标签，不会造成伤害,可以读取等级展示伤害
                 case HeroSkillID.ElementResonance:
                     switch (psionicType)
                     {
@@ -1044,8 +1129,7 @@ namespace BlackDawn
                     break;
                 //元素护盾 25 保护/唯一，保护技能25号元素可以仅添加渲染即可
                 case HeroSkillID.ElementShield:
-                    var skillElementShieldCmp = _entityManager.GetComponentData<SkillElementShieldTag_Hero>(_heroEntity);
-                   
+                    var skillElementShieldCmp = _entityManager.GetComponentData<SkillElementShieldTag_Hero>(_heroEntity);                  
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
@@ -2145,7 +2229,7 @@ namespace BlackDawn
         {
 
             var _rollCoroutineId = _coroutineController.StartRoutine(
-                    ThunderStrikeSkill<T>(prefab, componentData, castCount, interval, posion, quaternion, damageChangePar, positionOffset, rotationOffsetEuler
+                    IEThunderStrikeSkill<T>(prefab, componentData, castCount, interval, posion, quaternion, damageChangePar, positionOffset, rotationOffsetEuler
                     , scaleFactor, enablePull, enableExplosion, fllow),
                     tag: "ThunderStrikeSkill",
                     onComplete: () =>
@@ -2173,7 +2257,7 @@ namespace BlackDawn
         /// <param name="enablePull"></param>
         /// <param name="enableExplosion"></param>
         /// <returns></returns>
-        IEnumerator ThunderStrikeSkill<T>(Entity prefab,
+        IEnumerator IEThunderStrikeSkill<T>(Entity prefab,
          T componentData,
          int castCount,//释放总次数
          float interval,//间隔
@@ -2256,8 +2340,25 @@ namespace BlackDawn
 
 
         }
+        /// <summary>
+        /// 技能相位三秒后回复生命值
+        /// </summary>
+        /// <param name="interval"></param>
+        /// <returns></returns>
+        IEnumerator IEPhaseSkill(float interval,HeroAttributeCmpt realAttr)
+        {
+                   
+                realAttr.defenseAttribute.energy -= 50;
+                _entityManager.SetComponentData(_heroEntity, realAttr);
 
+            
+            //时间间隔完毕之后恢复生命值 （？外部表现特征）
+            yield return new WaitForSeconds(interval);
 
+            realAttr.defenseAttribute.hp += (realAttr.defenseAttribute.originalHp / 10);
+            _entityManager.SetComponentData(_heroEntity, realAttr);
+            
+        }
 
         #endregion
 

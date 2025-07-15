@@ -210,7 +210,7 @@ namespace BlackDawn.DOTS
 
 
 
-        
+
     #endregion
 
 
@@ -227,14 +227,19 @@ namespace BlackDawn.DOTS
     {
         //控制非免疫
         public float controlNoImmunity;
+        public float controlNoImmunityTimer;
         //内联伤害非免疫（如 法阵技能）
         public float inlineDamageNoImmunity;
+        public float inlineDamageNoImmunityTimer;
         //dot伤害非免疫
         public float dotNoImmunity;
+        public float dotNoImmunityTimer;
         // 物理伤害非免疫
         public float physicalDamageNoImmunity;
+        public float physicalDamageNoImmunityTimer;
         //元素伤害非免疫
         public float elementDamageNoImmunity;
+        public float elementDamageNoImmunityTimer;
 
         /// <summary>
         /// 无用， 不提供无参构造函数
