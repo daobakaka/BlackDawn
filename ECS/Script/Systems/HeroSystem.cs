@@ -141,6 +141,18 @@ namespace BlackDawn.DOTS
                     ecb.DestroyEntity(entity);
 
             }
+            //渲染技能 横扫的消除 --后期添加额外其他的
+            foreach (var (skillCal, entity) in SystemAPI.Query<RefRW<SkillSweepRenderTag>>().WithEntityAccess())
+            {
+            
+                if (skillCal.ValueRO.destory == true)
+
+                    ecb.DestroyEntity(entity);
+
+            }
+            
+
+
 
             // 侦测型技能销毁 --闪电链！！这里会引起侦察系统报错，暂时不知为什么     
 
@@ -181,7 +193,7 @@ namespace BlackDawn.DOTS
                 // 元素伤害非免疫
                 stateNoImmunity.ValueRW.elementDamageNoImmunityTimer -= timer;
                 stateNoImmunity.ValueRW.elementDamageNoImmunity = stateNoImmunity.ValueRW.elementDamageNoImmunityTimer <= 0 ? 1f : 0f;
-                
+
 
             }
             //技能法阵的英雄自身伤害、DOT减免、控制抵消的判定

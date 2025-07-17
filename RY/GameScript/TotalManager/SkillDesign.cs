@@ -218,8 +218,10 @@ namespace BlackDawn
         ShadowTideB,
         FrostNovaB,
         LightningChainRendering,
-        LightningChainCollder,
-        FrostShieldA,//寒冰护盾
+        LightningChainCollider,
+        FrostShieldA,//寒冰护盾A
+        SweepB,//横扫B
+        SweepCollider,//横扫碰撞体
         
 
     }

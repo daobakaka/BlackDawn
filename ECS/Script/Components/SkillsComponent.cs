@@ -437,6 +437,11 @@ namespace BlackDawn.DOTS
     public struct SkillSweepTag : IComponentData
     {
         public float tagSurvivalTime;
+        //生成时间
+        public float spawnTimer;
+
+        public float interval;
+        public float rotationTotalTime;
         public float scaleChangePar;
         //伤害变化参数,默认为0，外部赋值1+
         public float skillDamageChangeParTag;
@@ -447,9 +452,27 @@ namespace BlackDawn.DOTS
         public int level;
  
     }
+    /// <summary>
+    /// 横扫 渲染TAG
+    /// </summary>
+    public struct SkillSweepRenderTag : IComponentData
+    {
+        public float tagSurvivalTime;
+        public bool destory;
+    }
+ /// <summary>
+ /// 横扫B阶段 余震
+ /// </summary>
+    public struct SkillSweepBTag : IComponentData
+    {
+        public float tagSurvivalTime;
+        public float scaleChangePar;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+        public float speed;
+        public int level;
 
-
-
+    }
 
     /// <summary>
     /// 技能 毒池 瞬时类技能

@@ -327,32 +327,91 @@ namespace BlackDawn.DOTS
         //横扫 回调阶段
         void SkillCallBack_Sweep(float timer, EntityCommandBuffer ecb)
         {
-
-            //横扫技能的运动状态
-            Entities
-                    .WithName("SkillSweep")
-                    .ForEach((Entity entity, VisualEffect vfx, ref SkillSweepTag skillTag, ref SkillsDamageCalPar SkillCal,ref LocalTransform transform)=>
+              
+   
+        //基础阶段渲染
+          Entities
+                .WithName("SkillSweepRender")
+                .ForEach((Entity entity, VisualEffect vfx, ref SkillSweepRenderTag skillTag)=>
                     {
                         skillTag.tagSurvivalTime -= timer;
-
-                        if (skillTag.tagSurvivalTime >= 1)
+                        if (skillTag.tagSurvivalTime <= 0)
                         {
+                            skillTag.destory = true;
+                        }   
+                        
+                    }).WithoutBurst().Run();
 
+            //横扫的碰撞
+            Entities
+                 .WithName("SkillSweepCollider")
+                 .ForEach((Entity entity, ref SkillSweepTag skillTag, ref SkillsDamageCalPar skillDamgeCal, ref LocalTransform transform)=>
+                    {
+                        skillTag.tagSurvivalTime = math.max(0, skillTag.tagSurvivalTime - timer);
+                        transform.Position = _heroPositon;
+                        // 计算t
+                        float t = 1f - math.saturate(skillTag.tagSurvivalTime / skillTag.rotationTotalTime);
+
+                        // 起点角 -90
+                        float startAngle = -90f;
+                        float totalAngle = skillTag.enableSecondA ? 360f : 180f;
+                        float angle = startAngle + totalAngle * t;
+
+                        transform.Rotation = quaternion.RotateY(math.radians(angle));
+
+                        if (skillTag.tagSurvivalTime <= 0)
+                            skillDamgeCal.destory = true;
+
+                        if (skillTag.enableSecondB)
+                        {
+                            // 每0.2秒生成一次
+                            skillTag.spawnTimer -= timer;
+                            if (skillTag.spawnTimer <= 0f)
+                            {
+                                skillTag.spawnTimer += skillTag.interval; // 重置间隔，防止跳帧漏刷
+                                var skillB = ecb.Instantiate(_prefabs.HeroSkillAssistive_SweepB);
+                                // 使用当前的旋转
+                                ecb.SetComponent<LocalTransform>(skillB, transform);
+
+                                var skillDamageCalB = skillDamgeCal;
+                                skillDamageCalB.damageChangePar = skillTag.skillDamageChangeParTag;
+                                ecb.AddComponent<SkillsDamageCalPar>(skillB, skillDamageCalB);
+                                ecb.AddComponent(skillB, new SkillSweepBTag() { tagSurvivalTime = 5, speed = skillTag.speed });
+                                ecb.AddBuffer<HitRecord>(skillB);
+                                ecb.AddBuffer<HitElementResonanceRecord>(skillB);
+
+
+                            }
+                        }
+                            
+
+                    }).WithoutBurst().Run();
+
+          
+          
+          
+          
+          
+          
+          
+            //横扫技能B阶段 余震的运动状态
+            Entities
+                    .WithName("SkillSweepB")
+                    .ForEach((Entity entity, VisualEffect vfx, ref SkillSweepBTag skillTag, ref SkillsDamageCalPar SkillCal,ref LocalTransform transform)=>
+                    {
+                             skillTag.tagSurvivalTime -= timer;                 
                             float3 forward = math.mul(transform.Rotation, new float3(0, 0, 1));
                             transform.Position += forward * skillTag.speed * timer;
-                        }
+                            
+                        
                         if (skillTag.tagSurvivalTime < 1 && skillTag.tagSurvivalTime >= 1 - timer)
                         {
                             vfx.Stop();
                         }
                         if (skillTag.tagSurvivalTime <= 0)
                         {
-
                             SkillCal.destory = true;
                         }
-
-
-
 
 
                     }).WithoutBurst().Run();

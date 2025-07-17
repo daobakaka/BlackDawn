@@ -142,8 +142,10 @@ namespace BlackDawn.DOTS
                     HeroSkillAssistive_ShadowTideB = GetSafe(auth.skillAssistivePrefabs, HeroSkillAssistiveID.ShadowTideB),
                     HeroSkillAssistive_FrostNovaB = GetSafe(auth.skillAssistivePrefabs, HeroSkillAssistiveID.FrostNovaB),//寒霜新星第二阶段
                     HeroSkillAssistive_LightningChainRendering =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.LightningChainRendering),//闪电链渲染
-                    HeroSkillAssistive_LightningChainCollider =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.LightningChainCollder),//闪电链碰撞体
+                    HeroSkillAssistive_LightningChainCollider =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.LightningChainCollider),//闪电链碰撞体
                     HeroSkillAssistive_FrostShieldA =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.FrostShieldA),//冰霜护盾
+                    HeroSkillAssistive_SweepB =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.SweepB),//横扫B
+                    HeroSkillAssistive_SweepCollider =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.SweepCollider),//横扫碰撞体
 
 
 
@@ -378,7 +380,10 @@ namespace BlackDawn.DOTS
             public Entity HeroSkillAssistive_FrostNovaB;//寒霜新星第二阶段
             public Entity HeroSkillAssistive_LightningChainRendering;//闪电链渲染体
             public Entity HeroSkillAssistive_LightningChainCollider;//闪电链碰撞体
-            public Entity HeroSkillAssistive_FrostShieldA;//冰霜护盾           
+            public Entity HeroSkillAssistive_FrostShieldA;//冰霜护盾   
+
+            public Entity HeroSkillAssistive_SweepB;//横扫B 
+            public Entity HeroSkillAssistive_SweepCollider;//横扫碰撞体       
 
             // Monster Skills
         public Entity MonsterSkill_DeathPulse;

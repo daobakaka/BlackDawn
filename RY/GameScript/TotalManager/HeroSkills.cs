@@ -546,28 +546,41 @@ namespace BlackDawn
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
-                            var entitySweep = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entitySweepRender = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entitySweepRender, new SkillSweepRenderTag { tagSurvivalTime = 1 });
+
+                            var entitySweep = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_SweepCollider, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                              var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweep);                            
                             _entityManager.SetComponentData(entitySweep, skillPar);
-                            _entityManager.AddComponentData(entitySweep,new SkillSweepTag() { tagSurvivalTime =5,speed=10});
+                            _entityManager.AddComponentData(entitySweep,new SkillSweepTag() { tagSurvivalTime = 1, rotationTotalTime = 1 });
                             break;
                         case HeroSkillPsionicType.PsionicA:
-                            var entitySweepA = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                         var entitySweepRenderA = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entitySweepRenderA, new SkillSweepRenderTag { tagSurvivalTime = 1 });
+
+                            var entitySweepA = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_SweepCollider, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                              var skillParA = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweepA);                            
                             _entityManager.SetComponentData(entitySweepA, skillParA);
-                            _entityManager.AddComponentData(entitySweepA,new SkillSweepTag() { tagSurvivalTime =5,enableSecondA=true,speed=10});
+                            _entityManager.AddComponentData(entitySweepA, new SkillSweepTag() { tagSurvivalTime = 1, enableSecondA = true, rotationTotalTime = 1 });
                             break;
                         case HeroSkillPsionicType.PsionicB:
-                            var entitySweepB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                         var entitySweepRenderB = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entitySweepRenderB, new SkillSweepRenderTag { tagSurvivalTime = 1 });
+
+
+                            var entitySweepB = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_SweepCollider, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                              var skillParB = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweepB);                            
                             _entityManager.SetComponentData(entitySweepB, skillParB);
-                            _entityManager.AddComponentData(entitySweepB,new SkillSweepTag() { tagSurvivalTime =5,enableSecondB=true,speed=10});
+                            _entityManager.AddComponentData(entitySweepB, new SkillSweepTag() { tagSurvivalTime = 1, enableSecondB = true, rotationTotalTime = 1 ,speed=10,spawnTimer=UnityEngine.Random.Range(0,0.15f),interval=0.3f,skillDamageChangeParTag=0.5f});
                             break;
                         case HeroSkillPsionicType.PsionicAB:
-                          var entitySweepAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                              var entitySweepRenderAB = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entitySweepRenderAB, new SkillSweepRenderTag { tagSurvivalTime = 1 });
+
+                          var entitySweepAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_SweepCollider, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                              var skillParAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweepAB);                            
                             _entityManager.SetComponentData(entitySweepAB, skillParAB);
-                            _entityManager.AddComponentData(entitySweepAB,new SkillSweepTag() { tagSurvivalTime =5,enableSecondB=true,enableSecondA= true,speed=10});
+                            _entityManager.AddComponentData(entitySweepAB,new SkillSweepTag() { tagSurvivalTime =1,enableSecondB=true,enableSecondA= true,rotationTotalTime = 1 ,speed=10,spawnTimer=UnityEngine.Random.Range(0,0.15f),interval=0.15f,skillDamageChangeParTag=0.5f});
                             break;
                     }
                     break;
@@ -2152,7 +2165,7 @@ namespace BlackDawn
         float3 rotationOffsetEuler = default,  // 传入度数
         float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
         {
-            DevDebug.Log("释放伤害型飞行技能");
+            DevDebug.Log("释放无伤害型飞行技能");
 
             // 1) 实例化
             var entity = _entityManager.Instantiate(prefab);
