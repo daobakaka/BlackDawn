@@ -8,6 +8,7 @@ using Unity.Transforms;
 using Unity.Physics;
 using UnityEngine;
 using Unity.VisualScripting;
+using System.Linq;
 //用于管理技能的生命周期及状态
 //可以进行burstCompile 的无引用技能
 namespace BlackDawn.DOTS
@@ -26,6 +27,7 @@ namespace BlackDawn.DOTS
         ComponentLookup<LocalTransform> _transform;
         ComponentLookup<MonsterLossPoolAttribute> _monsterLossPoolAttrLookup;
         ComponentLookup<HeroAttributeCmpt> _heroAttribute;
+        ComponentLookup<SkillBlackFrameTag> _skillBlackFrameTagLookup;
         //获取技能道具上的buffer，用于实现暗影增吞噬效果
         BufferLookup<HitRecord> _hitBuffer;
         float3 _heroPosition;
@@ -43,6 +45,7 @@ namespace BlackDawn.DOTS
 
             _transform = state.GetComponentLookup<LocalTransform>(true);
             _monsterLossPoolAttrLookup = state.GetComponentLookup<MonsterLossPoolAttribute>(false);
+            _skillBlackFrameTagLookup = state.GetComponentLookup<SkillBlackFrameTag>(true);
             _heroAttribute = state.GetComponentLookup<HeroAttributeCmpt>(true);
             _entityManager = state.EntityManager;
             _detectionSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
@@ -70,6 +73,7 @@ namespace BlackDawn.DOTS
             _transform.Update(ref state);
             _monsterLossPoolAttrLookup.Update(ref state);
             _heroAttribute.Update(ref state);
+            _skillBlackFrameTagLookup.Update(ref state);
             // _hitBuffer.Update(ref state);
 
 
@@ -293,6 +297,8 @@ namespace BlackDawn.DOTS
             SkillMonoAdvance(ref state, timer);
             //寒冰的Mono效果
             SkillMonoFrost(ref state, ecb);
+            //黑炎的Mono效果-- 通过enbale 组件进行控制过滤
+            SkillMonoBlackFrameA(ref state, timer);
             //元素共鸣Mono效果
             SkillMonoElementResonance(ref state, ecb);
             //技能静电牢笼
@@ -379,6 +385,45 @@ namespace BlackDawn.DOTS
                 }
 
        }
+
+
+
+        }
+        //特殊， 检查激活A阶段怪物身上带有的黑炎标签， 进行其抗性持降低的计算
+        //检查激活B阶段怪物身上带有的黑炎标签，进行其伤害加深的计算
+        void SkillMonoBlackFrameA(ref SystemState state, float timer)
+        {
+            int level = 0;
+
+            foreach (var skillTag in SystemAPI.Query<RefRO<SkillBlackFrameTag>>())
+            {
+                level = skillTag.ValueRO.level;
+                return;
+            }
+
+            foreach (var (preSkillTag, defense, transform, entity)
+            in SystemAPI.Query<RefRW<PreDefineHeroSkillBlackFrameATag>, RefRW<MonsterDefenseAttribute>, RefRW<LocalTransform>>().WithEntityAccess())
+            {
+
+                defense.ValueRW.resistances.fire -= timer * (1 + level * 0.01f);
+                defense.ValueRW.resistances.frost -= timer * (1 + level * 0.01f);
+                defense.ValueRW.resistances.lightning -= timer * (1 + level * 0.01f);
+                defense.ValueRW.resistances.poison -= timer * (1 + level * 0.01f);
+                defense.ValueRW.resistances.shadow -= timer * (1 + level * 0.01f);
+
+            }
+             foreach (var (preSkillTag, debuff, transform, entity)
+            in SystemAPI.Query<RefRW<PreDefineHeroSkillBlackFrameBTag>, RefRW<MonsterDebuffAttribute>, RefRW<LocalTransform>>().WithEntityAccess())
+            {
+
+                debuff.ValueRW.damageAmplification += timer * 0.001f;
+
+            }
+
+
+
+
+
 
 
 

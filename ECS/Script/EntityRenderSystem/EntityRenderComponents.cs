@@ -303,6 +303,16 @@ namespace BlackDawn.DOTS
 
     }
 
+    
+    /// <summary>
+    /// 黑炎偏移便变量
+    /// </summary>
+    [MaterialProperty("_RandomOffset")]
+    public struct BlackFrameRandomOffset : IComponentData
+    {
+        public float4 Value;
+
+    }      
     /// <summary>
     /// 暗影偏移变量
     /// </summary>

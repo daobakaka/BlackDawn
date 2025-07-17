@@ -460,6 +460,141 @@ namespace BlackDawn
                     }
 
                     break;
+                //黑炎 7，瞬时/辅助
+                case HeroSkillID.BlackFlame:
+                    detectionSystem.enableSpecialSkillBlcakFrame = true;
+                    switch (psionicType)
+                    {
+                        //黑炎设计为特殊技能，打一个特殊技能标签，只要碰撞到了之后， 怪物就永久 减益，并且渲染出黑炎
+                        case HeroSkillPsionicType.Basic:
+                            //skillTag 这里在技能配置里进行读取，开启侦测系统进行侦测
+
+                            var entityBlackFrame = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_BlackFlame, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entityBlackFrame);
+                            _entityManager.SetComponentData(entityBlackFrame, skillPar);
+                            _entityManager.AddComponentData(entityBlackFrame, new SkillBlackFrameTag() { tagSurvivalTime = 10 });
+
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+
+                            var entityBlackFrameA = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_BlackFlame, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var skillParA = _entityManager.GetComponentData<SkillsDamageCalPar>(entityBlackFrameA);
+
+                            _entityManager.SetComponentData(entityBlackFrameA, skillParA);
+                            _entityManager.AddComponentData(entityBlackFrameA, new SkillBlackFrameTag() { tagSurvivalTime = 10, enableSecondA = true });
+
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+
+                            var entityBlackFrameB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_BlackFlame, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var skillParB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityBlackFrameB);
+                            _entityManager.SetComponentData(entityBlackFrameB, skillParB);
+                            _entityManager.AddComponentData(entityBlackFrameB, new SkillBlackFrameTag() { tagSurvivalTime = 10, enableSecondB = true });
+
+                            break;
+              
+                        case HeroSkillPsionicType.PsionicC:
+                            var entityBlackFrameC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_BlackFlame, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var skillParC = _entityManager.GetComponentData<SkillsDamageCalPar>(entityBlackFrameC);
+                            skillParC.fireDotDamage = 10 * skillParC.instantPhysicalDamage;//物理伤害可以压制
+                            _entityManager.SetComponentData(entityBlackFrameC, skillParC);
+                            _entityManager.AddComponentData(entityBlackFrameC, new SkillBlackFrameTag() { tagSurvivalTime = 10, enableSecondC = true });
+
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+
+                            var entityBlackFrameAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_BlackFlame, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var skillParAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entityBlackFrameAB);
+                            _entityManager.SetComponentData(entityBlackFrameAB, skillParAB);
+                            _entityManager.AddComponentData(entityBlackFrameAB, new SkillBlackFrameTag() { tagSurvivalTime = 10, enableSecondB = true, enableSecondA = true });
+
+                            break;
+                        case HeroSkillPsionicType.PsionicAC:
+                            var entityBlackFrameAC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_BlackFlame, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var skillParAC = _entityManager.GetComponentData<SkillsDamageCalPar>(entityBlackFrameAC);
+                            skillParAC.fireDotDamage = 10 * skillParAC.instantPhysicalDamage;//物理伤害可以压制
+                            _entityManager.SetComponentData(entityBlackFrameAC, skillParAC);
+                            _entityManager.AddComponentData(entityBlackFrameAC, new SkillBlackFrameTag() { tagSurvivalTime = 10, enableSecondC = true,enableSecondA=true });
+                            break;
+                        case HeroSkillPsionicType.PsionicBC:
+                            var entityBlackFrameBC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_BlackFlame, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var skillParBC = _entityManager.GetComponentData<SkillsDamageCalPar>(entityBlackFrameBC);
+                            skillParBC.fireDotDamage = 10 * skillParBC.instantPhysicalDamage;//物理伤害可以压制
+                            _entityManager.SetComponentData(entityBlackFrameBC, skillParBC);
+                            _entityManager.AddComponentData(entityBlackFrameBC, new SkillBlackFrameTag() { tagSurvivalTime = 10, enableSecondC = true,enableSecondB=true });
+
+                            break;
+                        case HeroSkillPsionicType.PsionicABC:
+                            var entityBlackFrameABC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_BlackFlame, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var skillParABC = _entityManager.GetComponentData<SkillsDamageCalPar>(entityBlackFrameABC);
+                            skillParABC.fireDotDamage = 10 * skillParABC.instantPhysicalDamage;//物理伤害可以压制
+                            _entityManager.SetComponentData(entityBlackFrameABC, skillParABC);
+                            _entityManager.AddComponentData(entityBlackFrameABC, new SkillBlackFrameTag() { tagSurvivalTime = 10, enableSecondB = true, enableSecondA = true,enableSecondC=true });
+
+                        
+                        break;
+
+
+
+
+
+                    }
+                    break;
+
+                //横扫 瞬时 8
+                case HeroSkillID.Sweep:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+                            var entitySweep = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                             var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweep);                            
+                            _entityManager.SetComponentData(entitySweep, skillPar);
+                            _entityManager.AddComponentData(entitySweep,new SkillSweepTag() { tagSurvivalTime =5,speed=10});
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            var entitySweepA = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                             var skillParA = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweepA);                            
+                            _entityManager.SetComponentData(entitySweepA, skillParA);
+                            _entityManager.AddComponentData(entitySweepA,new SkillSweepTag() { tagSurvivalTime =5,enableSecondA=true,speed=10});
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                            var entitySweepB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                             var skillParB = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweepB);                            
+                            _entityManager.SetComponentData(entitySweepB, skillParB);
+                            _entityManager.AddComponentData(entitySweepB,new SkillSweepTag() { tagSurvivalTime =5,enableSecondB=true,speed=10});
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+                          var entitySweepAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                             var skillParAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweepAB);                            
+                            _entityManager.SetComponentData(entitySweepAB, skillParAB);
+                            _entityManager.AddComponentData(entitySweepAB,new SkillSweepTag() { tagSurvivalTime =5,enableSecondB=true,enableSecondA= true,speed=10});
+                            break;
+                    }
+                    break;
+
+                //毒池 9 ，瞬时/辅助
+                case HeroSkillID.PoisonPool:
+                    switch (psionicType)
+                    {
+
+                        case HeroSkillPsionicType.Basic:
+                            //skillTag 这里在技能配置里进行读取
+                             var entityPoisonPool = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_PoisonPool, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                             var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entityPoisonPool);                            
+                            _entityManager.SetComponentData(entityPoisonPool, skillPar);
+                            _entityManager.AddComponentData(entityPoisonPool,new SkillPoisonPoolTag() { tagSurvivalTime =10});
+
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            break;
+
+
+
+
+
+                    }
+                    break;
+
                 //相位 10 ，保护/辅助
                 case HeroSkillID.Phase:
                     switch (psionicType)

@@ -95,22 +95,27 @@ namespace BlackDawn.DOTS
 
             //自定义绘制
             CustomOverlapDarw();
-            //技能脉冲
-            SkillCallback_Pulse(timer, ecb);
-            //技能冰火
-            Skill_iceFire(timer, ecb);
-            //技能法阵
-            Skill_ArcaneCircle(timer, ecb, arcaneCircleLinkedArray);
+            //技能脉冲 0
+            SkillCallBack_Pulse(timer, ecb);
+            //技能冰火 2
+            SkillCallBack_iceFire(timer, ecb);
+            //技能法阵 4
+            SkillCallBack_ArcaneCircle(timer, ecb, arcaneCircleLinkedArray);
+            //技能黑炎 7
+            SkillCallBack_BlackFrame(timer, ecb);
+            //技能横扫 8
+            SkillCallBack_Sweep(timer, ecb);
+            //技能毒池 9
+            SkillCallBack_PoisonPool(timer, ecb);
             //技能毒爆地雷 14
-            Skill_MineBlast(timer, ecb, mineBlastArray);
-
+            SkillCallBack_MineBlast(timer, ecb, mineBlastArray);
             //技能 暗影洪流,引导，跟随，旋转
             SkillCallBack_ShadowTide(timer, ecb, heroPar);
             //技能 冰霜新星
             SkillCallBack_FrostNova(timer, ecb, _prefabs);
             //通用护盾技能 1- 元素护盾
             SkillCallBack_ElementShieldDeal();
-            //通用-冰霜护盾
+            //通用-冰霜护盾 
             SkillCallBack_FrostShieldDeal(timer,_prefabs,ecb);
 
             //技能闪电链 30
@@ -199,7 +204,7 @@ namespace BlackDawn.DOTS
 
 
         //技能脉冲 回调阶段
-        void SkillCallback_Pulse(float timer,EntityCommandBuffer ecb)
+        void SkillCallBack_Pulse(float timer,EntityCommandBuffer ecb)
         { 
                    //脉冲处理
             Entities
@@ -229,7 +234,7 @@ namespace BlackDawn.DOTS
         }
 
         //技能 冰火 回调阶段
-        void Skill_iceFire(float timer, EntityCommandBuffer ecb)
+        void SkillCallBack_iceFire(float timer, EntityCommandBuffer ecb)
         {
               //冰火球处理
             Entities
@@ -291,10 +296,107 @@ namespace BlackDawn.DOTS
 
 
         }
+      
+       //黑炎  - 一种特殊的永不消失的dot?命中的敌人一直衰减？
+       void SkillCallBack_BlackFrame(float timer, EntityCommandBuffer ecb)
+        {
+
+            Entities
+                    .WithName("SkillBlackFrame")
+                    .ForEach((Entity entiy, VisualEffect vfx ,ref SkillBlackFrameTag skillTag,ref SkillsDamageCalPar skillCal) =>
+                    {
+
+                        skillTag.tagSurvivalTime -= timer;
+                        if (skillTag.tagSurvivalTime <= 3f && skillTag.tagSurvivalTime > 3f - timer)
+                        {
+
+                            vfx.Stop();
+
+                        }
+                        if (skillTag.tagSurvivalTime <= 0)
+                        {
+
+                            skillCal.destory = true;
+                            
+                        }
+
+                    }).WithoutBurst().Run();
 
 
+        }
+        //横扫 回调阶段
+        void SkillCallBack_Sweep(float timer, EntityCommandBuffer ecb)
+        {
+
+            //横扫技能的运动状态
+            Entities
+                    .WithName("SkillSweep")
+                    .ForEach((Entity entity, VisualEffect vfx, ref SkillSweepTag skillTag, ref SkillsDamageCalPar SkillCal,ref LocalTransform transform)=>
+                    {
+                        skillTag.tagSurvivalTime -= timer;
+
+                        if (skillTag.tagSurvivalTime >= 1)
+                        {
+
+                            float3 forward = math.mul(transform.Rotation, new float3(0, 0, 1));
+                            transform.Position += forward * skillTag.speed * timer;
+                        }
+                        if (skillTag.tagSurvivalTime < 1 && skillTag.tagSurvivalTime >= 1 - timer)
+                        {
+                            vfx.Stop();
+                        }
+                        if (skillTag.tagSurvivalTime <= 0)
+                        {
+
+                            SkillCal.destory = true;
+                        }
+
+
+
+
+
+                    }).WithoutBurst().Run();
+
+
+
+
+        }
+      
+      
+      
+        //毒池 回调阶段
+        void SkillCallBack_PoisonPool(float timer, EntityCommandBuffer ecb)
+        {
+
+            Entities
+                    .WithName("SkillPosionPool")
+                    .ForEach((Entity entiy, VisualEffect vfx ,ref SkillPoisonPoolTag skillTag,ref SkillsDamageCalPar skillCal) =>
+                    {
+
+                        skillTag.tagSurvivalTime -= timer;
+                        if (skillTag.tagSurvivalTime <= 3f && skillTag.tagSurvivalTime > 3f - timer)
+                        {
+
+                            vfx.Stop();
+
+                        }
+                        if (skillTag.tagSurvivalTime <= 0)
+                        {
+
+                            skillCal.destory = true;
+                            
+                        }
+
+                    }).WithoutBurst().Run();
+
+
+
+
+
+
+        }
         //技能 法阵
-        void Skill_ArcaneCircle(float timer, EntityCommandBuffer ecb,NativeArray<float3> arcaneCircleLinkedArray)
+        void SkillCallBack_ArcaneCircle(float timer, EntityCommandBuffer ecb,NativeArray<float3> arcaneCircleLinkedArray)
         {   
                //法阵buffer的效果 ，需要在外面清除,目前暂时使用这种方式，感觉其他方式有BUG,特比是关于buffer的清除比麻烦
             if (_arcaneCirclegraphicsBuffer != null)
@@ -352,7 +454,7 @@ namespace BlackDawn.DOTS
         }
 
         //技能毒爆地雷
-        void Skill_MineBlast(float timer,EntityCommandBuffer ecb,NativeArray<TriggerPairData> mineBlastArray)
+        void SkillCallBack_MineBlast(float timer,EntityCommandBuffer ecb,NativeArray<TriggerPairData> mineBlastArray)
         {
             
             //毒爆地雷一级阶段处理

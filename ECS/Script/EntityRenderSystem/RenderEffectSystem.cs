@@ -429,17 +429,32 @@ namespace BlackDawn.DOTS
                 Ecb.SetComponent(sortKey, childPoison, ltPoison);
 
 
-                // 6) 流血
-                if (false)
-                {
-                    pools.bleedTimer = math.max(0f, pools.bleedTimer - DeltaTime);
-                    var bleedt = math.saturate(pools.bleedPool / 100f);
-                    mat.Alpha.ValueRW.Value = bleedt;
-                    pools.bleedPool = math.max(
-                        0f,
-                        pools.bleedPool - 100f * DeltaTime * math.step(pools.bleedTimer, 0f)
-                    );
-                }
+                // 6) 流血              
+                pools.bleedTimer = math.max(0f, pools.bleedTimer - DeltaTime);
+                var bleedt = math.saturate(pools.bleedPool / 100f);
+                //mat.Alpha.ValueRW.Value = bleedt;//这里流血采用的是Alpha通道，暂时弃用，仅用广告牌效果表达
+                pools.bleedPool = math.max(
+                    0f,
+                    pools.bleedPool - 100f * DeltaTime * math.step(pools.bleedTimer, 0f)
+                );
+                var childBleed = linkedGroup[8].Value;
+                var ltBleed = LtLookup[childBleed];
+                float maskBleed = math.step(1f, pools.bleedActive);
+                float deltaBleed = DeltaTime * (maskBleed * 1f + (1f - maskBleed) * -1f);
+                ltBleed.Scale = math.saturate(ltBleed.Scale + deltaBleed);
+                Ecb.SetComponent(sortKey, childBleed, ltBleed);
+
+
+                // 7）黑炎
+                var childBlackFrame = linkedGroup[9].Value;
+                var ltBlackFrame = LtLookup[childBlackFrame];
+                float maskBlackFrame = math.step(1f, pools.blackFrameActive);
+                float deltaBlackFrame = DeltaTime * (maskBlackFrame * 1f + (1f - maskBlackFrame) * -1f);
+                ltBlackFrame.Scale = math.saturate(ltBlackFrame.Scale + deltaBlackFrame);
+                Ecb.SetComponent(sortKey, childBlackFrame, ltBlackFrame);
+
+                //黑炎状态计算
+
 
                 // 8) 默认死亡溶解,这里采用三目化，旨在编译时的无跳转
                 // 计算当 survivalTime 在 [0,2] 时的目标值

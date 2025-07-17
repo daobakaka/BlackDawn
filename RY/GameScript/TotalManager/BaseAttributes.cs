@@ -950,6 +950,8 @@ namespace BlackDawn
         //饥渴吞噬的buffer以及特效处理
         public bool toClearDotBuffer;
         public float Devourtimer;
+        //黑炎的状态阶段,1为开启A阶段，渲染系统直接进行 黑炎的伤害计算
+        public float blackFrameActiveA;
         
     }
 
@@ -1045,6 +1047,10 @@ namespace BlackDawn
         public float bleedTimer;
         /// <summary>流血池激活标志</summary>
         public float bleedActive;
+
+        //--黑炎状态,永久激活
+        public float blackFrameActive;
+        public float blackFrameTimer;
     }
     /// <summary>
     /// 伤害池属性

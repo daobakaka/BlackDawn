@@ -1,4 +1,5 @@
 using System;
+using NUnit.Framework.Interfaces;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -408,6 +409,61 @@ namespace BlackDawn.DOTS
         public float scaleChangePar;
         //伤害变化参数,默认为0，外部赋值1+
         public float skillDamageChangeParTag;
+
+    }
+    /// <summary>
+    /// 黑炎 
+    /// </summary>
+    public struct SkillBlackFrameTag : IComponentData
+    {
+        public float tagSurvivalTime;
+        public float scaleChangePar;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+
+        public bool enableSecondA;
+        public bool enableSecondB;
+        public bool enableSecondC;
+        public int level;
+    }
+    //预定义黑炎A阶段标签， 加载在怪物身上，避免在渲染系统中进行计算，解耦
+    public struct PreDefineHeroSkillBlackFrameATag : IComponentData, IEnableableComponent { }
+    //预定义黑炎B阶段标签， 加载在怪物身上
+    public struct PreDefineHeroSkillBlackFrameBTag : IComponentData, IEnableableComponent { }
+
+    /// <summary>
+    /// 横扫 
+    /// </summary>
+    public struct SkillSweepTag : IComponentData
+    {
+        public float tagSurvivalTime;
+        public float scaleChangePar;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+        public float speed;
+        public bool enableSecondA;
+        public bool enableSecondB;
+
+        public int level;
+ 
+    }
+
+
+
+
+    /// <summary>
+    /// 技能 毒池 瞬时类技能
+    /// </summary>
+    public struct SkillPoisonPoolTag : IComponentData
+    {
+
+
+        public float tagSurvivalTime;
+        //形变参数
+        public float scaleChangePar;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+
 
     }
 

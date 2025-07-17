@@ -44,6 +44,8 @@ namespace BlackDawn.DOTS
         private ComponentLookup<SkillChainDevourTag> _skillChainDevourTagLookup;
         private ComponentLookup<PreDefineHeroSkillThunderGripTag> _preDefineHeroSkillThunderGripTagLookup;
         private ComponentLookup<SkillsTrackingCalPar> _skillsTrackingCalParLookup;//寻址类技能通用计算标签
+        private ComponentLookup<SkillBlackFrameTag> _skillBlackFrameTagLookup;//黑炎 
+
         /// <summary>
         /// 法阵特殊技能造成的伤害表现为DOT伤害
         /// </summary>
@@ -85,6 +87,7 @@ namespace BlackDawn.DOTS
             _preDefineHeroSkillThunderGripTagLookup = SystemAPI.GetComponentLookup<PreDefineHeroSkillThunderGripTag>(true);
             _skillChainDevourTagLookup = SystemAPI.GetComponentLookup<SkillChainDevourTag>(true);
             _skillsTrackingCalParLookup = SystemAPI.GetComponentLookup<SkillsTrackingCalPar>(true);
+            _skillBlackFrameTagLookup = SystemAPI.GetComponentLookup<SkillBlackFrameTag>(true);
 
         }
         public void OnUpdate(ref SystemState state)
@@ -116,6 +119,8 @@ namespace BlackDawn.DOTS
             //连锁吞噬 技能标签，通用寻址类技能标签
             _skillChainDevourTagLookup.Update(ref state);
             _skillsTrackingCalParLookup.Update(ref state);
+            //黑炎技能标签
+            _skillBlackFrameTagLookup.Update(ref state);
 
             var deltaTime = SystemAPI.Time.DeltaTime;
             if (arcaneCircleLinkenBuffer.IsCreated)
@@ -136,6 +141,8 @@ namespace BlackDawn.DOTS
             var thunderGripHitMonsterArray = detectionSystem.thunderGripHitMonsterArray;
             //获取连锁吞噬碰撞对
             var chainDevourHitMonsterArray = detectionSystem.chainDevourHitMonsterArray;
+            //获取黑炎碰撞对
+            var blackFrameHitMonsterArray = detectionSystem.blackFrameHitMonsterArray;
             // if(thunderGripHitMonsterArray.Length>0)
             // DevDebug.LogError("雷霆之握碰撞对长度" + thunderGripHitMonsterArray.Length);
             //雷霆之握技能处理,由侦测系统开关控制
@@ -154,7 +161,7 @@ namespace BlackDawn.DOTS
 
 
             //连锁吞噬技能处理，由侦测系统开关控制
-            if (detectionSystem.enableSpecialSkillChainDevour&&chainDevourHitMonsterArray.Length>0)
+            if (detectionSystem.enableSpecialSkillChainDevour && chainDevourHitMonsterArray.Length > 0)
                 state.Dependency = new ApplySpecialSkillChainDevourDamageJob
                 {
                     ECB = ecb.AsParallelWriter(),
@@ -169,11 +176,25 @@ namespace BlackDawn.DOTS
                     HitArray = chainDevourHitMonsterArray
                 }
                 .ScheduleParallel(chainDevourHitMonsterArray.Length, 64, state.Dependency);
+            //黑炎处理
+            if (detectionSystem.enableSpecialSkillBlcakFrame && blackFrameHitMonsterArray.Length > 0)
+                state.Dependency = new ApplySkillSkillBlackFrameDamagejob
+                {
+                    ECB = ecb.AsParallelWriter(),
+                    DefenseAttrLookup = _monsterDefenseAttrLookup,
+                    DebuffAttrLookup = _monsterDebufferAttributeLookup,
+                    LossPoolAttrLookup = _monsterLossPoolAttrLookup,
+                    SkillTagLookup = _skillBlackFrameTagLookup,
+                    SkillDamageCalLookup = _skillsDamageCalParLookup,
+                    HitArray = blackFrameHitMonsterArray
+                }
+                .ScheduleParallel(blackFrameHitMonsterArray.Length, 64, state.Dependency);
+
             //Schedule(chainDevourHitMonsterArray.Length, state.Dependency);
-               
-                // if (chainDevourHitMonsterArray.Length > 0)
-                // DevDebug.Log("chian长度" + chainDevourHitMonsterArray.Length);
-               //.ScheduleParallel(chainDevourHitMonsterArray.Length, 64, state.Dependency);
+
+            // if (chainDevourHitMonsterArray.Length > 0)
+            // DevDebug.Log("chian长度" + chainDevourHitMonsterArray.Length);
+            //.ScheduleParallel(chainDevourHitMonsterArray.Length, 64, state.Dependency);
 
 
 
@@ -634,9 +655,9 @@ namespace BlackDawn.DOTS
 
         }
     }
-/// <summary>
-/// 连锁吞噬回调计算
-/// </summary>
+    /// <summary>
+    /// 连锁吞噬回调计算
+    /// </summary>
     struct ApplySpecialSkillChainDevourDamageJob : IJobFor
     {
         public EntityCommandBuffer.ParallelWriter ECB;
@@ -723,8 +744,59 @@ namespace BlackDawn.DOTS
                 ECB.SetComponent(index, target, monsterPool);
 
             }
-         
+
         }
+    }
+
+    /// <summary>
+    ///  黑炎 技能 渲染计算，DOT ？黑炎应该是一种特殊的DOT
+    /// </summary>
+    struct ApplySkillSkillBlackFrameDamagejob : IJobFor
+    {
+        public EntityCommandBuffer.ParallelWriter ECB;
+        [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
+        [ReadOnly] public ComponentLookup<MonsterLossPoolAttribute> LossPoolAttrLookup;
+        [ReadOnly] public ComponentLookup<MonsterDebuffAttribute> DebuffAttrLookup;
+        [ReadOnly] public ComponentLookup<SkillsDamageCalPar> SkillDamageCalLookup;
+        [ReadOnly] public ComponentLookup<SkillBlackFrameTag> SkillTagLookup;
+        
+        [ReadOnly] public NativeArray<TriggerPairData> HitArray;
+        public void Execute(int index)
+        {
+            var pair = HitArray[index];
+            Entity skill = pair.EntityA;
+            Entity target = pair.EntityB;
+
+            var debuff = DebuffAttrLookup[target];
+            var skillTag = SkillTagLookup[skill];
+            var skillDamageCal = SkillDamageCalLookup[skill];
+            var monsterPool = LossPoolAttrLookup[target];
+           // DevDebug.LogError("进入黑炎检测");
+            if (monsterPool.blackFrameActive == 0)
+            {
+                //DevDebug.LogError("进入黑炎计算");
+                monsterPool.blackFrameActive = 1;
+                monsterPool.blackFrameTimer = 10000;
+                debuff.damageAmplification = 0.15f;
+                //激活黑炎A阶段标识
+                if (skillTag.enableSecondA)
+                ECB.SetComponentEnabled<PreDefineHeroSkillBlackFrameATag>(index, target, true);
+                if (skillTag.enableSecondB)
+                ECB.SetComponentEnabled<PreDefineHeroSkillBlackFrameBTag>(index, target, true);
+                ECB.SetComponent(index, target, monsterPool);
+                ECB.SetComponent(index, target, debuff);
+                
+            }
+            else
+            {
+
+                return;
+            }
+
+            
+        }
+
+
     }
 
 }

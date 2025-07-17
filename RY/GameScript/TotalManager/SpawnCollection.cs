@@ -231,6 +231,11 @@ namespace BlackDawn
                 ecb.AddComponent(monster, new PreDefineHeroSkillThunderGripTag());
                 ecb.SetComponentEnabled<PreDefineHeroSkillThunderGripTag>(monster, false);
 
+                //--技能预定义标签区域 -- 黑炎
+                ecb.AddComponent(monster, new PreDefineHeroSkillBlackFrameATag());
+                ecb.SetComponentEnabled<PreDefineHeroSkillBlackFrameATag>(monster, false);
+                ecb.AddComponent(monster, new PreDefineHeroSkillBlackFrameBTag());
+                ecb.SetComponentEnabled<PreDefineHeroSkillBlackFrameBTag>(monster, false);
 
                 
 
@@ -306,6 +311,10 @@ namespace BlackDawn
                 var childLightning = linked[6].Value;
                 //毒素预制体
                 var childPoison =linked[7].Value;
+                //流血预制体
+                var childBleed = linked[8].Value;
+                //黑炎预制体
+                var childBlackFrame = linked[9].Value;
 
            
 
@@ -339,12 +348,12 @@ namespace BlackDawn
                     //非固定化设置，每次特效效果，都可以不一样，配套的随机值和rng
                     ecb.AddComponent(child, new RenderRngState() { rngState = defenseAttribute.rngState });
                     //池化偏移，防止过度效果， 这里直接传入初始化值
-                    ecb.AddComponent(child, new RandomOffset() { Value=  new float4(rng.NextFloat(-1, 1), rng.NextFloat(-1, 1), 0, 0) });
+                    ecb.AddComponent(child, new RandomOffset() { Value = new float4(rng.NextFloat(-1, 1), rng.NextFloat(-1, 1), 0, 0) });
 
                     //ecb.AddComponent<Disabled>(childFire);
                     //texCOlor 模块 放在第二个子物体身上
                     // 添加 TextColor 
-                    ecb.AddComponent(childText, new TextColor { Value = new float4(1, 1, 1, 1) });      
+                    ecb.AddComponent(childText, new TextColor { Value = new float4(1, 1, 1, 1) });
 
                     // 添加 Char1UVRect
                     ecb.AddComponent(childText, new Char1UVRect { Value = new float4(0, 0, 0, 0) });
@@ -420,8 +429,6 @@ namespace BlackDawn
 
                     //可能会有第四个子物体专门用于渲染DOT伤害
 
-
-
                 }
 
                 //添加怪物特定标签
@@ -436,20 +443,24 @@ namespace BlackDawn
                 ecb.AddComponent(childLightning, new LightningRandomOffset { Value = new float4(rng.NextFloat4(-1, 1)) });
                 //添加毒素预制体的随机标签
                 ecb.AddComponent(childPoison, new PoisoningRandomOffset { Value = new float4(rng.NextFloat4(-1, 1)) });
+                //添加流血预制体的随机标签
+                ecb.AddComponent(childBleed, new BleedRandomOffset { Value = new float4(rng.NextFloat4(-1, 1)) });
+                //添加黑炎预制体的随机标签
+                ecb.AddComponent(childBlackFrame, new BlackFrameRandomOffset { Value = new float4(rng.NextFloat4(-1, 1)) });
                
                 switch (name)
                 {
-                   
-                    
+
+
                     case MonsterName.Zombie:
                         ecb.AddComponent(monster, new MoZombieCmp());
                         break;
                     case MonsterName.Albono:
-                        ecb.AddComponent(monster, new MoAlbonoCmp()); 
+                        ecb.AddComponent(monster, new MoAlbonoCmp());
                         break;
                     case MonsterName.AlbonoUpper:
                         ecb.AddComponent(monster, new MoAlbonoUpperCmp());
-             
+
                         break;
 
                 }
