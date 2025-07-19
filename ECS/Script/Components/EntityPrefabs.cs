@@ -11,6 +11,8 @@ namespace BlackDawn.DOTS
         [Header("英雄")]
         public GameObject heroObj;
         public GameObject heroDetector;
+        public GameObject heroBrach;
+        public GameObject heroBrachWithCollider;
 
         [Header("英雄技能映射")]
         public HeroSkillPrefabPair[] skillPrefabs;
@@ -69,6 +71,14 @@ namespace BlackDawn.DOTS
                     HeroDetector = auth.heroDetector != null
                         ? GetEntity(auth.heroDetector, TransformUsageFlags.Dynamic)
                         : Entity.Null,
+                    HeroBrach = auth.heroBrach != null
+                        ? GetEntity(auth.heroBrach, TransformUsageFlags.Dynamic)
+                        : Entity.Null,
+                    HeroBrachWithCollider = auth.heroBrachWithCollider != null
+                        ? GetEntity(auth.heroBrachWithCollider, TransformUsageFlags.Dynamic)
+                        : Entity.Null,
+
+
                     //英雄技能
                     HeroSkill_Pulse = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.Pulse),
                     HeroSkill_DarkEnergy = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.DarkEnergy),
@@ -306,9 +316,13 @@ namespace BlackDawn.DOTS
     public struct ScenePrefabsSingleton : IComponentData
         {
             public Entity Hero;
-            public Entity HeroDetector;    
+            public Entity HeroDetector;
+            //技能幻影步- 生成的残影
+             public Entity HeroBrach;
+            //技能幻影步- 生成的残影-带碰撞体
+              public Entity HeroBrachWithCollider;
             // Hero Skills
-            public Entity HeroSkill_Pulse;
+        public Entity HeroSkill_Pulse;
             public Entity HeroSkill_DarkEnergy;
             public Entity HeroSkill_IceFire;
             public Entity HeroSkill_ThunderStrike;

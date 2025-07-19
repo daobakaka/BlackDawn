@@ -179,10 +179,47 @@ namespace BlackDawn
 
       
         }
+        /// <summary>
+        /// 用于某些技能生成英雄残影
+        /// </summary>
+        /// <returns></returns>
+        public Entity InstantiateHeroShadow(float3 positon,quaternion quaternion)
+        {
+
+  
+            var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
+
+
+            var heroEntity = entityManager.CreateEntity();
+                         
+           entityManager.AddComponentData(heroEntity, new LocalTransform
+                    {
+                        Position = positon,
+                        //  Position = new float3(0, 10, 0),
+                        Rotation = quaternion,
+                        Scale = 1f
+                    });
+                
+              //英雄分身 残影等 标签
+              entityManager.AddComponentData(heroEntity, new  HeroEntityBranchTag());
+
+            
+            ecb.Playback(entityManager);
+            ecb.Dispose();
+
+            DevDebug.LogError("生成英雄残影");
 
 
 
-       
+
+            return heroEntity;
+
+      
+        }
+
+           
         /// <summary>
         /// 怪物生成
         /// </summary>

@@ -469,13 +469,15 @@ namespace BlackDawn
     /// <summary>
     /// 临时防预属性，用于英雄的临时减伤计算
     /// </summary>
-     [Serializable]
-    public struct TempDefenseAttribute 
+    [Serializable]
+    public struct TempDefenseAttribute
     {
         //进击减伤
         public float advanceDamageReduction;
         //元素护盾减伤
         public float elmentShieldDamageReduction;
+        //幻影步3阶段减伤
+        public float PhantomStepC;
 
     }
 
@@ -647,6 +649,8 @@ namespace BlackDawn
         public float tempMasterDamagePar;
         //小于1形式累计
         public float tempAdvanceDamagePar;
+        //幻影步3阶段
+        public float tempPhantomStepCpar;
 
 
     }

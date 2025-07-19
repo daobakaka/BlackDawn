@@ -19,10 +19,13 @@ namespace BlackDawn
 {/// <summary>
 /// 主管英雄技能的核心类，在英雄Mono脚本中初始化之后，通过获取单例从构造函数进行初始化
 /// </summary>
-    public class HeroSkills : GameFrame.BaseClass.Singleton<HeroSkills>
+    public class HeroSkills : Singleton<HeroSkills>
     {
         ScenePrefabsSingleton _skillPrefabs;
         EntityManager _entityManager;
+        //生成集合器
+        SpawnCollection _spawnCollection;
+        GameObject[] _monoPrefabs;
         //技能位置
         Transform _transform;
         //英雄属性,这里的属性，基本只能用于只读，执行过程中，应该采用查询属性
@@ -70,6 +73,10 @@ namespace BlackDawn
             //实时英雄组件查询
             _heroRealTimeAttr = _entityManager.CreateEntityQuery(typeof(HeroAttributeCmpt), typeof(HeroEntityMasterTag));
 
+            //生成集合器
+            _spawnCollection = SpawnCollection.GetInstance();
+            _monoPrefabs = GameManager.instance.gameObjects;
+
 
         }
 
@@ -91,6 +98,7 @@ namespace BlackDawn
             ref var dotDamageSystem = ref World.DefaultGameObjectInjectionWorld.Unmanaged.GetUnsafeSystemRef<DotDamageSystem>(dotDamageSystemHandle);
 
             var runTimeHeroCmp = _entityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
+            var runtimeStateNoImmunity = _entityManager.GetComponentData<HeroIntgratedNoImmunityState>(_heroEntity);
             switch (iD)
 
             {
@@ -246,7 +254,7 @@ namespace BlackDawn
 
 
                     break;
-   
+
                 //法阵 4，持续
                 case HeroSkillID.ArcaneCircle:
 
@@ -385,9 +393,9 @@ namespace BlackDawn
                 case HeroSkillID.Advance:
                     switch (psionicType)
                     {
-                      
+
                         case HeroSkillPsionicType.Basic:
-                           
+
                             var skillAdvance = _entityManager.GetComponentData<SkillAdvanceTag_Hero>(_heroEntity);
 
                             if (skillAdvance.active)
@@ -424,7 +432,7 @@ namespace BlackDawn
                                     skillAdvanceA.tagSurvivalTime = 3f;
                                     skillAdvanceA.active = true;
                                     skillAdvanceA.enableSecondA = true;
-                                }                 
+                                }
                             }
                             _entityManager.SetComponentData(_heroEntity, skillAdvanceA);
                             _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
@@ -492,7 +500,7 @@ namespace BlackDawn
                             _entityManager.AddComponentData(entityBlackFrameB, new SkillBlackFrameTag() { tagSurvivalTime = 10, enableSecondB = true });
 
                             break;
-              
+
                         case HeroSkillPsionicType.PsionicC:
                             var entityBlackFrameC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_BlackFlame, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             var skillParC = _entityManager.GetComponentData<SkillsDamageCalPar>(entityBlackFrameC);
@@ -514,14 +522,14 @@ namespace BlackDawn
                             var skillParAC = _entityManager.GetComponentData<SkillsDamageCalPar>(entityBlackFrameAC);
                             skillParAC.fireDotDamage = 10 * skillParAC.instantPhysicalDamage;//物理伤害可以压制
                             _entityManager.SetComponentData(entityBlackFrameAC, skillParAC);
-                            _entityManager.AddComponentData(entityBlackFrameAC, new SkillBlackFrameTag() { tagSurvivalTime = 10, enableSecondC = true,enableSecondA=true });
+                            _entityManager.AddComponentData(entityBlackFrameAC, new SkillBlackFrameTag() { tagSurvivalTime = 10, enableSecondC = true, enableSecondA = true });
                             break;
                         case HeroSkillPsionicType.PsionicBC:
                             var entityBlackFrameBC = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_BlackFlame, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             var skillParBC = _entityManager.GetComponentData<SkillsDamageCalPar>(entityBlackFrameBC);
                             skillParBC.fireDotDamage = 10 * skillParBC.instantPhysicalDamage;//物理伤害可以压制
                             _entityManager.SetComponentData(entityBlackFrameBC, skillParBC);
-                            _entityManager.AddComponentData(entityBlackFrameBC, new SkillBlackFrameTag() { tagSurvivalTime = 10, enableSecondC = true,enableSecondB=true });
+                            _entityManager.AddComponentData(entityBlackFrameBC, new SkillBlackFrameTag() { tagSurvivalTime = 10, enableSecondC = true, enableSecondB = true });
 
                             break;
                         case HeroSkillPsionicType.PsionicABC:
@@ -529,10 +537,10 @@ namespace BlackDawn
                             var skillParABC = _entityManager.GetComponentData<SkillsDamageCalPar>(entityBlackFrameABC);
                             skillParABC.fireDotDamage = 10 * skillParABC.instantPhysicalDamage;//物理伤害可以压制
                             _entityManager.SetComponentData(entityBlackFrameABC, skillParABC);
-                            _entityManager.AddComponentData(entityBlackFrameABC, new SkillBlackFrameTag() { tagSurvivalTime = 10, enableSecondB = true, enableSecondA = true,enableSecondC=true });
+                            _entityManager.AddComponentData(entityBlackFrameABC, new SkillBlackFrameTag() { tagSurvivalTime = 10, enableSecondB = true, enableSecondA = true, enableSecondC = true });
 
-                        
-                        break;
+
+                            break;
 
 
 
@@ -550,37 +558,37 @@ namespace BlackDawn
                             _entityManager.AddComponentData(entitySweepRender, new SkillSweepRenderTag { tagSurvivalTime = 1 });
 
                             var entitySweep = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_SweepCollider, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                             var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweep);                            
+                            var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweep);
                             _entityManager.SetComponentData(entitySweep, skillPar);
-                            _entityManager.AddComponentData(entitySweep,new SkillSweepTag() { tagSurvivalTime = 1, rotationTotalTime = 1 });
+                            _entityManager.AddComponentData(entitySweep, new SkillSweepTag() { tagSurvivalTime = 1, rotationTotalTime = 1 });
                             break;
                         case HeroSkillPsionicType.PsionicA:
-                         var entitySweepRenderA = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entitySweepRenderA = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entitySweepRenderA, new SkillSweepRenderTag { tagSurvivalTime = 1 });
 
                             var entitySweepA = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_SweepCollider, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                             var skillParA = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweepA);                            
+                            var skillParA = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweepA);
                             _entityManager.SetComponentData(entitySweepA, skillParA);
                             _entityManager.AddComponentData(entitySweepA, new SkillSweepTag() { tagSurvivalTime = 1, enableSecondA = true, rotationTotalTime = 1 });
                             break;
                         case HeroSkillPsionicType.PsionicB:
-                         var entitySweepRenderB = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entitySweepRenderB = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entitySweepRenderB, new SkillSweepRenderTag { tagSurvivalTime = 1 });
 
 
                             var entitySweepB = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_SweepCollider, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                             var skillParB = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweepB);                            
+                            var skillParB = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweepB);
                             _entityManager.SetComponentData(entitySweepB, skillParB);
-                            _entityManager.AddComponentData(entitySweepB, new SkillSweepTag() { tagSurvivalTime = 1, enableSecondB = true, rotationTotalTime = 1 ,speed=10,spawnTimer=UnityEngine.Random.Range(0,0.15f),interval=0.3f,skillDamageChangeParTag=0.5f});
+                            _entityManager.AddComponentData(entitySweepB, new SkillSweepTag() { tagSurvivalTime = 1, enableSecondB = true, rotationTotalTime = 1, speed = 10, spawnTimer = UnityEngine.Random.Range(0, 0.15f), interval = 0.3f, skillDamageChangeParTag = 0.5f });
                             break;
                         case HeroSkillPsionicType.PsionicAB:
-                              var entitySweepRenderAB = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var entitySweepRenderAB = DamageSkillsFlightPropNoneDamage(_skillPrefabs.HeroSkill_Sweep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
                             _entityManager.AddComponentData(entitySweepRenderAB, new SkillSweepRenderTag { tagSurvivalTime = 1 });
 
-                          var entitySweepAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_SweepCollider, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                             var skillParAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweepAB);                            
+                            var entitySweepAB = DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_SweepCollider, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var skillParAB = _entityManager.GetComponentData<SkillsDamageCalPar>(entitySweepAB);
                             _entityManager.SetComponentData(entitySweepAB, skillParAB);
-                            _entityManager.AddComponentData(entitySweepAB,new SkillSweepTag() { tagSurvivalTime =1,enableSecondB=true,enableSecondA= true,rotationTotalTime = 1 ,speed=10,spawnTimer=UnityEngine.Random.Range(0,0.15f),interval=0.15f,skillDamageChangeParTag=0.5f});
+                            _entityManager.AddComponentData(entitySweepAB, new SkillSweepTag() { tagSurvivalTime = 1, enableSecondB = true, enableSecondA = true, rotationTotalTime = 1, speed = 10, spawnTimer = UnityEngine.Random.Range(0, 0.15f), interval = 0.15f, skillDamageChangeParTag = 0.5f });
                             break;
                     }
                     break;
@@ -592,10 +600,10 @@ namespace BlackDawn
 
                         case HeroSkillPsionicType.Basic:
                             //skillTag 这里在技能配置里进行读取
-                             var entityPoisonPool = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_PoisonPool, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
-                             var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entityPoisonPool);                            
+                            var entityPoisonPool = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_PoisonPool, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entityPoisonPool);
                             _entityManager.SetComponentData(entityPoisonPool, skillPar);
-                            _entityManager.AddComponentData(entityPoisonPool,new SkillPoisonPoolTag() { tagSurvivalTime =10});
+                            _entityManager.AddComponentData(entityPoisonPool, new SkillPoisonPoolTag() { tagSurvivalTime = 10 });
 
                             break;
                         case HeroSkillPsionicType.PsionicA:
@@ -614,25 +622,25 @@ namespace BlackDawn
                     {
                         //激活直接伤害物理免疫和元素伤害免疫的 两种状态,免疫时间，升级外部读取 临时储存
                         case HeroSkillPsionicType.Basic:
-                            var heroNoImmunityState=_entityManager.GetComponentData<HeroIntgratedNoImmunityState>(_heroEntity);
-                        
+                            var heroNoImmunityState = _entityManager.GetComponentData<HeroIntgratedNoImmunityState>(_heroEntity);
+
                             heroNoImmunityState.physicalDamageNoImmunityTimer = 3f;
                             heroNoImmunityState.elementDamageNoImmunityTimer = 3f;
                             _entityManager.SetComponentData(_heroEntity, heroNoImmunityState);
                             if (runTimeHeroCmp.defenseAttribute.energy > 51)
                             {
-                                    var _rollCoroutineId = _coroutineController.StartRoutine(
-                                    IEPhaseSkill(3, runTimeHeroCmp),
-                                    tag: "PhaseSkill",
-                                    onComplete: () =>
-                                    {
-                                        DevDebug.Log("相位释放完成");
-                                    }
-                                    );
+                                var _rollCoroutineId = _coroutineController.StartRoutine(
+                                IEPhaseSkill(3, runTimeHeroCmp),
+                                tag: "PhaseSkill",
+                                onComplete: () =>
+                                {
+                                    DevDebug.Log("相位释放完成");
+                                }
+                                );
                             }
                             break;
                         case HeroSkillPsionicType.PsionicA:
-                            break;                       
+                            break;
                     }
 
                     break;
@@ -662,7 +670,75 @@ namespace BlackDawn
 
                     }
                     break;
-                //静电牢笼，瞬时，持续
+                //暗影步 12 瞬时，辅助，保护
+                case HeroSkillID.ShadowStep:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 30)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 30;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                Hero.instance.transform.position = Hero.instance.skillTargetPositon;
+                            }
+
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                        //获得状态圣母降临
+                            if (runTimeHeroCmp.defenseAttribute.energy > 30)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 30;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                runtimeStateNoImmunity.controlNoImmunityTimer = 1;
+                                runtimeStateNoImmunity.dotNoImmunityTimer = 1;
+                                runtimeStateNoImmunity.elementDamageNoImmunityTimer = 1;
+                                runtimeStateNoImmunity.inlineDamageNoImmunityTimer = 1;
+                                runtimeStateNoImmunity.physicalDamageNoImmunityTimer = 1;
+                                _entityManager.SetComponentData(_heroEntity, runtimeStateNoImmunity);
+                                Hero.instance.transform.position = Hero.instance.skillTargetPositon;
+
+                            }
+
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 30)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 30;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                Hero.instance.transform.position = Hero.instance.skillTargetPositon;
+                                var entityShadowStep = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowStep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                                var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entityShadowStep);
+                                skillPar.tempStun = 200;
+                                _entityManager.SetComponentData(entityShadowStep, skillPar);
+                                _entityManager.AddComponentData(entityShadowStep, new SkillShadowStepTag() { tagSurvivalTime = 0.5f });
+                            }
+
+
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+
+                            if (runTimeHeroCmp.defenseAttribute.energy > 30)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 30;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                Hero.instance.transform.position = Hero.instance.skillTargetPositon;
+                                runtimeStateNoImmunity.controlNoImmunityTimer = 1;
+                                runtimeStateNoImmunity.dotNoImmunityTimer = 1;
+                                runtimeStateNoImmunity.elementDamageNoImmunityTimer = 1;
+                                runtimeStateNoImmunity.inlineDamageNoImmunityTimer = 1;
+                                runtimeStateNoImmunity.physicalDamageNoImmunityTimer = 1;
+                                _entityManager.SetComponentData(_heroEntity, runtimeStateNoImmunity);
+                                var entityShadowStep = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowStep, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                                var skillPar = _entityManager.GetComponentData<SkillsDamageCalPar>(entityShadowStep);
+                                skillPar.tempStun = 200;
+                                _entityManager.SetComponentData(entityShadowStep, skillPar);
+                                _entityManager.AddComponentData(entityShadowStep, new SkillShadowStepTag() { tagSurvivalTime = 0.5f });
+                            }
+
+                            break;
+                    }
+                    break;
+                //静电牢笼 13，瞬时，持续
                 case HeroSkillID.ElectroCage:
 
                     switch (psionicType)
@@ -995,52 +1071,52 @@ namespace BlackDawn
 
                 //冰霜护盾 18
                 case HeroSkillID.FrostShield:
-                 
+
                     var skillFrostShieldCmp = _entityManager.GetComponentData<SkillFrostShieldTag_Hero>(_heroEntity);
-                  
+
                     switch (psionicType)
 
                     {
 
                         case HeroSkillPsionicType.Basic:
-                            
-                           
-                                if (runTimeHeroCmp.defenseAttribute.energy > 100)
-                                {
-                                    //冰霜护盾吸收公式
-                                    runTimeHeroCmp.defenseAttribute.frostBarrier = 3000 + (runTimeHeroCmp.defenseAttribute.energy) * (1 + runTimeHeroCmp.attackAttribute.attackPower / 100) * (1 + runTimeHeroCmp.attackAttribute.elementalDamage.frostDamage);
-                                    runTimeHeroCmp.defenseAttribute.energy = 0;
-                                    skillFrostShieldCmp.active = true;
-                                    skillFrostShieldCmp.relaseSkill = true;
-                                    //初始化护盾存在时间为60秒
-                                    skillFrostShieldCmp.tagSurvivalTime = 60;
-                                    _entityManager.SetComponentData(_heroEntity, skillFrostShieldCmp);
-                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
-                                    SkillSetActiveFrostShield(true);
-                                }
-                          
+
+
+                            if (runTimeHeroCmp.defenseAttribute.energy > 100)
+                            {
+                                //冰霜护盾吸收公式
+                                runTimeHeroCmp.defenseAttribute.frostBarrier = 3000 + (runTimeHeroCmp.defenseAttribute.energy) * (1 + runTimeHeroCmp.attackAttribute.attackPower / 100) * (1 + runTimeHeroCmp.attackAttribute.elementalDamage.frostDamage);
+                                runTimeHeroCmp.defenseAttribute.energy = 0;
+                                skillFrostShieldCmp.active = true;
+                                skillFrostShieldCmp.relaseSkill = true;
+                                //初始化护盾存在时间为60秒
+                                skillFrostShieldCmp.tagSurvivalTime = 60;
+                                _entityManager.SetComponentData(_heroEntity, skillFrostShieldCmp);
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                SkillSetActiveFrostShield(true);
+                            }
+
 
                             break;
                         case HeroSkillPsionicType.PsionicA:
                             if (runTimeHeroCmp.defenseAttribute.energy > 100)
-                                {
-                                    //冰霜护盾吸收公式
-                                    runTimeHeroCmp.defenseAttribute.frostBarrier = 3000 + (runTimeHeroCmp.defenseAttribute.energy) * (1 + runTimeHeroCmp.attackAttribute.attackPower / 100) * (1 + runTimeHeroCmp.attackAttribute.elementalDamage.frostDamage);
-                                    runTimeHeroCmp.defenseAttribute.energy = 0;
-                                    skillFrostShieldCmp.active = true;
-                                    //初始化护盾存在时间为60秒
-                                    skillFrostShieldCmp.tagSurvivalTime = 60;
-                                   skillFrostShieldCmp.relaseSkill = true;
-                                    //释放冰刺
-                                    skillFrostShieldCmp.enableSecondA = true;
-                                    //储存阶段冰刺伤害
-                                    skillFrostShieldCmp.iceConeDamage = runTimeHeroCmp.defenseAttribute.frostBarrier;
-                                    //开启A阶段控制标识
-                                   _entityManager.SetComponentData(_heroEntity, skillFrostShieldCmp);
-                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
-                                
-                                    SkillSetActiveFrostShield(true);
-                                }
+                            {
+                                //冰霜护盾吸收公式
+                                runTimeHeroCmp.defenseAttribute.frostBarrier = 3000 + (runTimeHeroCmp.defenseAttribute.energy) * (1 + runTimeHeroCmp.attackAttribute.attackPower / 100) * (1 + runTimeHeroCmp.attackAttribute.elementalDamage.frostDamage);
+                                runTimeHeroCmp.defenseAttribute.energy = 0;
+                                skillFrostShieldCmp.active = true;
+                                //初始化护盾存在时间为60秒
+                                skillFrostShieldCmp.tagSurvivalTime = 60;
+                                skillFrostShieldCmp.relaseSkill = true;
+                                //释放冰刺
+                                skillFrostShieldCmp.enableSecondA = true;
+                                //储存阶段冰刺伤害
+                                skillFrostShieldCmp.iceConeDamage = runTimeHeroCmp.defenseAttribute.frostBarrier;
+                                //开启A阶段控制标识
+                                _entityManager.SetComponentData(_heroEntity, skillFrostShieldCmp);
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+
+                                SkillSetActiveFrostShield(true);
+                            }
                             break;
                         case HeroSkillPsionicType.PsionicB:
                             break;
@@ -1048,7 +1124,7 @@ namespace BlackDawn
                             break;
 
                     }
-            
+
                     break;
 
 
@@ -1277,7 +1353,7 @@ namespace BlackDawn
                     break;
                 //元素护盾 25 保护/唯一，保护技能25号元素可以仅添加渲染即可
                 case HeroSkillID.ElementShield:
-                    var skillElementShieldCmp = _entityManager.GetComponentData<SkillElementShieldTag_Hero>(_heroEntity);                  
+                    var skillElementShieldCmp = _entityManager.GetComponentData<SkillElementShieldTag_Hero>(_heroEntity);
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
@@ -1366,7 +1442,35 @@ namespace BlackDawn
                                 SkillSetActiveElementShield(false);
                             }
                             break;
+                    }
+                    break;
+                //时空扭曲27 第一步  生成残影及残影entity位置  第二步  传送
+                case HeroSkillID.ChronoTwist:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
 
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                //写回能量扣减
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                //残影
+                                var heroShadow = GameObject.Instantiate(_monoPrefabs[1].gameObject, Hero.instance.transform.position, Hero.instance.transform.rotation);
+                                //生成残影entity
+                                // var heroShadowEntity = _entityManager.CreateEntity();
+                                var heroShadowEntity = _entityManager.Instantiate(_skillPrefabs.HeroBrach);
+                                _entityManager.AddComponentData(heroShadowEntity, new LocalTransform { Position = Hero.instance.transform.position, Rotation = Hero.instance.transform.rotation, Scale = 1 });
+                                _entityManager.AddComponentData(heroShadowEntity, new HeroEntityBranchTag { });
+                                //持续5秒
+                                _entityManager.AddComponentData(heroShadowEntity, new SkillChronoTwistTag { tagSurvivalTime = 5 });
+                                _entityManager.AddComponentData(heroShadowEntity, Hero.instance.skillsDamageCalPar);
+                                //传送
+                                Hero.instance.transform.position = Hero.instance.skillTargetPositon;
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            break;
 
                     }
                     break;
@@ -1757,9 +1861,245 @@ namespace BlackDawn
                             //设置总体存活时间， 设置爆炸时间，开启池化标识
                             _entityManager.AddComponentData(elementBurstEntityAB, new SkillElementBurstTag() { tagSurvivalTime = 1.5f, startBurstTime = 0.5f, enableSecondB = true });
 
+
                             break;
                     }
 
+                    break;
+
+                //幻影步 34
+                case HeroSkillID.PhantomStep:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+
+                            if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                var tempDeltaTime = runTimeHeroCmp.defenseAttribute.energy * 0.05f;
+                                runTimeHeroCmp.defenseAttribute.energy = 0;
+                                //写回能量扣减
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                //残影
+                                var heroShadow = GameObject.Instantiate(_monoPrefabs[1].gameObject, Hero.instance.transform.position, Hero.instance.transform.rotation);
+                                heroShadow.TryGetComponent<HeroBranchDeal>(out HeroBranchDeal component);
+                                //最新的持续时间
+                                component.originalSurvivalTime += tempDeltaTime;
+                                //生成残影entity
+                                // var heroShadowEntity = _entityManager.CreateEntity();
+                                var heroShadowEntity = _entityManager.Instantiate(_skillPrefabs.HeroBrach);
+                                _entityManager.AddComponentData(heroShadowEntity, new LocalTransform { Position = Hero.instance.transform.position, Rotation = Hero.instance.transform.rotation, Scale = 1 });
+                                _entityManager.AddComponentData(heroShadowEntity, new HeroEntityBranchTag { });
+                                //持续5秒
+                                _entityManager.AddComponentData(heroShadowEntity, new SkillPhantomStepTag { tagSurvivalTime = 5 + tempDeltaTime });
+                                _entityManager.AddComponentData(heroShadowEntity, Hero.instance.skillsDamageCalPar);
+                                //传送
+                                Hero.instance.transform.position = Hero.instance.skillTargetPositon;
+
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 50)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 50;
+                                var tempDeltaTime = runTimeHeroCmp.defenseAttribute.energy * 0.05f;
+                                runTimeHeroCmp.defenseAttribute.energy = 0;
+                                //写回能量扣减
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                //残影
+                                var heroShadow = GameObject.Instantiate(_monoPrefabs[1].gameObject, Hero.instance.transform.position, Hero.instance.transform.rotation);
+                                heroShadow.TryGetComponent<HeroBranchDeal>(out HeroBranchDeal component);
+                                //最新的持续时间
+                                component.originalSurvivalTime += tempDeltaTime;
+                                //生成带碰撞体的残影
+                                var heroShadowEntity = _entityManager.Instantiate(_skillPrefabs.HeroBrachWithCollider);
+                                _entityManager.AddComponentData(heroShadowEntity, new LocalTransform { Position = Hero.instance.transform.position, Rotation = Hero.instance.transform.rotation, Scale = 1 });
+                                _entityManager.AddComponentData(heroShadowEntity, new HeroEntityBranchTag { });
+                                //持续5秒
+                                _entityManager.AddComponentData(heroShadowEntity, new SkillPhantomStepTag { tagSurvivalTime = 5 + tempDeltaTime, enableSecondA = true });
+                                _entityManager.AddComponentData(heroShadowEntity, Hero.instance.skillsDamageCalPar);
+                                _entityManager.AddBuffer<HitRecord>(heroShadowEntity);
+                                _entityManager.AddBuffer<HitElementResonanceRecord>(heroShadowEntity);
+                                //传送
+                                Hero.instance.transform.position = Hero.instance.skillTargetPositon;
+
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 50)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 50;
+                                var tempDeltaTime = runTimeHeroCmp.defenseAttribute.energy * 0.05f;
+                                runTimeHeroCmp.defenseAttribute.energy = 0;
+                                //写回能量扣减
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                //残影 ,这里设置残影的 初始化信息
+                                var heroShadow = GameObject.Instantiate(_monoPrefabs[1].gameObject, Hero.instance.transform.position, Hero.instance.transform.rotation);
+                                heroShadow.TryGetComponent<HeroBranchDeal>(out HeroBranchDeal component);
+                                component.spawnChance = 0.2f;
+                                //最新的持续时间
+                                component.originalSurvivalTime += tempDeltaTime;
+                                //生成残影entity
+                                // var heroShadowEntity = _entityManager.CreateEntity();
+                                var heroShadowEntity = _entityManager.Instantiate(_skillPrefabs.HeroBrach);
+                                _entityManager.AddComponentData(heroShadowEntity, new LocalTransform { Position = Hero.instance.transform.position, Rotation = Hero.instance.transform.rotation, Scale = 1 });
+                                _entityManager.AddComponentData(heroShadowEntity, new HeroEntityBranchTag { });
+                                //持续5秒
+                                _entityManager.AddComponentData(heroShadowEntity, new SkillPhantomStepTag { tagSurvivalTime = 5 + tempDeltaTime, enableSecondB = true });
+                                _entityManager.AddComponentData(heroShadowEntity, Hero.instance.skillsDamageCalPar);
+                                //传送
+                                Hero.instance.transform.position = Hero.instance.skillTargetPositon;
+
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicC:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 25)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 25;
+                                var tempDeltaTime = runTimeHeroCmp.defenseAttribute.energy * 0.05f;
+                                runTimeHeroCmp.defenseAttribute.energy = 0;
+                                //写回能量扣减
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                //残影 ,这里设置残影的 初始化信息
+                                var heroShadow = GameObject.Instantiate(_monoPrefabs[1].gameObject, Hero.instance.transform.position, Hero.instance.transform.rotation);
+                                heroShadow.TryGetComponent<HeroBranchDeal>(out HeroBranchDeal component);
+                                //最新的持续时间
+                                component.originalSurvivalTime += tempDeltaTime;
+                                //生成残影entity
+                                // var heroShadowEntity = _entityManager.CreateEntity();
+                                var heroShadowEntity = _entityManager.Instantiate(_skillPrefabs.HeroBrach);
+                                _entityManager.AddComponentData(heroShadowEntity, new LocalTransform { Position = Hero.instance.transform.position, Rotation = Hero.instance.transform.rotation, Scale = 1 });
+                                _entityManager.AddComponentData(heroShadowEntity, new HeroEntityBranchTag { });
+                                //持续5秒
+                                _entityManager.AddComponentData(heroShadowEntity, new SkillPhantomStepTag { tagSurvivalTime = 5 + tempDeltaTime, enableSecondC = true });
+                                _entityManager.AddComponentData(heroShadowEntity, Hero.instance.skillsDamageCalPar);
+                                //传送
+                                Hero.instance.transform.position = Hero.instance.skillTargetPositon;
+
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+
+                            if (runTimeHeroCmp.defenseAttribute.energy > 50)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 50;
+                                var tempDeltaTime = runTimeHeroCmp.defenseAttribute.energy * 0.05f;
+                                runTimeHeroCmp.defenseAttribute.energy = 0;
+                                //写回能量扣减
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                //残影 ,这里设置残影的 初始化信息
+                                var heroShadow = GameObject.Instantiate(_monoPrefabs[1].gameObject, Hero.instance.transform.position, Hero.instance.transform.rotation);
+                                heroShadow.TryGetComponent<HeroBranchDeal>(out HeroBranchDeal component);
+                                component.spawnChance = 0.2f;
+                                component.enableSecondA = true;
+                                //最新的持续时间
+                                component.originalSurvivalTime += tempDeltaTime;
+                                //生成残影entity
+                                // var heroShadowEntity = _entityManager.CreateEntity();
+                                var heroShadowEntity = _entityManager.Instantiate(_skillPrefabs.HeroBrachWithCollider);
+                                _entityManager.AddComponentData(heroShadowEntity, new LocalTransform { Position = Hero.instance.transform.position, Rotation = Hero.instance.transform.rotation, Scale = 1 });
+                                _entityManager.AddComponentData(heroShadowEntity, new HeroEntityBranchTag { });
+                                //持续5秒
+                                _entityManager.AddComponentData(heroShadowEntity, new SkillPhantomStepTag { tagSurvivalTime = 5 + tempDeltaTime, enableSecondB = true });
+                                _entityManager.AddComponentData(heroShadowEntity, Hero.instance.skillsDamageCalPar);
+                                //传送
+                                _entityManager.AddBuffer<HitRecord>(heroShadowEntity);
+                                _entityManager.AddBuffer<HitElementResonanceRecord>(heroShadowEntity);
+                                Hero.instance.transform.position = Hero.instance.skillTargetPositon;
+
+                            }
+
+                            break;
+                        case HeroSkillPsionicType.PsionicAC:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                var tempDeltaTime = runTimeHeroCmp.defenseAttribute.energy * 0.05f;
+                                runTimeHeroCmp.defenseAttribute.energy = 0;
+                                //写回能量扣减
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                //残影
+                                var heroShadow = GameObject.Instantiate(_monoPrefabs[1].gameObject, Hero.instance.transform.position, Hero.instance.transform.rotation);
+                                heroShadow.TryGetComponent<HeroBranchDeal>(out HeroBranchDeal component);
+                                //最新的持续时间
+                                component.originalSurvivalTime += tempDeltaTime;
+                                //生成带碰撞体的残影
+                                var heroShadowEntity = _entityManager.Instantiate(_skillPrefabs.HeroBrachWithCollider);
+                                _entityManager.AddComponentData(heroShadowEntity, new LocalTransform { Position = Hero.instance.transform.position, Rotation = Hero.instance.transform.rotation, Scale = 1 });
+                                _entityManager.AddComponentData(heroShadowEntity, new HeroEntityBranchTag { });
+                                //持续5秒
+                                _entityManager.AddComponentData(heroShadowEntity, new SkillPhantomStepTag { tagSurvivalTime = 5 + tempDeltaTime, enableSecondA = true, enableSecondC = true });
+                                _entityManager.AddComponentData(heroShadowEntity, Hero.instance.skillsDamageCalPar);
+                                _entityManager.AddBuffer<HitRecord>(heroShadowEntity);
+                                _entityManager.AddBuffer<HitElementResonanceRecord>(heroShadowEntity);
+                                //传送
+                                Hero.instance.transform.position = Hero.instance.skillTargetPositon;
+
+                            }
+
+                            break;
+                        case HeroSkillPsionicType.PsionicBC:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                var tempDeltaTime = runTimeHeroCmp.defenseAttribute.energy * 0.05f;
+                                runTimeHeroCmp.defenseAttribute.energy = 0;
+                                //写回能量扣减
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                //残影 ,这里设置残影的 初始化信息
+                                var heroShadow = GameObject.Instantiate(_monoPrefabs[1].gameObject, Hero.instance.transform.position, Hero.instance.transform.rotation);
+                                heroShadow.TryGetComponent<HeroBranchDeal>(out HeroBranchDeal component);
+                                component.spawnChance = 0.2f;
+                                component.enableSecondC = true;
+                                //最新的持续时间
+                                component.originalSurvivalTime += tempDeltaTime;
+                                //生成残影entity
+                                // var heroShadowEntity = _entityManager.CreateEntity();
+                                var heroShadowEntity = _entityManager.Instantiate(_skillPrefabs.HeroBrach);
+                                _entityManager.AddComponentData(heroShadowEntity, new LocalTransform { Position = Hero.instance.transform.position, Rotation = Hero.instance.transform.rotation, Scale = 1 });
+                                _entityManager.AddComponentData(heroShadowEntity, new HeroEntityBranchTag { });
+                                //持续5秒
+                                _entityManager.AddComponentData(heroShadowEntity, new SkillPhantomStepTag { tagSurvivalTime = 5 + tempDeltaTime, enableSecondB = true, enableSecondC = true });
+                                _entityManager.AddComponentData(heroShadowEntity, Hero.instance.skillsDamageCalPar);
+                                //传送
+                                Hero.instance.transform.position = Hero.instance.skillTargetPositon;
+
+                            }
+
+                            break;
+                        case HeroSkillPsionicType.PsionicABC:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 25;
+                                var tempDeltaTime = runTimeHeroCmp.defenseAttribute.energy * 0.05f;
+                                runTimeHeroCmp.defenseAttribute.energy = 0;
+                                //写回能量扣减
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                //残影 ,这里设置残影的 初始化信息
+                                var heroShadow = GameObject.Instantiate(_monoPrefabs[1].gameObject, Hero.instance.transform.position, Hero.instance.transform.rotation);
+                                heroShadow.TryGetComponent<HeroBranchDeal>(out HeroBranchDeal component);
+                                component.spawnChance = 0.2f;
+                                component.enableSecondA = true;
+                                component.enableSecondC = true;
+                                //最新的持续时间
+                                component.originalSurvivalTime += tempDeltaTime;
+                                //生成残影entity
+                                // var heroShadowEntity = _entityManager.CreateEntity();
+                                var heroShadowEntity = _entityManager.Instantiate(_skillPrefabs.HeroBrachWithCollider);
+                                _entityManager.AddComponentData(heroShadowEntity, new LocalTransform { Position = Hero.instance.transform.position, Rotation = Hero.instance.transform.rotation, Scale = 1 });
+                                _entityManager.AddComponentData(heroShadowEntity, new HeroEntityBranchTag { });
+                                //持续5秒
+                                _entityManager.AddComponentData(heroShadowEntity, new SkillPhantomStepTag { tagSurvivalTime = 5 + tempDeltaTime, enableSecondB = true, enableSecondA = true, enableSecondC = true });
+                                _entityManager.AddComponentData(heroShadowEntity, Hero.instance.skillsDamageCalPar);
+                                _entityManager.AddBuffer<HitRecord>(heroShadowEntity);
+                                _entityManager.AddBuffer<HitElementResonanceRecord>(heroShadowEntity);
+                                //传送
+                                Hero.instance.transform.position = Hero.instance.skillTargetPositon;
+
+                            }
+
+                            break;
+                    }
                     break;
             }
             ;

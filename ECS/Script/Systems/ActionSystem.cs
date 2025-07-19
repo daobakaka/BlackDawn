@@ -27,7 +27,10 @@ namespace BlackDawn.DOTS
     {
         ComponentLookup<LocalTransform> m_transform;
         ComponentLookup<AgentBody> m_PhysicsVelocity;
+        ComponentLookup<HeroEntityBranchTag> _heroEntityBranchTagLookup;
         ScenePrefabsSingleton m_Prefabs;
+        //一次建立 永久使用
+        EntityQuery _heroBranchQuery;
 
         float timer;
         bool IsOpenAction;
@@ -50,6 +53,9 @@ namespace BlackDawn.DOTS
             m_Prefabs = SystemAPI.GetSingleton<ScenePrefabsSingleton>();
             m_transform = SystemAPI.GetComponentLookup<LocalTransform>(true);
             m_PhysicsVelocity = SystemAPI.GetComponentLookup<AgentBody>(true);
+            _heroEntityBranchTagLookup = SystemAPI.GetComponentLookup<HeroEntityBranchTag>(true);
+            //不用更新
+            _heroBranchQuery = state.EntityManager.CreateEntityQuery(typeof(HeroEntityBranchTag), typeof(LocalTransform));
             IsOpenAction = true;
             _heroEntity = Hero.instance.heroEntity;
         }
@@ -57,26 +63,53 @@ namespace BlackDawn.DOTS
         {
             m_transform.Update(ref state);
             m_PhysicsVelocity.Update(ref state);
+            _heroEntityBranchTagLookup.Update(ref state);
+
         }
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             //state.Dependency.Complete();
             timer += SystemAPI.Time.DeltaTime;
-
             UpdateAllComponentLookup(ref state);
-
+            //agent 插件的空间分布单例
+            var spatial = SystemAPI.GetSingleton<AgentSpatialPartitioningSystem.Singleton>();
 
             //英雄位置
-            float3 heroPositon = m_transform[_heroEntity].Position;
-
+            float3 heroPositon = m_transform[_heroEntity].Position;         
+            var branchTransforms = _heroBranchQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
             //设置全局的entity的目标为英雄
-            foreach (var (body, lum) in SystemAPI.Query<RefRW<AgentBody>, RefRW<AgentLocomotion>>())
+            foreach (var (body, lum, live, transform) in SystemAPI.Query<RefRW<AgentBody>, RefRW<AgentLocomotion>, RefRW<LiveMonster>, RefRW<LocalTransform>>())
             {
-                body.ValueRW.SetDestination(heroPositon);
-                // lum.ValueRW.Speed = 10;
+                if (branchTransforms.Length > 0)
+                {
+
+                    // 计算与每个分支的距离，找到最近的
+                    float3 selfPos = transform.ValueRO.Position;
+                    int closestIdx = 0;
+                    float minDistSq = math.lengthsq(selfPos - branchTransforms[0].Position);
+
+                    for (int i = 1; i < branchTransforms.Length; i++)
+                    {
+                        float distSq = math.lengthsq(selfPos - branchTransforms[i].Position);
+                        if (distSq < minDistSq)
+                        {
+                            minDistSq = distSq;
+                            closestIdx = i;
+                        }
+                    }
+                    if (minDistSq < 100)
+                        body.ValueRW.SetDestination(branchTransforms[closestIdx].Position);
+                    else
+                        body.ValueRW.SetDestination(heroPositon);
+                }
+                else
+                {
+                    body.ValueRW.SetDestination(heroPositon);
+                }
 
             }
+            branchTransforms.Dispose();
 
             //近战job
             // var ecb = new EntityCommandBuffer(Allocator.TempJob);
@@ -102,7 +135,7 @@ namespace BlackDawn.DOTS
                 TransformLookup = m_transform,
             }.ScheduleParallel(state.Dependency); // 注意依赖 meleeHandle！
 
-     
+
 
 
 
@@ -159,7 +192,7 @@ namespace BlackDawn.DOTS
         /// <param name="transform"></param>
         /// <param name="animatorAspect"></param>
         /// <param name="index"></param>
-        public void Execute(Entity entity, EnabledRefRO<LiveMonster> live,in MonsterGainAttribute gainAttribute, ref AgentBody agentBody, ref AgentLocomotion agentLocomotion, AtMelee atMelee,
+        public void Execute(Entity entity, EnabledRefRO<LiveMonster> live, in MonsterGainAttribute gainAttribute, ref AgentBody agentBody, ref AgentLocomotion agentLocomotion, AtMelee atMelee,
             ref AnimationControllerData animation, ref DynamicBuffer<GpuEcsAnimatorEventBufferElement> eventBuffer,
             in LocalTransform transform, GpuEcsAnimatorAspect animatorAspect, [ChunkIndexInQuery] int index)
         {
@@ -245,7 +278,7 @@ namespace BlackDawn.DOTS
         public ScenePrefabsSingleton Prefabs;
         public float3 HeroPosition;
 
-        public void Execute(Entity entity, EnabledRefRO<LiveMonster> live,in MonsterGainAttribute gainAttribute, ref AgentBody agentBody, ref AgentLocomotion agentLocomotion, AtRanged atRanged,
+        public void Execute(Entity entity, EnabledRefRO<LiveMonster> live, in MonsterGainAttribute gainAttribute, ref AgentBody agentBody, ref AgentLocomotion agentLocomotion, AtRanged atRanged,
             ref AnimationControllerData animation, ref DynamicBuffer<GpuEcsAnimatorEventBufferElement> eventBuffer,
             in LocalTransform transform, GpuEcsAnimatorAspect animatorAspect, ref DynamicBuffer<GpuEcsCurrentAttachmentAnchorBufferElement> anchorBuffer,
             [ChunkIndexInQuery] int index)
@@ -387,5 +420,32 @@ namespace BlackDawn.DOTS
 
     }
 
+/// <summary>
+/// 查找附近的 英雄分支,就是一个结构体 封装方法， 非JOB
+/// </summary>
+    [BurstCompile]
+    public struct FindClosestHeroBranch : ISpatialQueryEntity
+    {
+        public float3 SelfPos;
+        public ComponentLookup<HeroEntityBranchTag> HeroEntityBranchTagLookup;
+        public Entity ClosestEntity;
+        public float3 ClosestPos;
+        public float MinDistSq;
 
+        public void Execute(Entity entity, AgentBody body, AgentShape shape, LocalTransform transform)
+        {
+            // 必须是Branch
+            if (!HeroEntityBranchTagLookup.HasComponent(entity))
+                return;
+
+            float distSq = math.lengthsq(SelfPos - transform.Position);
+            if (distSq <=MinDistSq)
+            {
+                MinDistSq = distSq;
+                ClosestEntity = entity;
+                ClosestPos = transform.Position;
+            }
+        }
+
+    }
 }

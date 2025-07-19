@@ -47,8 +47,8 @@ namespace BlackDawn
         //元素共鸣 11
         ElementResonance,  // 元素共鸣：生成一个持续8秒的元素领域，范围内所有攻击附加随机元素效果  
                            // 释放方式：Release/Buff；伤害类型：全元素
-        //暗影步        
-        ShadowStep,        // 暗影步：瞬移至目标位置，留下一个持续3秒的暗影残影（吸引敌人攻击）  
+        //暗影步  12      
+        ShadowStep,        // 暗影步：瞬移至目标位置 
                            // 释放方式：Teleport；伤害类型：暗影
         //静电牢笼13
         ElectroCage,       // 静电牢笼：禁锢目标敌人4秒，期间闪电伤害对其+100%  
@@ -92,7 +92,7 @@ namespace BlackDawn
 
         ArcanePulse,       // 奥术脉冲：发射一道穿透性奥术波，对路径上所有敌人造成伤害并降低其抗性10%（可叠加）  
                            // 释放方式：Release/Debuff；伤害类型：魔法
-
+        //时空扭曲 27
         ChronoTwist,       // 时空扭曲：短暂延迟后传送至目标位置，并在原地留下一个残影（吸引敌人攻击）  
                            // 释放方式：Teleport/Summon；伤害类型：无
 
@@ -113,7 +113,7 @@ namespace BlackDawn
         //元素爆发 33
         ElementBurst,      // 元素爆发：根据当前武器元素类型释放对应范围爆炸  
                            // 释放方式：Release/Explosion；伤害类型：全元素
-
+        //幻影步 34
         PhantomStep,       // 幻影步：进入1秒无敌状态，并在原地留下一个幻影（幻影持续3秒，可嘲讽敌人）  
                            // 释放方式：Teleport/Protect；伤害类型：无
 

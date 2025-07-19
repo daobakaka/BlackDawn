@@ -122,7 +122,7 @@ namespace BlackDawn
 
 
 
-        void InsGameObj(int order)
+       void InsGameObj(int order)
         {
             if (!Done)
             {

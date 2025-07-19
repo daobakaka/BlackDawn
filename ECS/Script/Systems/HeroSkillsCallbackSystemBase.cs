@@ -115,9 +115,10 @@ namespace BlackDawn.DOTS
             SkillCallBack_FrostNova(timer, ecb, _prefabs);
             //通用护盾技能 1- 元素护盾
             SkillCallBack_ElementShieldDeal();
-            //通用-冰霜护盾 
+            //通用-冰霜护盾25 
             SkillCallBack_FrostShieldDeal(timer,_prefabs,ecb);
-
+            //技能 时空扭曲 27
+            SkillCallBack_ChronoTwist(timer, ecb);
             //技能闪电链 30
             SkillCallBack_LightningChain(timer, ecb, _prefabs);
             //技能毒雨 32
@@ -838,23 +839,61 @@ namespace BlackDawn.DOTS
                 })
                 .WithoutBurst().Run();
             //两个阶段写在一个系统里面便于调式
-              Entities
-                .WithName("SkillTimeFrostNovaB")
-                .ForEach((Entity entity, VisualEffect vfx,
-                    ref SkillFrostNovaBTag skillTag,
-                    ref SkillsDamageCalPar damageCalPar,
-                    ref LocalTransform transform) =>
-                {
-                    skillTag.tagSurvivalTime -= timer;
-                    if (skillTag.tagSurvivalTime <= 0)
-                    {
-                        damageCalPar.destory = true;
-                        return;
-                    }                  
-                })
-                .WithoutBurst().Run();
+            Entities
+              .WithName("SkillTimeFrostNovaB")
+              .ForEach((Entity entity, VisualEffect vfx,
+                  ref SkillFrostNovaBTag skillTag,
+                  ref SkillsDamageCalPar damageCalPar,
+                  ref LocalTransform transform) =>
+              {
+                  skillTag.tagSurvivalTime -= timer;
+                  if (skillTag.tagSurvivalTime <= 0)
+                  {
+                      damageCalPar.destory = true;
+                      return;
+                  }
+              })
+              .WithoutBurst().Run();
 
-}
+        }
+        /// <summary>
+        /// 技能回调 时空扭曲
+        /// </summary>
+        /// <param name="timer"></param>
+        /// <param name="ecb"></param>
+
+        void SkillCallBack_ChronoTwist(float timer, EntityCommandBuffer ecb)
+        {
+
+            Entities.WithName("HeroSkillChrinoTwist")
+            .ForEach((ref HeroEntityBranchTag brachTag,ref SkillChronoTwistTag skillTag,ref SkillsDamageCalPar skillCal) =>
+            {
+                skillTag.tagSurvivalTime -= timer;
+                if (skillTag.tagSurvivalTime <= 0)
+                    skillCal.destory = true;
+                if (skillTag.enableSecondA)
+                { 
+
+
+                }
+                if (skillTag.enableSecondB)
+                {
+
+
+                }
+
+            }).WithoutBurst().Run();
+
+
+
+
+        }
+
+
+
+
+        
+
 
         //技能  闪电链,这里 应该是先投掷检测球， 根据检测球的检测结果，输出闪电链 即可
         void SkillCallBack_LightningChain(float timer, EntityCommandBuffer ecb, ScenePrefabsSingleton prefab)

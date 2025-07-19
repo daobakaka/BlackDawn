@@ -3468,3 +3468,72 @@ public class DamageTextMono : MonoBehaviour
            }).WithoutBurst().Run();
 
         }
+
+
+        //--------------------分支情况------------------------------------------------------------------------//
+            
+            var branchTransforms = _heroBranchQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
+            //设置全局的entity的目标为英雄
+            foreach (var (body, lum, live, transform) in SystemAPI.Query<RefRW<AgentBody>, RefRW<AgentLocomotion>, RefRW<LiveMonster>, RefRW<LocalTransform>>())
+            {
+                if (branchTransforms.Length > 0)
+                {
+
+                    // 计算与每个分支的距离，找到最近的
+                    float3 selfPos = transform.ValueRO.Position;
+                    int closestIdx = 0;
+                    float minDistSq = math.lengthsq(selfPos - branchTransforms[0].Position);
+
+                    for (int i = 1; i < branchTransforms.Length; i++)
+                    {
+                        float distSq = math.lengthsq(selfPos - branchTransforms[i].Position);
+                        if (distSq < minDistSq)
+                        {
+                            minDistSq = distSq;
+                            closestIdx = i;
+                        }
+                    }
+                    body.ValueRW.SetDestination(branchTransforms[closestIdx].Position);
+                }
+                else
+                {
+                    body.ValueRW.SetDestination(heroPositon);
+                }
+
+            }
+            branchTransforms.Dispose();
+   ////---- 用ai插件的空间划分寻找， 当前存在问题
+
+
+              //设置全局的entity的目标为英雄 ,利用插件的空间结构进行查找
+            foreach (var (body, lum, live, transform) in SystemAPI.Query<RefRW<AgentBody>, RefRW<AgentLocomotion>, RefRW<LiveMonster>, RefRW<LocalTransform>>())
+            {
+                if (branchTransforms.Length > 0)
+                {
+
+                    // 用空间分区查找最近的分支
+                    var action = new FindClosestHeroBranch
+                    {
+                        SelfPos = transform.ValueRO.Position,
+                        HeroEntityBranchTagLookup=_heroEntityBranchTagLookup,
+                        ClosestEntity = Entity.Null,
+                        ClosestPos = float3.zero,
+                        MinDistSq = float.MaxValue
+                    };
+
+                    // 查询空间分区，查找分支
+                  var count=  spatial.QueryCircle(transform.ValueRO.Position, 50, ref action);
+                  //  DevDebug.LogError("最近距离" + action.MinDistSq+"总体数量"+count);
+                    // 设置目标
+                    if (action.ClosestEntity != Entity.Null)
+                        body.ValueRW.SetDestination(action.ClosestPos);
+                     else
+                        body.ValueRW.SetDestination(heroPositon);
+
+                }
+                else
+                {
+                    body.ValueRW.SetDestination(heroPositon);
+                }
+
+            }

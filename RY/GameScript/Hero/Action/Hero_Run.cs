@@ -81,7 +81,7 @@ namespace BlackDawn
         {
             //攻击
          // fsm.Owner.HeroAttack(0.1f,1000,360);
-            fsm.Owner.HeroAttackBurst();
+           // fsm.Owner.HeroAttackBurst();
 
             //移动
             var transform = fsm.Owner.transform;

@@ -450,7 +450,7 @@ namespace BlackDawn.DOTS
         public bool enableSecondB;
 
         public int level;
- 
+
     }
     /// <summary>
     /// 横扫 渲染TAG
@@ -460,9 +460,9 @@ namespace BlackDawn.DOTS
         public float tagSurvivalTime;
         public bool destory;
     }
- /// <summary>
- /// 横扫B阶段 余震
- /// </summary>
+    /// <summary>
+    /// 横扫B阶段 余震
+    /// </summary>
     public struct SkillSweepBTag : IComponentData
     {
         public float tagSurvivalTime;
@@ -917,6 +917,44 @@ namespace BlackDawn.DOTS
         public bool active;
         public bool enableSecondA;
         public int level;
+    }
+
+    /// <summary>
+    /// 时空 扭曲
+    /// </summary>
+    public struct SkillChronoTwistTag : IComponentData
+    {
+        public float tagSurvivalTime;
+        public bool enableSecondA;
+        public bool enableSecondB;
+    }
+
+
+    /// <summary>
+    /// 幻影步
+    /// </summary>
+    public struct SkillPhantomStepTag : IComponentData
+    {
+        public float tagSurvivalTime;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        public bool enableSecondC;
+        public int level;
+
+    }
+    /// <summary>
+    /// 技能 暗影步
+    /// </summary>
+    public struct SkillShadowStepTag : IComponentData
+    {
+
+        public float tagSurvivalTime;
+        public bool enableSecondA;
+        public bool enableSecondB;
+
+        public int level;
+        public float skillDamageChangeParTag;
+
     }
 
 }

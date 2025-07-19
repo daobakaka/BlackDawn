@@ -86,7 +86,7 @@ namespace BlackDawn.DOTS
             quaternion rot = _transform[_heroEntity].Rotation;
             _heroPosition = _transform[_heroEntity].Position;
             //获取英雄属性
-            var  heroPar = _heroAttribute[_heroEntity];
+            var heroPar = _heroAttribute[_heroEntity];
             //获取英雄装载的技能等级
             var level = _heroAttribute[_heroEntity].skillDamageAttribute.skillLevel;
             var prefab = SystemAPI.GetSingleton<ScenePrefabsSingleton>();
@@ -303,12 +303,18 @@ namespace BlackDawn.DOTS
             SkillMonoElementResonance(ref state, ecb);
             //技能静电牢笼
             SkillMonoElectroCage(ref state, ecb, prefab);
+
+            // 暗影步 12
+            SkillMonoShadowStep(ref state, ecb, timer);   
             //暗影洪流B阶段，瞬时伤害特效控制
             SkillMonoMineBlastB(ref state);
             //连锁吞噬
             SkillMonoChainDevour(ref state, ecb);
             //雷霆之握
             SkillMonoThunderGrip(ref state, ecb);
+            //幻影步 34
+            SkillMonoPhantomStep(ref state, ecb, timer);
+
 
 
 
@@ -825,6 +831,48 @@ namespace BlackDawn.DOTS
 
 
         }
+
+
+        /// <summary>
+        /// 技能 幻影步
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="ecb"></param>
+        /// <param name="timer"></param>
+        void SkillMonoPhantomStep(ref SystemState state, EntityCommandBuffer ecb,float timer)
+        {
+
+            foreach (var (transform, skillDamageCal, SkillTag, entity)
+             in SystemAPI.Query<RefRW<LocalTransform>, RefRW<SkillsDamageCalPar>, RefRW<SkillPhantomStepTag>>().WithEntityAccess())
+            {
+                SkillTag.ValueRW.tagSurvivalTime -= timer;
+                if (SkillTag.ValueRW.tagSurvivalTime <= 0)
+                {
+                    skillDamageCal.ValueRW.destory = true;
+                }
+            }
+
+        }
+        /// <summary>
+        /// 技能暗影步
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="ecb"></param>
+        /// <param name="timer"></param>
+        void SkillMonoShadowStep(ref SystemState state, EntityCommandBuffer ecb, float timer)
+        {   
+              foreach (var (transform, skillDamageCal, SkillTag, entity)
+             in SystemAPI.Query<RefRW<LocalTransform>, RefRW<SkillsDamageCalPar>, RefRW<SkillShadowStepTag>>().WithEntityAccess())
+            {
+                SkillTag.ValueRW.tagSurvivalTime -= timer;
+                if (SkillTag.ValueRW.tagSurvivalTime <= 0)
+                {
+                    skillDamageCal.ValueRW.destory = true;
+                }
+            }
+
+        }
+
 
         /// <summary>
         /// 英雄技能ECS 释放系统(静电牢笼B变种)

@@ -28,6 +28,7 @@ namespace BlackDawn.DOTS
         Entity _heroEntity;
         public float3 targetPosition;//向Mono世界传输
         ProjectDawn.Navigation.Sample.Crowd.Spawner _crowdSpawner;
+        private EntityQuery _heroBranchQuery;
 
         private SystemHandle _detectionSystemHandle;
 
@@ -39,6 +40,7 @@ namespace BlackDawn.DOTS
             m_transform = state.GetComponentLookup<LocalTransform>(true);
             m_localToWorld = state.GetComponentLookup<LocalToWorld>(true);
             m_detection_DefaultCmpt = state.GetComponentLookup<Detection_DefaultCmpt>(true);
+            _heroBranchQuery = state.EntityManager.CreateEntityQuery(typeof(HeroEntityBranchTag), typeof(LocalTransform));
 
 
 
@@ -149,6 +151,23 @@ namespace BlackDawn.DOTS
 
                     ecb.DestroyEntity(entity);
 
+            }
+            //部分技能的 属性增强 --如幻影步C阶段
+
+            foreach (var (skillTag, entity) in SystemAPI.Query<RefRW<SkillPhantomStepTag>>().WithEntityAccess())
+            {
+                //所有分身加载C 标签
+                if (skillTag.ValueRO.enableSecondC)
+                {
+                    var branchCount = _heroBranchQuery.CalculateEntityCount();
+                    var runTimeHeroCmp = state.EntityManager.GetComponentData<HeroAttributeCmpt>(_heroEntity);
+                    runTimeHeroCmp.attackAttribute.heroDynamicalAttack.tempPhantomStepCpar = branchCount * (0.1f + 0.01f * skillTag.ValueRO.level);
+                    runTimeHeroCmp.defenseAttribute.tempDefense.PhantomStepC = branchCount * (0.02f + 0.001f * skillTag.ValueRO.level);
+                    state.EntityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                    return;
+
+                }
+                return;
             }
             
 
