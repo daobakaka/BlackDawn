@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
@@ -865,22 +866,65 @@ namespace BlackDawn.DOTS
         void SkillCallBack_ChronoTwist(float timer, EntityCommandBuffer ecb)
         {
 
-            Entities.WithName("HeroSkillChrinoTwist")
-            .ForEach((ref HeroEntityBranchTag brachTag,ref SkillChronoTwistTag skillTag,ref SkillsDamageCalPar skillCal) =>
+            Entities.WithName("HeroSkillChronoTwist")
+            .ForEach(( VisualEffect vfx,ref OverlapOverTimeQueryCenter overlap,ref SkillChronoTwistTag skillTag,ref SkillsOverTimeDamageCalPar skillOverTimeCal,ref LocalTransform transform) =>
             {
                 skillTag.tagSurvivalTime -= timer;
+                overlap.center = transform.Position;
                 if (skillTag.tagSurvivalTime <= 0)
-                    skillCal.destory = true;
-                if (skillTag.enableSecondA)
-                { 
-
+                    skillOverTimeCal.destory = true;              
+                //单帧判断  转换爆炸参数
+                if (skillTag.tagSurvivalTime < skillTag.stratExplosionTime && skillTag.tagSurvivalTime >= skillTag.stratExplosionTime - timer)
+                {
+                    vfx.SendEvent("hit");
 
                 }
-                if (skillTag.enableSecondB)
+                if (skillTag.tagSurvivalTime < 1 && skillTag.tagSurvivalTime >= 1 - timer)
                 {
 
+                    overlap.radius *= 1.3f;
+                    transform.Scale = 2.5f;
+                    //取消牵引 重新爆炸
+                    skillOverTimeCal.enablePull = false;
+                    skillOverTimeCal.enableExplosion = true;
+                    skillOverTimeCal.tempExplosion = 500f;
+                    //爆炸的时候进行伤害变化计算
+                    skillOverTimeCal.damageChangePar *= skillTag.skillDamageChangeParTag;
 
-                }
+                    if (skillTag.enableSecondB)
+                    {
+                        int totalCount = 10 + skillTag.level;
+                        float angleStep = 360f / totalCount;  // 每个之间的角度
+                        var skillDamageCal = new SkillsDamageCalPar();
+
+                        for (int j = 0; j < totalCount; j++)
+                        {
+                            var entiyBullet = ecb.Instantiate(_prefabs.HeroSkillAssistive_ChronoTwistB);
+                            var tras = transform;
+                            tras.Scale = 1.2f;
+                            tras.Rotation = transform.Rotation * Quaternion.Euler(0,angleStep*j , 0);
+                            ecb.SetComponent(entiyBullet, tras);
+                            //添加时空碎片
+                            ecb.AddComponent(entiyBullet, new SkillChronoTwistBTag { tagSurvivalTime = 0.5f, speed = 50 });
+                            //选取英雄的武器类型 生成对应的值,这里假设物理
+                            skillDamageCal.instantPhysicalDamage = skillOverTimeCal.instantPhysicalDamage*(0.2f+0.01f*skillTag.level);//每个造成10伤害加等级成长
+                            skillDamageCal.heroRef = _heroEntity;//传递引用，进行动态伤害计算
+                            skillDamageCal.damageChangePar = skillOverTimeCal.damageChangePar;
+                            skillDamageCal.damageTriggerType = skillOverTimeCal.damageTriggerType;//持续性伤害无法造成压制？
+                            //对应的dot伤害
+                            skillDamageCal.bleedDotDamage = UnityEngine.Random.Range(0, 1f) < 0.3f ? 1 : 0 * skillDamageCal.instantPhysicalDamage;
+                            ecb.AddComponent(entiyBullet, skillDamageCal);
+                            //添加节能检测的buffer
+                            ecb.AddBuffer<HitRecord>(entiyBullet);
+                            ecb.AddBuffer<HitElementResonanceRecord>(entiyBullet);
+                            
+
+
+                        }
+
+                    }
+                 }
+        
 
             }).WithoutBurst().Run();
 

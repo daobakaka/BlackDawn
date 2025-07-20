@@ -166,6 +166,9 @@ namespace BlackDawn
 
             //进击 预加载组件
             ecb.AddComponent(heroEntity,new SkillAdvanceTag_Hero(){ });
+
+            //时间缓速 预加载组件
+            ecb.AddComponent(heroEntity, new SkillTimeSlowTag_Hero { });
             
             ecb.Playback(entityManager);
             ecb.Dispose();

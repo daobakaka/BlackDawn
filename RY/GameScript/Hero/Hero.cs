@@ -136,10 +136,12 @@ namespace BlackDawn
         // Start is called before the first frame update
         void Start()
         {
-       
-            DevDebug.Log("物理系统+------------------------："+Physics.simulationMode);
 
-   
+            DevDebug.Log("物理系统+------------------------：" + Physics.simulationMode);
+
+
+
+       
             //测试
             //HeroAttack(1);
         }

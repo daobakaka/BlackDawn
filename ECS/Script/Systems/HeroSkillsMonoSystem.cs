@@ -58,7 +58,7 @@ namespace BlackDawn.DOTS
         {
             _heroEntity = SystemAPI.GetSingletonEntity<HeroEntityMasterTag>();
             _heroAttributeCmptOriginal = Hero.instance.attributeCmpt;
-
+        
 
             DevDebug.Log("重启SkillMono系统");
         }
@@ -306,12 +306,16 @@ namespace BlackDawn.DOTS
 
             // 暗影步 12
             SkillMonoShadowStep(ref state, ecb, timer);   
-            //暗影洪流B阶段，瞬时伤害特效控制
+            //暗影洪流15 B阶段，瞬时伤害特效控制
             SkillMonoMineBlastB(ref state);
+            //时间缓速 16
+            SKillMonoTimeSlow(ref state, timer);
             //连锁吞噬
             SkillMonoChainDevour(ref state, ecb);
             //雷霆之握
             SkillMonoThunderGrip(ref state, ecb);
+            //时空扭曲B阶段
+            SkillMonoChronoTwistB(ref state, timer);
             //幻影步 34
             SkillMonoPhantomStep(ref state, ecb, timer);
 
@@ -394,6 +398,83 @@ namespace BlackDawn.DOTS
 
 
 
+        }
+        //技能时间缓速
+        void SKillMonoTimeSlow(ref SystemState state, float timer)
+        {
+            foreach (var (skillTag, heroPar, transform, entity)
+                        in SystemAPI.Query<RefRW<SkillTimeSlowTag_Hero>, RefRW<HeroAttributeCmpt>, RefRW<LocalTransform>>().WithEntityAccess())
+            {
+
+                skillTag.ValueRW.tagSurvivalTime -= timer;
+                if (skillTag.ValueRW.active)
+                {
+                    if (skillTag.ValueRW.tagSurvivalTime <= 0)
+                    {
+                        //每秒降低5点灵能
+                        heroPar.ValueRW.defenseAttribute.energy -= 10 * timer;
+                    }
+                    //单次初始化的结果
+                    if (!skillTag.ValueRW.initialized)
+                    {
+                        skillTag.ValueRW.initialized = true;
+                        heroPar.ValueRW.gainAttribute.energyRegen *= 1.5f;
+                        heroPar.ValueRW.gainAttribute.hpRegen *= 2f;
+                        heroPar.ValueRW.defenseAttribute.moveSpeed *= 2f;
+                        if (skillTag.ValueRW.enableSecondA)
+                        {
+                            //这里提供的冷却缩减是基础冷却缩减，非进击式的动态冷却缩减--这种加成应该更高，属于1类加成
+                            heroPar.ValueRW.gainAttribute.cooldownReduction += (0.35f + 0.05f * skillTag.ValueRW.level);
+                        }
+                        if (skillTag.ValueRW.enableSecondB)
+                        {
+                            //提升的是基础攻速-这种加成应该更高，属于一类加成
+                            heroPar.ValueRW.attackAttribute.attackSpeed += (0.5f + 0.2f * skillTag.ValueRW.level);
+                        }
+                    }
+                }
+                    else
+                    {
+                        //非active 状态即重置 skillTag 
+                        skillTag.ValueRW.initialized = false;
+                        heroPar.ValueRW.gainAttribute.energyRegen = _heroAttributeCmptOriginal.gainAttribute.energyRegen;
+                        heroPar.ValueRW.gainAttribute.hpRegen = _heroAttributeCmptOriginal.gainAttribute.hpRegen;
+                        heroPar.ValueRW.defenseAttribute.moveSpeed = _heroAttributeCmptOriginal.defenseAttribute.moveSpeed;
+                        heroPar.ValueRW.attackAttribute.attackSpeed = _heroAttributeCmptOriginal.attackAttribute.attackSpeed;
+                        heroPar.ValueRW.gainAttribute.cooldownReduction = _heroAttributeCmptOriginal.gainAttribute.cooldownReduction;
+
+                    }
+                if (heroPar.ValueRW.defenseAttribute.energy <= 0.01f)
+                {
+
+                    skillTag.ValueRW.active = false;
+                    
+                }
+
+
+
+            }
+
+
+        }
+
+        //技能时空扭曲B阶段 瞬时伤害 ,暂定持续0.5秒销毁
+        void SkillMonoChronoTwistB(ref SystemState state, float timer)
+        {
+
+            foreach (var (skillTag, skillPar, transform, entity)
+            in SystemAPI.Query<RefRW<SkillChronoTwistBTag>, RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>>().WithEntityAccess())
+            {
+                skillTag.ValueRW.tagSurvivalTime -= timer;
+                if (skillTag.ValueRW.tagSurvivalTime <= 0)
+                    skillPar.ValueRW.destory = true;
+
+                float3 forward = math.mul(transform.ValueRO.Rotation, new float3(0, 0, 1)); // Z轴为前
+                transform.ValueRW.Position += forward * skillTag.ValueRO.speed* timer;
+
+            }
+            
+            
         }
         //特殊， 检查激活A阶段怪物身上带有的黑炎标签， 进行其抗性持降低的计算
         //检查激活B阶段怪物身上带有的黑炎标签，进行其伤害加深的计算
@@ -668,22 +749,12 @@ namespace BlackDawn.DOTS
                             else
                             {
                                 ecb.AddComponent(entityElectroCage, new SkillElectroCageTag() { tagSurvivalTime = 4, enableSecondB = true, StackCount = nextStackCount });
-
                             }
-
                         }
-
-
                     }
-
                 }
 
-
-
             }
-
-
-
 
             //雷暴消除逻辑
             foreach (var (skillTag, skillCal, entity)

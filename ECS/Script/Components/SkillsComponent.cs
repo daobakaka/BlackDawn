@@ -2,6 +2,7 @@ using System;
 using NUnit.Framework.Interfaces;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 
 namespace BlackDawn.DOTS
 {
@@ -910,7 +911,7 @@ namespace BlackDawn.DOTS
     /// <summary>
     /// 进击 保护类技能
     /// </summary>
-    public struct SkillAdvanceTag_Hero : IComponentData
+    public struct SkillAdvanceTag_Hero : IComponentData, IEnableableComponent
     {
 
         public float tagSurvivalTime;
@@ -920,13 +921,25 @@ namespace BlackDawn.DOTS
     }
 
     /// <summary>
-    /// 时空 扭曲
+    /// 时空 扭曲  --奇点爆炸
     /// </summary>
     public struct SkillChronoTwistTag : IComponentData
     {
         public float tagSurvivalTime;
         public bool enableSecondA;
         public bool enableSecondB;
+        public int level;
+
+        public float stratExplosionTime;
+        public float skillDamageChangeParTag;
+    }
+    /// <summary>
+    /// 时空扭曲第二阶段标签
+    /// </summary>
+    public struct SkillChronoTwistBTag : IComponentData
+    {
+        public float tagSurvivalTime;
+        public float speed;
     }
 
 
@@ -956,6 +969,24 @@ namespace BlackDawn.DOTS
         public float skillDamageChangeParTag;
 
     }
+    /// <summary>
+    /// 时间缓速预加载标签
+    /// </summary>
+    public struct SkillTimeSlowTag_Hero : IComponentData, IEnableableComponent
+    {
+
+        public float tagSurvivalTime;
+        public bool active;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        public int level;
+        //是否初始化
+        public bool initialized;
+    }
+    
+
+
+
 
 }
 

@@ -59,7 +59,7 @@ namespace BlackDawn
         //暗影洪流15
         ShadowTide,        // 暗影洪流：引导1.5秒，释放一道持续3秒的暗影光束（穿透所有敌人，每秒造成120%伤害）  
                            // 释放方式：Channel；伤害类型：魔法
-
+        //时间缓速 16
         TimeSlow,          // 时间缓速：范围内敌人攻速/移速降低60%，持续5秒  
                            // 释放方式：Release/Debuff；伤害类型：无
 
@@ -222,6 +222,8 @@ namespace BlackDawn
         FrostShieldA,//寒冰护盾A
         SweepB,//横扫B
         SweepCollider,//横扫碰撞体
+        ChronoTwistB,//时空扭曲
+        
         
 
     }

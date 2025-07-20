@@ -156,6 +156,7 @@ namespace BlackDawn.DOTS
                     HeroSkillAssistive_FrostShieldA =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.FrostShieldA),//冰霜护盾
                     HeroSkillAssistive_SweepB =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.SweepB),//横扫B
                     HeroSkillAssistive_SweepCollider =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.SweepCollider),//横扫碰撞体
+                    HeroSkillAssistive_ChronoTwistB =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.ChronoTwistB),//时空扭曲B阶段碰撞体
 
 
 
@@ -397,7 +398,9 @@ namespace BlackDawn.DOTS
             public Entity HeroSkillAssistive_FrostShieldA;//冰霜护盾   
 
             public Entity HeroSkillAssistive_SweepB;//横扫B 
-            public Entity HeroSkillAssistive_SweepCollider;//横扫碰撞体       
+            public Entity HeroSkillAssistive_SweepCollider;//横扫碰撞体  
+
+            public Entity HeroSkillAssistive_ChronoTwistB;//时空扭曲B阶段 时空碎裂     
 
             // Monster Skills
         public Entity MonsterSkill_DeathPulse;

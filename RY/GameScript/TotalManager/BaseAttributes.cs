@@ -310,6 +310,10 @@ namespace BlackDawn
         /// 称号
         /// </summary>
         public PlayerTitle title;
+        /// <summary>
+        /// 基础存放blob 的引用
+        /// </summary>
+       // public BlobAssetReference<OriginalHeroAttribute> blob;
 
     }
     /// <summary>

@@ -27,8 +27,8 @@ namespace BlackDawn.DOTS
         //新增技能伤害结构体
         public SkillDamageAttribute skillDamageAttribute;
         //新增动态伤害结构体
-        
-    
+        //blob资产原始引用
+        public BlobAssetReference<OriginalHeroAttribute> blob;
 
         public HeroAttributeCmpt(HeroAttributeCmpt other)
         {
@@ -44,6 +44,7 @@ namespace BlackDawn.DOTS
             controlDamageAttribute = other.controlDamageAttribute;
             dotDamageAttribute = other.dotDamageAttribute;
             skillDamageAttribute = other.skillDamageAttribute;
+            blob = other.blob;
         }
     }
 

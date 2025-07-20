@@ -26,6 +26,8 @@ namespace BlackDawn.DOTS
         ComponentLookup<LocalToWorld> m_localToWorld;
         ComponentLookup<Detection_DefaultCmpt> m_detection_DefaultCmpt;
         Entity _heroEntity;
+        //英雄初始参数缓存
+        HeroAttributeCmpt _heroCmpCache;
         public float3 targetPosition;//向Mono世界传输
         ProjectDawn.Navigation.Sample.Crowd.Spawner _crowdSpawner;
         private EntityQuery _heroBranchQuery;
@@ -57,10 +59,12 @@ namespace BlackDawn.DOTS
             //传输目标位置
             targetPosition = float3.zero;
 
-            //---    侦察系统
+            //--- 侦察系统
             _detectionSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
             _overlapDetectionSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<OverlapDetectionSystem>();
+            _heroCmpCache = Hero.instance.attributeCmpt;
             Debug.Log("重启系统英雄");
+            //DevDebug.LogError("blob 数据" + SystemAPI.GetSingleton<HeroAttributeBlobCmpt>().Blob.Value.baseAttribute.intelligence);
         }
 
         public void OnStopRunning(ref SystemState state)

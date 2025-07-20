@@ -391,6 +391,8 @@ namespace BlackDawn
 
                 //进击5 保护 辅助
                 case HeroSkillID.Advance:
+                //开启进击标签
+                   _entityManager.SetComponentEnabled<SkillAdvanceTag_Hero>(_heroEntity,true);
                     switch (psionicType)
                     {
 
@@ -1069,6 +1071,76 @@ namespace BlackDawn
 
                     break;
 
+                //时间缓速 16 消耗/持续，增益,每秒降低5点
+                case HeroSkillID.TimeSlow:
+                    _entityManager.SetComponentEnabled<SkillTimeSlowTag_Hero>(_heroEntity,true);
+                    var skillTimeslowCmp = _entityManager.GetComponentData<SkillTimeSlowTag_Hero>(_heroEntity);
+                    if (skillTimeslowCmp.active)
+                    {
+                        //开关节点，关闭之后重置初始化
+                        skillTimeslowCmp.active = false;
+                        
+                        skillTimeslowCmp.initialized = false;
+
+                        _entityManager.SetComponentData(_heroEntity, skillTimeslowCmp);
+                    }
+                    else
+                    {
+                        switch (psionicType)
+                        {
+                            case HeroSkillPsionicType.Basic:
+
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                    skillTimeslowCmp.active = true;
+                                    skillTimeslowCmp.tagSurvivalTime = 3;
+                                    _entityManager.SetComponentData(_heroEntity, skillTimeslowCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                }
+
+                                break;
+                            case HeroSkillPsionicType.PsionicA:
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                    skillTimeslowCmp.active = true;
+                                    skillTimeslowCmp.tagSurvivalTime = 3;
+                                    skillTimeslowCmp.enableSecondA = true;
+                                    _entityManager.SetComponentData(_heroEntity, skillTimeslowCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                }
+                                break;
+                            case HeroSkillPsionicType.PsionicB:
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                    skillTimeslowCmp.active = true;
+                                    skillTimeslowCmp.tagSurvivalTime = 3;
+                                    skillTimeslowCmp.enableSecondB = true;
+                                    _entityManager.SetComponentData(_heroEntity, skillTimeslowCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                }
+                                break;
+                            case HeroSkillPsionicType.PsionicAB:
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                    skillTimeslowCmp.active = true;
+                                    skillTimeslowCmp.tagSurvivalTime = 3;
+                                    skillTimeslowCmp.enableSecondB = true;
+                                    skillTimeslowCmp.enableSecondA = true;
+                                    _entityManager.SetComponentData(_heroEntity, skillTimeslowCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                }
+                                break;
+
+
+
+                        }
+                    }
+                        break;
+                    
                 //冰霜护盾 18
                 case HeroSkillID.FrostShield:
 
@@ -1304,9 +1376,6 @@ namespace BlackDawn
 
 
 
-
-
-
                     }
 
 
@@ -1444,8 +1513,9 @@ namespace BlackDawn
                             break;
                     }
                     break;
-                //时空扭曲27 第一步  生成残影及残影entity位置  第二步  传送
+                //时空扭曲27 第一步  生成时空奇点 第二步 随时间变化 形态， 第三步 爆炸生成时空碎片
                 case HeroSkillID.ChronoTwist:
+
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
@@ -1453,23 +1523,103 @@ namespace BlackDawn
                             if (runTimeHeroCmp.defenseAttribute.energy > 40)
                             {
                                 runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                var damagePar = runTimeHeroCmp.defenseAttribute.energy / 100;//每1点灵力提升1点爆炸伤害，100点灵力提升30%的牵引伤害，提升500%的爆炸伤害
+                                runTimeHeroCmp.defenseAttribute.energy = 0; //灵力归零
                                 //写回能量扣减
                                 _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
-                                //残影
-                                var heroShadow = GameObject.Instantiate(_monoPrefabs[1].gameObject, Hero.instance.transform.position, Hero.instance.transform.rotation);
-                                //生成残影entity
-                                // var heroShadowEntity = _entityManager.CreateEntity();
-                                var heroShadowEntity = _entityManager.Instantiate(_skillPrefabs.HeroBrach);
-                                _entityManager.AddComponentData(heroShadowEntity, new LocalTransform { Position = Hero.instance.transform.position, Rotation = Hero.instance.transform.rotation, Scale = 1 });
-                                _entityManager.AddComponentData(heroShadowEntity, new HeroEntityBranchTag { });
-                                //持续5秒
-                                _entityManager.AddComponentData(heroShadowEntity, new SkillChronoTwistTag { tagSurvivalTime = 5 });
-                                _entityManager.AddComponentData(heroShadowEntity, Hero.instance.skillsDamageCalPar);
-                                //传送
-                                Hero.instance.transform.position = Hero.instance.skillTargetPositon;
+                                var filter = new CollisionFilter
+                                {
+                                    BelongsTo = 1u << 10,
+                                    CollidesWith = 1u << 6,
+                                    GroupIndex = 0
+                                };
+                                var overlap = new OverlapOverTimeQueryCenter { center = Hero.instance.skillTargetPositon, radius = 15, filter = filter, offset = new float3(0, 0, 0) };
+                                var enityChronoTwist = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_ChronoTwist, overlap, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(0, 2, 0), float3.zero, 1, true, false);
+                                _entityManager.AddComponentData(enityChronoTwist, new SkillChronoTwistTag { tagSurvivalTime = 6f + damagePar * 3f, level = 10, stratExplosionTime = 2f, skillDamageChangeParTag = 1 + damagePar * 5f });
+                                var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(enityChronoTwist);
+                                skillPar.tempSlow = 100;
+                                skillPar.tempPull = 200;
+                                skillPar.damageChangePar += damagePar * 0.3f;
+                                _entityManager.SetComponentData(enityChronoTwist, skillPar);
+
                             }
                             break;
                         case HeroSkillPsionicType.PsionicA:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                var damagePar = runTimeHeroCmp.defenseAttribute.energy / 100;//每1点灵力提升1点爆炸伤害，100点灵力提升30%的牵引伤害，提升500%的爆炸伤害
+                                runTimeHeroCmp.defenseAttribute.energy = 0; //灵力归零
+                                //写回能量扣减
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                var filter = new CollisionFilter
+                                {
+                                    BelongsTo = 1u << 10,
+                                    CollidesWith = 1u << 6,
+                                    GroupIndex = 0
+                                };
+                                var overlap = new OverlapOverTimeQueryCenter { center = Hero.instance.skillTargetPositon, radius = 15, filter = filter, offset = new float3(0, 0, 0) };
+                                var enityChronoTwist = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_ChronoTwist, overlap, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(0, 2, 0), float3.zero, 1, true, false);
+                                _entityManager.AddComponentData(enityChronoTwist, new SkillChronoTwistTag { tagSurvivalTime = 6f + damagePar * 3f, level = 10, stratExplosionTime = 2f, skillDamageChangeParTag = 1 + damagePar * 5f });
+                                var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(enityChronoTwist);
+                                skillPar.tempSlow = 100;
+                                skillPar.tempPull = 200;
+                                skillPar.damageChangePar += damagePar * 0.3f;
+                                skillPar.damageChangePar *= 1.5f;//基础伤害提升50%，在加成蓄力加成之后提升，在乘以等级系数
+                                _entityManager.SetComponentData(enityChronoTwist, skillPar);
+
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                var damagePar = runTimeHeroCmp.defenseAttribute.energy / 100;//每1点灵力提升1点爆炸伤害，100点灵力提升30%的牵引伤害，提升500%的爆炸伤害
+                                runTimeHeroCmp.defenseAttribute.energy = 0; //灵力归零
+                                //写回能量扣减
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                var filter = new CollisionFilter
+                                {
+                                    BelongsTo = 1u << 10,
+                                    CollidesWith = 1u << 6,
+                                    GroupIndex = 0
+                                };
+                                var overlap = new OverlapOverTimeQueryCenter { center = Hero.instance.skillTargetPositon, radius = 15, filter = filter, offset = new float3(0, 0, 0) };
+                                var enityChronoTwist = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_ChronoTwist, overlap, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(0, 2, 0), float3.zero, 1, true, false);
+                                _entityManager.AddComponentData(enityChronoTwist, new SkillChronoTwistTag { tagSurvivalTime = 6f + damagePar * 3f, level = 10, stratExplosionTime = 2f, skillDamageChangeParTag = 1 + damagePar * 5f, enableSecondB = true });
+                                var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(enityChronoTwist);
+                                skillPar.tempSlow = 100;
+                                skillPar.tempPull = 200;
+                                skillPar.damageChangePar += damagePar * 0.3f;
+                                _entityManager.SetComponentData(enityChronoTwist, skillPar);
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+                              if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                var damagePar = runTimeHeroCmp.defenseAttribute.energy / 100;//每1点灵力提升1点爆炸伤害，100点灵力提升30%的牵引伤害，提升500%的爆炸伤害
+                                runTimeHeroCmp.defenseAttribute.energy = 0; //灵力归零
+                                //写回能量扣减
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                var filter = new CollisionFilter
+                                {
+                                    BelongsTo = 1u << 10,
+                                    CollidesWith = 1u << 6,
+                                    GroupIndex = 0
+                                };
+                                var overlap = new OverlapOverTimeQueryCenter { center = Hero.instance.skillTargetPositon, radius = 15, filter = filter, offset = new float3(0, 0, 0) };
+                                var enityChronoTwist = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_ChronoTwist, overlap, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1, new float3(0, 2, 0), float3.zero, 1, true, false);
+                                _entityManager.AddComponentData(enityChronoTwist, new SkillChronoTwistTag { tagSurvivalTime = 6f + damagePar * 3f, level = 10, stratExplosionTime = 2f, skillDamageChangeParTag = 1 + damagePar * 5f, enableSecondB = true });
+                                var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(enityChronoTwist);
+                                skillPar.tempSlow = 100;
+                                skillPar.tempPull = 200;
+                                skillPar.damageChangePar += damagePar * 0.3f;
+                                skillPar.damageChangePar *= 1.5f;//基础伤害提升50%，在加成蓄力加成之后提升，在乘以等级系数
+                                _entityManager.SetComponentData(enityChronoTwist, skillPar);
+                            }
+
+
                             break;
 
                     }
