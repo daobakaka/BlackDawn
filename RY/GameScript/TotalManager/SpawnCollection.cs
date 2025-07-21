@@ -166,9 +166,18 @@ namespace BlackDawn
 
             //进击 预加载组件
             ecb.AddComponent(heroEntity,new SkillAdvanceTag_Hero(){ });
+            ecb.SetComponentEnabled<SkillAdvanceTag_Hero>(heroEntity, false); // 设置为禁用
 
             //时间缓速 预加载组件
             ecb.AddComponent(heroEntity, new SkillTimeSlowTag_Hero { });
+            ecb.SetComponentEnabled<SkillTimeSlowTag_Hero>(heroEntity, false); // 设置为禁用
+            //瘟疫蔓延预加载组件
+            ecb.AddComponent(heroEntity, new SkillPlagueSpread_Hero() { });
+            ecb.SetComponentEnabled<SkillPlagueSpread_Hero>(heroEntity, false); // 设置为禁用
+            //加载特殊状态组件 隐匿
+            ecb.AddComponent(heroEntity, new SkillShadowEmbrace_Hero { }); 
+            ecb.SetComponentEnabled<SkillShadowEmbrace_Hero>(heroEntity, false); // 设置为禁用        
+
             
             ecb.Playback(entityManager);
             ecb.Dispose();

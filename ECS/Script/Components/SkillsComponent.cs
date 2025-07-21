@@ -719,6 +719,40 @@ namespace BlackDawn.DOTS
         public float tagSurvivalTime;
         public int level;
     }
+    /// <summary>
+    /// 暗影之拥技能标签
+    /// </summary>
+    public struct SkillShadowEmbraceTag : IComponentData
+    {
+
+        
+        public float tagSurvivalTime;
+        //形变参数
+        public float scaleChangePar;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+        //等级
+        public int level;
+
+
+
+    }
+    /// <summary>
+    /// 暗影辉耀造成的持续性伤害
+    /// </summary>
+        public struct SkillShadowEmbraceAOverTimeTag : IComponentData
+    {
+
+        public float tagSurvivalTime;
+        //形变参数
+        public int level;
+
+
+
+    }
+
 
     /// <summary>
     /// 雷霆之握 技能标签
@@ -918,6 +952,35 @@ namespace BlackDawn.DOTS
         public bool active;
         public bool enableSecondA;
         public int level;
+    }
+
+    /// <summary>
+    /// 暗影之拥抱技能标签
+    /// </summary>
+    public struct SkillShadowEmbrace_Hero : IComponentData, IEnableableComponent
+    {
+        public float tagSurvivalTime;
+        public bool active;
+        public float shadowTime;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        public bool initialized;
+         public int level;
+    }
+    /// <summary>
+    /// 瘟疫蔓延， 运行逻辑需由技能开启，涉及到自身特效， 写在回调系统中
+    /// </summary>
+    public struct SkillPlagueSpread_Hero : IComponentData, IEnableableComponent
+    {
+        public float tagSurvivalTime;
+        public bool active;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        public int level;
+        //能量消耗参数
+        public float energyCost;
+        //初始化控制
+        public bool initialized;
     }
 
     /// <summary>

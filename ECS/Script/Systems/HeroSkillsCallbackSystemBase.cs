@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Entities.Serialization;
 using Unity.Entities.UniversalDelegates;
 using Unity.Mathematics;
 using Unity.Physics;
@@ -40,6 +41,8 @@ namespace BlackDawn.DOTS
         //英雄属性
         private ComponentLookup<HeroAttributeCmpt> _heroAttribute;
 
+        private HeroAttributeCmpt _orignalHeroAttributeCmp;
+
 
         //法阵技能的GPUbuffer
         GraphicsBuffer _arcaneCirclegraphicsBuffer;
@@ -66,6 +69,7 @@ namespace BlackDawn.DOTS
             _prefabs = SystemAPI.GetSingleton<ScenePrefabsSingleton>();
             //获取英雄entity
             _heroEntity = Hero.instance.heroEntity;
+            _orignalHeroAttributeCmp = Hero.instance.attributeCmpt;
 
         }
 
@@ -116,6 +120,10 @@ namespace BlackDawn.DOTS
             SkillCallBack_FrostNova(timer, ecb, _prefabs);
             //通用护盾技能 1- 元素护盾
             SkillCallBack_ElementShieldDeal();
+
+            SkillCallBack_ShadowEmbrace(timer, ecb);
+            //瘟疫蔓延 24 辅助/增强
+            SkillCallBack_PlagueSpread(timer);
             //通用-冰霜护盾25 
             SkillCallBack_FrostShieldDeal(timer,_prefabs,ecb);
             //技能 时空扭曲 27
@@ -935,10 +943,6 @@ namespace BlackDawn.DOTS
 
 
 
-
-        
-
-
         //技能  闪电链,这里 应该是先投掷检测球， 根据检测球的检测结果，输出闪电链 即可
         void SkillCallBack_LightningChain(float timer, EntityCommandBuffer ecb, ScenePrefabsSingleton prefab)
         {
@@ -1225,6 +1229,145 @@ namespace BlackDawn.DOTS
             })
             .WithoutBurst().Run();
         }
+
+        /// <summary>
+        /// 暗影之拥 处理
+        /// </summary>
+        /// <param name="timer"></param>
+        /// <param name="prefab"></param>
+        /// <param name="ecb"></param>
+        void SkillCallBack_ShadowEmbrace(float timer, EntityCommandBuffer ecb)
+        {
+
+            bool enableA = false;
+            float3 overlapPositon = 0;
+            //潜行状态处理
+            Entities
+                    .WithName("HeroSkillShadowEmbraceDeal")                  
+                    .ForEach((ref HeroEntityMasterTag masterTag, ref HeroAttributeCmpt heroAttr, ref SkillShadowEmbrace_Hero skillHeroTag, ref LocalTransform transform) =>
+                    {
+                        skillHeroTag.tagSurvivalTime -= timer;
+                        if (skillHeroTag.tagSurvivalTime <= 0)
+                            skillHeroTag.active = false;
+
+                        if (!skillHeroTag.active && !skillHeroTag.initialized)
+                        {
+                            skillHeroTag.initialized = true;
+                            var entiyShadowEmbrace = ecb.Instantiate(_prefabs.HeroSkill_ShadowEmbrace);
+                            ecb.SetComponent(entiyShadowEmbrace, transform);
+                            //手动计算暴击
+                            var skillCalParOverrride = Hero.instance.CalculateBaseSkillDamage(1);//必定触发暴击
+                            if (skillHeroTag.enableSecondB)
+                            {
+                                skillCalParOverrride = Hero.instance.CalculateBaseSkillDamage(1, 0, (0.15f * skillHeroTag.shadowTime * (1 + 0.01f * skillHeroTag.level)));
+                            }
+                            //写回暴击参数,压制
+                            ecb.SetComponent(entiyShadowEmbrace, skillCalParOverrride);
+                            Hero.instance.CalculateBaseSkillDamage();//再重新计算一次以手动更新，避免其他技能受影响
+                            ecb.AddComponent(entiyShadowEmbrace, Hero.instance.skillsDamageCalPar);
+                            ecb.AddComponent(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
+                            //释放技能清零暗影藏匿计时器
+                            skillHeroTag.shadowTime = 0;
+                        }
+                        if (skillHeroTag.active && skillHeroTag.enableSecondB)
+                        {
+                            skillHeroTag.shadowTime += timer;
+
+                        }                      
+                        enableA = skillHeroTag.active;
+                        overlapPositon = transform.Position;
+
+                    }).WithoutBurst().Run();
+
+            //基本状态处理攻击效果
+            Entities
+                    .ForEach((ref SkillShadowEmbraceTag skillTag, ref SkillsDamageCalPar skillCal) =>
+                    {
+
+                        skillTag.tagSurvivalTime -= timer;
+                        if (skillTag.tagSurvivalTime <= 0)
+                            skillCal.destory = true;
+
+                    }).WithoutBurst().Run();
+
+            //开启A阶段效果
+            Entities.
+                    ForEach((ref SkillShadowEmbraceAOverTimeTag skillTag,ref SkillsOverTimeDamageCalPar skillsOver,ref OverlapOverTimeQueryCenter overlapOverTime) =>
+                    {
+                        overlapOverTime.center = overlapPositon;                   
+                         if (enableA)
+                            skillsOver.destory = true;
+
+                    }).WithoutBurst().Run();     
+
+        }
+
+        //瘟疫蔓延处理
+        void SkillCallBack_PlagueSpread(float timer)
+        {
+            Entities
+            .WithName("HeroSkillPlagueSpreadDeal")
+            .ForEach((ref HeroEntityMasterTag masterTag, ref HeroAttributeCmpt heroAttr, ref SkillPlagueSpread_Hero skillTag) =>
+            {
+                skillTag.tagSurvivalTime -= timer;
+                if (skillTag.active)
+                {
+                    if (skillTag.tagSurvivalTime <= 0)
+                    {
+                        //配置读取可以不用硬编码了
+                        heroAttr.defenseAttribute.energy -= skillTag.energyCost * timer;
+                    }
+                    if (heroAttr.defenseAttribute.energy <= -0.1f)
+                    {
+                        skillTag.active = false;
+
+                    }
+                    if (!skillTag.initialized)
+                    {
+                        skillTag.initialized = true;
+
+                        heroAttr.attackAttribute.dotProcChance.poisonChance += 0.35f+(skillTag.level * 0.015f);
+
+                        //持续性伤害 加成最高80%
+                        if (skillTag.enableSecondA)
+                        {
+                            heroAttr.attackAttribute.dotDamage += 0.6f + (skillTag.level * 0.02f);
+                        }
+                        //持续性伤害暴击伤害 加成最高50%
+                        if (skillTag.enableSecondB)
+                        {
+                            heroAttr.attackAttribute.dotCritDamage += 0.35f + (skillTag.level * 0.015f);
+
+                        }
+
+                    }
+                }
+                else
+                {
+                    if (skillTag.initialized)
+                    {
+                        skillTag.initialized = false;
+
+                        heroAttr.attackAttribute.dotProcChance.poisonChance = _orignalHeroAttributeCmp.attackAttribute.dotProcChance.poisonChance;
+
+                        //持续性伤害 加成最高80%
+                        if (skillTag.enableSecondA)
+                        {
+                            heroAttr.attackAttribute.dotDamage = _orignalHeroAttributeCmp.attackAttribute.dotDamage;
+                        }
+                        //持续性伤害暴击伤害 加成最高50%
+                        if (skillTag.enableSecondB)
+                        {
+                            heroAttr.attackAttribute.dotCritDamage = _orignalHeroAttributeCmp.attackAttribute.dotCritDamage;
+
+                        }
+
+                    }
+
+                }
+            }).WithoutBurst().Run();
+        }
+
         //冰霜护盾 处理,寒冰持续时间60秒？
         void SkillCallBack_FrostShieldDeal(float timer, ScenePrefabsSingleton prefab, EntityCommandBuffer ecb)
         {

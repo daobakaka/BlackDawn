@@ -31,6 +31,8 @@ namespace BlackDawn.DOTS
         ScenePrefabsSingleton m_Prefabs;
         //一次建立 永久使用
         EntityQuery _heroBranchQuery;
+        //英雄潜行状态
+        EntityQuery _heroStealthQuery;
 
         float timer;
         bool IsOpenAction;
@@ -78,12 +80,17 @@ namespace BlackDawn.DOTS
             //英雄位置
             float3 heroPositon = m_transform[_heroEntity].Position;         
             var branchTransforms = _heroBranchQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
+
+            var activeState = SystemAPI.GetComponent<SkillShadowEmbrace_Hero>(_heroEntity);
             //设置全局的entity的目标为英雄
             foreach (var (body, lum, live, transform) in SystemAPI.Query<RefRW<AgentBody>, RefRW<AgentLocomotion>, RefRW<LiveMonster>, RefRW<LocalTransform>>())
             {
-                if (branchTransforms.Length > 0)
+                //隐匿状态
+                if (activeState.active)
+                { lum.ValueRW.Speed = 0; }
+                //分身状态
+                else if (branchTransforms.Length > 0)
                 {
-
                     // 计算与每个分支的距离，找到最近的
                     float3 selfPos = transform.ValueRO.Position;
                     int closestIdx = 0;
@@ -103,11 +110,11 @@ namespace BlackDawn.DOTS
                     else
                         body.ValueRW.SetDestination(heroPositon);
                 }
+                //正常状态
                 else
                 {
                     body.ValueRW.SetDestination(heroPositon);
                 }
-
             }
             branchTransforms.Dispose();
 

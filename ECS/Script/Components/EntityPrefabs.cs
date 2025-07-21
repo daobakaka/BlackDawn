@@ -157,6 +157,7 @@ namespace BlackDawn.DOTS
                     HeroSkillAssistive_SweepB =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.SweepB),//横扫B
                     HeroSkillAssistive_SweepCollider =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.SweepCollider),//横扫碰撞体
                     HeroSkillAssistive_ChronoTwistB =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.ChronoTwistB),//时空扭曲B阶段碰撞体
+                    HeroSkillAssistive_ShadowEmbraceA= GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.ShadowEmbraceA),//暗影辉耀
 
 
 
@@ -396,14 +397,12 @@ namespace BlackDawn.DOTS
             public Entity HeroSkillAssistive_LightningChainRendering;//闪电链渲染体
             public Entity HeroSkillAssistive_LightningChainCollider;//闪电链碰撞体
             public Entity HeroSkillAssistive_FrostShieldA;//冰霜护盾   
-
             public Entity HeroSkillAssistive_SweepB;//横扫B 
             public Entity HeroSkillAssistive_SweepCollider;//横扫碰撞体  
-
-            public Entity HeroSkillAssistive_ChronoTwistB;//时空扭曲B阶段 时空碎裂     
-
+            public Entity HeroSkillAssistive_ChronoTwistB;//时空扭曲B阶段 时空碎裂  
+            public Entity HeroSkillAssistive_ShadowEmbraceA;//暗影之拥A阶段， 暗影辉耀体
             // Monster Skills
-        public Entity MonsterSkill_DeathPulse;
+            public Entity MonsterSkill_DeathPulse;
             // Monster Entities
             public Entity Monster_Zombie;
             public Entity Monster_Albono;

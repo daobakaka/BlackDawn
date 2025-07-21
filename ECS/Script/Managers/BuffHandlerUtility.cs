@@ -191,7 +191,7 @@ namespace BlackDawn.DOTS
     /// 用于记录元素共鸣的记录条，后面可根据选择的中途休息选择的技能进行配置，不同的技能采用不同的buffer?
     /// </summary>
     [Serializable]
-    [InternalBufferCapacity(10)] //默认容量50
+    [InternalBufferCapacity(10)] //默认容量10
     public struct HitElementResonanceRecord : IBufferElementData
     {
         public Entity other;

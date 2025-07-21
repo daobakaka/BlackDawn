@@ -1420,6 +1420,280 @@ namespace BlackDawn
                             break;
                     }
                     break;
+                //暗影之拥 23 瞬时
+                case HeroSkillID.ShadowEmbrace:
+                    //激活暗影之拥
+                   _entityManager.SetComponentEnabled<SkillShadowEmbrace_Hero>(_heroEntity, true);
+                    var skillShadowEmbraceCmp = _entityManager.GetComponentData<SkillShadowEmbrace_Hero>(_heroEntity);
+    
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+                            if (!skillShadowEmbraceCmp.active)
+                            {
+                                if (runTimeHeroCmp.defenseAttribute.energy > 80)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 80;
+                                    skillShadowEmbraceCmp.active = true;
+                                    skillShadowEmbraceCmp.initialized = false;
+                                    skillShadowEmbraceCmp.tagSurvivalTime = 7;
+                                    skillShadowEmbraceCmp .shadowTime = 0;
+                                    _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                }
+                            }
+                            else
+                            {
+                                //这里会释放技能,且改变英雄的渲染状态,破隐时释放的暗影切割
+                                skillShadowEmbraceCmp.active = false;
+                                skillShadowEmbraceCmp.initialized = true;
+                                 skillShadowEmbraceCmp .shadowTime = 0;
+                                //在英雄正前方生成一次暗影切割
+                                var entiyShadowEmbrace = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowEmbrace, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, new float3(0, 0, 0), 1, false, false);
+                                _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
+                                //计算暴击
+                                var skillCalParOverrride = Hero.instance.CalculateBaseSkillDamage(1);//必定触发暴击
+                                //写回暴击参数
+                                _entityManager.SetComponentData(entiyShadowEmbrace, skillCalParOverrride);
+                                Hero.instance.CalculateBaseSkillDamage();//再重新计算一次以手动更新，避免其他技能受影响
+
+                                //暗影之拥抱攻击技能标签
+                                _entityManager.AddComponentData(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
+                            }
+
+                            break;
+                        //A阶段要添加暗影辉耀的持续伤害碰撞体
+                        case HeroSkillPsionicType.PsionicA:
+                            if (!skillShadowEmbraceCmp.active)
+                            {
+                                if (runTimeHeroCmp.defenseAttribute.energy > 80)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 80;
+                                    skillShadowEmbraceCmp.active = true;
+                                    skillShadowEmbraceCmp.initialized = false;
+                                    //开启A阶段， 外部更新相关的参数
+                                    skillShadowEmbraceCmp.enableSecondA = true;
+                                    skillShadowEmbraceCmp.tagSurvivalTime = 7;
+                                       skillShadowEmbraceCmp .shadowTime = 0;
+                                    _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+
+                                    var filter = new CollisionFilter
+                                    {
+                                        //属于道具层
+                                        BelongsTo = 1u << 10,
+                                        //检测敌人
+                                        CollidesWith = 1u << 6,
+                                        GroupIndex = 0
+                                    };
+                                    var overlapAB = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position, radius = 15, filter = filter, shape = OverLapShape.Sphere };
+                                    //0.5f的 持续性伤害
+                                    var entityShadowEmbraceA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_ShadowEmbraceA, overlapAB, Hero.instance.transform.position, Hero.instance.transform.rotation, 0.5f, float3.zero, new float3(0, 0, 0), 1, false, false);
+                                    _entityManager.AddComponentData(entityShadowEmbraceA, new SkillShadowEmbraceAOverTimeTag { tagSurvivalTime = 7 });
+
+                                }
+                            }
+                            else
+                            {
+                                //这里会释放技能,且改变英雄的渲染状态,破隐时释放的暗影切割
+                                skillShadowEmbraceCmp.active = false;
+                                skillShadowEmbraceCmp.initialized = true;
+                                   skillShadowEmbraceCmp .shadowTime = 0;
+                                //在英雄正前方生成一次暗影切割
+                                var entiyShadowEmbrace = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowEmbrace, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, new float3(0, 0, 0), 1, false, false);
+                                _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
+                                //计算暴击
+                                var skillCalParOverrride = Hero.instance.CalculateBaseSkillDamage(1);//必定触发暴击
+                                //写回暴击参数
+                                _entityManager.SetComponentData(entiyShadowEmbrace, skillCalParOverrride);
+                                Hero.instance.CalculateBaseSkillDamage();//再重新计算一次以手动更新，避免其他技能受影响
+                                //暗影之拥抱攻击技能标签
+                                _entityManager.AddComponentData(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
+                            }
+
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+
+                            if (!skillShadowEmbraceCmp.active)
+                            {
+                                if (runTimeHeroCmp.defenseAttribute.energy > 80)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 80;
+                                    skillShadowEmbraceCmp.active = true;
+                                    skillShadowEmbraceCmp.initialized = false;
+                                    //开启B阶段，外部调试相关的参数
+                                    skillShadowEmbraceCmp.enableSecondB = true;
+                                    skillShadowEmbraceCmp.tagSurvivalTime = 7;
+                                       skillShadowEmbraceCmp .shadowTime = 0;
+                                    _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                }
+                            }
+                            else
+                            {
+                                //这里会释放技能,且改变英雄的渲染状态,破隐时释放的暗影切割
+                                skillShadowEmbraceCmp.active = false;
+                                skillShadowEmbraceCmp.initialized = true;
+                                   skillShadowEmbraceCmp .shadowTime = 0;
+                                //在英雄正前方生成一次暗影切割
+                                var entiyShadowEmbrace = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowEmbrace, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, new float3(0, 0, 0), 1, false, false);
+                                _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
+                                //计算暴击
+                                var skillCalParOverrride = Hero.instance.CalculateBaseSkillDamage(1);//必定触发暴击
+                                //写回暴击参数
+                                _entityManager.SetComponentData(entiyShadowEmbrace, skillCalParOverrride);
+                                Hero.instance.CalculateBaseSkillDamage();//再重新计算一次以手动更新，避免其他技能受影响
+                                //暗影之拥抱攻击技能标签
+                                _entityManager.AddComponentData(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+                            if (!skillShadowEmbraceCmp.active)
+                            {
+                                if (runTimeHeroCmp.defenseAttribute.energy > 80)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 80;
+                                    skillShadowEmbraceCmp.active = true;
+                                    skillShadowEmbraceCmp.initialized = false;
+                                    //开启A阶段， 外部更新相关的参数
+                                    skillShadowEmbraceCmp.enableSecondA = true;
+                                    //开启B阶段， 外部更新相关的参数
+                                    skillShadowEmbraceCmp.enableSecondB = true;
+                                    skillShadowEmbraceCmp.tagSurvivalTime = 7;
+                                       skillShadowEmbraceCmp .shadowTime = 0;
+                                    _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+
+                                    var filter = new CollisionFilter
+                                    {
+                                        //属于道具层
+                                        BelongsTo = 1u << 10,
+                                        //检测敌人
+                                        CollidesWith = 1u << 6,
+                                        GroupIndex = 0
+                                    };
+                                    var overlapAB = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position, radius = 15, filter = filter, shape = OverLapShape.Sphere };
+                                    //0.5f的 持续性伤害
+                                    var entityShadowEmbraceA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_ShadowEmbraceA, overlapAB, Hero.instance.transform.position, Hero.instance.transform.rotation, 0.5f, float3.zero, new float3(0, 0, 0), 1, false, false);
+                                    _entityManager.AddComponentData(entityShadowEmbraceA, new SkillShadowEmbraceAOverTimeTag { tagSurvivalTime = 7 });
+
+                                }
+                            }
+                            else
+                            {
+                                //这里会释放技能,且改变英雄的渲染状态,破隐时释放的暗影切割
+                                skillShadowEmbraceCmp.active = false;
+                                skillShadowEmbraceCmp.initialized = true;
+                                   skillShadowEmbraceCmp .shadowTime = 0;
+                                //在英雄正前方生成一次暗影切割
+                                var entiyShadowEmbrace = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowEmbrace, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, new float3(0, 0, 0), 1, false, false);
+                                _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
+                                //计算暴击
+                                var skillCalParOverrride = Hero.instance.CalculateBaseSkillDamage(1);//必定触发暴击
+                                //写回暴击参数
+                                _entityManager.SetComponentData(entiyShadowEmbrace, skillCalParOverrride);
+                                Hero.instance.CalculateBaseSkillDamage();//再重新计算一次以手动更新，避免其他技能受影响
+                                //暗影之拥抱攻击技能标签
+                                _entityManager.AddComponentData(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
+                            }
+
+                            break;
+                    }
+                    break;
+                //瘟疫蔓延 24  持续性 辅助 核心
+                case HeroSkillID.PlagueSpread:
+                    //开启激活遍历
+                    _entityManager.SetComponentEnabled<SkillPlagueSpread_Hero>(_heroEntity, true);
+                    var skillPlagueSpreadCmp = _entityManager.GetComponentData<SkillPlagueSpread_Hero>(_heroEntity);
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+                            if (!skillPlagueSpreadCmp.active)
+                            {
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                    skillPlagueSpreadCmp.active = true;
+                                    skillPlagueSpreadCmp.tagSurvivalTime = 3;
+                                    skillPlagueSpreadCmp.energyCost = 5;//能量消耗， 这样可以配置了
+                                    _entityManager.SetComponentData(_heroEntity, skillPlagueSpreadCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                }
+                            }
+                            else
+                            {
+
+                                skillPlagueSpreadCmp.active = false;
+                                _entityManager.SetComponentData(_heroEntity, skillPlagueSpreadCmp);
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            if (!skillPlagueSpreadCmp.active)
+                            {
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                    skillPlagueSpreadCmp.active = true;
+                                    skillPlagueSpreadCmp.tagSurvivalTime = 3;
+                                    skillPlagueSpreadCmp.enableSecondA = true;
+                                    skillPlagueSpreadCmp.energyCost = 5;//能量消耗， 这样可以配置了
+                                    _entityManager.SetComponentData(_heroEntity, skillPlagueSpreadCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                }
+                            }
+                            else
+                            {
+
+                                skillPlagueSpreadCmp.active = false;
+                                _entityManager.SetComponentData(_heroEntity, skillPlagueSpreadCmp);
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                                if (!skillPlagueSpreadCmp.active)
+                            {
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                    skillPlagueSpreadCmp.active = true;
+                                    skillPlagueSpreadCmp.tagSurvivalTime = 3;
+                                    skillPlagueSpreadCmp.enableSecondB = true;
+                                    skillPlagueSpreadCmp.energyCost = 5;//能量消耗， 这样可以配置了
+                                    _entityManager.SetComponentData(_heroEntity, skillPlagueSpreadCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                }
+                            }
+                            else
+                            {
+
+                                skillPlagueSpreadCmp.active = false;
+                                _entityManager.SetComponentData(_heroEntity, skillPlagueSpreadCmp);
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+                                if (!skillPlagueSpreadCmp.active)
+                            {
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                                {
+                                    runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                    skillPlagueSpreadCmp.active = true;
+                                    skillPlagueSpreadCmp.tagSurvivalTime = 3;
+                                    skillPlagueSpreadCmp.enableSecondA = true;
+                                    skillPlagueSpreadCmp.enableSecondB = true;
+                                    skillPlagueSpreadCmp.energyCost = 5;//能量消耗， 这样可以配置了
+                                    _entityManager.SetComponentData(_heroEntity, skillPlagueSpreadCmp);
+                                    _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                }
+                            }
+                            else
+                            {
+
+                                skillPlagueSpreadCmp.active = false;
+                                _entityManager.SetComponentData(_heroEntity, skillPlagueSpreadCmp);
+                            }
+                            break;
+                    }
+                     break;
+
                 //元素护盾 25 保护/唯一，保护技能25号元素可以仅添加渲染即可
                 case HeroSkillID.ElementShield:
                     var skillElementShieldCmp = _entityManager.GetComponentData<SkillElementShieldTag_Hero>(_heroEntity);

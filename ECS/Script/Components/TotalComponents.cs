@@ -172,13 +172,16 @@ namespace BlackDawn.DOTS
     /// 英雄分支标识 主要用于英雄分身
     /// </summary>
     public struct HeroEntityBranchTag : IComponentData,IEnableableComponent{   }
+
+
+
     /// <summary>
     /// 动画控制信息
     /// </summary>
     public struct AnimationControllerData : IComponentData
     {
         public bool isAttack;
-        public bool isFire;    
+        public bool isFire;
     }
     #region 攻击类型标签
     /// <summary>

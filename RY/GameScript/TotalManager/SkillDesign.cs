@@ -80,10 +80,10 @@ namespace BlackDawn
         //寒霜新星 22    
         FrostNova,         // 寒霜新星：释放一圈冰霜冲击波，冻结范围内敌人1.5秒  
                            // 释放方式：Control；伤害类型：冰霜
-
+        //23 暗影之拥
         ShadowEmbrace,     // 暗影之拥：进入潜行状态3秒，下次攻击必定暴击并附加暗影撕裂（持续伤害）  
                            // 释放方式：Buff/Teleport；伤害类型：暗影
-
+        //瘟疫蔓延 23
         PlagueSpread,      // 瘟疫蔓延：使目标敌人的毒素效果扩散至附近3个敌人  
                            // 释放方式：Passive；伤害类型：毒素
         //元素护盾 25
@@ -223,6 +223,7 @@ namespace BlackDawn
         SweepB,//横扫B
         SweepCollider,//横扫碰撞体
         ChronoTwistB,//时空扭曲
+        ShadowEmbraceA,//暗影辉耀
         
         
 
