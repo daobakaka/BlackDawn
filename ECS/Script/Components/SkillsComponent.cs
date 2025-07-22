@@ -3,6 +3,7 @@ using NUnit.Framework.Interfaces;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.VisualScripting;
+using UnityEditor;
 
 namespace BlackDawn.DOTS
 {
@@ -53,6 +54,8 @@ namespace BlackDawn.DOTS
         public float tempRoot;
         public float tempSlow;
 
+        public float tempknockback;
+
         /// <summary>用于技能变化的整体伤害参，这里看到是在池化中进行计算的，也应该在技能表现中增加，默认值为1</summary>
         public float damageChangePar;
 
@@ -70,6 +73,8 @@ namespace BlackDawn.DOTS
         //击中后存活时间，用于构建爆炸或者其他属性(如分裂)
         public float hitSurvivalTime;
         public bool hit;
+
+        public float timer;//通用记时器,1. 烈焰灵刃
         //原始存活时间
         public float originalSurvivalTime;
         //销毁标识
@@ -725,7 +730,7 @@ namespace BlackDawn.DOTS
     public struct SkillShadowEmbraceTag : IComponentData
     {
 
-        
+
         public float tagSurvivalTime;
         //形变参数
         public float scaleChangePar;
@@ -742,7 +747,7 @@ namespace BlackDawn.DOTS
     /// <summary>
     /// 暗影辉耀造成的持续性伤害
     /// </summary>
-        public struct SkillShadowEmbraceAOverTimeTag : IComponentData
+    public struct SkillShadowEmbraceAOverTimeTag : IComponentData
     {
 
         public float tagSurvivalTime;
@@ -965,7 +970,7 @@ namespace BlackDawn.DOTS
         public bool enableSecondA;
         public bool enableSecondB;
         public bool initialized;
-         public int level;
+        public int level;
     }
     /// <summary>
     /// 瘟疫蔓延， 运行逻辑需由技能开启，涉及到自身特效， 写在回调系统中
@@ -1045,6 +1050,29 @@ namespace BlackDawn.DOTS
         public int level;
         //是否初始化
         public bool initialized;
+    }
+
+
+    /// <summary>
+    /// 烈焰灵刃 
+    /// </summary>
+    public struct SkillFlameSpiritBladeTag : IComponentData
+    {
+        public float tagSurvivalTime;
+
+        public float speed;
+        //形变参数
+        public float scaleChangePar;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+        //等级
+        public int level;
+
+        public float3 startPosition;
+       
+
     }
     
 

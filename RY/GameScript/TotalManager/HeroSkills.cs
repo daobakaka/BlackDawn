@@ -1425,6 +1425,7 @@ namespace BlackDawn
                     //激活暗影之拥
                    _entityManager.SetComponentEnabled<SkillShadowEmbrace_Hero>(_heroEntity, true);
                     var skillShadowEmbraceCmp = _entityManager.GetComponentData<SkillShadowEmbrace_Hero>(_heroEntity);
+                   // Hero.instance.fsm.ChangeState<Hero_Stealth>();
     
                     switch (psionicType)
                     {
@@ -1434,31 +1435,43 @@ namespace BlackDawn
                                 if (runTimeHeroCmp.defenseAttribute.energy > 80)
                                 {
                                     runTimeHeroCmp.defenseAttribute.energy -= 80;
+                                    runTimeHeroCmp.defenseAttribute.moveSpeed *= 0.7f;//移速降低30%
+                                    runTimeHeroCmp.gainAttribute.energyRegen *= 0.3f;//能量回复速度降低70%
+                                    runTimeHeroCmp.gainAttribute.hpRegen *= 2f;//生命回复速度提升100%
                                     skillShadowEmbraceCmp.active = true;
                                     skillShadowEmbraceCmp.initialized = false;
                                     skillShadowEmbraceCmp.tagSurvivalTime = 7;
-                                    skillShadowEmbraceCmp .shadowTime = 0;
+                                    skillShadowEmbraceCmp.shadowTime = 0;
                                     _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
                                     _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                    Hero.instance.skillAttackPar.stealth = true;
                                 }
                             }
                             else
                             {
+                                Hero.instance.skillAttackPar.stealth = false;
                                 //这里会释放技能,且改变英雄的渲染状态,破隐时释放的暗影切割
                                 skillShadowEmbraceCmp.active = false;
                                 skillShadowEmbraceCmp.initialized = true;
-                                 skillShadowEmbraceCmp .shadowTime = 0;
+                                skillShadowEmbraceCmp.shadowTime = 0;
+                                //这里有可能出现其他参数对增加的增加！-后期更改
+                                runTimeHeroCmp.defenseAttribute.moveSpeed = _heroAttributeCmptOriginal.defenseAttribute.moveSpeed;
+                                runTimeHeroCmp.gainAttribute.energyRegen = _heroAttributeCmptOriginal.gainAttribute.energyRegen;
+                                runTimeHeroCmp.gainAttribute.hpRegen = _heroAttributeCmptOriginal.gainAttribute.hpRegen;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
                                 //在英雄正前方生成一次暗影切割
                                 var entiyShadowEmbrace = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowEmbrace, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, new float3(0, 0, 0), 1, false, false);
                                 _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
                                 //计算暴击
                                 var skillCalParOverrride = Hero.instance.CalculateBaseSkillDamage(1);//必定触发暴击
+                                skillCalParOverrride.shadowDotDamage = skillCalParOverrride.shadowDamage;//必定触发暗蚀
                                 //写回暴击参数
                                 _entityManager.SetComponentData(entiyShadowEmbrace, skillCalParOverrride);
                                 Hero.instance.CalculateBaseSkillDamage();//再重新计算一次以手动更新，避免其他技能受影响
 
                                 //暗影之拥抱攻击技能标签
                                 _entityManager.AddComponentData(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
+                               // Hero.instance.fsm.ChangeState<Hero_Idle>();
                             }
 
                             break;
@@ -1469,14 +1482,18 @@ namespace BlackDawn
                                 if (runTimeHeroCmp.defenseAttribute.energy > 80)
                                 {
                                     runTimeHeroCmp.defenseAttribute.energy -= 80;
+                                    runTimeHeroCmp.defenseAttribute.moveSpeed *= 0.7f;//移速降低30%
+                                    runTimeHeroCmp.gainAttribute.energyRegen *= 0.3f;//能量回复速度降低70%
+                                    runTimeHeroCmp.gainAttribute.hpRegen *= 2f;//生命回复速度提升100%
                                     skillShadowEmbraceCmp.active = true;
                                     skillShadowEmbraceCmp.initialized = false;
                                     //开启A阶段， 外部更新相关的参数
                                     skillShadowEmbraceCmp.enableSecondA = true;
                                     skillShadowEmbraceCmp.tagSurvivalTime = 7;
-                                       skillShadowEmbraceCmp .shadowTime = 0;
+                                    skillShadowEmbraceCmp.shadowTime = 0;
                                     _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
                                     _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                    Hero.instance.skillAttackPar.stealth = true;
 
                                     var filter = new CollisionFilter
                                     {
@@ -1491,24 +1508,33 @@ namespace BlackDawn
                                     var entityShadowEmbraceA = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkillAssistive_ShadowEmbraceA, overlapAB, Hero.instance.transform.position, Hero.instance.transform.rotation, 0.5f, float3.zero, new float3(0, 0, 0), 1, false, false);
                                     _entityManager.AddComponentData(entityShadowEmbraceA, new SkillShadowEmbraceAOverTimeTag { tagSurvivalTime = 7 });
 
+
                                 }
                             }
                             else
                             {
+                                Hero.instance.skillAttackPar.stealth = false;
                                 //这里会释放技能,且改变英雄的渲染状态,破隐时释放的暗影切割
                                 skillShadowEmbraceCmp.active = false;
                                 skillShadowEmbraceCmp.initialized = true;
-                                   skillShadowEmbraceCmp .shadowTime = 0;
+                                skillShadowEmbraceCmp.shadowTime = 0;
+                                //这里有可能出现其他参数对增加的增加！-后期更改
+                                runTimeHeroCmp.defenseAttribute.moveSpeed = _heroAttributeCmptOriginal.defenseAttribute.moveSpeed;
+                                runTimeHeroCmp.gainAttribute.energyRegen = _heroAttributeCmptOriginal.gainAttribute.energyRegen;
+                                runTimeHeroCmp.gainAttribute.hpRegen = _heroAttributeCmptOriginal.gainAttribute.hpRegen;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
                                 //在英雄正前方生成一次暗影切割
                                 var entiyShadowEmbrace = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowEmbrace, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, new float3(0, 0, 0), 1, false, false);
                                 _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
                                 //计算暴击
                                 var skillCalParOverrride = Hero.instance.CalculateBaseSkillDamage(1);//必定触发暴击
+                                skillCalParOverrride.shadowDotDamage = skillCalParOverrride.shadowDamage;//必定触发暗蚀
                                 //写回暴击参数
                                 _entityManager.SetComponentData(entiyShadowEmbrace, skillCalParOverrride);
                                 Hero.instance.CalculateBaseSkillDamage();//再重新计算一次以手动更新，避免其他技能受影响
                                 //暗影之拥抱攻击技能标签
                                 _entityManager.AddComponentData(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
+                               // Hero.instance.fsm.ChangeState<Hero_Idle>();
                             }
 
                             break;
@@ -1519,32 +1545,44 @@ namespace BlackDawn
                                 if (runTimeHeroCmp.defenseAttribute.energy > 80)
                                 {
                                     runTimeHeroCmp.defenseAttribute.energy -= 80;
+                                    runTimeHeroCmp.defenseAttribute.moveSpeed *= 0.7f;//移速降低30%
+                                    runTimeHeroCmp.gainAttribute.energyRegen *= 0.3f;//能量回复速度降低70%
+                                    runTimeHeroCmp.gainAttribute.hpRegen *= 2f;//生命回复速度提升100%
                                     skillShadowEmbraceCmp.active = true;
                                     skillShadowEmbraceCmp.initialized = false;
                                     //开启B阶段，外部调试相关的参数
                                     skillShadowEmbraceCmp.enableSecondB = true;
                                     skillShadowEmbraceCmp.tagSurvivalTime = 7;
-                                       skillShadowEmbraceCmp .shadowTime = 0;
+                                    skillShadowEmbraceCmp.shadowTime = 0;
                                     _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
                                     _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                     Hero.instance.skillAttackPar.stealth = true;
                                 }
                             }
                             else
                             {
+                                Hero.instance.skillAttackPar.stealth = false;
                                 //这里会释放技能,且改变英雄的渲染状态,破隐时释放的暗影切割
                                 skillShadowEmbraceCmp.active = false;
                                 skillShadowEmbraceCmp.initialized = true;
-                                   skillShadowEmbraceCmp .shadowTime = 0;
+                                skillShadowEmbraceCmp.shadowTime = 0;
+                                //这里有可能出现其他参数对增加的增加！-后期更改
+                                runTimeHeroCmp.defenseAttribute.moveSpeed = _heroAttributeCmptOriginal.defenseAttribute.moveSpeed;
+                                runTimeHeroCmp.gainAttribute.energyRegen = _heroAttributeCmptOriginal.gainAttribute.energyRegen;
+                                runTimeHeroCmp.gainAttribute.hpRegen = _heroAttributeCmptOriginal.gainAttribute.hpRegen;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
                                 //在英雄正前方生成一次暗影切割
                                 var entiyShadowEmbrace = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowEmbrace, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, new float3(0, 0, 0), 1, false, false);
                                 _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
                                 //计算暴击
                                 var skillCalParOverrride = Hero.instance.CalculateBaseSkillDamage(1);//必定触发暴击
-                                //写回暴击参数
+                                                                                                     //写回暴击参数
+                                skillCalParOverrride.shadowDotDamage = skillCalParOverrride.shadowDamage;//必定触发暗蚀
                                 _entityManager.SetComponentData(entiyShadowEmbrace, skillCalParOverrride);
                                 Hero.instance.CalculateBaseSkillDamage();//再重新计算一次以手动更新，避免其他技能受影响
                                 //暗影之拥抱攻击技能标签
                                 _entityManager.AddComponentData(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
+                               // Hero.instance.fsm.ChangeState<Hero_Idle>();
                             }
                             break;
                         case HeroSkillPsionicType.PsionicAB:
@@ -1553,6 +1591,9 @@ namespace BlackDawn
                                 if (runTimeHeroCmp.defenseAttribute.energy > 80)
                                 {
                                     runTimeHeroCmp.defenseAttribute.energy -= 80;
+                                    runTimeHeroCmp.defenseAttribute.moveSpeed *= 0.7f;//移速降低30%
+                                    runTimeHeroCmp.gainAttribute.energyRegen *= 0.3f;//能量回复速度降低70%
+                                    runTimeHeroCmp.gainAttribute.hpRegen *= 2f;//生命回复速度提升100%
                                     skillShadowEmbraceCmp.active = true;
                                     skillShadowEmbraceCmp.initialized = false;
                                     //开启A阶段， 外部更新相关的参数
@@ -1560,9 +1601,10 @@ namespace BlackDawn
                                     //开启B阶段， 外部更新相关的参数
                                     skillShadowEmbraceCmp.enableSecondB = true;
                                     skillShadowEmbraceCmp.tagSurvivalTime = 7;
-                                       skillShadowEmbraceCmp .shadowTime = 0;
+                                    skillShadowEmbraceCmp.shadowTime = 0;
                                     _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
                                     _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                     Hero.instance.skillAttackPar.stealth = true;
 
                                     var filter = new CollisionFilter
                                     {
@@ -1581,20 +1623,28 @@ namespace BlackDawn
                             }
                             else
                             {
+                                Hero.instance.skillAttackPar.stealth = false;
                                 //这里会释放技能,且改变英雄的渲染状态,破隐时释放的暗影切割
                                 skillShadowEmbraceCmp.active = false;
                                 skillShadowEmbraceCmp.initialized = true;
-                                   skillShadowEmbraceCmp .shadowTime = 0;
+                                skillShadowEmbraceCmp.shadowTime = 0;
+                                //这里有可能出现其他参数对增加的增加！-后期更改
+                                runTimeHeroCmp.defenseAttribute.moveSpeed = _heroAttributeCmptOriginal.defenseAttribute.moveSpeed;
+                                runTimeHeroCmp.gainAttribute.energyRegen = _heroAttributeCmptOriginal.gainAttribute.energyRegen;
+                                runTimeHeroCmp.gainAttribute.hpRegen = _heroAttributeCmptOriginal.gainAttribute.hpRegen;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
                                 //在英雄正前方生成一次暗影切割
                                 var entiyShadowEmbrace = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowEmbrace, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, new float3(0, 0, 0), 1, false, false);
                                 _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
                                 //计算暴击
                                 var skillCalParOverrride = Hero.instance.CalculateBaseSkillDamage(1);//必定触发暴击
-                                //写回暴击参数
+                                                                                                     //写回暴击参数
+                                skillCalParOverrride.shadowDotDamage = skillCalParOverrride.shadowDamage;//必定触发暗蚀
                                 _entityManager.SetComponentData(entiyShadowEmbrace, skillCalParOverrride);
                                 Hero.instance.CalculateBaseSkillDamage();//再重新计算一次以手动更新，避免其他技能受影响
                                 //暗影之拥抱攻击技能标签
                                 _entityManager.AddComponentData(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
+                              //  Hero.instance.fsm.ChangeState<Hero_Idle>();
                             }
 
                             break;
@@ -1787,6 +1837,68 @@ namespace BlackDawn
                             break;
                     }
                     break;
+                //烈焰灵刃 26 瞬发
+                case HeroSkillID.FlameSpiritBlade:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 25)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 25;
+                                var entityFlameSpiritBlade = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_FlameSpiritBlade, Hero.instance.targetPosition, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                                _entityManager.AddComponentData(entityFlameSpiritBlade, new SkillFlameSpiritBladeTag() { tagSurvivalTime = 8f, speed = 10,startPosition =Hero.instance.targetPosition });
+                                //取出攻击参数，写回击退值
+                                var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityFlameSpiritBlade);
+                                skillCal.tempknockback = 300;
+                                _entityManager.SetComponentData(entityFlameSpiritBlade, skillCal);
+                            }                      
+ 
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 25)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 25;
+                                var entityFlameSpiritBlade = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_FlameSpiritBlade, Hero.instance.targetPosition, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                                _entityManager.AddComponentData(entityFlameSpiritBlade, new SkillFlameSpiritBladeTag() { tagSurvivalTime = 8f, speed = 10,startPosition =Hero.instance.targetPosition ,enableSecondA=true});
+                                //取出攻击参数，写回击退值
+                                var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityFlameSpiritBlade);
+                                skillCal.tempknockback = 300;
+                                _entityManager.SetComponentData(entityFlameSpiritBlade, skillCal);
+                            }     
+
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 25)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 25;
+                                var entityFlameSpiritBlade = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_FlameSpiritBlade, Hero.instance.targetPosition, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                                _entityManager.AddComponentData(entityFlameSpiritBlade, new SkillFlameSpiritBladeTag() { tagSurvivalTime = 8f, speed = 10,enableSecondB=true ,startPosition =Hero.instance.targetPosition});
+                                //取出攻击参数，写回击退值
+                                var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityFlameSpiritBlade);
+                                skillCal.tempknockback = 300;
+                                skillCal.damageChangePar += _heroAttributeCmptOriginal.attackAttribute.luckyStrikeChance;
+                                _entityManager.SetComponentData(entityFlameSpiritBlade, skillCal);
+                            }                      
+ 
+
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+                         if (runTimeHeroCmp.defenseAttribute.energy > 25)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 25;
+                                var entityFlameSpiritBlade = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_FlameSpiritBlade, Hero.instance.targetPosition, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                                _entityManager.AddComponentData(entityFlameSpiritBlade, new SkillFlameSpiritBladeTag() { tagSurvivalTime = 8f, speed = 10,enableSecondB=true ,enableSecondA=true,startPosition =Hero.instance.targetPosition});
+                                //取出攻击参数，写回击退值
+                                var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityFlameSpiritBlade);
+                                skillCal.tempknockback = 300;
+                                skillCal.damageChangePar += _heroAttributeCmptOriginal.attackAttribute.luckyStrikeChance;
+                                _entityManager.SetComponentData(entityFlameSpiritBlade, skillCal);
+                            }                      
+ 
+                            break;                       
+                    }
+                    break;
+                
                 //时空扭曲27 第一步  生成时空奇点 第二步 随时间变化 形态， 第三步 爆炸生成时空碎片
                 case HeroSkillID.ChronoTwist:
 

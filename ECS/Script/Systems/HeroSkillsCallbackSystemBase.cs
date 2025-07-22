@@ -10,6 +10,7 @@ using Unity.Physics;
 using Unity.Transforms;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.VFX;
 using static BlackDawn.HeroAttributes;
 
@@ -43,6 +44,8 @@ namespace BlackDawn.DOTS
 
         private HeroAttributeCmpt _orignalHeroAttributeCmp;
 
+        private EntityManager _entityManager;
+
 
         //法阵技能的GPUbuffer
         GraphicsBuffer _arcaneCirclegraphicsBuffer;
@@ -58,6 +61,7 @@ namespace BlackDawn.DOTS
             _detectionSystemHandle = World.Unmanaged.GetExistingUnmanagedSystem<DetectionSystem>();
             _transformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true);
             _heroAttribute = SystemAPI.GetComponentLookup<HeroAttributeCmpt>(true);
+            _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
         }
 
@@ -120,12 +124,14 @@ namespace BlackDawn.DOTS
             SkillCallBack_FrostNova(timer, ecb, _prefabs);
             //通用护盾技能 1- 元素护盾
             SkillCallBack_ElementShieldDeal();
-
+            //暗影之拥 23 瞬时/持续 
             SkillCallBack_ShadowEmbrace(timer, ecb);
             //瘟疫蔓延 24 辅助/增强
             SkillCallBack_PlagueSpread(timer);
             //通用-冰霜护盾25 
             SkillCallBack_FrostShieldDeal(timer,_prefabs,ecb);
+            //技能 烈焰灵刃 26
+            SkillCallBack_FlameSpiritBlade(timer, ecb);
             //技能 时空扭曲 27
             SkillCallBack_ChronoTwist(timer, ecb);
             //技能闪电链 30
@@ -865,6 +871,78 @@ namespace BlackDawn.DOTS
               .WithoutBurst().Run();
 
         }
+
+
+
+
+        /// <summary>
+        /// 技能回调 烈焰灵刃
+        /// </summary>
+        /// <param name="timer"></param>
+        /// <param name="ecb"></param>/
+        void SkillCallBack_FlameSpiritBlade(float timer, EntityCommandBuffer ecb)
+        {
+
+            Entities.WithName("HeroSkillFlameSpiritBlade")
+                    .ForEach((VisualEffect vfx,ref SkillFlameSpiritBladeTag skillTag,ref SkillsDamageCalPar skillsDamageCal,ref LocalTransform transform) =>
+                    {
+                        skillTag.tagSurvivalTime -= timer;
+                        if (skillTag.tagSurvivalTime <= 0)
+                            skillsDamageCal.destory = true;
+                        if (skillTag.tagSurvivalTime <= 1 && skillTag.tagSurvivalTime > 1 - timer)
+                        {
+                            vfx.SendEvent("end");
+                        }
+                         float3 forward = math.mul(transform.Rotation, new float3(0, 0, 1));
+
+                          if (skillTag.enableSecondB)
+                        {
+                            float t = 8 - skillTag.tagSurvivalTime; // 已经经过的时间
+                            float phaseTime = 4f;
+
+                            if (t < phaseTime)
+                            {
+                                // 第一阶段：直线飞出
+                                transform.Position += forward * skillTag.speed*timer;
+                            }
+                            else
+                            {
+                                if (t > phaseTime && t <= phaseTime + timer)
+                                      transform.Rotation = math.mul( quaternion.RotateY(math.radians(180f)), transform.Rotation);//沿着Y 调转180度
+                                //取消击退值
+                                    skillsDamageCal.tempknockback = 0;
+                                skillsDamageCal.tempStun = 300;
+                                transform.Position += forward * skillTag.speed * 2f*timer;
+
+                            }
+                        }
+                        else
+                        {
+
+                            transform.Position += forward * timer * skillTag.speed; // 速度可调
+                        }
+                        //开启烈焰吞噬的变化
+                        if (skillTag.enableSecondA)
+                        {
+                            skillsDamageCal.timer += timer;//增加timer
+                            skillsDamageCal.hitSurvivalTime -= timer;
+                            if (skillsDamageCal.hitSurvivalTime <= 0)
+                                skillsDamageCal.hit = false;
+                            if (skillsDamageCal.hit)
+                            {
+                                if (skillsDamageCal.timer > 0.5f)
+                                {
+                                    skillsDamageCal.damageChangePar += 0.2f * (1+skillTag.level * 0.01f);//内置的timer去执行公共CD
+                                    skillsDamageCal.timer = 0;
+                                    vfx.SendEvent("hit");
+                                }
+                            }
+                        }
+                   
+
+            }).WithoutBurst().Run();
+
+        }
         /// <summary>
         /// 技能回调 时空扭曲
         /// </summary>
@@ -1239,8 +1317,6 @@ namespace BlackDawn.DOTS
         void SkillCallBack_ShadowEmbrace(float timer, EntityCommandBuffer ecb)
         {
 
-            bool enableA = false;
-            float3 overlapPositon = 0;
             //潜行状态处理
             Entities
                     .WithName("HeroSkillShadowEmbraceDeal")                  
@@ -1253,6 +1329,11 @@ namespace BlackDawn.DOTS
                         if (!skillHeroTag.active && !skillHeroTag.initialized)
                         {
                             skillHeroTag.initialized = true;
+
+                            heroAttr.defenseAttribute.moveSpeed = _orignalHeroAttributeCmp.defenseAttribute.moveSpeed;
+                            heroAttr.gainAttribute.energyRegen = _orignalHeroAttributeCmp.gainAttribute.energyRegen;
+                            heroAttr.gainAttribute.hpRegen = _orignalHeroAttributeCmp.gainAttribute.hpRegen;
+                            Hero.instance.skillAttackPar.stealth = false;//时间到期被动释放
                             var entiyShadowEmbrace = ecb.Instantiate(_prefabs.HeroSkill_ShadowEmbrace);
                             ecb.SetComponent(entiyShadowEmbrace, transform);
                             //手动计算暴击
@@ -1262,10 +1343,12 @@ namespace BlackDawn.DOTS
                                 skillCalParOverrride = Hero.instance.CalculateBaseSkillDamage(1, 0, (0.15f * skillHeroTag.shadowTime * (1 + 0.01f * skillHeroTag.level)));
                             }
                             //写回暴击参数,压制
-                            ecb.SetComponent(entiyShadowEmbrace, skillCalParOverrride);
+                            skillCalParOverrride.shadowDotDamage = skillCalParOverrride.shadowDamage;//触发暗蚀
+                            ecb.AddComponent(entiyShadowEmbrace, skillCalParOverrride);
                             Hero.instance.CalculateBaseSkillDamage();//再重新计算一次以手动更新，避免其他技能受影响
-                            ecb.AddComponent(entiyShadowEmbrace, Hero.instance.skillsDamageCalPar);
                             ecb.AddComponent(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
+                            ecb.AddBuffer<HitRecord>(entiyShadowEmbrace);
+                            ecb.AddBuffer<HitElementResonanceRecord>(entiyShadowEmbrace);
                             //释放技能清零暗影藏匿计时器
                             skillHeroTag.shadowTime = 0;
                         }
@@ -1273,11 +1356,13 @@ namespace BlackDawn.DOTS
                         {
                             skillHeroTag.shadowTime += timer;
 
-                        }                      
-                        enableA = skillHeroTag.active;
-                        overlapPositon = transform.Position;
+                        }
+                        if (skillHeroTag.active)
+                        {
 
-                    }).WithoutBurst().Run();
+                        }                      
+
+                    }).WithoutBurst().WithStructuralChanges().Run();
 
             //基本状态处理攻击效果
             Entities
@@ -1292,10 +1377,11 @@ namespace BlackDawn.DOTS
 
             //开启A阶段效果
             Entities.
-                    ForEach((ref SkillShadowEmbraceAOverTimeTag skillTag,ref SkillsOverTimeDamageCalPar skillsOver,ref OverlapOverTimeQueryCenter overlapOverTime) =>
+                    ForEach((VisualEffect vfx,ref SkillShadowEmbraceAOverTimeTag skillTag,ref SkillsOverTimeDamageCalPar skillsOver,ref OverlapOverTimeQueryCenter overlapOverTime,ref LocalTransform transform) =>
                     {
-                        overlapOverTime.center = overlapPositon;                   
-                         if (enableA)
+                        overlapOverTime.center = _heroPositon;
+                        transform.Position = _heroPositon;                                       
+                         if (!SystemAPI.GetComponent<SkillShadowEmbrace_Hero>(_heroEntity).active)
                             skillsOver.destory = true;
 
                     }).WithoutBurst().Run();     

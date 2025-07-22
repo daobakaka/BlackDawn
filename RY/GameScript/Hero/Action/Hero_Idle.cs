@@ -23,10 +23,13 @@ namespace BlackDawn
                 
                     Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                     RaycastHit hit;
-                    if (Physics.Raycast(ray, out hit))
-                    {
-                        fsm.Owner.targetPosition = hit.point;
+                if (Physics.Raycast(ray, out hit))
+                {
+                    fsm.Owner.targetPosition = hit.point;
+                    if (!fsm.Owner.skillAttackPar.stealth)
                         fsm.ChangeState<Hero_Run>();
+                    else
+                        fsm.ChangeState<Hero_Stealth>();
                         
                 }
                 
@@ -80,7 +83,8 @@ namespace BlackDawn
 
             // fsm.Owner.HeroAttackBurst(0.1f, 100, 360);
             // fsm.Owner.HeroAttackBurst();
-           // fsm.Owner.HeroAttackBurst();
+            //  if(!fsm.Owner.skillAttackPar.stealth)
+            //  fsm.Owner.HeroAttackBurst();
         }
         protected internal override void OnExit(IFsm<Hero> fsm, bool isShutdown)
         {

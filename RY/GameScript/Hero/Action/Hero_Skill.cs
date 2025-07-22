@@ -69,16 +69,9 @@ namespace BlackDawn
                 _hasFiredMid = true;
                 DevDebug.Log("SKILL 动画到中点，执行特殊逻辑"+stateInfo.normalizedTime);
                 _heroSkills.RelasesHeroSkill((HeroSkillID)_skillID, (HeroSkillPsionicType)_skillIDType);
-
-
-                
-
             }
 
-
-
-
-            // 如果当前 State 带了 “Skill1” 这个 Tag，且播放完一轮
+            // 如果当前 State 带了 “Skill1” 这个 Tag，且播放完一轮,（非潜行状态）
             if (stateInfo.tagHash == _skillTagHash && stateInfo.normalizedTime >= 1f )
             {
                 DevDebug.Log("SKILL动画播放完毕"+stateInfo.normalizedTime);

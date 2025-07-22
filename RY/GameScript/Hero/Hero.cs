@@ -39,7 +39,7 @@ namespace BlackDawn
         [HideInInspector] public bool enableOperate = true;
         [HideInInspector] public EventBusManager eventBusManager; //事件总线管理
         //全局控制状态机
-        private IFsm<Hero> _fsm;
+        [HideInInspector] public IFsm<Hero> fsm;
         //全局携程控制器
         [HideInInspector] public CoroutineController coroutineController;
         //base系统交互
@@ -105,6 +105,8 @@ namespace BlackDawn
             public float frostSkillChangePar;
             //寒冰的临时冻结值
             public float tempFreeze;
+            //潜行状态判定
+            public bool stealth;
         }
 
 
@@ -122,14 +124,15 @@ namespace BlackDawn
 
 
             //创建自己的状态机
-            _fsm = FsmManager.Instans.CreateFsm(this, new List<FsmState<Hero>>()
+            fsm = FsmManager.Instans.CreateFsm(this, new List<FsmState<Hero>>()
             {
                 new Hero_Idle(),
                 new Hero_Run(),
                 new Hero_Roll(),
                 new Hero_Skill(),
+                new Hero_Stealth(),
             });
-            _fsm.Start<Hero_Idle>();
+            fsm.Start<Hero_Idle>();
 
         }
         private Hero() { }
@@ -987,7 +990,7 @@ namespace BlackDawn
             if (!enableOperate) return;
 
             enableOperate = false;
-            _fsm.ChangeState<Hero_Roll>();
+            fsm.ChangeState<Hero_Roll>();
 
             float distance = 10f;
             float duration = 0.4f;
@@ -998,7 +1001,7 @@ namespace BlackDawn
                   MoveForwardRoutine(distance, duration),
                   tag: "HeroRoll",
                   onComplete: () => {
-                      _fsm.ChangeState<Hero_Idle>();
+                      fsm.ChangeState<Hero_Idle>();
                       enableOperate = true;
                   }
               );

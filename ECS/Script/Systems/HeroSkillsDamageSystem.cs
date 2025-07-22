@@ -252,7 +252,7 @@ new ProfilerMarker("SkillDamageJob.Execute");
                 c.slow += h.controlAbilityAttribute.slow + d.tempSlow;
                 c.slowTimer = 0;
                 //击退,不进行叠加
-                c.knockback = h.controlAbilityAttribute.knockback;
+                c.knockback = h.controlAbilityAttribute.knockback+d.tempknockback;
                 c.knockbackTimer = 0;
 
 
@@ -490,9 +490,9 @@ new ProfilerMarker("SkillDamageJob.Execute");
 
                 //10) 标记道具销毁，这样就可以执行穿透逻辑，而不必持续检测
                 {
-                    var pd = d;
+                 
                     //  pd.destory = true;
-                    ECB.SetComponent(i, skill, pd);
+                    ECB.SetComponent(i, skill, d);
                 }
 
 

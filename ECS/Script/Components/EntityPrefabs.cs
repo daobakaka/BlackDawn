@@ -106,7 +106,7 @@ namespace BlackDawn.DOTS
                     HeroSkill_ShadowEmbrace = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.ShadowEmbrace),
                     HeroSkill_PlagueSpread = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.PlagueSpread),
                     HeroSkill_ElementShield = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.ElementShield),
-                    HeroSkill_ArcanePulse = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.ArcanePulse),
+                    HeroSkill_FlameSpiritBlade = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.FlameSpiritBlade),
                     HeroSkill_ChronoTwist = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.ChronoTwist),
                     HeroSkill_FlameBurst = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.FlameBurst),
                     HeroSkill_FrostTrail = GetSafe<HeroSkillPrefabPair, HeroSkillID>(auth.skillPrefabs, HeroSkillID.FrostTrail),
@@ -350,7 +350,7 @@ namespace BlackDawn.DOTS
             public Entity HeroSkill_ShadowEmbrace;
             public Entity HeroSkill_PlagueSpread;
             public Entity HeroSkill_ElementShield;
-            public Entity HeroSkill_ArcanePulse;
+            public Entity HeroSkill_FlameSpiritBlade;
             public Entity HeroSkill_ChronoTwist;
             public Entity HeroSkill_FlameBurst;
             public Entity HeroSkill_FrostTrail;

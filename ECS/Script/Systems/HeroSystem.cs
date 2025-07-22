@@ -120,7 +120,7 @@ namespace BlackDawn.DOTS
             //最开始的全局飞行技能消除
             foreach (var (skillCal, entity) in SystemAPI.Query<RefRO<SkillsDamageCalPar>>().WithEntityAccess())
             {
-
+                
                 if (skillCal.ValueRO.destory == true)
 
                     ecb.DestroyEntity(entity);

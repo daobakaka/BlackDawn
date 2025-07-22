@@ -3537,3 +3537,42 @@ public class DamageTextMono : MonoBehaviour
                 }
 
             }
+            ///---  entityManager 与ECB---
+                //潜行状态处理
+            Entities
+                    .WithName("HeroSkillShadowEmbraceDeal")                  
+                    .ForEach((ref HeroEntityMasterTag masterTag, ref HeroAttributeCmpt heroAttr, ref SkillShadowEmbrace_Hero skillHeroTag, ref LocalTransform transform) =>
+                    {
+                        skillHeroTag.tagSurvivalTime -= timer;
+                        if (skillHeroTag.tagSurvivalTime <= 0)
+                            skillHeroTag.active = false;
+
+                        if (!skillHeroTag.active && !skillHeroTag.initialized)
+                        {
+                            skillHeroTag.initialized = true;
+                            
+                            var entiyShadowEmbrace = base.EntityManager.Instantiate(_prefabs.HeroSkill_ShadowEmbrace);
+                            base.EntityManager.SetComponentData(entiyShadowEmbrace, transform);
+                            //手动计算暴击
+                            var skillCalParOverrride = Hero.instance.CalculateBaseSkillDamage(1);//必定触发暴击
+                            if (skillHeroTag.enableSecondB)
+                            {
+                                skillCalParOverrride = Hero.instance.CalculateBaseSkillDamage(1, 0, (0.15f * skillHeroTag.shadowTime * (1 + 0.01f * skillHeroTag.level)));
+                            }
+                            //写回暴击参数,压制
+                            base.EntityManager.SetComponentData(entiyShadowEmbrace, skillCalParOverrride);
+                            Hero.instance.CalculateBaseSkillDamage();//再重新计算一次以手动更新，避免其他技能受影响
+                            base.EntityManager.AddComponentData(entiyShadowEmbrace, Hero.instance.skillsDamageCalPar);
+                            base.EntityManager.AddComponentData(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
+                            base.EntityManager.AddBuffer<HitRecord>(entiyShadowEmbrace);
+                            base.EntityManager.AddBuffer<HitElementResonanceRecord>(entiyShadowEmbrace);
+                            //释放技能清零暗影藏匿计时器
+                            skillHeroTag.shadowTime = 0;
+                        }
+                        if (skillHeroTag.active && skillHeroTag.enableSecondB)
+                        {
+                            skillHeroTag.shadowTime += timer;
+
+                        }                      
+
+                    }).WithoutBurst().WithStructuralChanges().Run();
