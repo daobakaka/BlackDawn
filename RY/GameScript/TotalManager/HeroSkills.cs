@@ -2004,13 +2004,46 @@ namespace BlackDawn
                                 skillPar.damageChangePar *= 1.5f;//基础伤害提升50%，在加成蓄力加成之后提升，在乘以等级系数
                                 _entityManager.SetComponentData(enityChronoTwist, skillPar);
                             }
-
-
                             break;
-
                     }
                     break;
+                //烈焰爆发 28 爆发
+                case HeroSkillID.FlameBurst:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
 
+                            DevDebug.LogError("进入烈焰爆发");
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                            runTimeHeroCmp.defenseAttribute.energy -= 40;
+                            var filter = new CollisionFilter
+                            {
+                                //属于道具层
+                                BelongsTo = 1u << 10,
+                                //检测敌人
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            var overlap = new OverlapBurstQueryCenter { center = Hero.instance.transform.position, radius = 15f, filter = filter, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                            var flameBurstEntity = DamageSkillsBrustProp(_skillPrefabs.HeroSkill_FlameBurst, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation,
+                            1, float3.zero, float3.zero, 1, false, true);
+                            var skillBurstDamageCal = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(flameBurstEntity);
+                            skillBurstDamageCal.tempknockback= 300;//附带300击退值
+                            _entityManager.SetComponentData(flameBurstEntity, skillBurstDamageCal);
+                            //设置总体存活时间， 设置爆发时间，应该是到了爆发时间动态扩大烈焰爆发的技能检测范围
+                            _entityManager.AddComponentData(flameBurstEntity, new SkillFlameBurstTag() { tagSurvivalTime = 0.5f, startBurstTime = 0.5f });
+
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+                            break;
+                    }
+                    break;
                 //闪电链 30， 瞬时寻址
                 case HeroSkillID.LightningChain:
                     switch (psionicType)
@@ -2208,7 +2241,64 @@ namespace BlackDawn
 
                     }
                     break;
+                //暗影之刺  31
+                case HeroSkillID.ShadowStab:
+                 
+                    switch (psionicType)
+                    {   //能量消耗等， 都可以进行配置
+                        case HeroSkillPsionicType.Basic:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                var entityShadowStab = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowStab, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                                _entityManager.AddComponentData(entityShadowStab, new SkillShadowStabTag() { tagSurvivalTime = 4f, speed = 20 ,skillDamageChangeParTag=1f});
+                                //取出攻击参数，写回击退值
+                                var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityShadowStab);
+                                skillCal.tempknockback = 100;
+                                _entityManager.SetComponentData(entityShadowStab, skillCal);
+                            }
 
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                int level = 10;
+                                var entityShadowStab = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowStab,Hero.instance.transform.position, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                                _entityManager.AddComponentData(entityShadowStab, new SkillShadowStabTag() { tagSurvivalTime = 4f, speed = 20, enableSecondA = true,secondAChance = 0.5f + (level*0.05f),skillDamageChangeParTag=1f });
+                                //取出攻击参数，写回击退值
+                                var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityShadowStab);
+                                skillCal.tempknockback = 100;
+                                _entityManager.SetComponentData(entityShadowStab, skillCal);
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {    int level = 10;
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                var entityShadowStab = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowStab, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.3f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                                _entityManager.AddComponentData(entityShadowStab, new SkillShadowStabTag() { tagSurvivalTime = 4f, speed = 20, enableSecondB = true,skillDamageChangeParTag=0.5f+(level*0.02f) });
+                                //取出攻击参数，写回击退值
+                                var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityShadowStab);
+                                skillCal.tempknockback = 100;
+                                _entityManager.SetComponentData(entityShadowStab, skillCal);
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                 int level = 10;
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                var entityShadowStab = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowStab, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.3f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                                _entityManager.AddComponentData(entityShadowStab, new SkillShadowStabTag() { tagSurvivalTime = 4f, speed = 20, enableSecondA = true,skillDamageChangeParTag=0.5f+(level*0.02f) , enableSecondB = true,secondAChance = 0.5f + (level*0.05f)});
+                                //取出攻击参数，写回击退值
+                                var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityShadowStab);
+                                skillCal.tempknockback = 100;
+                                _entityManager.SetComponentData(entityShadowStab, skillCal);
+                            }
+                            break;
+                    }
+                    break;
 
                 //毒雨 32 ,持续,技能附带的控制参数， 可以通过配置表进行配置
                 case HeroSkillID.PoisonRain:

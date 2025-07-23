@@ -223,8 +223,7 @@ namespace BlackDawn.DOTS
         public float tempFear;
         public float tempRoot;
         public float tempSlow;
-
-
+        public float tempknockback;
 
         public bool critTriggered;
         public bool vulTriggered;
@@ -1071,11 +1070,50 @@ namespace BlackDawn.DOTS
         public int level;
 
         public float3 startPosition;
-       
+
 
     }
-    
+    /// <summary>
+    /// 暗影之刺
+    /// </summary>
+    public struct SkillShadowStabTag : IComponentData
+    {
+        public float tagSurvivalTime;
 
+        public float speed;
+        //形变参数
+        public float scaleChangePar;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+        //一级分裂概率
+        public float secondAChance;
+        //二级分裂概率
+        public float secondBchance;
+
+        //等级
+        public int level;
+        //分裂次数
+        public int splitCount;
+        public bool initialized;//初始化
+
+    }
+    /// <summary>
+    ///烈焰爆发 爆发 幸运
+    /// </summary>/
+        public struct SkillFlameBurstTag : IComponentData
+    {
+        public float tagSurvivalTime;
+
+        public float startBurstTime;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        public float skillDamageChangeParTag;
+        //等级
+        public int level;
+
+    }
 
 
 

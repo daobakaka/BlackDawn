@@ -134,6 +134,8 @@ namespace BlackDawn.DOTS
             SkillCallBack_FlameSpiritBlade(timer, ecb);
             //技能 时空扭曲 27
             SkillCallBack_ChronoTwist(timer, ecb);
+            //技能 烈焰爆发 28
+            SKillCakkBack_FlameBurst(timer, ecb);
             //技能闪电链 30
             SkillCallBack_LightningChain(timer, ecb, _prefabs);
             //技能毒雨 32
@@ -1020,6 +1022,24 @@ namespace BlackDawn.DOTS
         }
 
 
+        /// <summary>
+        /// 烈焰爆发 技能
+        /// </summary>
+        /// <param name="timer"></param>
+        /// <param name="ecb"></param>
+        void SKillCakkBack_FlameBurst(float timer, EntityCommandBuffer ecb)
+        {
+            Entities.
+                    ForEach((VisualEffect vfx,ref SkillFlameBurstTag skillTag,ref SkillsBurstDamageCalPar skillsBurstDamage, ref OverlapBurstQueryCenter overlap ,ref LocalTransform transform) =>
+                    {
+                        skillTag.tagSurvivalTime -= timer;
+                        if (skillTag.tagSurvivalTime <= 0)
+                            skillsBurstDamage.destory = true;
+                        overlap.center = _heroPositon;
+                        transform.Position = _heroPositon;
+                                                      
+                    }).WithoutBurst().Run();
+        }
 
         //技能  闪电链,这里 应该是先投掷检测球， 根据检测球的检测结果，输出闪电链 即可
         void SkillCallBack_LightningChain(float timer, EntityCommandBuffer ecb, ScenePrefabsSingleton prefab)

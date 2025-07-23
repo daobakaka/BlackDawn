@@ -95,7 +95,7 @@ namespace BlackDawn
         //时空扭曲 27
         ChronoTwist,       // 时空扭曲：短暂延迟后传送至目标位置，并在原地留下一个残影（吸引敌人攻击）  
                            // 释放方式：Teleport/Summon；伤害类型：无
-
+        //烈焰爆发 28
         FlameBurst,        // 烈焰爆发：对周围敌人造成火焰伤害并击退，若敌人处于燃烧状态则伤害翻倍  
                            // 释放方式：Control/Buff；伤害类型：火焰
 
@@ -104,10 +104,10 @@ namespace BlackDawn
         //闪电链 30
         LightningChain,    // 闪电链：释放一道闪电链，跳跃5次，每次伤害递减20%  
                            // 释放方式：Release/Bounce；伤害类型：闪电
-
+        //暗影之刺 31
         ShadowStab,        // 暗影之刺：瞬间闪烁至目标身后，造成暗影伤害并使其昏迷2秒  
                            // 释放方式：Teleport/Control；伤害类型：暗影
-       //毒雨 -技能名称更改    
+       //毒雨 32-技能名称更改    
         PoisonRain,           // 毒雾陷阱：降下一片毒雨，造成毒素伤害 
                            // 释放方式：Release/Summon；伤害类型：毒素
         //元素爆发 33

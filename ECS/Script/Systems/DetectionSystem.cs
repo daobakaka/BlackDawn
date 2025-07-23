@@ -31,6 +31,8 @@ namespace BlackDawn.DOTS
         public bool enableSpecialSkillChainDevour;
         //激活黑炎  技能标签
         public bool enableSpecialSkillBlcakFrame;
+        //激活暗影之刺 技能标签
+        public bool enableSpecialSkillShadowStab;
 
 
         // 每帧要更新的查找
@@ -53,6 +55,7 @@ namespace BlackDawn.DOTS
         private ComponentLookup<SkillThunderGripTag> _skillThunderGripTagLookup;
         private ComponentLookup<SkillChainDevourTag> _skillChainDevourTagLookup;
         private ComponentLookup<SkillBlackFrameTag> _skillBlackFrameTagLookup;
+        private ComponentLookup<SkillShadowStabTag> _skillShadowStabTaglookup;
 
 
         // 所有用于分类的碰撞对容器
@@ -73,6 +76,8 @@ namespace BlackDawn.DOTS
         private NativeQueue<TriggerPairData> _thunderGripHitMonster; // 雷霆之握技能碰撞对
         private NativeQueue<TriggerPairData> _chainDevourHitMonster;//连锁吞噬技能碰撞对
         private NativeQueue<TriggerPairData> _blackFrameHitMonster;//黑炎 技能碰撞对
+
+        private NativeQueue<TriggerPairData> _shadowStabHitMonster;//暗影之刺 技能碰撞对
 
 
         //用于在job中并行的array
@@ -96,6 +101,8 @@ namespace BlackDawn.DOTS
         public NativeArray<TriggerPairData> chainDevourHitMonsterArray;// 连锁吞噬技能碰撞对数组
 
         public NativeArray<TriggerPairData> blackFrameHitMonsterArray;// 黑炎技能碰撞对数组
+
+        public NativeArray<TriggerPairData> shadowStabHitMonsterArray;//暗影之刺 技能碰撞对数组
 
 
         public void OnCreate(ref SystemState state)
@@ -126,6 +133,7 @@ namespace BlackDawn.DOTS
             _skillChainDevourTagLookup = SystemAPI.GetComponentLookup<SkillChainDevourTag>(true);
             //黑炎技能标签
             _skillBlackFrameTagLookup = SystemAPI.GetComponentLookup<SkillBlackFrameTag>(true);
+            _skillShadowStabTaglookup = SystemAPI.GetComponentLookup<SkillShadowStabTag>(true);
 
 
             batchSize = UnityEngine.SystemInfo.processorCount > 8 ? 64 : 32;
@@ -147,6 +155,7 @@ namespace BlackDawn.DOTS
             _thunderGripHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _chainDevourHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _blackFrameHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
+            _shadowStabHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
 
 
             // enableSpecialSkillThunderGrip =true;
@@ -178,6 +187,7 @@ namespace BlackDawn.DOTS
             _skillThunderGripTagLookup.Update(ref state);
             _skillChainDevourTagLookup.Update(ref state);
             _skillBlackFrameTagLookup.Update(ref state);
+            _skillShadowStabTaglookup.Update(ref state);
             //清空区
             _heroHitMonster.Clear();
             _enemyFlightHitHero.Clear();
@@ -203,6 +213,8 @@ namespace BlackDawn.DOTS
             _chainDevourHitMonster.Clear();
             //黑炎 原始队列
             _blackFrameHitMonster.Clear();
+            //暗影之刺
+            _shadowStabHitMonster.Clear();
 
             //释放所有碰撞数组内存
             DisposeArrayForCollison();
@@ -222,7 +234,8 @@ namespace BlackDawn.DOTS
             var poisonRainAHitMonsterQueue = _poisonRainAHitMonster.AsParallelWriter();
             var thunderGripHitMonsterQueue = _thunderGripHitMonster.AsParallelWriter(); // 雷霆之握技能碰撞对
             var chainDevourHitMonsterQueue = _chainDevourHitMonster.AsParallelWriter(); //连锁吞噬技能碰撞对
-            var blackFrameHitMonsterQueue = _blackFrameHitMonster.AsParallelWriter();//黑炎 技能对撞对
+            var blackFrameHitMonsterQueue = _blackFrameHitMonster.AsParallelWriter();//黑炎 技能碰撞对
+            var shadowStabHitMonsterQueue = _shadowStabHitMonster.AsParallelWriter();//暗影之刺 技能碰撞对
 
 
             // 1. 收集触发：把所有碰撞写入自己实体的 buffer,收集碰撞对的标准并行方式
@@ -243,7 +256,7 @@ namespace BlackDawn.DOTS
                 EnableSpecialSkillThunderGrip = enableSpecialSkillThunderGrip,
                 SkillThunderGripTagLookup = _skillThunderGripTagLookup, // 雷霆之握技能标签
                 ThunderGripHitMonsterQueue = thunderGripHitMonsterQueue, // 雷霆之握技能碰撞对
-                
+
 
                 EnableSpecialSkillChainDevour = enableSpecialSkillChainDevour,
                 SkillChainDevourTagLookup = _skillChainDevourTagLookup,// 连锁吞噬 技能标签
@@ -251,9 +264,14 @@ namespace BlackDawn.DOTS
 
 
 
-                EnableSpecialSkillBlackFrame =enableSpecialSkillBlcakFrame,
-                SkillBlackFrameTagLookup=_skillBlackFrameTagLookup,//黑炎
+                EnableSpecialSkillBlackFrame = enableSpecialSkillBlcakFrame,
+                SkillBlackFrameTagLookup = _skillBlackFrameTagLookup,//黑炎
                 BlackFrameHitMonsterQueue = blackFrameHitMonsterQueue,
+
+
+                EnableSpecialSkillShadowStab =enableSpecialSkillShadowStab,
+                SkillShadowStabTagLookup =_skillShadowStabTaglookup,//暗影之刺
+                ShadowStabHitMonsterQueue =shadowStabHitMonsterQueue,
                 //end
 
 
@@ -307,6 +325,8 @@ namespace BlackDawn.DOTS
             thunderGripHitMonsterArray = _thunderGripHitMonster.ToArray(Allocator.Persistent); // 雷霆之握技能碰撞对数组
             chainDevourHitMonsterArray = _chainDevourHitMonster.ToArray(Allocator.Persistent);// 连锁吞噬技能碰撞对数组
             blackFrameHitMonsterArray = _blackFrameHitMonster.ToArray(Allocator.Persistent);// 黑炎技能碰撞对数组
+            shadowStabHitMonsterArray = _shadowStabHitMonster.ToArray(Allocator.Persistent);// 暗影之刺技能碰撞对数组
+            
 
 
             //   if(blackFrameHitMonsterArray.Length>0)
@@ -364,6 +384,7 @@ namespace BlackDawn.DOTS
             _thunderGripHitMonster.Dispose();
             _chainDevourHitMonster.Dispose();
             _blackFrameHitMonster.Dispose();
+            _shadowStabHitMonster.Dispose();
             
 
 
@@ -390,6 +411,7 @@ namespace BlackDawn.DOTS
             if (thunderGripHitMonsterArray.IsCreated) thunderGripHitMonsterArray.Dispose();
             if (chainDevourHitMonsterArray.IsCreated) chainDevourHitMonsterArray.Dispose();
             if (blackFrameHitMonsterArray.IsCreated) blackFrameHitMonsterArray.Dispose();
+            if (shadowStabHitMonsterArray.IsCreated) shadowStabHitMonsterArray.Dispose();
 
 
 
@@ -426,9 +448,19 @@ namespace BlackDawn.DOTS
 
         [ReadOnly] public bool EnableSpecialSkillBlackFrame;//黑炎技能
         [ReadOnly] public ComponentLookup<SkillBlackFrameTag> SkillBlackFrameTagLookup;//黑炎技能标签
+       
+        [ReadOnly] public bool EnableSpecialSkillShadowStab;//黑炎技能
+        [ReadOnly] public ComponentLookup<SkillShadowStabTag> SkillShadowStabTagLookup;//黑炎技能标签
+       
+       
+       
+       
+       
+       
+       
+       
+       
         public BufferLookup<NearbyHit> HitBufferLookup; // 基础检测系统
-        
-
         public NativeQueue<TriggerPairData>.ParallelWriter HeroHitMonsterQueue;
         public NativeQueue<TriggerPairData>.ParallelWriter EnemyFlightHitHeroQueue;
         public NativeQueue<TriggerPairData>.ParallelWriter FlightHitMonsterQueue;
@@ -459,7 +491,8 @@ namespace BlackDawn.DOTS
         public NativeQueue<TriggerPairData>.ParallelWriter ChainDevourHitMonsterQueue;// 连锁吞噬技能碰撞对
         //黑炎技能碰撞对
         public NativeQueue<TriggerPairData>.ParallelWriter BlackFrameHitMonsterQueue;//黑炎技能碰撞对
-
+        //暗影之刺技能碰撞对
+        public NativeQueue<TriggerPairData>.ParallelWriter ShadowStabHitMonsterQueue;//暗影之刺技能碰撞对
 
         public void Execute(TriggerEvent triggerEvent)
         {
@@ -494,10 +527,12 @@ namespace BlackDawn.DOTS
             //连锁吞噬 技能传入 控制标签，
             if (EnableSpecialSkillChainDevour)
                 AddIfMatch(a, b, SkillChainDevourTagLookup, LiveMonsterLookup, ChainDevourHitMonsterQueue, true);
-              //黑炎 技能传入 控制标签，
+            //黑炎 技能传入 控制标签，
             if (EnableSpecialSkillBlackFrame)
-                AddIfMatch(a,b,SkillBlackFrameTagLookup ,LiveMonsterLookup, BlackFrameHitMonsterQueue, true);
-
+                AddIfMatch(a, b, SkillBlackFrameTagLookup, LiveMonsterLookup, BlackFrameHitMonsterQueue, true);
+            //暗影之刺 技能传入 控制标签
+            if (EnableSpecialSkillShadowStab)
+                AddIfMatch(a, b, SkillShadowStabTagLookup, LiveMonsterLookup, ShadowStabHitMonsterQueue, true);
 
 
 
@@ -506,34 +541,34 @@ namespace BlackDawn.DOTS
             // AddIfMatch(a, b, SkillOverTimePropDamageCalParLookup, LiveMonsterLookup, SkillOverTimeHitMonsterQueue, true);
             // AddIfMatch(b, a, SkillPropDamageCalParLookup, LiveMonsterLookup, SkillHitMonsterQueue, true);
 
-            // //怪物与法阵碰撞
-            // AddIfMatch(a, b, SkillArcaneCircleSecondTagLookup, LiveMonsterLookup, ArcaneCircleHitMonsterQueue, true);
-            // AddIfMatch(b, a, SkillArcaneCircleSecondTagLookup, LiveMonsterLookup, ArcaneCircleHitMonsterQueue, true);
+                // //怪物与法阵碰撞
+                // AddIfMatch(a, b, SkillArcaneCircleSecondTagLookup, LiveMonsterLookup, ArcaneCircleHitMonsterQueue, true);
+                // AddIfMatch(b, a, SkillArcaneCircleSecondTagLookup, LiveMonsterLookup, ArcaneCircleHitMonsterQueue, true);
 
-            // //英雄与法阵本体碰撞,英雄可以在阶段内自行判断
-            // AddIfMatchSimple(a, b, HeroEntityMasterTagLookup, SkillArcaneCircleTagLookup, ArcaneCircleHitHeroQueue);
-            // AddIfMatchSimple(b, a, HeroEntityMasterTagLookup, SkillArcaneCircleTagLookup, ArcaneCircleHitHeroQueue);
+                // //英雄与法阵本体碰撞,英雄可以在阶段内自行判断
+                // AddIfMatchSimple(a, b, HeroEntityMasterTagLookup, SkillArcaneCircleTagLookup, ArcaneCircleHitHeroQueue);
+                // AddIfMatchSimple(b, a, HeroEntityMasterTagLookup, SkillArcaneCircleTagLookup, ArcaneCircleHitHeroQueue);
 
-            // //技能碰撞到元素共鸣体,元素共鸣体自身不检测自己
-            // AddIfMatchSimple(a, b, SkillElementResonanceTagLookup, SkillPropDamageCalParLookup, SkillElementResonanceQueue);
-            // AddIfMatchSimple(b, a, SkillElementResonanceTagLookup, SkillPropDamageCalParLookup, SkillElementResonanceQueue);
+                // //技能碰撞到元素共鸣体,元素共鸣体自身不检测自己
+                // AddIfMatchSimple(a, b, SkillElementResonanceTagLookup, SkillPropDamageCalParLookup, SkillElementResonanceQueue);
+                // AddIfMatchSimple(b, a, SkillElementResonanceTagLookup, SkillPropDamageCalParLookup, SkillElementResonanceQueue);
 
-            // //基础飞行道具碰撞到元素共鸣体
-            // AddIfMatchSimple(a, b, SkillElementResonanceTagLookup, FlightPropDamageCalParLookup, BaseFlightElementResonanceQueue);
-            // AddIfMatchSimple(b, a, SkillElementResonanceTagLookup, FlightPropDamageCalParLookup, BaseFlightElementResonanceQueue);
+                // //基础飞行道具碰撞到元素共鸣体
+                // AddIfMatchSimple(a, b, SkillElementResonanceTagLookup, FlightPropDamageCalParLookup, BaseFlightElementResonanceQueue);
+                // AddIfMatchSimple(b, a, SkillElementResonanceTagLookup, FlightPropDamageCalParLookup, BaseFlightElementResonanceQueue);
 
-            // //怪物与毒爆地雷碰撞
-            // AddIfMatch(a, b, SkillMineBlastTagLookup, LiveMonsterLookup, MineBlastHitMonsterQueue, true);
-            // AddIfMatch(b, a, SkillMineBlastTagLookup, LiveMonsterLookup, MineBlastHitMonsterQueue, true);
-            // //怪物与毒爆地雷爆炸后的碰撞对，用于计算B效果
-            // AddIfMatch(a, b, SkillMineBlastExplosionTagLookup, LiveMonsterLookup, MineBlastExplosionHitMonsterQueue, true);
-            // AddIfMatch(b, a, SkillMineBlastExplosionTagLookup, LiveMonsterLookup, MineBlastExplosionHitMonsterQueue, true);
-            // //毒雨A阶段
-            // AddIfMatch(a, b, SkillPoisonRainATaglookup, LiveMonsterLookup, PoisonRainAHitMonsterQueue, true);
-            // AddIfMatch(b, a, SkillPoisonRainATaglookup, LiveMonsterLookup, PoisonRainAHitMonsterQueue, true);
+                // //怪物与毒爆地雷碰撞
+                // AddIfMatch(a, b, SkillMineBlastTagLookup, LiveMonsterLookup, MineBlastHitMonsterQueue, true);
+                // AddIfMatch(b, a, SkillMineBlastTagLookup, LiveMonsterLookup, MineBlastHitMonsterQueue, true);
+                // //怪物与毒爆地雷爆炸后的碰撞对，用于计算B效果
+                // AddIfMatch(a, b, SkillMineBlastExplosionTagLookup, LiveMonsterLookup, MineBlastExplosionHitMonsterQueue, true);
+                // AddIfMatch(b, a, SkillMineBlastExplosionTagLookup, LiveMonsterLookup, MineBlastExplosionHitMonsterQueue, true);
+                // //毒雨A阶段
+                // AddIfMatch(a, b, SkillPoisonRainATaglookup, LiveMonsterLookup, PoisonRainAHitMonsterQueue, true);
+                // AddIfMatch(b, a, SkillPoisonRainATaglookup, LiveMonsterLookup, PoisonRainAHitMonsterQueue, true);
 
 
-            // AddIfMatchSingle(a, b, SkillPoisonRainATaglookup, LiveMonsterLookup, PoisonRainAHitMonsterQueue, true);
+                // AddIfMatchSingle(a, b, SkillPoisonRainATaglookup, LiveMonsterLookup, PoisonRainAHitMonsterQueue, true);
 
 
         }

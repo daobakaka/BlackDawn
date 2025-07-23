@@ -35,6 +35,8 @@ namespace BlackDawn.DOTS
         EntityManager _entityManager;
         HeroAttributeCmpt _heroAttributeCmptOriginal;
 
+        ScenePrefabsSingleton _prefabs;
+
         public void OnCreate(ref SystemState state)
         {
 
@@ -58,7 +60,7 @@ namespace BlackDawn.DOTS
         {
             _heroEntity = SystemAPI.GetSingletonEntity<HeroEntityMasterTag>();
             _heroAttributeCmptOriginal = Hero.instance.attributeCmpt;
-        
+
 
             DevDebug.Log("重启SkillMono系统");
         }
@@ -89,7 +91,7 @@ namespace BlackDawn.DOTS
             var heroPar = _heroAttribute[_heroEntity];
             //获取英雄装载的技能等级
             var level = _heroAttribute[_heroEntity].skillDamageAttribute.skillLevel;
-            var prefab = SystemAPI.GetSingleton<ScenePrefabsSingleton>();
+            _prefabs = SystemAPI.GetSingleton<ScenePrefabsSingleton>();
             //获取收集世界单例
             var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
             var thunderGripHitMonsterArray = detectionSystem.thunderGripHitMonsterArray;
@@ -302,10 +304,10 @@ namespace BlackDawn.DOTS
             //元素共鸣Mono效果
             SkillMonoElementResonance(ref state, ecb);
             //技能静电牢笼
-            SkillMonoElectroCage(ref state, ecb, prefab);
+            SkillMonoElectroCage(ref state, ecb);
 
             // 暗影步 12
-            SkillMonoShadowStep(ref state, ecb, timer);   
+            SkillMonoShadowStep(ref state, ecb, timer);
             //暗影洪流15 B阶段，瞬时伤害特效控制
             SkillMonoMineBlastB(ref state);
             //时间缓速 16
@@ -314,8 +316,10 @@ namespace BlackDawn.DOTS
             SkillMonoChainDevour(ref state, ecb);
             //雷霆之握
             SkillMonoThunderGrip(ref state, ecb);
-            //时空扭曲B阶段
+            //时空扭曲B阶段 27
             SkillMonoChronoTwistB(ref state, timer);
+            //暗影之刺 31
+            SkillMonoShadowStap(ref state, timer, ecb);
             //幻影步 34
             SkillMonoPhantomStep(ref state, ecb, timer);
 
@@ -340,7 +344,7 @@ namespace BlackDawn.DOTS
         /// </summary>
         /// <param name="state"></param>
         /// <param name="ecb"></param>
-        void SkillMonoAdvance(ref SystemState state,float timer)
+        void SkillMonoAdvance(ref SystemState state, float timer)
         {
             foreach (var (skillTag, heroPar, transform, entity)
              in SystemAPI.Query<RefRW<SkillAdvanceTag_Hero>, RefRW<HeroAttributeCmpt>, RefRW<LocalTransform>>().WithEntityAccess())
@@ -394,7 +398,7 @@ namespace BlackDawn.DOTS
 
                 }
 
-       }
+            }
 
 
 
@@ -433,22 +437,22 @@ namespace BlackDawn.DOTS
                         }
                     }
                 }
-                    else
-                    {
-                        //非active 状态即重置 skillTag 
-                        skillTag.ValueRW.initialized = false;
-                        heroPar.ValueRW.gainAttribute.energyRegen = _heroAttributeCmptOriginal.gainAttribute.energyRegen;
-                        heroPar.ValueRW.gainAttribute.hpRegen = _heroAttributeCmptOriginal.gainAttribute.hpRegen;
-                        heroPar.ValueRW.defenseAttribute.moveSpeed = _heroAttributeCmptOriginal.defenseAttribute.moveSpeed;
-                        heroPar.ValueRW.attackAttribute.attackSpeed = _heroAttributeCmptOriginal.attackAttribute.attackSpeed;
-                        heroPar.ValueRW.gainAttribute.cooldownReduction = _heroAttributeCmptOriginal.gainAttribute.cooldownReduction;
+                else
+                {
+                    //非active 状态即重置 skillTag 
+                    skillTag.ValueRW.initialized = false;
+                    heroPar.ValueRW.gainAttribute.energyRegen = _heroAttributeCmptOriginal.gainAttribute.energyRegen;
+                    heroPar.ValueRW.gainAttribute.hpRegen = _heroAttributeCmptOriginal.gainAttribute.hpRegen;
+                    heroPar.ValueRW.defenseAttribute.moveSpeed = _heroAttributeCmptOriginal.defenseAttribute.moveSpeed;
+                    heroPar.ValueRW.attackAttribute.attackSpeed = _heroAttributeCmptOriginal.attackAttribute.attackSpeed;
+                    heroPar.ValueRW.gainAttribute.cooldownReduction = _heroAttributeCmptOriginal.gainAttribute.cooldownReduction;
 
-                    }
+                }
                 if (heroPar.ValueRW.defenseAttribute.energy <= 0.01f)
                 {
 
                     skillTag.ValueRW.active = false;
-                    
+
                 }
 
 
@@ -470,12 +474,179 @@ namespace BlackDawn.DOTS
                     skillPar.ValueRW.destory = true;
 
                 float3 forward = math.mul(transform.ValueRO.Rotation, new float3(0, 0, 1)); // Z轴为前
-                transform.ValueRW.Position += forward * skillTag.ValueRO.speed* timer;
+                transform.ValueRW.Position += forward * skillTag.ValueRO.speed * timer;
 
             }
-            
-            
+
+
         }
+
+        //暗影之刺 31 分裂在特殊类里面执行？支线程or主线程OR并行线程
+        void SkillMonoShadowStap(ref SystemState state, float timer, EntityCommandBuffer ecb)
+        {
+            foreach (var (skillTag, skillPar, transform, entity)
+              in SystemAPI.Query<RefRW<SkillShadowStabTag>, RefRW<SkillsDamageCalPar>, RefRW<LocalTransform>>().WithEntityAccess())
+            {
+
+                skillTag.ValueRW.tagSurvivalTime -= timer;
+                if (skillTag.ValueRW.tagSurvivalTime <= 0)
+                    skillPar.ValueRW.destory = true;
+                var forward = math.mul(transform.ValueRO.Rotation, new float3(0, 0, 1));
+                transform.ValueRW.Position += forward * timer * skillTag.ValueRO.speed;
+                skillPar.ValueRW.timer += timer;
+
+
+                //命中 且未初始化时
+                if (skillPar.ValueRO.hit && !skillTag.ValueRW.initialized)
+                {
+                    skillPar.ValueRW.hit = false;
+                    skillTag.ValueRW.initialized = true;
+                    for (int j = 0; j < 2; j++)
+                    {
+
+                        var entityShadowStab = ecb.Instantiate(_prefabs.HeroSkill_ShadowStab);
+
+                        var trs = transform.ValueRW;
+                        trs.Scale = 1;
+                        var baseRot = transform.ValueRW.Rotation;
+
+                        // 左右各30度偏转（j=0: -30°, j=1: +30°）
+                        float offsetDeg = -30 + (j * 60);
+                        quaternion offsetRot = quaternion.RotateY(math.radians(offsetDeg));
+
+                        // 最终旋转：当前朝向 * 偏移量
+                        trs.Rotation = math.mul(baseRot, offsetRot);
+                        ecb.SetComponent(entityShadowStab, trs);
+                        //添加暗影之刺的标签,赋予伤害标签的伤害值
+                        ecb.AddComponent(entityShadowStab, new SkillShadowStabTag() { speed = 20, tagSurvivalTime = 4, splitCount = 0, initialized = true,enableSecondA=skillTag.ValueRO.enableSecondA,
+                        enableSecondB=skillTag.ValueRO.enableSecondB,skillDamageChangeParTag=skillTag.ValueRO.skillDamageChangeParTag,secondAChance=skillTag.ValueRO.secondAChance});
+                        var newCal = skillPar.ValueRW;
+                        ecb.AddComponent(entityShadowStab, newCal);
+
+                        var hits = ecb.AddBuffer<HitRecord>(entityShadowStab);
+                        ecb.AddBuffer<HitElementResonanceRecord>(entityShadowStab);
+
+                    }
+                }
+
+                //开启A阶段之后，没有开始次级分裂的道具，进行分裂判断，判断结果为1
+                if (skillTag.ValueRO.enableSecondA)
+                {
+                    if (skillPar.ValueRO.hit && skillTag.ValueRW.splitCount <= 0&&skillPar.ValueRW.timer > 0.5f)
+                    {
+                        skillPar.ValueRW.hit = false;
+                        skillPar.ValueRW.timer = 0;
+                        skillTag.ValueRW.splitCount += 1;
+                        if (UnityEngine.Random.Range(0, 1f) <= skillTag.ValueRW.secondAChance)
+                            for (int j = 0; j < 2; j++)
+                            {
+
+                                var entityShadowStab = ecb.Instantiate(_prefabs.HeroSkill_ShadowStab);
+                                var trs = transform.ValueRW;
+                                trs.Scale = 1;
+                                var baseRot = transform.ValueRW.Rotation;
+
+                                // 左右各30度偏转（j=0: -30°, j=1: +30°）
+                                float offsetDeg = -30 + (j * 60);
+                                quaternion offsetRot = quaternion.RotateY(math.radians(offsetDeg));
+
+                                // 最终旋转：当前朝向 * 偏移量
+                                trs.Rotation = math.mul(baseRot, offsetRot);
+                                ecb.SetComponent(entityShadowStab, trs);
+                                //添加暗影之刺的标签,赋予伤害标签的伤害值
+                        ecb.AddComponent(entityShadowStab, new SkillShadowStabTag() { speed = 20, tagSurvivalTime = 4, splitCount = skillTag.ValueRW.splitCount, initialized = true,enableSecondA=skillTag.ValueRO.enableSecondA,
+                        enableSecondB=skillTag.ValueRO.enableSecondB,skillDamageChangeParTag=skillTag.ValueRO.skillDamageChangeParTag,secondAChance=skillTag.ValueRO.secondAChance});
+                                var newCal = skillPar.ValueRW;
+                                ecb.AddComponent(entityShadowStab, newCal);
+
+                                var hits = ecb.AddBuffer<HitRecord>(entityShadowStab);
+                                ecb.AddBuffer<HitElementResonanceRecord>(entityShadowStab);
+
+                            }
+                    }
+
+                }
+
+                //开启B阶段之后，针对已经已经过次级分裂，没有开始次次级分裂的道具，进行分裂判断，判断结果为2，B阶段的值为0.5f
+                if (skillTag.ValueRO.enableSecondB)
+                {
+                    if (skillPar.ValueRO.hit && skillTag.ValueRW.splitCount <= 1 && skillTag.ValueRW.splitCount > 0&&skillPar.ValueRW.timer > 0.5f)
+                    {
+                        skillPar.ValueRW.hit = false;
+                        skillPar.ValueRW.timer = 0;
+                        skillTag.ValueRW.splitCount += 1;
+                        if (UnityEngine.Random.Range(0, 1f) <= 0.5f)//次次级分裂概率50%
+                            for (int j = 0; j < 2; j++)
+                            {
+
+                                var entityShadowStab = ecb.Instantiate(_prefabs.HeroSkill_ShadowStab);
+                                var trs = transform.ValueRW;
+                                trs.Scale = 1;
+                                var baseRot = transform.ValueRW.Rotation;
+
+                                // 左右各30度偏转（j=0: -30°, j=1: +30°）
+                                float offsetDeg = -30 + (j * 60);
+                                quaternion offsetRot = quaternion.RotateY(math.radians(offsetDeg));
+
+                                // 最终旋转：当前朝向 * 偏移量
+                                trs.Rotation = math.mul(baseRot, offsetRot);
+                                ecb.SetComponent(entityShadowStab, trs);
+                                //添加暗影之刺的标签,赋予伤害标签的伤害值
+                                ecb.AddComponent(entityShadowStab, new SkillShadowStabTag() { speed = 20, tagSurvivalTime = 4, splitCount = skillTag.ValueRW.splitCount, initialized = true,enableSecondA=skillTag.ValueRO.enableSecondA,
+                        enableSecondB=skillTag.ValueRO.enableSecondB,skillDamageChangeParTag=skillTag.ValueRO.skillDamageChangeParTag,secondAChance=skillTag.ValueRO.secondAChance});
+                                var newCal = skillPar.ValueRW;
+                                newCal.damageChangePar *= skillTag.ValueRO.skillDamageChangeParTag;
+                                ecb.AddComponent(entityShadowStab, newCal);
+                                var hits = ecb.AddBuffer<HitRecord>(entityShadowStab);
+                                ecb.AddBuffer<HitElementResonanceRecord>(entityShadowStab);
+
+                            }
+                    }
+                    //次次级之后的分裂，由幸运一击触发，幸运一击可以溢出,判断内置0.5fCD,由幸运一击产生的暗影之刺最多分裂5次
+                    if (skillPar.ValueRO.hit && skillTag.ValueRW.splitCount >= 2 && skillPar.ValueRW.timer > 0.5f&&skillTag.ValueRW.splitCount<7)
+                    {
+                        skillPar.ValueRW.hit = false;
+                        skillPar.ValueRW.timer = 0;
+                        skillTag.ValueRW.splitCount += 1;
+                        if (UnityEngine.Random.Range(0, 1f) <= 0.5f * 0.25 * _heroAttribute[_heroEntity].attackAttribute.luckyStrikeChance)//0.5幸运一击*0.25幸运一击命中*幸运一击几率
+                            for (int j = 0; j < 2; j++)
+                            {
+
+                                var entityShadowStab = ecb.Instantiate(_prefabs.HeroSkill_ShadowStab);
+                                var trs = transform.ValueRW;
+                                trs.Scale = 1;
+                                var baseRot = transform.ValueRW.Rotation;
+
+                                // 左右各30度偏转（j=0: -30°, j=1: +30°）
+                                float offsetDeg = -30 + (j * 60);
+                                quaternion offsetRot = quaternion.RotateY(math.radians(offsetDeg));
+
+                                // 最终旋转：当前朝向 * 偏移量
+                                trs.Rotation = math.mul(baseRot, offsetRot);
+                                ecb.SetComponent(entityShadowStab, trs);
+
+                                skillTag.ValueRW.skillDamageChangeParTag *= 0.9f;//次次级分裂伤害递减10%
+                                //添加暗影之刺的标签,赋予伤害标签的伤害值
+                                ecb.AddComponent(entityShadowStab, new SkillShadowStabTag() { speed = 20, tagSurvivalTime = 4, splitCount = skillTag.ValueRW.splitCount, initialized = true,enableSecondA=skillTag.ValueRO.enableSecondA,
+                        enableSecondB=skillTag.ValueRO.enableSecondB,skillDamageChangeParTag=skillTag.ValueRO.skillDamageChangeParTag,secondAChance=skillTag.ValueRO.secondAChance});
+                                var newCal = skillPar.ValueRW;
+                                newCal.damageChangePar *= skillTag.ValueRO.skillDamageChangeParTag;
+                                ecb.AddComponent(entityShadowStab, newCal);
+
+                                var hits = ecb.AddBuffer<HitRecord>(entityShadowStab);
+                                ecb.AddBuffer<HitElementResonanceRecord>(entityShadowStab);
+
+                            }
+                    }
+
+
+                }
+
+
+            }
+
+        }
+
         //特殊， 检查激活A阶段怪物身上带有的黑炎标签， 进行其抗性持降低的计算
         //检查激活B阶段怪物身上带有的黑炎标签，进行其伤害加深的计算
         void SkillMonoBlackFrameA(ref SystemState state, float timer)
@@ -499,20 +670,13 @@ namespace BlackDawn.DOTS
                 defense.ValueRW.resistances.shadow -= timer * (1 + level * 0.01f);
 
             }
-             foreach (var (preSkillTag, debuff, transform, entity)
-            in SystemAPI.Query<RefRW<PreDefineHeroSkillBlackFrameBTag>, RefRW<MonsterDebuffAttribute>, RefRW<LocalTransform>>().WithEntityAccess())
+            foreach (var (preSkillTag, debuff, transform, entity)
+           in SystemAPI.Query<RefRW<PreDefineHeroSkillBlackFrameBTag>, RefRW<MonsterDebuffAttribute>, RefRW<LocalTransform>>().WithEntityAccess())
             {
 
                 debuff.ValueRW.damageAmplification += timer * 0.001f;
 
             }
-
-
-
-
-
-
-
 
         }
         /// <summary>
@@ -567,7 +731,6 @@ namespace BlackDawn.DOTS
                     if (skillCal.ValueRW.hit == true && skillTag.ValueRW.hitCount > 0)
                     {
                         skillCal.ValueRW.hit = false;
-                        var prefab = SystemAPI.GetSingleton<ScenePrefabsSingleton>();
 
                         //激发一次寒冰碎片的计算
 
@@ -576,7 +739,7 @@ namespace BlackDawn.DOTS
                         for (int i = 0; i < skillTag.ValueRO.shrapnelCount; i++)
                         {
 
-                            var fragIce = ecb.Instantiate(prefab.HeroSkillAssistive_Frost);
+                            var fragIce = ecb.Instantiate(_prefabs.HeroSkillAssistive_Frost);
 
                             var trs = transform.ValueRW;
                             trs.Scale = 1;
@@ -666,7 +829,7 @@ namespace BlackDawn.DOTS
         /// </summary>
         /// <param name="state"></param>
         /// <param name="ecb"></param>
-        void SkillMonoElectroCage(ref SystemState state, EntityCommandBuffer ecb, ScenePrefabsSingleton prefabs)
+        void SkillMonoElectroCage(ref SystemState state, EntityCommandBuffer ecb)
         {
             var rng = new Unity.Mathematics.Random((uint)UnityEngine.Random.Range(1, int.MaxValue));
 
@@ -693,7 +856,7 @@ namespace BlackDawn.DOTS
                         skillTag.ValueRW.timerA = 0;
 
                         //  1.实例化新牢笼电弧
-                        var arcEntity = ecb.Instantiate(prefabs.HeroSkillAssistive_ElectroCage_Lightning);
+                        var arcEntity = ecb.Instantiate(_prefabs.HeroSkillAssistive_ElectroCage_Lightning);
 
                         // 2. LocalTransform 随机偏移 XZ ±10
                         var newTransform = transform.ValueRO;
@@ -740,7 +903,7 @@ namespace BlackDawn.DOTS
                             skillTag.ValueRW.StackCount += 1;
                             float3 newPosition = transform.ValueRO.Position + new float3(Offset.x, 0, Offset.z);
 
-                            var entityElectroCage = DamageSkillsECSRelaseProp(ecb, prefabs.HeroSkill_ElectroCage, damagePar.ValueRO, newPosition, quaternion.identity);
+                            var entityElectroCage = DamageSkillsECSRelaseProp(ecb, _prefabs.HeroSkill_ElectroCage, damagePar.ValueRO, newPosition, quaternion.identity);
                             int nextStackCount = skillTag.ValueRO.StackCount + 1;
                             if (skillTag.ValueRO.enableSecondA)
                             {
@@ -910,7 +1073,7 @@ namespace BlackDawn.DOTS
         /// <param name="state"></param>
         /// <param name="ecb"></param>
         /// <param name="timer"></param>
-        void SkillMonoPhantomStep(ref SystemState state, EntityCommandBuffer ecb,float timer)
+        void SkillMonoPhantomStep(ref SystemState state, EntityCommandBuffer ecb, float timer)
         {
 
             foreach (var (transform, skillDamageCal, SkillTag, entity)
@@ -931,9 +1094,9 @@ namespace BlackDawn.DOTS
         /// <param name="ecb"></param>
         /// <param name="timer"></param>
         void SkillMonoShadowStep(ref SystemState state, EntityCommandBuffer ecb, float timer)
-        {   
-              foreach (var (transform, skillDamageCal, SkillTag, entity)
-             in SystemAPI.Query<RefRW<LocalTransform>, RefRW<SkillsDamageCalPar>, RefRW<SkillShadowStepTag>>().WithEntityAccess())
+        {
+            foreach (var (transform, skillDamageCal, SkillTag, entity)
+           in SystemAPI.Query<RefRW<LocalTransform>, RefRW<SkillsDamageCalPar>, RefRW<SkillShadowStepTag>>().WithEntityAccess())
             {
                 SkillTag.ValueRW.tagSurvivalTime -= timer;
                 if (SkillTag.ValueRW.tagSurvivalTime <= 0)
