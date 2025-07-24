@@ -318,6 +318,8 @@ namespace BlackDawn.DOTS
             SkillMonoThunderGrip(ref state, ecb);
             //时空扭曲B阶段 27
             SkillMonoChronoTwistB(ref state, timer);
+            //烈焰爆发B阶段 28
+            SkillFlameBurstB(ref state, timer);
             //暗影之刺 31
             SkillMonoShadowStap(ref state, timer, ecb);
             //幻影步 34
@@ -380,7 +382,7 @@ namespace BlackDawn.DOTS
                     {
                         heroPar.ValueRW.gainAttribute.dymicalCooldownReduction.advanceACooldownReduction = 0.3f;
 
-                        heroPar.ValueRW.attackAttribute.heroDynamicalAttack.tempAdvanceDamagePar = 0.2f;
+                        heroPar.ValueRW.attackAttribute.heroDynamicalAttack.tempAdvanceADamagePar = 0.2f;
                     }
 
 
@@ -393,7 +395,7 @@ namespace BlackDawn.DOTS
                     {
                         heroPar.ValueRW.gainAttribute.dymicalCooldownReduction.advanceACooldownReduction = 0.0f;
 
-                        heroPar.ValueRW.attackAttribute.heroDynamicalAttack.tempAdvanceDamagePar = 0.0f;
+                        heroPar.ValueRW.attackAttribute.heroDynamicalAttack.tempAdvanceADamagePar = 0.0f;
                     }
 
                 }
@@ -455,6 +457,27 @@ namespace BlackDawn.DOTS
 
                 }
 
+
+
+            }
+
+
+        }
+        /// <summary>
+        /// 烈焰爆发B
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="timer"></param>
+        void SkillFlameBurstB(ref SystemState state, float timer)
+        {
+
+            foreach (var (skillTag, heroPar, transform, entity)
+            in SystemAPI.Query<RefRW<SkillFlameBurst_Hero>, RefRW<HeroAttributeCmpt>, RefRW<LocalTransform>>().WithEntityAccess())
+
+            {
+                skillTag.ValueRW.tagSurvivalTime -= timer;
+                if (skillTag.ValueRW.tagSurvivalTime <= 0)
+                    heroPar.ValueRW.attackAttribute.heroDynamicalAttack.tempFlameBurstBDamagePar = 0;//持续时间标记，小于0 则伤害增强清零
 
 
             }

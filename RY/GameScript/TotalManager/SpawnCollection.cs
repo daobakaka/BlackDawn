@@ -160,9 +160,11 @@ namespace BlackDawn
 
             //元素护盾预加载组件
             ecb.AddComponent(heroEntity, new SkillElementShieldTag_Hero() { });
+            ecb.SetComponentEnabled<SkillElementShieldTag_Hero>(heroEntity, false); // 设置为禁用
 
             //冰霜护盾预加载组件            
             ecb.AddComponent(heroEntity, new SkillFrostShieldTag_Hero() { });
+            ecb.SetComponentEnabled<SkillFrostShieldTag_Hero>(heroEntity, false); // 设置为禁用
 
             //进击 预加载组件
             ecb.AddComponent(heroEntity,new SkillAdvanceTag_Hero(){ });
@@ -177,7 +179,9 @@ namespace BlackDawn
             //加载特殊状态组件 隐匿
             ecb.AddComponent(heroEntity, new SkillShadowEmbrace_Hero { }); 
             ecb.SetComponentEnabled<SkillShadowEmbrace_Hero>(heroEntity, false); // 设置为禁用        
-
+             //烈焰爆发 组件
+             ecb.AddComponent(heroEntity, new SkillFlameBurst_Hero { }); 
+            ecb.SetComponentEnabled<SkillFlameBurst_Hero>(heroEntity, false); // 设置为禁用     
             
             ecb.Playback(entityManager);
             ecb.Dispose();

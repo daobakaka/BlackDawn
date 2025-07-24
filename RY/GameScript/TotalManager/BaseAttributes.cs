@@ -652,10 +652,11 @@ namespace BlackDawn
         //大于1通用累计
         public float tempMasterDamagePar;
         //小于1形式累计
-        public float tempAdvanceDamagePar;
+        public float tempAdvanceADamagePar;
+        //烈焰爆发二阶段增伤
+        public float tempFlameBurstBDamagePar;
         //幻影步3阶段
         public float tempPhantomStepCpar;
-
 
     }
     /// <summary>

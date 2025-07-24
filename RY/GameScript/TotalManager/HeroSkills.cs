@@ -254,7 +254,6 @@ namespace BlackDawn
 
 
                     break;
-
                 //法阵 4，持续
                 case HeroSkillID.ArcaneCircle:
 
@@ -387,8 +386,6 @@ namespace BlackDawn
 
 
                     break;
-
-
                 //进击5 保护 辅助
                 case HeroSkillID.Advance:
                 //开启进击标签
@@ -550,7 +547,6 @@ namespace BlackDawn
 
                     }
                     break;
-
                 //横扫 瞬时 8
                 case HeroSkillID.Sweep:
                     switch (psionicType)
@@ -594,7 +590,6 @@ namespace BlackDawn
                             break;
                     }
                     break;
-
                 //毒池 9 ，瞬时/辅助
                 case HeroSkillID.PoisonPool:
                     switch (psionicType)
@@ -617,7 +612,6 @@ namespace BlackDawn
 
                     }
                     break;
-
                 //相位 10 ，保护/辅助
                 case HeroSkillID.Phase:
                     switch (psionicType)
@@ -646,7 +640,6 @@ namespace BlackDawn
                     }
 
                     break;
-
                 //元素共鸣 11,持续？，非技能标签，不会造成伤害,可以读取等级展示伤害
                 case HeroSkillID.ElementResonance:
                     switch (psionicType)
@@ -1070,7 +1063,6 @@ namespace BlackDawn
                     }
 
                     break;
-
                 //时间缓速 16 消耗/持续，增益,每秒降低5点
                 case HeroSkillID.TimeSlow:
                     _entityManager.SetComponentEnabled<SkillTimeSlowTag_Hero>(_heroEntity,true);
@@ -1139,12 +1131,12 @@ namespace BlackDawn
 
                         }
                     }
-                        break;
-                    
+                        break;                   
                 //冰霜护盾 18
                 case HeroSkillID.FrostShield:
 
                     var skillFrostShieldCmp = _entityManager.GetComponentData<SkillFrostShieldTag_Hero>(_heroEntity);
+                    _entityManager.SetComponentEnabled<SkillFrostShieldTag_Hero>(_heroEntity, true);
 
                     switch (psionicType)
 
@@ -1198,8 +1190,6 @@ namespace BlackDawn
                     }
 
                     break;
-
-
                 //连锁吞噬 ：瞬时 19
                 case HeroSkillID.ChainDevour:
                     //开启连锁吞噬碰撞，
@@ -1310,7 +1300,6 @@ namespace BlackDawn
 
                     }
                     break;
-
                 //雷霆之握：瞬时 20    
                 case HeroSkillID.ThunderGrip:
 
@@ -1743,10 +1732,10 @@ namespace BlackDawn
                             break;
                     }
                      break;
-
                 //元素护盾 25 保护/唯一，保护技能25号元素可以仅添加渲染即可
                 case HeroSkillID.ElementShield:
                     var skillElementShieldCmp = _entityManager.GetComponentData<SkillElementShieldTag_Hero>(_heroEntity);
+                    _entityManager.SetComponentEnabled<SkillElementShieldTag_Hero>(_heroEntity, true);
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
@@ -1897,8 +1886,7 @@ namespace BlackDawn
  
                             break;                       
                     }
-                    break;
-                
+                    break;               
                 //时空扭曲27 第一步  生成时空奇点 第二步 随时间变化 形态， 第三步 爆炸生成时空碎片
                 case HeroSkillID.ChronoTwist:
 
@@ -2013,34 +2001,304 @@ namespace BlackDawn
                     {
                         case HeroSkillPsionicType.Basic:
 
-                            DevDebug.LogError("进入烈焰爆发");
+                            // DevDebug.LogError("进入烈焰爆发");
                             if (runTimeHeroCmp.defenseAttribute.energy > 40)
                             {
-                            runTimeHeroCmp.defenseAttribute.energy -= 40;
-                            var filter = new CollisionFilter
-                            {
-                                //属于道具层
-                                BelongsTo = 1u << 10,
-                                //检测敌人
-                                CollidesWith = 1u << 6,
-                                GroupIndex = 0
-                            };
-                            var overlap = new OverlapBurstQueryCenter { center = Hero.instance.transform.position, radius = 15f, filter = filter, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
-                            var flameBurstEntity = DamageSkillsBrustProp(_skillPrefabs.HeroSkill_FlameBurst, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation,
-                            1, float3.zero, float3.zero, 1, false, true);
-                            var skillBurstDamageCal = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(flameBurstEntity);
-                            skillBurstDamageCal.tempknockback= 300;//附带300击退值
-                            _entityManager.SetComponentData(flameBurstEntity, skillBurstDamageCal);
-                            //设置总体存活时间， 设置爆发时间，应该是到了爆发时间动态扩大烈焰爆发的技能检测范围
-                            _entityManager.AddComponentData(flameBurstEntity, new SkillFlameBurstTag() { tagSurvivalTime = 0.5f, startBurstTime = 0.5f });
-
+                                int preLevel = 10;
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                var filter = new CollisionFilter
+                                {
+                                    //属于道具层
+                                    BelongsTo = 1u << 10,
+                                    //检测敌人
+                                    CollidesWith = 1u << 6,
+                                    GroupIndex = 0
+                                };
+                                var overlap = new OverlapBurstQueryCenter { center = Hero.instance.transform.position, radius = 12f, filter = filter, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                                var flameBurstEntity = DamageSkillsBrustProp(_skillPrefabs.HeroSkill_FlameBurst, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation,
+                                1, float3.zero, float3.zero, 1, false, true);
+                                var skillBurstDamageCal = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(flameBurstEntity);
+                                skillBurstDamageCal.tempknockback = 300;//附带300击退值
+                                _entityManager.SetComponentData(flameBurstEntity, skillBurstDamageCal);
+                                //设置总体存活时间， 设置爆发时间，应该是到了爆发时间动态扩大烈焰爆发的技能检测范围
+                                _entityManager.AddComponentData(flameBurstEntity, new SkillFlameBurstTag() { tagSurvivalTime = 0.5f, level = preLevel });
                             }
                             break;
                         case HeroSkillPsionicType.PsionicA:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                int preLevel = 10;
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                var filter = new CollisionFilter
+                                {
+                                    //属于道具层
+                                    BelongsTo = 1u << 10,
+                                    //检测敌人
+                                    CollidesWith = 1u << 6,
+                                    GroupIndex = 0
+                                };
+                                var overlap = new OverlapBurstQueryCenter { center = Hero.instance.transform.position, radius = 12f, filter = filter, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                                var flameBurstEntity = DamageSkillsBrustProp(_skillPrefabs.HeroSkill_FlameBurst, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation,
+                                1, float3.zero, float3.zero, 1, false, true);
+                                var skillBurstDamageCal = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(flameBurstEntity);
+                                //新增爆燃冲击的压制逻辑
+                                var tempCount = Hero.instance.skillAttackPar.flameBurstRelasecount += 1;
+                                if (tempCount >= (11 - preLevel * 0.5f))
+                                {
+                                    DevDebug.LogError("压制");
+                                    skillBurstDamageCal = Hero.instance.CalculateBurstSkillDamage(0, 0, 1);//产生压制
+                                    Hero.instance.skillAttackPar.flameBurstRelasecount = 0;//清零计数器
+                                }
+
+                                skillBurstDamageCal.tempknockback = 300;//附带300击退值
+                                _entityManager.SetComponentData(flameBurstEntity, skillBurstDamageCal);
+                                //设置总体存活时间， 设置爆发时间，应该是到了爆发时间动态扩大烈焰爆发的技能检测范围
+                                _entityManager.AddComponentData(flameBurstEntity, new SkillFlameBurstTag() { tagSurvivalTime = 0.5f, level = preLevel });
+
+                            }
                             break;
                         case HeroSkillPsionicType.PsionicB:
+                            _entityManager.SetComponentEnabled<SkillFlameBurst_Hero>(_heroEntity, true);//开启烈焰爆发B阶段加载标签
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                int preLevel = 10;
+
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                //烈焰爆发独立增伤
+                                if (runTimeHeroCmp.attackAttribute.heroDynamicalAttack.tempFlameBurstBDamagePar < (8 * (0.15f + 0.01f * preLevel)))
+                                    runTimeHeroCmp.attackAttribute.heroDynamicalAttack.tempFlameBurstBDamagePar += 0.15f + 0.01f * preLevel;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                var flameBurstStength = _entityManager.GetComponentData<SkillFlameBurst_Hero>(_heroEntity);
+                                flameBurstStength.tagSurvivalTime = 6;//重置6秒的加成时间
+                                _entityManager.SetComponentData(_heroEntity, flameBurstStength);//写回-由外部检测加成时间                              
+                                var filter = new CollisionFilter
+                                {
+                                    //属于道具层
+                                    BelongsTo = 1u << 10,
+                                    //检测敌人
+                                    CollidesWith = 1u << 6,
+                                    GroupIndex = 0
+                                };
+                                var overlap = new OverlapBurstQueryCenter { center = Hero.instance.transform.position, radius = 12f, filter = filter, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                                var flameBurstEntity = DamageSkillsBrustProp(_skillPrefabs.HeroSkill_FlameBurst, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation,
+                                1, float3.zero, float3.zero, 1, false, true);
+                                var skillBurstDamageCal = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(flameBurstEntity);
+                                skillBurstDamageCal.tempknockback = 300;//附带300击退值
+                                _entityManager.SetComponentData(flameBurstEntity, skillBurstDamageCal);
+                                //设置总体存活时间， 设置爆发时间，应该是到了爆发时间动态扩大烈焰爆发的技能检测范围
+                                _entityManager.AddComponentData(flameBurstEntity, new SkillFlameBurstTag() { tagSurvivalTime = 0.5f, level = preLevel });
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicC:
+
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                int preLevel = 10;
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                var filter = new CollisionFilter
+                                {
+                                    //属于道具层
+                                    BelongsTo = 1u << 10,
+                                    //检测敌人
+                                    CollidesWith = 1u << 6,
+                                    GroupIndex = 0
+                                };
+                                var overlap = new OverlapBurstQueryCenter { center = Hero.instance.transform.position, radius = 12f, filter = filter, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                                var flameBurstEntity = DamageSkillsBrustProp(_skillPrefabs.HeroSkill_FlameBurst, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation,
+                                1, float3.zero, float3.zero, 1, false, true);
+                                var skillBurstDamageCal = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(flameBurstEntity);
+                                //C阶段的幸运判定
+                                var enbaleSup = UnityEngine.Random.Range(0, 1f) <= (0.25 + preLevel * 0.015) * 0.5f * runTimeHeroCmp.attackAttribute.luckyStrikeChance;
+                                if (enbaleSup)
+                                {
+                                    DevDebug.LogError("压制");
+                                    skillBurstDamageCal = Hero.instance.CalculateBurstSkillDamage(0, 0, 1);//产生压制
+                                                                                                           // Hero.instance.skillAttackPar.flameBurstRelasecount = 0;//清零计数器
+                                }
+
+                                skillBurstDamageCal.tempknockback = 300;//附带300击退值
+                                _entityManager.SetComponentData(flameBurstEntity, skillBurstDamageCal);
+                                //设置总体存活时间， 设置爆发时间，应该是到了爆发时间动态扩大烈焰爆发的技能检测范围
+                                _entityManager.AddComponentData(flameBurstEntity, new SkillFlameBurstTag() { tagSurvivalTime = 0.5f, level = preLevel });
+
+                            }
                             break;
                         case HeroSkillPsionicType.PsionicAB:
+                         _entityManager.SetComponentEnabled<SkillFlameBurst_Hero>(_heroEntity, true);//开启烈焰爆发B阶段加载标签
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                int preLevel = 10;
+
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                              
+                                //烈焰爆发独立增伤
+                                if (runTimeHeroCmp.attackAttribute.heroDynamicalAttack.tempFlameBurstBDamagePar < (8 * (0.15f + 0.01f * preLevel)))
+                                    runTimeHeroCmp.attackAttribute.heroDynamicalAttack.tempFlameBurstBDamagePar += 0.15f + 0.01f * preLevel;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                var flameBurstStength = _entityManager.GetComponentData<SkillFlameBurst_Hero>(_heroEntity);
+                                flameBurstStength.tagSurvivalTime = 6;//重置6秒的加成时间
+                                _entityManager.SetComponentData(_heroEntity, flameBurstStength);//写回-由外部检测加成时间                              
+                                var filter = new CollisionFilter
+                                {
+                                    //属于道具层
+                                    BelongsTo = 1u << 10,
+                                    //检测敌人
+                                    CollidesWith = 1u << 6,
+                                    GroupIndex = 0
+                                };
+                                var overlap = new OverlapBurstQueryCenter { center = Hero.instance.transform.position, radius = 12f, filter = filter, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                                var flameBurstEntity = DamageSkillsBrustProp(_skillPrefabs.HeroSkill_FlameBurst, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation,
+                                1, float3.zero, float3.zero, 1, false, true);
+                                var skillBurstDamageCal = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(flameBurstEntity);
+                                //新增爆燃冲击A的压制逻辑
+                                var tempCount = Hero.instance.skillAttackPar.flameBurstRelasecount += 1;
+                                if (tempCount >= (11 - preLevel * 0.5f))
+                                {
+                                    DevDebug.LogError("压制");
+                                    skillBurstDamageCal = Hero.instance.CalculateBurstSkillDamage(0, 0, 1);//产生压制
+                                    Hero.instance.skillAttackPar.flameBurstRelasecount = 0;//清零计数器
+                                }
+
+                                skillBurstDamageCal.tempknockback = 300;//附带300击退值
+                                _entityManager.SetComponentData(flameBurstEntity, skillBurstDamageCal);
+                                //设置总体存活时间， 设置爆发时间，应该是到了爆发时间动态扩大烈焰爆发的技能检测范围
+                                _entityManager.AddComponentData(flameBurstEntity, new SkillFlameBurstTag() { tagSurvivalTime = 0.5f, level = preLevel });
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicAC:
+                          if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                int preLevel = 10;
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                var filter = new CollisionFilter
+                                {
+                                    //属于道具层
+                                    BelongsTo = 1u << 10,
+                                    //检测敌人
+                                    CollidesWith = 1u << 6,
+                                    GroupIndex = 0
+                                };
+                                var overlap = new OverlapBurstQueryCenter { center = Hero.instance.transform.position, radius = 12f, filter = filter, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                                var flameBurstEntity = DamageSkillsBrustProp(_skillPrefabs.HeroSkill_FlameBurst, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation,
+                                1, float3.zero, float3.zero, 1, false, true);
+                                var skillBurstDamageCal = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(flameBurstEntity);
+
+                                //新增爆燃冲击A的压制逻辑
+                                var tempCount = Hero.instance.skillAttackPar.flameBurstRelasecount += 1;
+                                if (tempCount >= (11 - preLevel * 0.5f))
+                                {
+                                    DevDebug.LogError("压制");
+                                    skillBurstDamageCal = Hero.instance.CalculateBurstSkillDamage(0, 0, 1);//产生压制
+                                    Hero.instance.skillAttackPar.flameBurstRelasecount = 0;//清零计数器
+                                }
+                                //C阶段的幸运判定
+                                var enbaleSup = UnityEngine.Random.Range(0, 1f) <= (0.25 + preLevel * 0.015) * 0.5f * runTimeHeroCmp.attackAttribute.luckyStrikeChance;
+                                if (enbaleSup)
+                                {
+                                    DevDebug.LogError("压制");
+                                    skillBurstDamageCal = Hero.instance.CalculateBurstSkillDamage(0, 0, 1);//产生压制
+                                                                                                           // Hero.instance.skillAttackPar.flameBurstRelasecount = 0;//清零计数器
+                                }
+                                skillBurstDamageCal.tempknockback = 300;//附带300击退值
+                                _entityManager.SetComponentData(flameBurstEntity, skillBurstDamageCal);
+                                //设置总体存活时间， 设置爆发时间，应该是到了爆发时间动态扩大烈焰爆发的技能检测范围
+                                _entityManager.AddComponentData(flameBurstEntity, new SkillFlameBurstTag() { tagSurvivalTime = 0.5f, level = preLevel });
+
+                            }
+
+                            break;
+                        case HeroSkillPsionicType.PsionicBC:
+                              _entityManager.SetComponentEnabled<SkillFlameBurst_Hero>(_heroEntity, true);//开启烈焰爆发B阶段加载标签
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                int preLevel = 10;
+
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                //烈焰爆发独立增伤
+                                if (runTimeHeroCmp.attackAttribute.heroDynamicalAttack.tempFlameBurstBDamagePar < (8 * (0.15f + 0.01f * preLevel)))
+                                    runTimeHeroCmp.attackAttribute.heroDynamicalAttack.tempFlameBurstBDamagePar += 0.15f + 0.01f * preLevel;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                var flameBurstStength = _entityManager.GetComponentData<SkillFlameBurst_Hero>(_heroEntity);
+                                flameBurstStength.tagSurvivalTime = 6;//重置6秒的加成时间
+                                _entityManager.SetComponentData(_heroEntity, flameBurstStength);//写回-由外部检测加成时间                              
+                                var filter = new CollisionFilter
+                                {
+                                    //属于道具层
+                                    BelongsTo = 1u << 10,
+                                    //检测敌人
+                                    CollidesWith = 1u << 6,
+                                    GroupIndex = 0
+                                };
+                                var overlap = new OverlapBurstQueryCenter { center = Hero.instance.transform.position, radius = 12f, filter = filter, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                                var flameBurstEntity = DamageSkillsBrustProp(_skillPrefabs.HeroSkill_FlameBurst, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation,
+                                1, float3.zero, float3.zero, 1, false, true);
+                                var skillBurstDamageCal = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(flameBurstEntity);
+                                //C阶段的幸运判定
+                                var enbaleSup = UnityEngine.Random.Range(0, 1f) <= (0.25 + preLevel * 0.015) * 0.5f * runTimeHeroCmp.attackAttribute.luckyStrikeChance;
+                                if (enbaleSup)
+                                {
+                                    DevDebug.LogError("压制");
+                                    skillBurstDamageCal = Hero.instance.CalculateBurstSkillDamage(0, 0, 1);//产生压制
+                                                                                                           // Hero.instance.skillAttackPar.flameBurstRelasecount = 0;//清零计数器
+                                }
+                                skillBurstDamageCal.tempknockback = 300;//附带300击退值
+                                _entityManager.SetComponentData(flameBurstEntity, skillBurstDamageCal);
+                                //设置总体存活时间， 设置爆发时间，应该是到了爆发时间动态扩大烈焰爆发的技能检测范围
+                                _entityManager.AddComponentData(flameBurstEntity, new SkillFlameBurstTag() { tagSurvivalTime = 0.5f, level = preLevel });
+                            }
+
+                            break;
+                        case HeroSkillPsionicType.PsionicABC:
+                           _entityManager.SetComponentEnabled<SkillFlameBurst_Hero>(_heroEntity, true);//开启烈焰爆发B阶段加载标签
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                int preLevel = 10;
+
+                                runTimeHeroCmp.defenseAttribute.energy -= 40;
+                                //烈焰爆发独立增伤
+                                if (runTimeHeroCmp.attackAttribute.heroDynamicalAttack.tempFlameBurstBDamagePar < (8 * (0.15f + 0.01f * preLevel)))
+                                    runTimeHeroCmp.attackAttribute.heroDynamicalAttack.tempFlameBurstBDamagePar += 0.15f + 0.01f * preLevel;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                var flameBurstStength = _entityManager.GetComponentData<SkillFlameBurst_Hero>(_heroEntity);
+                                flameBurstStength.tagSurvivalTime = 6;//重置6秒的加成时间
+                                _entityManager.SetComponentData(_heroEntity, flameBurstStength);//写回-由外部检测加成时间                              
+                                var filter = new CollisionFilter
+                                {
+                                    //属于道具层
+                                    BelongsTo = 1u << 10,
+                                    //检测敌人
+                                    CollidesWith = 1u << 6,
+                                    GroupIndex = 0
+                                };
+                                var overlap = new OverlapBurstQueryCenter { center = Hero.instance.transform.position, radius = 12f, filter = filter, offset = new float3(0, 0, 0), shape = OverLapShape.Sphere };
+                                var flameBurstEntity = DamageSkillsBrustProp(_skillPrefabs.HeroSkill_FlameBurst, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation,
+                                1, float3.zero, float3.zero, 1, false, true);
+                                var skillBurstDamageCal = _entityManager.GetComponentData<SkillsBurstDamageCalPar>(flameBurstEntity);
+                                //新增爆燃冲击A的压制逻辑
+                                var tempCount = Hero.instance.skillAttackPar.flameBurstRelasecount += 1;
+                                if (tempCount >= (11 - preLevel * 0.5f))
+                                {
+                                    DevDebug.LogError("压制");
+                                    skillBurstDamageCal = Hero.instance.CalculateBurstSkillDamage(0, 0, 1);//产生压制
+                                    Hero.instance.skillAttackPar.flameBurstRelasecount = 0;//清零计数器
+                                }
+                                //C阶段的幸运判定
+                                var enbaleSup = UnityEngine.Random.Range(0, 1f) <= (0.25 + preLevel * 0.015) * 0.5f * runTimeHeroCmp.attackAttribute.luckyStrikeChance;
+                                if (enbaleSup)
+                                {
+                                    DevDebug.LogError("压制");
+                                    skillBurstDamageCal = Hero.instance.CalculateBurstSkillDamage(0, 0, 1);//产生压制
+                                                                                                           // Hero.instance.skillAttackPar.flameBurstRelasecount = 0;//清零计数器
+                                }
+                                skillBurstDamageCal.tempknockback = 300;//附带300击退值
+                                _entityManager.SetComponentData(flameBurstEntity, skillBurstDamageCal);
+                                //设置总体存活时间， 设置爆发时间，应该是到了爆发时间动态扩大烈焰爆发的技能检测范围
+                                _entityManager.AddComponentData(flameBurstEntity, new SkillFlameBurstTag() { tagSurvivalTime = 0.5f, level = preLevel });
+                            }
                             break;
                     }
                     break;
@@ -2299,7 +2557,6 @@ namespace BlackDawn
                             break;
                     }
                     break;
-
                 //毒雨 32 ,持续,技能附带的控制参数， 可以通过配置表进行配置
                 case HeroSkillID.PoisonRain:
                     switch (psionicType)
@@ -2492,7 +2749,6 @@ namespace BlackDawn
                     }
 
                     break;
-
                 //幻影步 34
                 case HeroSkillID.PhantomStep:
                     switch (psionicType)

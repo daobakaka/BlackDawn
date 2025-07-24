@@ -209,7 +209,7 @@ new ProfilerMarker("SkillDamageJob.Execute");
                 var rnd = new Unity.Mathematics.Random(a.rngState);
                 //补充元素护盾二阶段独立增伤值
                 var elementShieldBAddDamagePar = h.attackAttribute.heroDynamicalAttack.tempMasterDamagePar;
-                 var advanceADamagePar = h.attackAttribute.heroDynamicalAttack.tempAdvanceDamagePar;
+                 var advanceADamagePar = h.attackAttribute.heroDynamicalAttack.tempAdvanceADamagePar;
 
 
                 // 只有没记录过，才加进来,这里要注意并行写入限制，使用并行写入方法

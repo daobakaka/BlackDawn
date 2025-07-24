@@ -198,7 +198,7 @@ new ProfilerMarker("SkillDamageOverTimeJob.Execute");
                 var rnd = new Unity.Mathematics.Random(a.rngState);
                 //补充元素护盾二阶段独立增伤值
                  var elementShieldBAddDamagePar = h.attackAttribute.heroDynamicalAttack.tempMasterDamagePar;
-                 var advanceADamagePar = h.attackAttribute.heroDynamicalAttack.tempAdvanceDamagePar;
+                 var advanceADamagePar = h.attackAttribute.heroDynamicalAttack.tempAdvanceADamagePar;
 
 
                 //0)累加命中记数器，这样可以变相的记录秒数

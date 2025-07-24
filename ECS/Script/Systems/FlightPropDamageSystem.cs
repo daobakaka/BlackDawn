@@ -208,7 +208,7 @@ namespace BlackDawn.DOTS
 
             //补充元素护盾二阶段独立增伤值
             var elementShieldBAddDamagePar = h.attackAttribute.heroDynamicalAttack.tempMasterDamagePar;
-            var advanceADamagePar = h.attackAttribute.heroDynamicalAttack.tempAdvanceDamagePar;
+            var advanceADamagePar = h.attackAttribute.heroDynamicalAttack.tempAdvanceADamagePar;
 
             // 3) 闪避判定
             if (rnd.NextFloat() < a.dodge)

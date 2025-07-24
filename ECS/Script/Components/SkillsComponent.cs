@@ -892,7 +892,7 @@ namespace BlackDawn.DOTS
     /// 开始添加到英雄身上,动态更新自身的减伤值和增伤值 --作为英雄内部结构体添加？
     /// 分散添加， 独立于英雄自身结构体之外
     /// </summary>
-    public struct SkillElementShieldTag_Hero : IComponentData
+    public struct SkillElementShieldTag_Hero : IComponentData,IEnableableComponent
     {
 
         public bool enableSecondA;
@@ -915,7 +915,7 @@ namespace BlackDawn.DOTS
     /// 开始添加到英雄身上,动态更新自身的减伤值和增伤值 --作为英雄内部结构体添加？
     /// 分散添加， 独立于英雄自身结构体之外
     /// </summary>
-    public struct SkillFrostShieldTag_Hero : IComponentData
+    public struct SkillFrostShieldTag_Hero : IComponentData,IEnableableComponent
     {
         //持续60秒
         public float tagSurvivalTime;
@@ -1102,16 +1102,25 @@ namespace BlackDawn.DOTS
     /// <summary>
     ///烈焰爆发 爆发 幸运
     /// </summary>/
-        public struct SkillFlameBurstTag : IComponentData
+    public struct SkillFlameBurstTag : IComponentData
     {
         public float tagSurvivalTime;
 
         public float startBurstTime;
         public bool enableSecondA;
         public bool enableSecondB;
+        public bool enbaleSecondC;
         public float skillDamageChangeParTag;
         //等级
         public int level;
+
+    }
+    /// <summary>
+    /// 烈焰爆发记时器标签
+    /// </summary>
+    public struct SkillFlameBurst_Hero : IComponentData, IEnableableComponent
+    {
+        public float tagSurvivalTime;
 
     }
 
