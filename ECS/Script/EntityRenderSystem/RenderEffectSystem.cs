@@ -23,6 +23,7 @@ namespace BlackDawn.DOTS
         private ComponentLookup<MonsterLossPoolAttribute> _monsterLossPoolattrLookup;
         private ComponentLookup<MonsterDefenseAttribute> _monsterDefenseAttrLookup;
         private ComponentLookup<MonsterTempDamageText> _monsterTempDamageTextLookup;
+        private ComponentLookup<MonsterDebuffAttribute> _monsterDebuffAttrLookup;
         private ComponentLookup<LocalTransform> _transform;
         private BufferLookup<LinkedEntityGroup> _linkedEntityGroupLookup;
         private ComponentLookup<FireRandomOffset> _fireRandomOffsetLookup;
@@ -46,6 +47,7 @@ namespace BlackDawn.DOTS
             _linkedEntityGroupLookup = SystemAPI.GetBufferLookup<LinkedEntityGroup>(true);
             _fireRandomOffsetLookup = SystemAPI.GetComponentLookup<FireRandomOffset>(true);
             _monsterControlledEffectAttributeLookup = SystemAPI.GetComponentLookup<MonsterControlledEffectAttribute>(true);
+            _monsterDebuffAttrLookup = SystemAPI.GetComponentLookup<MonsterDebuffAttribute>(true);
 
             _entityManager = state.EntityManager;
 
@@ -87,6 +89,7 @@ namespace BlackDawn.DOTS
             _linkedEntityGroupLookup.Update(ref state);
             _fireRandomOffsetLookup.Update(ref state);
             _monsterControlledEffectAttributeLookup.Update(ref state);
+            _monsterDebuffAttrLookup.Update(ref state);
             float dt = SystemAPI.Time.DeltaTime;
             // var ecb = new EntityCommandBuffer(Allocator.TempJob);
             //渲染动态ECB,等同于end，写回必须在系统运行顺序之后进行才可以
@@ -111,6 +114,7 @@ namespace BlackDawn.DOTS
                 Ecb = ecb.AsParallelWriter(),
                 DeltaTime = SystemAPI.Time.DeltaTime,
                 LinderGroupLookup = _linkedEntityGroupLookup,
+                DebuffLookup =_monsterDebuffAttrLookup,
                 MonsterControlledEffectAttrLookup = _monsterControlledEffectAttributeLookup,
             }.ScheduleParallel(state.Dependency);
 
@@ -268,6 +272,7 @@ namespace BlackDawn.DOTS
         
       [ReadOnly] public ComponentLookup<MonsterLossPoolAttribute> LossPoolLookup;
       [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseLookup;
+      [ReadOnly] public ComponentLookup<MonsterDebuffAttribute> DebuffLookup;
       [ReadOnly] public ComponentLookup<LocalTransform> LtLookup;
       [ReadOnly] public BufferLookup<LinkedEntityGroup> LinderGroupLookup;
       [ReadOnly] public ComponentLookup<MonsterControlledEffectAttribute> MonsterControlledEffectAttrLookup;
@@ -292,6 +297,7 @@ namespace BlackDawn.DOTS
                 // DevDebug.Log("进入渲染JOB"); 
                 var monster = parentRO.Value;
                 var linkedGroup = LinderGroupLookup[monster];
+                var debuff = DebuffLookup[monster];
                 //获取控制组件
                 var control = MonsterControlledEffectAttrLookup[monster];
                 // 先拷贝出来，再修改，最后 write-back
@@ -302,12 +308,12 @@ namespace BlackDawn.DOTS
                 //这里应该只在初始化的时候写入
                // mat.RandomOffset.ValueRW.Value = new float4(rng.NextFloat(-1, 1), rng.NextFloat(-1, 1), 0, 0);
     
-
+        
                 // 1) 受击高亮
                 pools.attackTimer = math.max(0f, pools.attackTimer - DeltaTime);
                 mat.UnderAttack.ValueRW.Value =
                     pools.attackTimer < 0.01f
-                        ? float4.zero
+                        ? float4.zero+new float4(1f,0,0,1)*debuff.scorchMarkdamageAmplification //这里写入炽炎烙印红色值
                         : new float4(1f, 1f, 1f, 1f);
 
                 //同一时间dot激活时间减少，池化标签的功能目前是激活DOT

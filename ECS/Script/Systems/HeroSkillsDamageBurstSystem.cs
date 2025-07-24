@@ -424,10 +424,18 @@ new ProfilerMarker("SkillBurstDamageJob.Execute");
                     // 7) 固定减伤（对瞬时+DOT，0-50%的固定随机减伤，用于控制数字跳动),这里的DOT伤害是计算过暴击和抗性之后,补充上伤害加深的debuffer
                     //这里乘以伤害变化参数
                     var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//固定随机减伤
-                    float finalDamage = (instTotal + dotTotal) * (1f - a.damageReduction) * (1 - rd)*(1+db.damageAmplification)*d.damageChangePar*(elementShieldBAddDamagePar+advanceADamagePar+flameBurstBDamagePar);
+                    float finalDamage = (instTotal + dotTotal) * (1f - a.damageReduction) * (1 - rd) * (1 + db.damageAmplification + db.scorchMarkdamageAmplification)
+                    * d.damageChangePar *(1+elementShieldBAddDamagePar+advanceADamagePar+flameBurstBDamagePar)*(1+db.scorchMarkdamagePar);
                     //这里分离dot伤害
-                     float finalDotDamage = (dotTotal) * (1f-a.damageReduction) * (1-rd) * (1 + db.damageAmplification)*d.damageChangePar*(elementShieldBAddDamagePar+advanceADamagePar+flameBurstBDamagePar);
+                     float finalDotDamage = (dotTotal) * (1f-a.damageReduction) * (1-rd) * (1 + db.damageAmplification+db.scorchMarkdamageAmplification)
+                     *d.damageChangePar*(1+elementShieldBAddDamagePar+advanceADamagePar+flameBurstBDamagePar)*(1+db.scorchMarkdamagePar);
 
+                    //（7-1-1）写回炽热烙印 失活炽热烙印标识 ，同步修正A阶段增伤为0，
+                    if (db.scorchMarkdamagePar > 0)
+                    {
+                        ECB.SetComponentEnabled<PreDefineHeroSkillScorchMarkTag>(i, target, false);
+                    }
+                    db.scorchMarkdamagePar = 0;
 
                     //（7-1）写回dot伤害的扣血总量,采用同样的buffer累加方式
                     db.totalDotDamage += finalDotDamage;

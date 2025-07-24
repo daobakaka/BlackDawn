@@ -48,19 +48,15 @@ namespace BlackDawn.DOTS
             _heroIntgrateNoImmunityStateLookup.Update(ref state);
 
             //获取元素护盾单例组件,减伤独立计算
-            SkillElementShieldTag_Hero heroShieldReduction;
             float tempReduciton = 0;
-
-            if (SystemAPI.TryGetSingleton<SkillElementShieldTag_Hero>(out heroShieldReduction))
-            {
-
-             tempReduciton = heroShieldReduction.damageReduction > 0 ? heroShieldReduction.damageReduction : 0;
+            foreach (var skillElement in SystemAPI.Query<RefRW<SkillElementShieldTag_Hero>>())
+            { 
+                tempReduciton = skillElement.ValueRW.damageReduction > 0 ? skillElement.ValueRW.damageReduction : 0;
 
             }
         
-
                 //获取收集世界单例
-          var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
+                var detectionSystem = state.WorldUnmanaged.GetUnsafeSystemRef<DetectionSystem>(_detectionSystemHandle);
            
             var hitsArray = detectionSystem.heroHitMonsterArray;
 

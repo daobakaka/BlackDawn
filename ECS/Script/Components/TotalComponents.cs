@@ -200,13 +200,6 @@ namespace BlackDawn.DOTS
     #endregion
 
     #region 英雄技能 预施加 在怪物身上的标签
-    /// <summary>
-    /// 雷霆之握标签,预加载失活状态
-    /// </summary>
-    public struct PreDefineHeroSkillThunderGripTag : IComponentData, IEnableableComponent
-    {
-          
-    }
 
 
 

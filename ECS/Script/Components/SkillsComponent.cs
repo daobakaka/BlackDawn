@@ -777,6 +777,14 @@ namespace BlackDawn.DOTS
         public int level;
 
     }
+
+    /// <summary>
+    /// 雷霆之握标签,预加载失活状态
+    /// </summary>
+    public struct PreDefineHeroSkillThunderGripTag : IComponentData, IEnableableComponent
+    {
+    }
+
     /// <summary>
     /// 技能连锁吞噬
     /// </summary>
@@ -892,7 +900,7 @@ namespace BlackDawn.DOTS
     /// 开始添加到英雄身上,动态更新自身的减伤值和增伤值 --作为英雄内部结构体添加？
     /// 分散添加， 独立于英雄自身结构体之外
     /// </summary>
-    public struct SkillElementShieldTag_Hero : IComponentData,IEnableableComponent
+    public struct SkillElementShieldTag_Hero : IComponentData, IEnableableComponent
     {
 
         public bool enableSecondA;
@@ -915,7 +923,7 @@ namespace BlackDawn.DOTS
     /// 开始添加到英雄身上,动态更新自身的减伤值和增伤值 --作为英雄内部结构体添加？
     /// 分散添加， 独立于英雄自身结构体之外
     /// </summary>
-    public struct SkillFrostShieldTag_Hero : IComponentData,IEnableableComponent
+    public struct SkillFrostShieldTag_Hero : IComponentData, IEnableableComponent
     {
         //持续60秒
         public float tagSurvivalTime;
@@ -1125,6 +1133,29 @@ namespace BlackDawn.DOTS
     }
 
 
+    /// <summary>
+    /// 炽热烙印 技能标签
+    /// </summary>
+    public struct SkillScorchMarkTag : IComponentData
+    {
+        public float tagSurvivalTime;
+        //形变参数
+        public float scaleChangePar;
+        public bool enableSecondA;
+        public bool enableSecondC;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+        //等级
+        public int level;
+
+    }
+    /// <summary>
+    /// 执行标记类技能的预加载标签,这里根据持续时间进行-开关
+    /// </summary>
+        public struct PreDefineHeroSkillScorchMarkTag : IComponentData, IEnableableComponent
+    {
+        public float tagSurvivalTime;
+    }
 
 }
 

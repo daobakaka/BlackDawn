@@ -961,6 +961,11 @@ namespace BlackDawn
         public float Devourtimer;
         //黑炎的状态阶段,1为开启A阶段，渲染系统直接进行 黑炎的伤害计算
         public float blackFrameActiveA;
+
+        //炽炎烙印 提供的伤害加深(全局共享)
+        public float scorchMarkdamageAmplification;
+        //炽炎烙印 提供的伤害加成系数（1+或者0）
+        public float scorchMarkdamagePar;
         
     }
 

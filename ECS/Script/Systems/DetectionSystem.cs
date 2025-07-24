@@ -31,8 +31,8 @@ namespace BlackDawn.DOTS
         public bool enableSpecialSkillChainDevour;
         //激活黑炎  技能标签
         public bool enableSpecialSkillBlcakFrame;
-        //激活暗影之刺 技能标签
-        public bool enableSpecialSkillShadowStab;
+        //激活炽炎烙印 技能标签
+        public bool enableSpecialSkillScorchMark;
 
 
         // 每帧要更新的查找
@@ -55,7 +55,7 @@ namespace BlackDawn.DOTS
         private ComponentLookup<SkillThunderGripTag> _skillThunderGripTagLookup;
         private ComponentLookup<SkillChainDevourTag> _skillChainDevourTagLookup;
         private ComponentLookup<SkillBlackFrameTag> _skillBlackFrameTagLookup;
-        private ComponentLookup<SkillShadowStabTag> _skillShadowStabTaglookup;
+        private ComponentLookup<SkillScorchMarkTag> _skillScorchMarkTaglookup;
 
 
         // 所有用于分类的碰撞对容器
@@ -77,7 +77,7 @@ namespace BlackDawn.DOTS
         private NativeQueue<TriggerPairData> _chainDevourHitMonster;//连锁吞噬技能碰撞对
         private NativeQueue<TriggerPairData> _blackFrameHitMonster;//黑炎 技能碰撞对
 
-        private NativeQueue<TriggerPairData> _shadowStabHitMonster;//暗影之刺 技能碰撞对
+        private NativeQueue<TriggerPairData> _scorchMarkHitMonster;//炽炎烙印 技能碰撞对
 
 
         //用于在job中并行的array
@@ -102,7 +102,7 @@ namespace BlackDawn.DOTS
 
         public NativeArray<TriggerPairData> blackFrameHitMonsterArray;// 黑炎技能碰撞对数组
 
-        public NativeArray<TriggerPairData> shadowStabHitMonsterArray;//暗影之刺 技能碰撞对数组
+        public NativeArray<TriggerPairData> scorchMarkHitMonsterArray;//炽炎烙印 技能碰撞对数组
 
 
         public void OnCreate(ref SystemState state)
@@ -133,7 +133,7 @@ namespace BlackDawn.DOTS
             _skillChainDevourTagLookup = SystemAPI.GetComponentLookup<SkillChainDevourTag>(true);
             //黑炎技能标签
             _skillBlackFrameTagLookup = SystemAPI.GetComponentLookup<SkillBlackFrameTag>(true);
-            _skillShadowStabTaglookup = SystemAPI.GetComponentLookup<SkillShadowStabTag>(true);
+            _skillScorchMarkTaglookup = SystemAPI.GetComponentLookup<SkillScorchMarkTag>(true);
 
 
             batchSize = UnityEngine.SystemInfo.processorCount > 8 ? 64 : 32;
@@ -155,7 +155,7 @@ namespace BlackDawn.DOTS
             _thunderGripHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _chainDevourHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
             _blackFrameHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
-            _shadowStabHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
+            _scorchMarkHitMonster = new NativeQueue<TriggerPairData>(Allocator.Persistent);
 
 
             // enableSpecialSkillThunderGrip =true;
@@ -187,7 +187,7 @@ namespace BlackDawn.DOTS
             _skillThunderGripTagLookup.Update(ref state);
             _skillChainDevourTagLookup.Update(ref state);
             _skillBlackFrameTagLookup.Update(ref state);
-            _skillShadowStabTaglookup.Update(ref state);
+            _skillScorchMarkTaglookup.Update(ref state);
             //清空区
             _heroHitMonster.Clear();
             _enemyFlightHitHero.Clear();
@@ -213,8 +213,8 @@ namespace BlackDawn.DOTS
             _chainDevourHitMonster.Clear();
             //黑炎 原始队列
             _blackFrameHitMonster.Clear();
-            //暗影之刺
-            _shadowStabHitMonster.Clear();
+            //炽炎烙印
+            _scorchMarkHitMonster.Clear();
 
             //释放所有碰撞数组内存
             DisposeArrayForCollison();
@@ -235,7 +235,7 @@ namespace BlackDawn.DOTS
             var thunderGripHitMonsterQueue = _thunderGripHitMonster.AsParallelWriter(); // 雷霆之握技能碰撞对
             var chainDevourHitMonsterQueue = _chainDevourHitMonster.AsParallelWriter(); //连锁吞噬技能碰撞对
             var blackFrameHitMonsterQueue = _blackFrameHitMonster.AsParallelWriter();//黑炎 技能碰撞对
-            var shadowStabHitMonsterQueue = _shadowStabHitMonster.AsParallelWriter();//暗影之刺 技能碰撞对
+            var scorchMarkHitMonsterQueue = _scorchMarkHitMonster.AsParallelWriter();//炽炎烙印 技能碰撞对
 
 
             // 1. 收集触发：把所有碰撞写入自己实体的 buffer,收集碰撞对的标准并行方式
@@ -269,9 +269,9 @@ namespace BlackDawn.DOTS
                 BlackFrameHitMonsterQueue = blackFrameHitMonsterQueue,
 
 
-                EnableSpecialSkillShadowStab =enableSpecialSkillShadowStab,
-                SkillShadowStabTagLookup =_skillShadowStabTaglookup,//暗影之刺
-                ShadowStabHitMonsterQueue =shadowStabHitMonsterQueue,
+                EnableSpecialSkillScorchMark=enableSpecialSkillScorchMark,
+                SkillScorchMarkTagLookup =_skillScorchMarkTaglookup,//炽炎烙印
+                ScorchMarkHitMonsterQueue =scorchMarkHitMonsterQueue,
                 //end
 
 
@@ -325,7 +325,7 @@ namespace BlackDawn.DOTS
             thunderGripHitMonsterArray = _thunderGripHitMonster.ToArray(Allocator.Persistent); // 雷霆之握技能碰撞对数组
             chainDevourHitMonsterArray = _chainDevourHitMonster.ToArray(Allocator.Persistent);// 连锁吞噬技能碰撞对数组
             blackFrameHitMonsterArray = _blackFrameHitMonster.ToArray(Allocator.Persistent);// 黑炎技能碰撞对数组
-            shadowStabHitMonsterArray = _shadowStabHitMonster.ToArray(Allocator.Persistent);// 暗影之刺技能碰撞对数组
+            scorchMarkHitMonsterArray = _scorchMarkHitMonster.ToArray(Allocator.Persistent);// 炽炎烙印技能碰撞对数组
             
 
 
@@ -384,7 +384,7 @@ namespace BlackDawn.DOTS
             _thunderGripHitMonster.Dispose();
             _chainDevourHitMonster.Dispose();
             _blackFrameHitMonster.Dispose();
-            _shadowStabHitMonster.Dispose();
+            _scorchMarkHitMonster.Dispose();
             
 
 
@@ -411,7 +411,7 @@ namespace BlackDawn.DOTS
             if (thunderGripHitMonsterArray.IsCreated) thunderGripHitMonsterArray.Dispose();
             if (chainDevourHitMonsterArray.IsCreated) chainDevourHitMonsterArray.Dispose();
             if (blackFrameHitMonsterArray.IsCreated) blackFrameHitMonsterArray.Dispose();
-            if (shadowStabHitMonsterArray.IsCreated) shadowStabHitMonsterArray.Dispose();
+            if (scorchMarkHitMonsterArray.IsCreated) scorchMarkHitMonsterArray.Dispose();
 
 
 
@@ -449,8 +449,8 @@ namespace BlackDawn.DOTS
         [ReadOnly] public bool EnableSpecialSkillBlackFrame;//黑炎技能
         [ReadOnly] public ComponentLookup<SkillBlackFrameTag> SkillBlackFrameTagLookup;//黑炎技能标签
        
-        [ReadOnly] public bool EnableSpecialSkillShadowStab;//黑炎技能
-        [ReadOnly] public ComponentLookup<SkillShadowStabTag> SkillShadowStabTagLookup;//黑炎技能标签
+        [ReadOnly] public bool EnableSpecialSkillScorchMark;//炽炎烙印
+        [ReadOnly] public ComponentLookup<SkillScorchMarkTag> SkillScorchMarkTagLookup;//炽炎烙印
        
        
        
@@ -492,7 +492,7 @@ namespace BlackDawn.DOTS
         //黑炎技能碰撞对
         public NativeQueue<TriggerPairData>.ParallelWriter BlackFrameHitMonsterQueue;//黑炎技能碰撞对
         //暗影之刺技能碰撞对
-        public NativeQueue<TriggerPairData>.ParallelWriter ShadowStabHitMonsterQueue;//暗影之刺技能碰撞对
+        public NativeQueue<TriggerPairData>.ParallelWriter ScorchMarkHitMonsterQueue;//暗影之刺技能碰撞对
 
         public void Execute(TriggerEvent triggerEvent)
         {
@@ -531,8 +531,8 @@ namespace BlackDawn.DOTS
             if (EnableSpecialSkillBlackFrame)
                 AddIfMatch(a, b, SkillBlackFrameTagLookup, LiveMonsterLookup, BlackFrameHitMonsterQueue, true);
             //暗影之刺 技能传入 控制标签
-            if (EnableSpecialSkillShadowStab)
-                AddIfMatch(a, b, SkillShadowStabTagLookup, LiveMonsterLookup, ShadowStabHitMonsterQueue, true);
+            if (EnableSpecialSkillScorchMark)
+                AddIfMatch(a, b, SkillScorchMarkTagLookup, LiveMonsterLookup, ScorchMarkHitMonsterQueue, true);
 
 
 

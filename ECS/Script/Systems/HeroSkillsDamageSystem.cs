@@ -383,9 +383,9 @@ new ProfilerMarker("SkillDamageJob.Execute");
                 //再乘以元素护盾技能二阶段的独立增伤值 elementShieldBAddDamagepar
                 //这里乘以伤害变化参数
                 var rd = math.lerp(0.0f, 0.5f, rnd.NextFloat());//固定随机减伤
-                float finalDamage = (instTotal + dotTotal) * (1f - a.damageReduction) * (1 - rd)*(1+db.damageAmplification)*d.damageChangePar*(elementShieldBAddDamagePar+advanceADamagePar);
+                float finalDamage = (instTotal + dotTotal) * (1f - a.damageReduction) * (1 - rd)*(1+db.damageAmplification+db.scorchMarkdamageAmplification)*d.damageChangePar*(1+elementShieldBAddDamagePar+advanceADamagePar);
                 //这里分离dot伤害
-                float finalDotDamage = (dotTotal) * (1f-a.damageReduction) * (1-rd) * (1 + db.damageAmplification)*d.damageChangePar*(elementShieldBAddDamagePar+advanceADamagePar);
+                float finalDotDamage = (dotTotal) * (1f-a.damageReduction) * (1-rd) * (1 + db.damageAmplification+db.scorchMarkdamageAmplification)*d.damageChangePar*(1+elementShieldBAddDamagePar+advanceADamagePar);
 
 
                 //（7-1）写回dot伤害的扣血总量,采用同样的buffer累加方式

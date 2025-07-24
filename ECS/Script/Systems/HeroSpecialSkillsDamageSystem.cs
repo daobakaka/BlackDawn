@@ -45,6 +45,8 @@ namespace BlackDawn.DOTS
         private ComponentLookup<PreDefineHeroSkillThunderGripTag> _preDefineHeroSkillThunderGripTagLookup;
         private ComponentLookup<SkillsTrackingCalPar> _skillsTrackingCalParLookup;//寻址类技能通用计算标签
         private ComponentLookup<SkillBlackFrameTag> _skillBlackFrameTagLookup;//黑炎 
+        private ComponentLookup<SkillScorchMarkTag> _skillScorchMarkTagLookup;//炽炎烙印
+        private ComponentLookup<PreDefineHeroSkillScorchMarkTag> _preDefineHeroSkillScorchMarkTagLookup; //炽炎烙印 预定义标签
 
         /// <summary>
         /// 法阵特殊技能造成的伤害表现为DOT伤害
@@ -87,6 +89,8 @@ namespace BlackDawn.DOTS
             _skillChainDevourTagLookup = SystemAPI.GetComponentLookup<SkillChainDevourTag>(true);
             _skillsTrackingCalParLookup = SystemAPI.GetComponentLookup<SkillsTrackingCalPar>(true);
             _skillBlackFrameTagLookup = SystemAPI.GetComponentLookup<SkillBlackFrameTag>(true);
+            _skillScorchMarkTagLookup = SystemAPI.GetComponentLookup<SkillScorchMarkTag>(true);
+            _preDefineHeroSkillScorchMarkTagLookup = SystemAPI.GetComponentLookup<PreDefineHeroSkillScorchMarkTag>(true);
 
         }
         public void OnUpdate(ref SystemState state)
@@ -120,6 +124,9 @@ namespace BlackDawn.DOTS
             _skillsTrackingCalParLookup.Update(ref state);
             //黑炎技能标签
             _skillBlackFrameTagLookup.Update(ref state);
+            //炽热烙印 技能标签
+            _skillScorchMarkTagLookup.Update(ref state);
+            _preDefineHeroSkillScorchMarkTagLookup.Update(ref state);
 
             var deltaTime = SystemAPI.Time.DeltaTime;
             if (arcaneCircleLinkenBuffer.IsCreated)
@@ -142,6 +149,8 @@ namespace BlackDawn.DOTS
             var chainDevourHitMonsterArray = detectionSystem.chainDevourHitMonsterArray;
             //获取黑炎碰撞对
             var blackFrameHitMonsterArray = detectionSystem.blackFrameHitMonsterArray;
+            //获取 炽炎烙印碰撞对
+            var scorchMarkHitMonsterArray = detectionSystem.scorchMarkHitMonsterArray;
             // if(thunderGripHitMonsterArray.Length>0)
             // DevDebug.LogError("雷霆之握碰撞对长度" + thunderGripHitMonsterArray.Length);
             //雷霆之握技能处理,由侦测系统开关控制
@@ -177,7 +186,7 @@ namespace BlackDawn.DOTS
                 .ScheduleParallel(chainDevourHitMonsterArray.Length, 64, state.Dependency);
             //黑炎处理
             if (detectionSystem.enableSpecialSkillBlcakFrame && blackFrameHitMonsterArray.Length > 0)
-                state.Dependency = new ApplySkillSkillBlackFrameDamagejob
+                state.Dependency = new ApplySpecialSkillBlackFrameDamagejob
                 {
                     ECB = ecb.AsParallelWriter(),
                     DefenseAttrLookup = _monsterDefenseAttrLookup,
@@ -188,16 +197,27 @@ namespace BlackDawn.DOTS
                     HitArray = blackFrameHitMonsterArray
                 }
                 .ScheduleParallel(blackFrameHitMonsterArray.Length, 64, state.Dependency);
+            //炽炎烙印 处理
+            if (detectionSystem.enableSpecialSkillScorchMark && scorchMarkHitMonsterArray.Length > 0)
+                state.Dependency = new ApplySpecialSkillScorchMarkDamagejob
+                {
+                    ECB = ecb.AsParallelWriter(),
+                    DebuffAttrLookup = _monsterDebufferAttributeLookup,
+                    SkillTagLookup = _skillScorchMarkTagLookup,
+                    PreSkillTagLookup = _preDefineHeroSkillScorchMarkTagLookup,
+                    HitArray =scorchMarkHitMonsterArray
+
+                }.ScheduleParallel(scorchMarkHitMonsterArray.Length, 64, state.Dependency);
 
             //Schedule(chainDevourHitMonsterArray.Length, state.Dependency);
 
-            // if (chainDevourHitMonsterArray.Length > 0)
-            // DevDebug.Log("chian长度" + chainDevourHitMonsterArray.Length);
-            //.ScheduleParallel(chainDevourHitMonsterArray.Length, 64, state.Dependency);
+                // if (chainDevourHitMonsterArray.Length > 0)
+                // DevDebug.Log("chian长度" + chainDevourHitMonsterArray.Length);
+                //.ScheduleParallel(chainDevourHitMonsterArray.Length, 64, state.Dependency);
 
 
 
-            if (false)
+                if (false)
             {
                 // 为虹吸特效提供buffer，遍历BUFFer  生成特效
                 var damageJobHandle = new ApplySpecialSkillArcaneCircleDamageJob
@@ -750,7 +770,7 @@ namespace BlackDawn.DOTS
     /// <summary>
     ///  黑炎 技能 渲染计算，DOT ？黑炎应该是一种特殊的DOT
     /// </summary>
-    struct ApplySkillSkillBlackFrameDamagejob : IJobFor
+    struct ApplySpecialSkillBlackFrameDamagejob : IJobFor
     {
         public EntityCommandBuffer.ParallelWriter ECB;
         [ReadOnly] public ComponentLookup<MonsterDefenseAttribute> DefenseAttrLookup;
@@ -758,7 +778,6 @@ namespace BlackDawn.DOTS
         [ReadOnly] public ComponentLookup<MonsterDebuffAttribute> DebuffAttrLookup;
         [ReadOnly] public ComponentLookup<SkillsDamageCalPar> SkillDamageCalLookup;
         [ReadOnly] public ComponentLookup<SkillBlackFrameTag> SkillTagLookup;
-        
         [ReadOnly] public NativeArray<TriggerPairData> HitArray;
         public void Execute(int index)
         {
@@ -770,7 +789,7 @@ namespace BlackDawn.DOTS
             var skillTag = SkillTagLookup[skill];
             var skillDamageCal = SkillDamageCalLookup[skill];
             var monsterPool = LossPoolAttrLookup[target];
-           // DevDebug.LogError("进入黑炎检测");
+            // DevDebug.LogError("进入黑炎检测");
             if (monsterPool.blackFrameActive == 0)
             {
                 //DevDebug.LogError("进入黑炎计算");
@@ -779,23 +798,55 @@ namespace BlackDawn.DOTS
                 debuff.damageAmplification = 0.15f;
                 //激活黑炎A阶段标识
                 if (skillTag.enableSecondA)
-                ECB.SetComponentEnabled<PreDefineHeroSkillBlackFrameATag>(index, target, true);
+                    ECB.SetComponentEnabled<PreDefineHeroSkillBlackFrameATag>(index, target, true);
                 if (skillTag.enableSecondB)
-                ECB.SetComponentEnabled<PreDefineHeroSkillBlackFrameBTag>(index, target, true);
+                    ECB.SetComponentEnabled<PreDefineHeroSkillBlackFrameBTag>(index, target, true);
                 ECB.SetComponent(index, target, monsterPool);
                 ECB.SetComponent(index, target, debuff);
-                
             }
             else
             {
 
                 return;
             }
-
-            
         }
-
-
     }
 
+
+    /// <summary>
+    /// 炽炎烙印 处理
+    /// </summary>
+    struct ApplySpecialSkillScorchMarkDamagejob : IJobFor
+    {
+        [ReadOnly] public NativeArray<TriggerPairData> HitArray;
+        [ReadOnly] public ComponentLookup<MonsterDebuffAttribute> DebuffAttrLookup;
+        [ReadOnly] public ComponentLookup<SkillScorchMarkTag> SkillTagLookup;
+        [ReadOnly] public ComponentLookup<PreDefineHeroSkillScorchMarkTag> PreSkillTagLookup;
+        public EntityCommandBuffer.ParallelWriter ECB;
+        public void Execute(int index)
+        {
+            var pair = HitArray[index];
+            Entity skill = pair.EntityA;
+            Entity target = pair.EntityB;
+
+
+            var debuff = DebuffAttrLookup[target];
+            var skillTag = SkillTagLookup[skill];
+            var preDefineSkillTag = PreSkillTagLookup[target];
+
+            //开启预定义 炽炎烙印标识
+            ECB.SetComponentEnabled<PreDefineHeroSkillScorchMarkTag>(index, target, true);
+            debuff.scorchMarkdamageAmplification = 0.15f + (skillTag.level * 0.01f);//基准0.15 加成长 0.01f
+            preDefineSkillTag.tagSurvivalTime = 12;//重置激活时间12秒,时间一点一点减少
+            ECB.SetComponent(index, target, preDefineSkillTag);
+            //A阶段伤害加深1
+            if (skillTag.enableSecondA)
+            {
+                debuff.scorchMarkdamagePar = 1 + (skillTag.level * 0.1f);//基准1 加成长0.1
+            }
+            ECB.SetComponent(index,target, debuff);//写回伤害加深，爆发技能碰撞后消失
+
+        }
+
+    }
 }

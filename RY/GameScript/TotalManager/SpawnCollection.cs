@@ -284,13 +284,17 @@ namespace BlackDawn
                 ecb.AddComponent(monster, new PreDefineHeroSkillThunderGripTag());
                 ecb.SetComponentEnabled<PreDefineHeroSkillThunderGripTag>(monster, false);
 
-                //--技能预定义标签区域 -- 黑炎
+                //--技能预定义标签区域 -- 黑炎A
                 ecb.AddComponent(monster, new PreDefineHeroSkillBlackFrameATag());
                 ecb.SetComponentEnabled<PreDefineHeroSkillBlackFrameATag>(monster, false);
+
+                //--技能预定义标签区域 -- 黑炎B
                 ecb.AddComponent(monster, new PreDefineHeroSkillBlackFrameBTag());
                 ecb.SetComponentEnabled<PreDefineHeroSkillBlackFrameBTag>(monster, false);
 
-                
+                //--技能预定义标签区域 -- 炽炎烙印
+                ecb.AddComponent(monster, new PreDefineHeroSkillScorchMarkTag());
+                ecb.SetComponentEnabled<PreDefineHeroSkillScorchMarkTag>(monster, false);
 
                 // 基础属性赋值
                 var monsterBaseAttribute = attributeGet.baseAttribute;
@@ -503,7 +507,6 @@ namespace BlackDawn
                
                 switch (name)
                 {
-
 
                     case MonsterName.Zombie:
                         ecb.AddComponent(monster, new MoZombieCmp());

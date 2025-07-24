@@ -295,27 +295,28 @@ namespace BlackDawn.DOTS
 
 
 
-            //进击的Mono效果
+            //进击的Mono效果 5
             SkillMonoAdvance(ref state, timer);
-            //寒冰的Mono效果
+            //寒冰的Mono效果 6
             SkillMonoFrost(ref state, ecb);
-            //黑炎的Mono效果-- 通过enbale 组件进行控制过滤
+            //黑炎的Mono效果 7-- 通过enbale 组件进行控制过滤
             SkillMonoBlackFrameA(ref state, timer);
-            //元素共鸣Mono效果
+            //元素共鸣Mono效果 11
             SkillMonoElementResonance(ref state, ecb);
-            //技能静电牢笼
+            //技能静电牢笼 13
             SkillMonoElectroCage(ref state, ecb);
-
             // 暗影步 12
             SkillMonoShadowStep(ref state, ecb, timer);
             //暗影洪流15 B阶段，瞬时伤害特效控制
             SkillMonoMineBlastB(ref state);
             //时间缓速 16
             SKillMonoTimeSlow(ref state, timer);
-            //连锁吞噬
+            //连锁吞噬 19
             SkillMonoChainDevour(ref state, ecb);
-            //雷霆之握
+            //雷霆之握 20
             SkillMonoThunderGrip(ref state, ecb);
+            //炽炎烙印 21
+            SkillMonoScorchMark(ref state, timer, ecb);
             //时空扭曲B阶段 27
             SkillMonoChronoTwistB(ref state, timer);
             //烈焰爆发B阶段 28
@@ -1021,7 +1022,7 @@ namespace BlackDawn.DOTS
                 }
             }
 
-            //雷霆之握控制怪物移动
+            //雷霆之握控制怪物移动， 标记类技能，需要操作移动怪物的特殊状态 才需要执行预加载标签？
             foreach (var (liveMonster, transform, debuff, preDefineSkillTag, entity)
                 in SystemAPI.Query<RefRW<LiveMonster>, RefRW<LocalTransform>, RefRW<MonsterDebuffAttribute>, RefRW<PreDefineHeroSkillThunderGripTag>>().WithEntityAccess())
             {
@@ -1054,6 +1055,41 @@ namespace BlackDawn.DOTS
 
 
         }
+        /// <summary>
+        /// 炽炎烙印 标记
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="ecb"></param>
+        void SkillMonoScorchMark(ref SystemState state, float timer, EntityCommandBuffer ecb)
+        {
+            foreach (var (liveMonster, transform, debuff, preDefineSkillTag, entity)
+               in SystemAPI.Query<RefRW<LiveMonster>, RefRW<LocalTransform>, RefRW<MonsterDebuffAttribute>, RefRW<PreDefineHeroSkillScorchMarkTag>>().WithEntityAccess())
+            {
+
+                preDefineSkillTag.ValueRW.tagSurvivalTime -= timer;
+                //如果时间为0 则关闭炽焰印记，使用最外层frenel 处理标记特效问题？
+                if (preDefineSkillTag.ValueRW.tagSurvivalTime <= 0)
+                {
+                    debuff.ValueRW.scorchMarkdamageAmplification = 0;//恢复伤害加深
+                    ecb.SetComponentEnabled<PreDefineHeroSkillScorchMarkTag>(entity, false);
+                    
+                }
+            }
+
+            foreach (var (skillTag, skillCal, entity)
+             in SystemAPI.Query<RefRW<SkillScorchMarkTag>, RefRW<SkillsDamageCalPar>>().WithEntityAccess())
+            {
+
+                skillTag.ValueRW.tagSurvivalTime -= timer;
+                if (skillTag.ValueRW.tagSurvivalTime <= 0)
+                    skillCal.ValueRW.destory = true;
+
+            }
+
+            
+
+        }
+
 
         /// <summary>
         /// 连锁吞噬，瞬时技能标签 寻址技能通用标签 连锁吞噬 专用标签

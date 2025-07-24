@@ -1300,11 +1300,10 @@ namespace BlackDawn
 
                     }
                     break;
-                //雷霆之握：瞬时 20    
+                //雷霆之握：瞬时,标记 20    
                 case HeroSkillID.ThunderGrip:
 
                     //开启特殊碰撞对确认系统,后期可以根据装载代码来进行处理
-
                     detectionSystem.enableSpecialSkillThunderGrip = true;
                     switch (psionicType)
                     {
@@ -1362,13 +1361,48 @@ namespace BlackDawn
                             _entityManager.SetComponentData(entityThunderGripAB, skillDamageCalTGAB);
                             break;
 
-
-
+                    }
+                    break;               
+                //炽炎烙印 21，标记 瞬时
+                case HeroSkillID.ScorchMark:
+                      //开启其炽炎烙印碰撞对收集
+                    detectionSystem.enableSpecialSkillScorchMark = true;
+                    switch (psionicType)
+                    {
+                        //基础技能添加炽炎烙印 标记
+                        case HeroSkillPsionicType.Basic:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                var entityScorchMark = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ScorchMark, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                                _entityManager.AddComponentData(entityScorchMark, new SkillScorchMarkTag { tagSurvivalTime = 0.3f });
+                                //获得恐惧值
+                                var skillDamageCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityScorchMark);
+                                skillDamageCal.tempFear = 300;
+                                _entityManager.SetComponentData(entityScorchMark, skillDamageCal);
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 20;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                                var entityScorchMark = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ScorchMark, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                                _entityManager.AddComponentData(entityScorchMark, new SkillScorchMarkTag { tagSurvivalTime = 0.3f ,enableSecondA=true});
+                                //获得恐惧值
+                                var skillDamageCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityScorchMark);
+                                skillDamageCal.tempFear = 300;
+                                _entityManager.SetComponentData(entityScorchMark, skillDamageCal);
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+                            break;
 
                     }
-
-
-                    break;
+                   break;
                 //寒霜新星, 瞬时 22    
                 case HeroSkillID.FrostNova:
                     switch (psionicType)
@@ -2499,7 +2533,7 @@ namespace BlackDawn
 
                     }
                     break;
-                //暗影之刺  31
+                //暗影之刺  31 瞬时，分裂
                 case HeroSkillID.ShadowStab:
                  
                     switch (psionicType)
@@ -3387,7 +3421,7 @@ namespace BlackDawn
         float3 rotationOffsetEuler = default,  // 传入度数
         float scaleFactor = 1f, bool enablePull = false, bool enableExplosion = false)
         {
-            DevDebug.Log("释放无伤害型飞行技能");
+            DevDebug.Log("释放无伤害型技能");
 
             // 1) 实例化
             var entity = _entityManager.Instantiate(prefab);
