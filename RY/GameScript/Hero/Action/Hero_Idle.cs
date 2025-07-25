@@ -26,6 +26,7 @@ namespace BlackDawn
                 if (Physics.Raycast(ray, out hit))
                 {
                     fsm.Owner.targetPosition = hit.point;
+               
                     if (!fsm.Owner.skillAttackPar.stealth)
                         fsm.ChangeState<Hero_Run>();
                     else

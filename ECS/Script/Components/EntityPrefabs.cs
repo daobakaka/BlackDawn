@@ -158,6 +158,7 @@ namespace BlackDawn.DOTS
                     HeroSkillAssistive_SweepCollider =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.SweepCollider),//横扫碰撞体
                     HeroSkillAssistive_ChronoTwistB =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.ChronoTwistB),//时空扭曲B阶段碰撞体
                     HeroSkillAssistive_ShadowEmbraceA= GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.ShadowEmbraceA),//暗影辉耀
+                    HeroSkillAssistive_FlameChargeA =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.FlameChargeA),//烈焰爆冲
 
 
 
@@ -182,7 +183,6 @@ namespace BlackDawn.DOTS
                     Shader_BurningEffect = GetSafe<ShaderEffectsPair, ShaderEffectsID>(auth.shaderEffectsPrefabs, ShaderEffectsID.BurningEffect),
                     //VFX 特效
                     VFX_DefaultEffect = GetSafe<VFXEffectsPair,VFXEffectsID>(auth.vfxEffectsPrefabs,VFXEffectsID.DefaultEffexts),
-
 
                     //粒子特效
                     ParticleEffect_DefaultEffexts = GetSafe<ParticleEffectPair, ParticleEffectsID>(auth.particlePrefabs, ParticleEffectsID.DefaultEffexts),
@@ -401,8 +401,9 @@ namespace BlackDawn.DOTS
             public Entity HeroSkillAssistive_SweepCollider;//横扫碰撞体  
             public Entity HeroSkillAssistive_ChronoTwistB;//时空扭曲B阶段 时空碎裂  
             public Entity HeroSkillAssistive_ShadowEmbraceA;//暗影之拥A阶段， 暗影辉耀体
+            public Entity HeroSkillAssistive_FlameChargeA;//烈焰冲锋A阶段 烈焰爆冲
             // Monster Skills
-            public Entity MonsterSkill_DeathPulse;
+             public Entity MonsterSkill_DeathPulse;
             // Monster Entities
             public Entity Monster_Zombie;
             public Entity Monster_Albono;

@@ -206,14 +206,14 @@ new ProfilerMarker("SkillBurstDamageJob.Execute");
                 // DevDebug.Log("进入");
 
                 //超过1帧直接退回， 进行单次伤害计算,这里burstTIme 要在主线程里更新
-                if (d.burstTime > DeltaTime)
+                if (d.burstTime >DeltaTime)
                 {
-                    // DevDebug.Log("返回");
+                   //  DevDebug.LogError("返回");
                     return;
                 }
                 else
                 {
-
+                  
                     // DevDebug.Log("计算");
                     var a = DefenseAttrLookup[target];
                     var c = ControlledEffectAttrLookup[target];
@@ -233,7 +233,7 @@ new ProfilerMarker("SkillBurstDamageJob.Execute");
                  var advanceADamagePar = h.attackAttribute.heroDynamicalAttack.tempAdvanceADamagePar;
                     var flameBurstBDamagePar = h.attackAttribute.heroDynamicalAttack.tempFlameBurstBDamagePar;
 
-
+                    
                     // 3) 闪避判定-这里应该展现闪避字体
                     if (rnd.NextFloat() < a.dodge)
                     {

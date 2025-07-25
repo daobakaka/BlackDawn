@@ -109,6 +109,10 @@ namespace BlackDawn
             public bool stealth;
             //烈焰爆发技能释放次数
             public int flameBurstRelasecount;
+
+            //冲锋状态判定
+            public bool flameCharge;
+            
         }
 
 

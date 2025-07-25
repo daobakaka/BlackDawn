@@ -1152,10 +1152,36 @@ namespace BlackDawn.DOTS
     /// <summary>
     /// 执行标记类技能的预加载标签,这里根据持续时间进行-开关
     /// </summary>
-        public struct PreDefineHeroSkillScorchMarkTag : IComponentData, IEnableableComponent
+    public struct PreDefineHeroSkillScorchMarkTag : IComponentData, IEnableableComponent
     {
         public float tagSurvivalTime;
     }
+    
 
+    /// <summary>
+    /// 烈焰冲锋
+    /// </summary>
+    public struct SkillFlameChargeTag : IComponentData
+    {
+
+        public float tagSurvivalTime;
+        //形变参数
+        public float scaleChangePar;
+        //等级
+        public int level;
+    }
+
+    /// <summary>
+    ///烈焰冲锋A阶段标签
+    /// </summary>
+    public struct SkillFlameChargeATag : IComponentData
+    {
+
+        public float tagSurvivalTime;
+        //形变参数
+        public float scaleChangePar;
+        //等级
+        public int level;
+    }
 }
 

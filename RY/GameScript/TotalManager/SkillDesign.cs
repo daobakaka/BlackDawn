@@ -62,7 +62,7 @@ namespace BlackDawn
         //时间缓速 16
         TimeSlow,          // 时间缓速：范围内敌人攻速/移速降低60%，持续5秒  
                            // 释放方式：Release/Debuff；伤害类型：无
-
+        //烈焰冲锋 17
         FlameCharge,       // 烈焰冲锋：向前冲刺，路径上留下火焰轨迹（持续燃烧3秒）  
                            // 释放方式：Dash；伤害类型：火焰
         //冰霜护盾 18
@@ -224,6 +224,7 @@ namespace BlackDawn
         SweepCollider,//横扫碰撞体
         ChronoTwistB,//时空扭曲
         ShadowEmbraceA,//暗影辉耀
+        FlameChargeA,//烈焰冲锋A阶段 烈焰爆冲
         
         
 

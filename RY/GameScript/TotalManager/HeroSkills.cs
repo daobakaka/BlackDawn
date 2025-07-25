@@ -10,6 +10,7 @@ using Unity.Collections;
 using Unity.Physics;
 using TMPro;
 using System.Collections.Generic;
+using Pathfinding;
 
 
 
@@ -388,8 +389,8 @@ namespace BlackDawn
                     break;
                 //进击5 保护 辅助
                 case HeroSkillID.Advance:
-                //开启进击标签
-                   _entityManager.SetComponentEnabled<SkillAdvanceTag_Hero>(_heroEntity,true);
+                    //开启进击标签
+                    _entityManager.SetComponentEnabled<SkillAdvanceTag_Hero>(_heroEntity, true);
                     switch (psionicType)
                     {
 
@@ -679,7 +680,7 @@ namespace BlackDawn
 
                             break;
                         case HeroSkillPsionicType.PsionicA:
-                        //获得状态圣母降临
+                            //获得状态圣母降临
                             if (runTimeHeroCmp.defenseAttribute.energy > 30)
                             {
                                 runTimeHeroCmp.defenseAttribute.energy -= 30;
@@ -788,7 +789,7 @@ namespace BlackDawn
                     }
 
                     break;
-                //毒爆地雷,瞬时，持续，第一个3阶变化技能
+                //毒爆地雷 14,瞬时，持续，第一个3阶变化技能
                 case HeroSkillID.MineBlast:
                     switch (psionicType)
                     {
@@ -894,7 +895,7 @@ namespace BlackDawn
 
                     }
                     break;
-                //暗影洪流，瞬时,持续，引导15
+                //暗影洪流 15，持续，引导
                 case HeroSkillID.ShadowTide:
                     switch (psionicType)
                     {
@@ -1065,13 +1066,13 @@ namespace BlackDawn
                     break;
                 //时间缓速 16 消耗/持续，增益,每秒降低5点
                 case HeroSkillID.TimeSlow:
-                    _entityManager.SetComponentEnabled<SkillTimeSlowTag_Hero>(_heroEntity,true);
+                    _entityManager.SetComponentEnabled<SkillTimeSlowTag_Hero>(_heroEntity, true);
                     var skillTimeslowCmp = _entityManager.GetComponentData<SkillTimeSlowTag_Hero>(_heroEntity);
                     if (skillTimeslowCmp.active)
                     {
                         //开关节点，关闭之后重置初始化
                         skillTimeslowCmp.active = false;
-                        
+
                         skillTimeslowCmp.initialized = false;
 
                         _entityManager.SetComponentData(_heroEntity, skillTimeslowCmp);
@@ -1131,20 +1132,105 @@ namespace BlackDawn
 
                         }
                     }
-                        break;                   
+                    break;
+                //烈焰冲锋 17 位移/持续/保护/控制 -- 这里应该是开启一个0.5秒的位移携程
+                case HeroSkillID.FlameCharge:
+                    switch (psionicType)
+                    {   //
+                        case HeroSkillPsionicType.Basic:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+
+                                var _rollCoroutineId = _coroutineController.StartRoutine(
+                                IEFlameCharge(runTimeHeroCmp, runtimeStateNoImmunity),
+                                tag: "FlameCharge",
+                                onComplete: () =>
+                                {
+                                    DevDebug.Log("烈焰冲锋释放完毕");
+                                }
+                                );
+                            }
+
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                            int preLevel = 10; 
+                            var entityFlameCharge= DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_FlameChargeA, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            //获得昏迷值
+                            var skillDamageCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityFlameCharge); 
+                                skillDamageCal = Hero.instance.CalculateBaseSkillDamage(1, 1);//伤100% 易伤100%
+                                skillDamageCal.tempknockback = 500;//附带500击退值
+                                skillDamageCal.damageChangePar +=10+0.5f*(preLevel);//10倍+0.5倍
+                                _entityManager.SetComponentData(entityFlameCharge, skillDamageCal);
+                                Hero.instance.CalculateBaseSkillDamage();//重新计算爆伤易伤
+                                //设置总体存活时间， 设置爆发时间，应该是到了爆发时间动态扩大烈焰爆发的技能检测范围
+                                _entityManager.AddComponentData(entityFlameCharge, new SkillFlameChargeATag() { tagSurvivalTime = 0.5f, level = preLevel });
+                                var _rollCoroutineId = _coroutineController.StartRoutine(
+                                IEFlameCharge(runTimeHeroCmp, runtimeStateNoImmunity,preLevel),
+                                tag: "FlameCharge",
+                                onComplete: () =>
+                                {
+                                    DevDebug.Log("烈焰冲锋释放完毕");
+                                }
+                                );
+                            }
+
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                             if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                                
+                                var _rollCoroutineId = _coroutineController.StartRoutine(
+                                IEFlameCharge(runTimeHeroCmp, runtimeStateNoImmunity,10,true),
+                                tag: "FlameCharge",
+                                onComplete: () =>
+                                {
+                                    DevDebug.Log("烈焰冲锋释放完毕");
+                                }
+                                );
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+                         if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            {
+                            int preLevel = 10; 
+                            var entityFlameCharge= DamageSkillsFlightProp(_skillPrefabs.HeroSkillAssistive_FlameChargeA, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                            //获得昏迷值
+                            var skillDamageCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityFlameCharge); 
+                                skillDamageCal = Hero.instance.CalculateBaseSkillDamage(1, 1);//伤100% 易伤100%
+                                skillDamageCal.tempknockback = 500;//附带500击退值
+                                skillDamageCal.damageChangePar +=10+0.5f*(preLevel);//10倍+0.5倍
+                                if (UnityEngine.Random.Range(0, 1f) <= runTimeHeroCmp.attackAttribute.luckyStrikeChance * 0.5f * (0.25f + (0.015f * preLevel)))
+                                {
+                                    skillDamageCal.damageChangePar *= 3f;//三倍基础乘伤
+                                    skillDamageCal.fireDotDamage += skillDamageCal.fireDamage;//dot伤害
+                                    DevDebug.LogError("幸运增伤");
+                                }
+                                _entityManager.SetComponentData(entityFlameCharge, skillDamageCal);
+                                Hero.instance.CalculateBaseSkillDamage();//重新计算爆伤易伤,切回伤害参数
+                                //设置总体存活时间
+                                _entityManager.AddComponentData(entityFlameCharge, new SkillFlameChargeATag() { tagSurvivalTime = 0.5f, level = preLevel });
+                                var _rollCoroutineId = _coroutineController.StartRoutine(
+                                IEFlameCharge(runTimeHeroCmp, runtimeStateNoImmunity,preLevel,true),
+                                tag: "FlameCharge",
+                                onComplete: () =>
+                                {
+                                    DevDebug.Log("烈焰冲锋释放完毕");
+                                }
+                                );
+                            }
+                            break;
+                    }
+                    break;
                 //冰霜护盾 18
                 case HeroSkillID.FrostShield:
 
                     var skillFrostShieldCmp = _entityManager.GetComponentData<SkillFrostShieldTag_Hero>(_heroEntity);
                     _entityManager.SetComponentEnabled<SkillFrostShieldTag_Hero>(_heroEntity, true);
-
                     switch (psionicType)
-
                     {
-
                         case HeroSkillPsionicType.Basic:
-
-
                             if (runTimeHeroCmp.defenseAttribute.energy > 100)
                             {
                                 //冰霜护盾吸收公式
@@ -1158,7 +1244,6 @@ namespace BlackDawn
                                 _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
                                 SkillSetActiveFrostShield(true);
                             }
-
 
                             break;
                         case HeroSkillPsionicType.PsionicA:
@@ -1362,10 +1447,10 @@ namespace BlackDawn
                             break;
 
                     }
-                    break;               
+                    break;
                 //炽炎烙印 21，标记 瞬时
                 case HeroSkillID.ScorchMark:
-                      //开启其炽炎烙印碰撞对收集
+                    //开启其炽炎烙印碰撞对收集
                     detectionSystem.enableSpecialSkillScorchMark = true;
                     switch (psionicType)
                     {
@@ -1384,12 +1469,12 @@ namespace BlackDawn
                             }
                             break;
                         case HeroSkillPsionicType.PsionicA:
-                                if (runTimeHeroCmp.defenseAttribute.energy > 20)
+                            if (runTimeHeroCmp.defenseAttribute.energy > 20)
                             {
                                 runTimeHeroCmp.defenseAttribute.energy -= 20;
                                 _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
                                 var entityScorchMark = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ScorchMark, Hero.instance.skillTargetPositon, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
-                                _entityManager.AddComponentData(entityScorchMark, new SkillScorchMarkTag { tagSurvivalTime = 0.3f ,enableSecondA=true});
+                                _entityManager.AddComponentData(entityScorchMark, new SkillScorchMarkTag { tagSurvivalTime = 0.3f, enableSecondA = true });
                                 //获得恐惧值
                                 var skillDamageCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityScorchMark);
                                 skillDamageCal.tempFear = 300;
@@ -1402,7 +1487,7 @@ namespace BlackDawn
                             break;
 
                     }
-                   break;
+                    break;
                 //寒霜新星, 瞬时 22    
                 case HeroSkillID.FrostNova:
                     switch (psionicType)
@@ -1446,10 +1531,10 @@ namespace BlackDawn
                 //暗影之拥 23 瞬时
                 case HeroSkillID.ShadowEmbrace:
                     //激活暗影之拥
-                   _entityManager.SetComponentEnabled<SkillShadowEmbrace_Hero>(_heroEntity, true);
+                    _entityManager.SetComponentEnabled<SkillShadowEmbrace_Hero>(_heroEntity, true);
                     var skillShadowEmbraceCmp = _entityManager.GetComponentData<SkillShadowEmbrace_Hero>(_heroEntity);
-                   // Hero.instance.fsm.ChangeState<Hero_Stealth>();
-    
+                    // Hero.instance.fsm.ChangeState<Hero_Stealth>();
+
                     switch (psionicType)
                     {
                         case HeroSkillPsionicType.Basic:
@@ -1494,7 +1579,7 @@ namespace BlackDawn
 
                                 //暗影之拥抱攻击技能标签
                                 _entityManager.AddComponentData(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
-                               // Hero.instance.fsm.ChangeState<Hero_Idle>();
+                                // Hero.instance.fsm.ChangeState<Hero_Idle>();
                             }
 
                             break;
@@ -1557,7 +1642,7 @@ namespace BlackDawn
                                 Hero.instance.CalculateBaseSkillDamage();//再重新计算一次以手动更新，避免其他技能受影响
                                 //暗影之拥抱攻击技能标签
                                 _entityManager.AddComponentData(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
-                               // Hero.instance.fsm.ChangeState<Hero_Idle>();
+                                // Hero.instance.fsm.ChangeState<Hero_Idle>();
                             }
 
                             break;
@@ -1579,7 +1664,7 @@ namespace BlackDawn
                                     skillShadowEmbraceCmp.shadowTime = 0;
                                     _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
                                     _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
-                                     Hero.instance.skillAttackPar.stealth = true;
+                                    Hero.instance.skillAttackPar.stealth = true;
                                 }
                             }
                             else
@@ -1605,7 +1690,7 @@ namespace BlackDawn
                                 Hero.instance.CalculateBaseSkillDamage();//再重新计算一次以手动更新，避免其他技能受影响
                                 //暗影之拥抱攻击技能标签
                                 _entityManager.AddComponentData(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
-                               // Hero.instance.fsm.ChangeState<Hero_Idle>();
+                                // Hero.instance.fsm.ChangeState<Hero_Idle>();
                             }
                             break;
                         case HeroSkillPsionicType.PsionicAB:
@@ -1627,7 +1712,7 @@ namespace BlackDawn
                                     skillShadowEmbraceCmp.shadowTime = 0;
                                     _entityManager.SetComponentData(_heroEntity, skillShadowEmbraceCmp);
                                     _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
-                                     Hero.instance.skillAttackPar.stealth = true;
+                                    Hero.instance.skillAttackPar.stealth = true;
 
                                     var filter = new CollisionFilter
                                     {
@@ -1667,13 +1752,13 @@ namespace BlackDawn
                                 Hero.instance.CalculateBaseSkillDamage();//再重新计算一次以手动更新，避免其他技能受影响
                                 //暗影之拥抱攻击技能标签
                                 _entityManager.AddComponentData(entiyShadowEmbrace, new SkillShadowEmbraceTag { tagSurvivalTime = 0.5f });
-                              //  Hero.instance.fsm.ChangeState<Hero_Idle>();
+                                //  Hero.instance.fsm.ChangeState<Hero_Idle>();
                             }
 
                             break;
                     }
                     break;
-                //瘟疫蔓延 24  持续性 辅助 核心
+                //瘟疫蔓延 24  消耗 辅助 核心
                 case HeroSkillID.PlagueSpread:
                     //开启激活遍历
                     _entityManager.SetComponentEnabled<SkillPlagueSpread_Hero>(_heroEntity, true);
@@ -1722,7 +1807,7 @@ namespace BlackDawn
                             }
                             break;
                         case HeroSkillPsionicType.PsionicB:
-                                if (!skillPlagueSpreadCmp.active)
+                            if (!skillPlagueSpreadCmp.active)
                             {
                                 if (runTimeHeroCmp.defenseAttribute.energy > 20)
                                 {
@@ -1743,7 +1828,7 @@ namespace BlackDawn
                             }
                             break;
                         case HeroSkillPsionicType.PsionicAB:
-                                if (!skillPlagueSpreadCmp.active)
+                            if (!skillPlagueSpreadCmp.active)
                             {
                                 if (runTimeHeroCmp.defenseAttribute.energy > 20)
                                 {
@@ -1765,7 +1850,7 @@ namespace BlackDawn
                             }
                             break;
                     }
-                     break;
+                    break;
                 //元素护盾 25 保护/唯一，保护技能25号元素可以仅添加渲染即可
                 case HeroSkillID.ElementShield:
                     var skillElementShieldCmp = _entityManager.GetComponentData<SkillElementShieldTag_Hero>(_heroEntity);
@@ -1869,25 +1954,25 @@ namespace BlackDawn
                             {
                                 runTimeHeroCmp.defenseAttribute.energy -= 25;
                                 var entityFlameSpiritBlade = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_FlameSpiritBlade, Hero.instance.targetPosition, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
-                                _entityManager.AddComponentData(entityFlameSpiritBlade, new SkillFlameSpiritBladeTag() { tagSurvivalTime = 8f, speed = 10,startPosition =Hero.instance.targetPosition });
+                                _entityManager.AddComponentData(entityFlameSpiritBlade, new SkillFlameSpiritBladeTag() { tagSurvivalTime = 8f, speed = 10, startPosition = Hero.instance.targetPosition });
                                 //取出攻击参数，写回击退值
                                 var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityFlameSpiritBlade);
                                 skillCal.tempknockback = 300;
                                 _entityManager.SetComponentData(entityFlameSpiritBlade, skillCal);
-                            }                      
- 
+                            }
+
                             break;
                         case HeroSkillPsionicType.PsionicA:
                             if (runTimeHeroCmp.defenseAttribute.energy > 25)
                             {
                                 runTimeHeroCmp.defenseAttribute.energy -= 25;
                                 var entityFlameSpiritBlade = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_FlameSpiritBlade, Hero.instance.targetPosition, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
-                                _entityManager.AddComponentData(entityFlameSpiritBlade, new SkillFlameSpiritBladeTag() { tagSurvivalTime = 8f, speed = 10,startPosition =Hero.instance.targetPosition ,enableSecondA=true});
+                                _entityManager.AddComponentData(entityFlameSpiritBlade, new SkillFlameSpiritBladeTag() { tagSurvivalTime = 8f, speed = 10, startPosition = Hero.instance.targetPosition, enableSecondA = true });
                                 //取出攻击参数，写回击退值
                                 var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityFlameSpiritBlade);
                                 skillCal.tempknockback = 300;
                                 _entityManager.SetComponentData(entityFlameSpiritBlade, skillCal);
-                            }     
+                            }
 
                             break;
                         case HeroSkillPsionicType.PsionicB:
@@ -1895,32 +1980,32 @@ namespace BlackDawn
                             {
                                 runTimeHeroCmp.defenseAttribute.energy -= 25;
                                 var entityFlameSpiritBlade = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_FlameSpiritBlade, Hero.instance.targetPosition, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
-                                _entityManager.AddComponentData(entityFlameSpiritBlade, new SkillFlameSpiritBladeTag() { tagSurvivalTime = 8f, speed = 10,enableSecondB=true ,startPosition =Hero.instance.targetPosition});
+                                _entityManager.AddComponentData(entityFlameSpiritBlade, new SkillFlameSpiritBladeTag() { tagSurvivalTime = 8f, speed = 10, enableSecondB = true, startPosition = Hero.instance.targetPosition });
                                 //取出攻击参数，写回击退值
                                 var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityFlameSpiritBlade);
                                 skillCal.tempknockback = 300;
                                 skillCal.damageChangePar += _heroAttributeCmptOriginal.attackAttribute.luckyStrikeChance;
                                 _entityManager.SetComponentData(entityFlameSpiritBlade, skillCal);
-                            }                      
- 
+                            }
+
 
                             break;
                         case HeroSkillPsionicType.PsionicAB:
-                         if (runTimeHeroCmp.defenseAttribute.energy > 25)
+                            if (runTimeHeroCmp.defenseAttribute.energy > 25)
                             {
                                 runTimeHeroCmp.defenseAttribute.energy -= 25;
                                 var entityFlameSpiritBlade = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_FlameSpiritBlade, Hero.instance.targetPosition, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
-                                _entityManager.AddComponentData(entityFlameSpiritBlade, new SkillFlameSpiritBladeTag() { tagSurvivalTime = 8f, speed = 10,enableSecondB=true ,enableSecondA=true,startPosition =Hero.instance.targetPosition});
+                                _entityManager.AddComponentData(entityFlameSpiritBlade, new SkillFlameSpiritBladeTag() { tagSurvivalTime = 8f, speed = 10, enableSecondB = true, enableSecondA = true, startPosition = Hero.instance.targetPosition });
                                 //取出攻击参数，写回击退值
                                 var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityFlameSpiritBlade);
                                 skillCal.tempknockback = 300;
                                 skillCal.damageChangePar += _heroAttributeCmptOriginal.attackAttribute.luckyStrikeChance;
                                 _entityManager.SetComponentData(entityFlameSpiritBlade, skillCal);
-                            }                      
- 
-                            break;                       
+                            }
+
+                            break;
                     }
-                    break;               
+                    break;
                 //时空扭曲27 第一步  生成时空奇点 第二步 随时间变化 形态， 第三步 爆炸生成时空碎片
                 case HeroSkillID.ChronoTwist:
 
@@ -2003,7 +2088,7 @@ namespace BlackDawn
                             }
                             break;
                         case HeroSkillPsionicType.PsionicAB:
-                              if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
                             {
                                 runTimeHeroCmp.defenseAttribute.energy -= 40;
                                 var damagePar = runTimeHeroCmp.defenseAttribute.energy / 100;//每1点灵力提升1点爆炸伤害，100点灵力提升30%的牵引伤害，提升500%的爆炸伤害
@@ -2161,13 +2246,13 @@ namespace BlackDawn
                             }
                             break;
                         case HeroSkillPsionicType.PsionicAB:
-                         _entityManager.SetComponentEnabled<SkillFlameBurst_Hero>(_heroEntity, true);//开启烈焰爆发B阶段加载标签
+                            _entityManager.SetComponentEnabled<SkillFlameBurst_Hero>(_heroEntity, true);//开启烈焰爆发B阶段加载标签
                             if (runTimeHeroCmp.defenseAttribute.energy > 40)
                             {
                                 int preLevel = 10;
 
                                 runTimeHeroCmp.defenseAttribute.energy -= 40;
-                              
+
                                 //烈焰爆发独立增伤
                                 if (runTimeHeroCmp.attackAttribute.heroDynamicalAttack.tempFlameBurstBDamagePar < (8 * (0.15f + 0.01f * preLevel)))
                                     runTimeHeroCmp.attackAttribute.heroDynamicalAttack.tempFlameBurstBDamagePar += 0.15f + 0.01f * preLevel;
@@ -2203,7 +2288,7 @@ namespace BlackDawn
                             }
                             break;
                         case HeroSkillPsionicType.PsionicAC:
-                          if (runTimeHeroCmp.defenseAttribute.energy > 40)
+                            if (runTimeHeroCmp.defenseAttribute.energy > 40)
                             {
                                 int preLevel = 10;
                                 runTimeHeroCmp.defenseAttribute.energy -= 40;
@@ -2246,7 +2331,7 @@ namespace BlackDawn
 
                             break;
                         case HeroSkillPsionicType.PsionicBC:
-                              _entityManager.SetComponentEnabled<SkillFlameBurst_Hero>(_heroEntity, true);//开启烈焰爆发B阶段加载标签
+                            _entityManager.SetComponentEnabled<SkillFlameBurst_Hero>(_heroEntity, true);//开启烈焰爆发B阶段加载标签
                             if (runTimeHeroCmp.defenseAttribute.energy > 40)
                             {
                                 int preLevel = 10;
@@ -2287,7 +2372,7 @@ namespace BlackDawn
 
                             break;
                         case HeroSkillPsionicType.PsionicABC:
-                           _entityManager.SetComponentEnabled<SkillFlameBurst_Hero>(_heroEntity, true);//开启烈焰爆发B阶段加载标签
+                            _entityManager.SetComponentEnabled<SkillFlameBurst_Hero>(_heroEntity, true);//开启烈焰爆发B阶段加载标签
                             if (runTimeHeroCmp.defenseAttribute.energy > 40)
                             {
                                 int preLevel = 10;
@@ -2535,7 +2620,7 @@ namespace BlackDawn
                     break;
                 //暗影之刺  31 瞬时，分裂
                 case HeroSkillID.ShadowStab:
-                 
+
                     switch (psionicType)
                     {   //能量消耗等， 都可以进行配置
                         case HeroSkillPsionicType.Basic:
@@ -2543,7 +2628,7 @@ namespace BlackDawn
                             {
                                 runTimeHeroCmp.defenseAttribute.energy -= 40;
                                 var entityShadowStab = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowStab, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
-                                _entityManager.AddComponentData(entityShadowStab, new SkillShadowStabTag() { tagSurvivalTime = 4f, speed = 20 ,skillDamageChangeParTag=1f});
+                                _entityManager.AddComponentData(entityShadowStab, new SkillShadowStabTag() { tagSurvivalTime = 4f, speed = 20, skillDamageChangeParTag = 1f });
                                 //取出攻击参数，写回击退值
                                 var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityShadowStab);
                                 skillCal.tempknockback = 100;
@@ -2556,8 +2641,8 @@ namespace BlackDawn
                             {
                                 runTimeHeroCmp.defenseAttribute.energy -= 40;
                                 int level = 10;
-                                var entityShadowStab = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowStab,Hero.instance.transform.position, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
-                                _entityManager.AddComponentData(entityShadowStab, new SkillShadowStabTag() { tagSurvivalTime = 4f, speed = 20, enableSecondA = true,secondAChance = 0.5f + (level*0.05f),skillDamageChangeParTag=1f });
+                                var entityShadowStab = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowStab, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.0f, new float3(0, 0.0f, 0), 0, 1, false, false);
+                                _entityManager.AddComponentData(entityShadowStab, new SkillShadowStabTag() { tagSurvivalTime = 4f, speed = 20, enableSecondA = true, secondAChance = 0.5f + (level * 0.05f), skillDamageChangeParTag = 1f });
                                 //取出攻击参数，写回击退值
                                 var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityShadowStab);
                                 skillCal.tempknockback = 100;
@@ -2566,10 +2651,11 @@ namespace BlackDawn
                             break;
                         case HeroSkillPsionicType.PsionicB:
                             if (runTimeHeroCmp.defenseAttribute.energy > 40)
-                            {    int level = 10;
+                            {
+                                int level = 10;
                                 runTimeHeroCmp.defenseAttribute.energy -= 40;
                                 var entityShadowStab = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowStab, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.3f, new float3(0, 0.0f, 0), 0, 1, false, false);
-                                _entityManager.AddComponentData(entityShadowStab, new SkillShadowStabTag() { tagSurvivalTime = 4f, speed = 20, enableSecondB = true,skillDamageChangeParTag=0.5f+(level*0.02f) });
+                                _entityManager.AddComponentData(entityShadowStab, new SkillShadowStabTag() { tagSurvivalTime = 4f, speed = 20, enableSecondB = true, skillDamageChangeParTag = 0.5f + (level * 0.02f) });
                                 //取出攻击参数，写回击退值
                                 var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityShadowStab);
                                 skillCal.tempknockback = 100;
@@ -2579,10 +2665,10 @@ namespace BlackDawn
                         case HeroSkillPsionicType.PsionicAB:
                             if (runTimeHeroCmp.defenseAttribute.energy > 40)
                             {
-                                 int level = 10;
+                                int level = 10;
                                 runTimeHeroCmp.defenseAttribute.energy -= 40;
                                 var entityShadowStab = DamageSkillsFlightProp(_skillPrefabs.HeroSkill_ShadowStab, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.3f, new float3(0, 0.0f, 0), 0, 1, false, false);
-                                _entityManager.AddComponentData(entityShadowStab, new SkillShadowStabTag() { tagSurvivalTime = 4f, speed = 20, enableSecondA = true,skillDamageChangeParTag=0.5f+(level*0.02f) , enableSecondB = true,secondAChance = 0.5f + (level*0.05f)});
+                                _entityManager.AddComponentData(entityShadowStab, new SkillShadowStabTag() { tagSurvivalTime = 4f, speed = 20, enableSecondA = true, skillDamageChangeParTag = 0.5f + (level * 0.02f), enableSecondB = true, secondAChance = 0.5f + (level * 0.05f) });
                                 //取出攻击参数，写回击退值
                                 var skillCal = _entityManager.GetComponentData<SkillsDamageCalPar>(entityShadowStab);
                                 skillCal.tempknockback = 100;
@@ -3749,19 +3835,102 @@ namespace BlackDawn
         /// </summary>
         /// <param name="interval"></param>
         /// <returns></returns>
-        IEnumerator IEPhaseSkill(float interval,HeroAttributeCmpt realAttr)
+        IEnumerator IEPhaseSkill(float interval, HeroAttributeCmpt realAttr)
         {
-                   
-                realAttr.defenseAttribute.energy -= 50;
-                _entityManager.SetComponentData(_heroEntity, realAttr);
 
-            
+            realAttr.defenseAttribute.energy -= 50;
+            _entityManager.SetComponentData(_heroEntity, realAttr);
+
+
             //时间间隔完毕之后恢复生命值 （？外部表现特征）
             yield return new WaitForSeconds(interval);
 
             realAttr.defenseAttribute.hp += (realAttr.defenseAttribute.originalHp / 10);
             _entityManager.SetComponentData(_heroEntity, realAttr);
-            
+
+        }
+
+        //烈焰冲锋携程
+        IEnumerator IEFlameCharge(HeroAttributeCmpt runTimeHeroCmp, HeroIntgratedNoImmunityState runtimeStateNoImmunity,int level=0,bool enableSecondB=false)
+        {
+            Hero.instance.skillAttackPar.flameCharge = true;//激活烈焰冲锋状态判断，在idel状态机中行使的状态
+           // Hero.instance.animator.SetBool("Charge", true);
+            // 消耗能量&无敌状态写回
+            runTimeHeroCmp.defenseAttribute.energy -= 40;
+            _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+            runtimeStateNoImmunity.controlNoImmunityTimer = 1f;
+            runtimeStateNoImmunity.dotNoImmunityTimer = 1f;
+            runtimeStateNoImmunity.elementDamageNoImmunityTimer = 1f;
+            runtimeStateNoImmunity.inlineDamageNoImmunityTimer = 1f;
+            runtimeStateNoImmunity.physicalDamageNoImmunityTimer = 1f;
+            _entityManager.SetComponentData(_heroEntity, runtimeStateNoImmunity);
+
+            // 1. 冲锋参数
+            float duration = 0.5f; // 持续0.5秒
+            float timer = 0f;
+            float speed = 50f; // 每秒移动的速度
+            Vector3 startPosition = Hero.instance.transform.position;
+
+            // 2. 冲锋协程
+            while (timer < duration)
+            {
+                Vector3 forward = Hero.instance.transform.forward;
+                Hero.instance.transform.position += forward * speed * Time.deltaTime;
+                timer += Time.deltaTime;
+                yield return null;
+            }
+
+            // 3. 计算最终判定区域
+            Vector3 endPosition = Hero.instance.transform.position;
+            Vector3 direction = (endPosition - startPosition).normalized;
+            float length = Vector3.Distance(startPosition, endPosition);
+            Vector3 center = (startPosition + endPosition) * 0.5f;
+            Vector3 box = new Vector3(8, 3, length); // Z为路径长度
+            quaternion rotation = quaternion.LookRotationSafe(direction, math.up()); // Box朝向
+
+            // 4. 构造 OverlapOverTimeQueryCenter
+            var filter = new CollisionFilter
+            {
+                BelongsTo = 1u << 10,
+                CollidesWith = 1u << 6,
+                GroupIndex = 0
+            };
+
+            var overlap = new OverlapOverTimeQueryCenter
+            {
+                shape = OverLapShape.Box,
+                box = box,
+                center = center,
+                radius = 0.1f, // 用 box
+                offset = float3.zero, // 不需要额外偏移
+                rotaion = rotation.value,
+                filter = filter
+            };
+
+            // 5. 生成判定实体
+            var entityFlameCharge = DamageSkillsOverTimeProp(
+                _skillPrefabs.HeroSkill_FlameCharge,
+                overlap,
+                center, // 注意这里位置填 center，rotation 填 rotation
+                rotation,
+                1, float3.zero, float3.zero, 1, false, false);
+
+            _entityManager.AddComponentData(entityFlameCharge, new SkillFlameChargeTag { tagSurvivalTime = 6f, level = level});
+            var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityFlameCharge);
+            if (enableSecondB && UnityEngine.Random.Range(0, 1f) <= runTimeHeroCmp.attackAttribute.luckyStrikeChance * 0.5f * (0.25f + (0.015f * level)))
+            {
+                skillPar.damageChangePar *= 3f;//三倍基础乘伤
+                skillPar.fireDotDamage += skillPar.fireDamage;//dot伤害
+                DevDebug.LogError("烈焰尾迹 幸运增伤");
+            }
+            //skillPar.tempExplosion = 300;
+            _entityManager.SetComponentData(entityFlameCharge, skillPar);
+
+
+            // Hero.instance.animator.SetBool("Charge", false); //跳出冲锋动画
+            // Hero.instance.animator.SetTrigger("Idle"); //跳转到Idel 动画
+            yield return Hero.instance.skillAttackPar.flameCharge = false; //返回烈焰冲锋状态结束
+
         }
 
         #endregion
@@ -3895,7 +4064,7 @@ namespace BlackDawn
 
         }
         //冰霜护盾技能设置,outer
-          public void SkillSetActiveFrostShield(bool active)
+        public void SkillSetActiveFrostShield(bool active)
         {
 
             Hero.instance.skillTransforms[4].gameObject.SetActive(active);

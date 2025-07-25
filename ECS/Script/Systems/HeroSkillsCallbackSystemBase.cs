@@ -118,18 +118,22 @@ namespace BlackDawn.DOTS
             SkillCallBack_PoisonPool(timer, ecb);
             //技能毒爆地雷 14
             SkillCallBack_MineBlast(timer, ecb, mineBlastArray);
-            //技能 暗影洪流,引导，跟随，旋转
+            //技能 暗影洪流 15,引导，跟随，旋转
             SkillCallBack_ShadowTide(timer, ecb, heroPar);
-            //技能 冰霜新星
+            //技能 烈焰冲锋 17
+            SkillCallBack_FlameCharge(timer, ecb);
+            //通用-冰霜护盾18 
+            SkillCallBack_FrostShieldDeal(timer,_prefabs,ecb);
+            //技能 冰霜新星 22
             SkillCallBack_FrostNova(timer, ecb, _prefabs);
-            //通用护盾技能 1- 元素护盾
+            // 元素护盾 25
             SkillCallBack_ElementShieldDeal();
             //暗影之拥 23 瞬时/持续 
             SkillCallBack_ShadowEmbrace(timer, ecb);
             //瘟疫蔓延 24 辅助/增强
             SkillCallBack_PlagueSpread(timer);
-            //通用-冰霜护盾25 
-            SkillCallBack_FrostShieldDeal(timer,_prefabs,ecb);
+            // 元素护盾 25
+            SkillCallBack_ElementShieldDeal();
             //技能 烈焰灵刃 26
             SkillCallBack_FlameSpiritBlade(timer, ecb);
             //技能 时空扭曲 27
@@ -1465,15 +1469,44 @@ namespace BlackDawn.DOTS
                         if (skillTag.enableSecondB)
                         {
                             heroAttr.attackAttribute.dotCritDamage = _orignalHeroAttributeCmp.attackAttribute.dotCritDamage;
-
                         }
-
                     }
-
                 }
             }).WithoutBurst().Run();
         }
+        /// <summary>
+        /// 烈焰冲锋
+        /// </summary>
+        /// <param name="timer"></param>
+        /// <param name="ecb"></param>
+        void SkillCallBack_FlameCharge(float timer, EntityCommandBuffer ecb)
+        {
+            //烈焰痕迹 燃烧的消失
+            Entities
+            .ForEach((VisualEffect vfx, ref SkillFlameChargeTag skillTag, ref SkillsOverTimeDamageCalPar skillCal) =>
+            {
+                skillTag.tagSurvivalTime -= timer;
+                if (skillTag.tagSurvivalTime <= 0)
+                    skillCal.destory = true;
+                //提前1秒关闭燃烧效果
+                if (skillTag.tagSurvivalTime <= 1 && skillTag.tagSurvivalTime > 1 - timer)
+                    vfx.Stop();
 
+            }).WithoutBurst().Run();
+
+             //烈焰爆冲 瞬时
+            Entities
+            .ForEach((VisualEffect vfx, ref SkillFlameChargeATag skillTag,ref SkillsDamageCalPar skillCal,ref LocalTransform transform) =>
+            {
+                skillTag.tagSurvivalTime -= timer;
+                transform.Position = _heroPositon;
+                
+                if (skillTag.tagSurvivalTime <= 0)
+                    skillCal.destory = true;
+            
+            }).WithoutBurst().Run();
+
+       }
         //冰霜护盾 处理,寒冰持续时间60秒？
         void SkillCallBack_FrostShieldDeal(float timer, ScenePrefabsSingleton prefab, EntityCommandBuffer ecb)
         {
