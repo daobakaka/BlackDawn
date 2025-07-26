@@ -159,6 +159,7 @@ namespace BlackDawn.DOTS
                     HeroSkillAssistive_ChronoTwistB =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.ChronoTwistB),//时空扭曲B阶段碰撞体
                     HeroSkillAssistive_ShadowEmbraceA= GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.ShadowEmbraceA),//暗影辉耀
                     HeroSkillAssistive_FlameChargeA =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.FlameChargeA),//烈焰爆冲
+                    HeroSkillAssisitive_FrostTrailB =GetSafe(auth.skillAssistivePrefabs,HeroSkillAssistiveID.FrostTrailB),//冰霜路径B
 
 
 
@@ -402,8 +403,9 @@ namespace BlackDawn.DOTS
             public Entity HeroSkillAssistive_ChronoTwistB;//时空扭曲B阶段 时空碎裂  
             public Entity HeroSkillAssistive_ShadowEmbraceA;//暗影之拥A阶段， 暗影辉耀体
             public Entity HeroSkillAssistive_FlameChargeA;//烈焰冲锋A阶段 烈焰爆冲
+            public Entity HeroSkillAssisitive_FrostTrailB;//冰霜路径B阶段
             // Monster Skills
-             public Entity MonsterSkill_DeathPulse;
+            public Entity MonsterSkill_DeathPulse;
             // Monster Entities
             public Entity Monster_Zombie;
             public Entity Monster_Albono;

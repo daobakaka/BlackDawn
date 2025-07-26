@@ -140,6 +140,8 @@ namespace BlackDawn.DOTS
             SkillCallBack_ChronoTwist(timer, ecb);
             //技能 烈焰爆发 28
             SKillCakkBack_FlameBurst(timer, ecb);
+            //技能 冰霜之径 29
+            SKillCakkBack_FrostTrail(timer, ecb);
             //技能闪电链 30
             SkillCallBack_LightningChain(timer, ecb, _prefabs);
             //技能毒雨 32
@@ -1586,6 +1588,77 @@ namespace BlackDawn.DOTS
 
 
         }
+
+        /// <summary>
+        ///  冰霜之泾 29
+        /// </summary>
+        /// <param name="timer"></param>
+        /// <param name="ecb"></param>
+        void SKillCakkBack_FrostTrail(float timer, EntityCommandBuffer ecb)
+        {
+            //冰霜之泾
+            Entities
+            .ForEach((VisualEffect vfx, ref SkillFrostTrailTag skillTag, ref SkillsOverTimeDamageCalPar skillCal, ref LocalTransform transform) =>
+            {
+                skillTag.tagSurvivalTime -= timer;
+                skillTag.interval += timer;
+                if (skillTag.tagSurvivalTime <= 0)
+                    skillCal.destory = true;
+
+                if (skillTag.enableSecondB && skillTag.interval >= 2f)
+                {
+                    skillTag.interval = 0;
+                    //每两秒判定一次，生成冰雨
+                    if (UnityEngine.Random.Range(0, 1f) <= _heroAttribute[_heroEntity].attackAttribute.luckyStrikeChance * 0.5f * (0.1f + skillTag.level*0.01f))
+                    {
+                        var filter = new CollisionFilter
+                        {
+                            BelongsTo = 1u << 10,
+                            CollidesWith = 1u << 6,
+                            GroupIndex = 0
+                        };
+
+                        var overlap = new OverlapOverTimeQueryCenter { center = transform.Position, radius = 15, filter = filter, shape = OverLapShape.Sphere, rotaion = transform.Rotation.value };
+
+                        var entityFrostTrailB = ecb.Instantiate(_prefabs.HeroSkillAssisitive_FrostTrailB);
+
+                        ecb.AddComponent(entityFrostTrailB, overlap);
+
+                        ecb.SetComponent(entityFrostTrailB, transform);
+                        
+                        ecb.AddComponent(entityFrostTrailB, new SkillFrostTrailBTag { tagSurvivalTime = 6, level = 10 });
+
+                        var skillPar = skillCal;
+                        skillPar.tempSlow = 50;
+                        skillPar.tempFreeze = 50;
+                        skillPar.damageChangePar *= 1.5f;
+                        ecb.AddComponent(entityFrostTrailB, skillPar);
+                        ecb.AddBuffer<HitElementResonanceRecord>(entityFrostTrailB);
+
+                    }
+                }
+            }).WithoutBurst().Run();
+
+            //霜冻之雨
+            Entities
+            .ForEach((VisualEffect vfx, ref SkillFrostTrailBTag skillTag, ref SkillsOverTimeDamageCalPar skillCal, ref LocalTransform transform) =>
+            {
+                skillTag.tagSurvivalTime -= timer;
+                if (skillTag.tagSurvivalTime <= 0)
+                    skillCal.destory = true;
+                //时间结束前1秒取消
+                if (skillTag.tagSurvivalTime <= 1 && skillTag.tagSurvivalTime > 1 - timer)
+                {
+                    vfx.Stop();
+                }
+
+
+            }).WithoutBurst().Run();
+
+
+
+        }
+
         void DebugDrawSphere(float3 entityPosition, float3 offset, quaternion rotation, float radius, Color color, float duration)
         {
             // ✅ 偏移应用旋转

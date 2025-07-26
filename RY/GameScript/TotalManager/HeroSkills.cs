@@ -2421,6 +2421,105 @@ namespace BlackDawn
                             break;
                     }
                     break;
+                //冰霜路径 29
+                case HeroSkillID.FrostTrail:
+                    switch (psionicType)
+                    {
+                        case HeroSkillPsionicType.Basic:
+                            if (runTimeHeroCmp.defenseAttribute.energy > 70)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 70;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                            var filter = new CollisionFilter
+                            {
+                                BelongsTo = 1u << 10,
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            Quaternion q = Hero.instance.transform.rotation;
+                            float4 rotaion = new float4(q.x, q.y, q.z, q.w);
+                            var overlap = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position, box=new float3(8,3,30),radius = 1, filter = filter,shape=OverLapShape.Box,rotaion=rotaion};
+                            var entityFrostTrail = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_FrostTrail, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityFrostTrail, new SkillFrostTrailTag { tagSurvivalTime = 6, level = 1 });
+                            var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityFrostTrail);
+                            skillPar.tempSlow = 100;                          
+                            _entityManager.SetComponentData(entityFrostTrail, skillPar);
+                                
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicA:
+                            //增加伤害，并添加冻结
+                            if (runTimeHeroCmp.defenseAttribute.energy > 70)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 70;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                            var filter = new CollisionFilter
+                            {
+                                BelongsTo = 1u << 10,
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            Quaternion q = Hero.instance.transform.rotation;
+                            float4 rotaion = new float4(q.x, q.y, q.z, q.w);
+                            var overlap = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position, box=new float3(8,3,50),radius = 1, filter = filter,shape=OverLapShape.Box,rotaion=rotaion};
+                            var entityFrostTrail = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_FrostTrail, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.3f, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityFrostTrail, new SkillFrostTrailTag { tagSurvivalTime = 6, level = 1 });
+                            var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityFrostTrail);
+                            skillPar.tempSlow = 100;
+                            skillPar.tempFreeze = 50;                       
+                            _entityManager.SetComponentData(entityFrostTrail, skillPar);
+                                
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicB:
+                           if (runTimeHeroCmp.defenseAttribute.energy > 70)
+                            {
+                            runTimeHeroCmp.defenseAttribute.energy -= 70;
+                            _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                            var filter = new CollisionFilter
+                            {
+                                BelongsTo = 1u << 10,
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            Quaternion q = Hero.instance.transform.rotation;
+                            float4 rotaion = new float4(q.x, q.y, q.z, q.w);
+                            var overlap = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position, box=new float3(8,3,30),radius = 1, filter = filter,shape=OverLapShape.Box,rotaion=rotaion};
+                            var entityFrostTrail = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_FrostTrail, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation, 1, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityFrostTrail, new SkillFrostTrailTag { tagSurvivalTime = 6, level = 10,enableSecondB=true });
+                            var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityFrostTrail);
+                            skillPar.tempSlow = 100;                          
+                            _entityManager.SetComponentData(entityFrostTrail, skillPar);
+                                
+                            }
+                            break;
+                        case HeroSkillPsionicType.PsionicAB:
+                              //增加伤害，并添加冻结
+                            if (runTimeHeroCmp.defenseAttribute.energy > 70)
+                            {
+                                runTimeHeroCmp.defenseAttribute.energy -= 70;
+                                _entityManager.SetComponentData(_heroEntity, runTimeHeroCmp);
+                            var filter = new CollisionFilter
+                            {
+                                BelongsTo = 1u << 10,
+                                CollidesWith = 1u << 6,
+                                GroupIndex = 0
+                            };
+                            Quaternion q = Hero.instance.transform.rotation;
+                            float4 rotaion = new float4(q.x, q.y, q.z, q.w);
+                            var overlap = new OverlapOverTimeQueryCenter { center = Hero.instance.transform.position, box=new float3(8,3,50),radius = 1, filter = filter,shape=OverLapShape.Box,rotaion=rotaion};
+                            var entityFrostTrail = DamageSkillsOverTimeProp(_skillPrefabs.HeroSkill_FrostTrail, overlap, Hero.instance.transform.position, Hero.instance.transform.rotation, 1.3f, float3.zero, float3.zero, 1, false, false);
+                            _entityManager.AddComponentData(entityFrostTrail, new SkillFrostTrailTag { tagSurvivalTime = 6, level = 1 ,enableSecondB=true});
+                            var skillPar = _entityManager.GetComponentData<SkillsOverTimeDamageCalPar>(entityFrostTrail);
+                            skillPar.tempSlow = 100;
+                            skillPar.tempFreeze = 50;                       
+                            _entityManager.SetComponentData(entityFrostTrail, skillPar);
+                                
+                            }
+                            break;
+
+                    }
+                    break;
                 //闪电链 30， 瞬时寻址
                 case HeroSkillID.LightningChain:
                     switch (psionicType)

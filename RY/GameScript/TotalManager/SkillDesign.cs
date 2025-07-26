@@ -98,7 +98,7 @@ namespace BlackDawn
         //烈焰爆发 28
         FlameBurst,        // 烈焰爆发：对周围敌人造成火焰伤害并击退，若敌人处于燃烧状态则伤害翻倍  
                            // 释放方式：Control/Buff；伤害类型：火焰
-
+        //冰霜路径 29
         FrostTrail,        // 冰霜路径：创造一条持续6秒的冰霜路径，友军移速+30%，敌军移速-30%  
                            // 释放方式：Buff；伤害类型：冰霜
         //闪电链 30
@@ -225,9 +225,8 @@ namespace BlackDawn
         ChronoTwistB,//时空扭曲
         ShadowEmbraceA,//暗影辉耀
         FlameChargeA,//烈焰冲锋A阶段 烈焰爆冲
+        FrostTrailB,// 冰霜路径B
         
-        
-
     }
     /// <summary>
     /// 英雄技能灵能分类

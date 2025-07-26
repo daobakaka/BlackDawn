@@ -1156,7 +1156,7 @@ namespace BlackDawn.DOTS
     {
         public float tagSurvivalTime;
     }
-    
+
 
     /// <summary>
     /// 烈焰冲锋
@@ -1182,6 +1182,41 @@ namespace BlackDawn.DOTS
         public float scaleChangePar;
         //等级
         public int level;
+    }
+
+    /// <summary>
+    /// 冰霜路径 
+    /// </summary>
+    public struct SkillFrostTrailTag : IComponentData
+    {
+        public float tagSurvivalTime;
+        //形变参数
+        public float scaleChangePar;
+        public bool enableSecondA;
+        public bool enableSecondB;
+        //伤害变化参数,默认为0，外部赋值1+
+        public float skillDamageChangeParTag;
+        //等级
+        public int level;
+
+        public float interval;
+
+    }
+
+
+    /// <summary>
+    /// 冰霜之泾 B 阶段
+    /// </summary>
+    public struct SkillFrostTrailBTag : IComponentData
+    {
+        public float tagSurvivalTime;
+        //形变参数
+        public float scaleChangePar;
+        public float skillDamageChangeParTag;
+        //等级
+        public int level;
+
+
     }
 }
 
